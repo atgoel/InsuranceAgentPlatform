@@ -1,19 +1,116 @@
 {
   "modules": [
-    { "id": "M00", "name": "Kernel, observability & web shell", "spec": "docs/spec/modules/M00-kernel.md",
-      "core": ["src/kernel"], "coreTests": ["src/kernel", "test/kernel"],
-      "web": ["src/design-system", "src/lib", "src/app"], "webTests": ["src/design-system", "src/lib", "src/app"] },
-    { "id": "M01", "name": "Tenant & Entitlements", "spec": "docs/spec/modules/M01-tenancy.md",
-      "core": ["src/modules/tenancy"], "coreTests": ["src/modules/tenancy", "test/tenancy"],
-      "web": ["src/features/tenancy"], "webTests": ["src/features/tenancy"] },
-    { "id": "M02", "name": "Distribution Network", "spec": "docs/spec/modules/M02-distribution.md",
-      "core": ["src/modules/distribution"], "coreTests": ["src/modules/distribution", "test/distribution"],
-      "web": ["src/features/distribution"], "webTests": ["src/features/distribution"] },
-    { "id": "M03", "name": "Party & Consent", "spec": "docs/spec/modules/M03-party.md",
-      "core": ["src/modules/party"], "coreTests": ["src/modules/party", "test/party"],
-      "web": ["src/features/party"], "webTests": ["src/features/party"] },
-    { "id": "M04", "name": "CRM Engagement", "spec": "docs/spec/modules/M04-crm.md",
-      "core": ["src/modules/crm"], "coreTests": ["src/modules/crm", "test/crm"],
-      "web": ["src/features/crm"], "webTests": ["src/features/crm"] }
+    {
+      "id": "M00",
+      "name": "Kernel, observability & web shell",
+      "spec": "docs/spec/modules/M00-kernel.md",
+      "core": [
+        "src/kernel"
+      ],
+      "coreTests": [
+        "src/kernel",
+        "test/kernel"
+      ],
+      "web": [
+        "src/design-system",
+        "src/lib",
+        "src/app"
+      ],
+      "webTests": [
+        "src/design-system",
+        "src/lib",
+        "src/app"
+      ]
+    },
+    {
+      "id": "M01",
+      "name": "Tenant & Entitlements",
+      "spec": "docs/spec/modules/M01-tenancy.md",
+      "core": [
+        "src/modules/tenancy"
+      ],
+      "coreTests": [
+        "src/modules/tenancy",
+        "test/tenancy"
+      ],
+      "web": [
+        "src/features/tenancy"
+      ],
+      "webTests": [
+        "src/features/tenancy"
+      ]
+    },
+    {
+      "id": "M02",
+      "name": "Distribution Network",
+      "spec": "docs/spec/modules/M02-distribution.md",
+      "core": [
+        "src/modules/distribution"
+      ],
+      "coreTests": [
+        "src/modules/distribution",
+        "test/distribution"
+      ],
+      "web": [
+        "src/features/distribution"
+      ],
+      "webTests": [
+        "src/features/distribution"
+      ]
+    },
+    {
+      "id": "M03",
+      "name": "Party & Consent",
+      "spec": "docs/spec/modules/M03-party.md",
+      "core": [
+        "src/modules/party"
+      ],
+      "coreTests": [
+        "src/modules/party",
+        "test/party"
+      ],
+      "web": [
+        "src/features/party"
+      ],
+      "webTests": [
+        "src/features/party"
+      ]
+    },
+    {
+      "id": "M04",
+      "name": "CRM Engagement",
+      "spec": "docs/spec/modules/M04-crm.md",
+      "core": [
+        "src/modules/crm"
+      ],
+      "coreTests": [
+        "src/modules/crm",
+        "test/crm"
+      ],
+      "web": [
+        "src/features/crm"
+      ],
+      "webTests": [
+        "src/features/crm"
+      ]
+    },
+    {
+      "id": "M05",
+      "name": "Product Catalogue & comparison",
+      "spec": "docs/spec/modules/M05-catalogue.md",
+      "core": [
+        "src/modules/catalogue"
+      ],
+      "coreTests": [
+        "src/modules/catalogue",
+        "test/catalogue"
+      ],
+      "web": [
+        "src/features/catalogue"
+      ],
+      "webTests": [
+        "src/features/catalogue"
+      ]
+    }
   ]
 }
