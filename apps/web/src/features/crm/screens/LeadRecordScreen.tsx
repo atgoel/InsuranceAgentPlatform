@@ -25,6 +25,8 @@ export function LeadRecordScreen() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | undefined>();
+  /** A failed action is shown inline; the record stays on screen. */
+  const [actionError, setActionError] = useState<string | undefined>();
   const [lead, setLead] = useState<LeadDetailView | undefined>();
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export function LeadRecordScreen() {
         setLead(updated);
       } catch (err) {
         if (err instanceof ApiError) {
-          setError(err);
+          setActionError(err.title);
         }
       }
     },
@@ -69,7 +71,7 @@ export function LeadRecordScreen() {
         setLead(updated);
       } catch (err) {
         if (err instanceof ApiError) {
-          setError(err);
+          setActionError(err.title);
         }
       }
     },
@@ -84,7 +86,7 @@ export function LeadRecordScreen() {
         setLead(updated);
       } catch (err) {
         if (err instanceof ApiError) {
-          setError(err);
+          setActionError(err.title);
         }
       }
     },
@@ -100,7 +102,7 @@ export function LeadRecordScreen() {
         setLead(updated);
       } catch (err) {
         if (err instanceof ApiError) {
-          setError(err);
+          setActionError(err.title);
         }
       }
     },
@@ -127,6 +129,7 @@ export function LeadRecordScreen() {
 
   return (
     <main className="lead-record-screen" role="main">
+      {actionError && <p role="alert" className="action-error">{t('crm.lead.action_failed', { reason: actionError })}</p>}
       <LeadHeader lead={lead} />
 
       <div className="lead-content">

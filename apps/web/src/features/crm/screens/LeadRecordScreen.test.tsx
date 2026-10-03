@@ -100,12 +100,9 @@ describe('AC-M04-26 LeadRecordScreen', () => {
     await waitFor(() => {
       expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
     });
-    const stageButtons = screen.getAllByRole('button');
-    const stageBar = stageButtons.filter((btn) => {
-      const text = btn.textContent || '';
-      return text.toLowerCase().includes('new') || text.toLowerCase().includes('contacted') || text.toLowerCase().includes('qualified');
-    });
-    expect(stageBar.length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'New' })).toBeDisabled(); // the current stage
+    expect(screen.getByRole('button', { name: 'Contacted' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Qualified' })).toBeEnabled();
   });
 
   it('AC-M04-26 shows blocked move message when stage rules not met', async () => {
@@ -315,5 +312,21 @@ describe('AC-M04-26 LeadRecordScreen', () => {
     await waitFor(() => {
       expect(screen.getByText('Follow up call')).toBeInTheDocument();
     });
+  });
+
+  it('AC-M04-26 a rejected action is shown inline and the record stays on screen', async () => {
+    mockLead.stageRules = {};
+    (mockApiClient.post as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new ApiError(422, 'stage_rules_unmet', 'Consent must be recorded first'));
+    render(
+      <MemoryRouter initialEntries={['/crm/leads/lead-1']}>
+        <Routes>
+          <Route path="/crm/leads/:id" element={<ApiProvider client={mockApiClient}><I18nProvider><LeadRecordScreen /></I18nProvider></ApiProvider>} />
+        </Routes>
+      </MemoryRouter>
+    );
+    await screen.findByText('Rajesh Kumar');
+    await userEvent.click(screen.getByRole('button', { name: 'Contacted' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('That did not go through: Consent must be recorded first');
+    expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
   });
 });

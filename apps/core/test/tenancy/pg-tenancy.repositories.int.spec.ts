@@ -90,7 +90,7 @@ run('AC-M01-15 Postgres tenancy repositories', () => {
     const entity = DistributorEntity.create({ tenantKind: 'ORGANISATION', entityType: 'BROKER', legalName: 'Acme Brokers Pvt Ltd', registrationNo: 'IRDAI/DB/123', registrationValidTo: '2027-03-31', principalOfficerName: 'R. Iyer' });
     const tieUps = new TieUpSet([{ insurerId: 'ins_star', line: 'HEALTH', effectiveFrom: '2026-01-01' }, { insurerId: 'ins_hdfc_life', line: 'LIFE', effectiveFrom: '2026-01-01', effectiveTo: '2026-12-31' }]);
     const flags = FeatureFlagSet.defaults();
-    flags.enable('whatsapp_api', clock.now());
+    flags.enable('whatsapp_api');
     const kit = BrandKit.platformDefault();
     await uow.run(a, async (tx) => {
       await settings.saveEntity(tx, entity);

@@ -49,13 +49,13 @@
   },
   "M04": {
     "name": "CRM Engagement",
-    "total": 83.3,
-    "coverage": 25,
-    "lint": 12,
+    "total": 92,
+    "coverage": 30.7,
+    "lint": 12.5,
     "types": 10,
-    "trace": 12.5,
+    "trace": 15,
     "review": 23.8,
-    "covAvg": 64.3,
+    "covAvg": 79.1,
     "allPass": true,
     "date": "2026-10-03"
   },
