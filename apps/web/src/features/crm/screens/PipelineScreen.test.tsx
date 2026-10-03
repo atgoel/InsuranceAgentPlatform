@@ -89,15 +89,15 @@ describe('AC-M04-27 PipelineScreen', () => {
 
   beforeEach(() => {
     mockApiClient = {
-      get: vi.fn(() => Promise.resolve(mockBoard)),
-      post: vi.fn(() => Promise.resolve({})),
-      put: vi.fn(),
-      patch: vi.fn(),
-      del: vi.fn(),
-    };
+      get: vi.fn().mockResolvedValue(mockBoard),
+      post: vi.fn().mockResolvedValue({}),
+      put: vi.fn().mockResolvedValue({}),
+      patch: vi.fn().mockResolvedValue({}),
+      del: vi.fn().mockResolvedValue({}),
+    } as ApiClient;
   });
 
-  it('AC-M04-27 renders kanban columns with stage labels', async () => {
+  it('AC-M04-27 renders kanban columns with i18n stage labels', async () => {
     render(
       <ApiProvider client={mockApiClient}>
         <I18nProvider>
@@ -107,9 +107,11 @@ describe('AC-M04-27 PipelineScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/discovery/i) || screen.getByText(/DISCOVERY/)).toBeInTheDocument();
-      expect(screen.getByText(/quote shared/i) || screen.getByText(/QUOTE_SHARED/)).toBeInTheDocument();
+      expect(screen.getByText('Needs analysis')).toBeInTheDocument();
     });
+    expect(screen.getByText('Quoted')).toBeInTheDocument();
+    expect(screen.getByText('Proposal')).toBeInTheDocument();
+    expect(screen.getByText('Insurer pending')).toBeInTheDocument();
   });
 
   it('AC-M04-27 displays column counts and premium totals', async () => {
@@ -122,12 +124,13 @@ describe('AC-M04-27 PipelineScreen', () => {
     );
 
     await waitFor(() => {
-      // Check for counts
       expect(screen.getByText('3')).toBeInTheDocument();
-      expect(screen.getByText('2')).toBeInTheDocument();
-      // Check for premium amounts in rupees
-      expect(screen.getByText(/₹/)).toBeInTheDocument();
     });
+    const allText = screen.queryAllByText('2');
+    expect(allText.length).toBeGreaterThan(0);
+    // Check for premium amounts (rupee symbol may be in separate text node)
+    const premiumElements = screen.queryAllByText(/5,000|3,000/);
+    expect(premiumElements.length).toBeGreaterThan(0);
   });
 
   it('AC-M04-27 displays closed counts (issued and lost)', async () => {
@@ -140,14 +143,16 @@ describe('AC-M04-27 PipelineScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('5')).toBeInTheDocument(); // issued count
-      expect(screen.getByText('2')).toBeInTheDocument(); // lost count
+      const allText = screen.queryAllByText('5');
+      expect(allText.length).toBeGreaterThan(0);
     });
+    const lostText = screen.queryAllByText('2');
+    expect(lostText.length).toBeGreaterThan(0);
   });
 
   it('AC-M04-27 allows moving opportunity to adjacent stages', async () => {
     const user = userEvent.setup();
-    mockApiClient.post = vi.fn(() => Promise.resolve(mockBoard.columns[1].items[0]));
+    mockApiClient.post = vi.fn().mockResolvedValue(mockBoard.columns[1].items[0]);
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -161,7 +166,6 @@ describe('AC-M04-27 PipelineScreen', () => {
       expect(screen.getByText('Rajesh Kumar - Term Life')).toBeInTheDocument();
     });
 
-    // Find and click move button (→)
     const moveButtons = screen.getAllByRole('button').filter((btn) => btn.textContent?.includes('→'));
     if (moveButtons.length > 0) {
       await user.click(moveButtons[0]);
@@ -171,7 +175,7 @@ describe('AC-M04-27 PipelineScreen', () => {
 
   it('AC-M04-27 allows marking opportunity as lost with reason', async () => {
     const user = userEvent.setup();
-    mockApiClient.post = vi.fn(() => Promise.resolve(mockBoard.columns[0].items[0]));
+    mockApiClient.post = vi.fn().mockResolvedValue(mockBoard.columns[0].items[0]);
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -185,11 +189,9 @@ describe('AC-M04-27 PipelineScreen', () => {
       expect(screen.getByText('Rajesh Kumar - Term Life')).toBeInTheDocument();
     });
 
-    // Find and click Lost button
     const lostButtons = screen.getAllByRole('button').filter((btn) => btn.textContent?.toLowerCase().includes('lost'));
     if (lostButtons.length > 0) {
       await user.click(lostButtons[0]);
-      // Should show reason select dropdown
       const reasonSelects = screen.queryAllByRole('combobox');
       expect(reasonSelects.length).toBeGreaterThanOrEqual(0);
     }
@@ -208,8 +210,10 @@ describe('AC-M04-27 PipelineScreen', () => {
       expect(screen.getByText('Rajesh Kumar - Term Life')).toBeInTheDocument();
     });
 
-    // Should not have an "Issue" or "Won" button
-    const issueButtons = screen.queryAllByRole('button').filter((btn) => btn.textContent?.toLowerCase().includes('issue') || btn.textContent?.toLowerCase().includes('won'));
+    const issueButtons = screen.queryAllByRole('button').filter((btn) => {
+      const text = btn.textContent?.toLowerCase() || '';
+      return text.includes('issue') || text.includes('won');
+    });
     expect(issueButtons.length).toBe(0);
   });
 
@@ -223,12 +227,13 @@ describe('AC-M04-27 PipelineScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/insurer/i)).toBeInTheDocument();
+      const insurerText = screen.queryByText(/Won is set only by the insurer/i);
+      expect(insurerText).toBeInTheDocument();
     });
   });
 
   it('AC-M04-27 handles API errors gracefully', async () => {
-    mockApiClient.get = vi.fn(() => Promise.reject(new ApiError(500, 'error', 'Server error')));
+    mockApiClient.get = vi.fn().mockRejectedValue(new ApiError(500, 'error', 'Server error'));
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -244,7 +249,7 @@ describe('AC-M04-27 PipelineScreen', () => {
   });
 
   it('AC-M04-27 handles permission denied', async () => {
-    mockApiClient.get = vi.fn(() => Promise.reject(new ApiError(403, 'error', 'Forbidden')));
+    mockApiClient.get = vi.fn().mockRejectedValue(new ApiError(403, 'error', 'Forbidden'));
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -269,9 +274,10 @@ describe('AC-M04-27 PipelineScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('7')).toBeInTheDocument(); // openCount
-      expect(screen.getByText(/₹/)).toBeInTheDocument(); // premium
-      expect(screen.getByText('42%')).toBeInTheDocument(); // win rate
+      expect(screen.getByText('7')).toBeInTheDocument();
     });
+    const premiumText = screen.queryAllByText(/₹|11,000/);
+    expect(premiumText.length).toBeGreaterThan(0);
+    expect(screen.getByText('42%')).toBeInTheDocument();
   });
 });

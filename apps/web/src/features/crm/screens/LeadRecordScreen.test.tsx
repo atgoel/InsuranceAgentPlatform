@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ApiProvider } from '../../../lib/api';
 import { ApiError } from '../../../lib/api/api-error';
 import { I18nProvider } from '../../../lib/i18n';
 import { LeadRecordScreen } from './LeadRecordScreen';
 import { ApiClient } from '../../../lib/api/api-client';
 import { type LeadDetailView } from '../api';
-import { BrowserRouter } from 'react-router-dom';
 
 describe('AC-M04-26 LeadRecordScreen', () => {
   const mockLead: LeadDetailView = {
@@ -53,69 +53,84 @@ describe('AC-M04-26 LeadRecordScreen', () => {
 
   beforeEach(() => {
     mockApiClient = {
-      get: vi.fn(() => Promise.resolve(mockLead as any)),
-      post: vi.fn(() => Promise.resolve({ leadId: 'lead-1' } as any)),
-      put: vi.fn(() => Promise.resolve(mockLead as any)),
-      patch: vi.fn(() => Promise.resolve({ id: 'activity-1' } as any)),
-      del: vi.fn(() => Promise.resolve({})),
-    } as any;
+      get: vi.fn().mockResolvedValue(mockLead),
+      post: vi.fn().mockResolvedValue({ leadId: 'lead-1' }),
+      put: vi.fn().mockResolvedValue(mockLead),
+      patch: vi.fn().mockResolvedValue({ id: 'activity-1' }),
+      del: vi.fn().mockResolvedValue({}),
+    } as ApiClient;
   });
 
   it('AC-M04-26 renders lead header with name and temperature', async () => {
     render(
-      <BrowserRouter>
-        <ApiProvider client={mockApiClient}>
-          <I18nProvider>
-            <LeadRecordScreen />
-          </I18nProvider>
-        </ApiProvider>
-      </BrowserRouter>
+      <MemoryRouter initialEntries={['/crm/leads/lead-1']}>
+        <Routes>
+          <Route path="/crm/leads/:id" element={
+            <ApiProvider client={mockApiClient}>
+              <I18nProvider>
+                <LeadRecordScreen />
+              </I18nProvider>
+            </ApiProvider>
+          } />
+        </Routes>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
       expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
-      expect(screen.getByText('HOT')).toBeInTheDocument();
     });
+    expect(screen.getByText('HOT')).toBeInTheDocument();
   });
 
   it('AC-M04-26 displays stage bar with current stage active', async () => {
     render(
-      <BrowserRouter>
-        <ApiProvider client={mockApiClient}>
-          <I18nProvider>
-            <LeadRecordScreen />
-          </I18nProvider>
-        </ApiProvider>
-      </BrowserRouter>
+      <MemoryRouter initialEntries={['/crm/leads/lead-1']}>
+        <Routes>
+          <Route path="/crm/leads/:id" element={
+            <ApiProvider client={mockApiClient}>
+              <I18nProvider>
+                <LeadRecordScreen />
+              </I18nProvider>
+            </ApiProvider>
+          } />
+        </Routes>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
-      const stageButtons = screen.getAllByRole('button').filter((btn) => btn.textContent?.includes('NEW') || btn.textContent?.includes('CONTACTED'));
-      expect(stageButtons.length).toBeGreaterThan(0);
+      expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
     });
+    const stageButtons = screen.getAllByRole('button');
+    const stageBar = stageButtons.filter((btn) => {
+      const text = btn.textContent || '';
+      return text.toLowerCase().includes('new') || text.toLowerCase().includes('contacted') || text.toLowerCase().includes('qualified');
+    });
+    expect(stageBar.length).toBeGreaterThan(0);
   });
 
   it('AC-M04-26 shows blocked move message when stage rules not met', async () => {
     const user = userEvent.setup();
     render(
-      <BrowserRouter>
-        <ApiProvider client={mockApiClient}>
-          <I18nProvider>
-            <LeadRecordScreen />
-          </I18nProvider>
-        </ApiProvider>
-      </BrowserRouter>
+      <MemoryRouter initialEntries={['/crm/leads/lead-1']}>
+        <Routes>
+          <Route path="/crm/leads/:id" element={
+            <ApiProvider client={mockApiClient}>
+              <I18nProvider>
+                <LeadRecordScreen />
+              </I18nProvider>
+            </ApiProvider>
+          } />
+        </Routes>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
       expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
     });
 
-    // Try to click CONTACTED stage (which has blocking rules)
     const contactedBtn = screen.getAllByRole('button').find((btn) => btn.textContent?.includes('CONTACTED'));
     if (contactedBtn) {
       await user.click(contactedBtn);
-      // Should show blocked message
       await waitFor(() => {
         expect(screen.getByText(/Log a connected call/)).toBeInTheDocument();
       });
@@ -124,102 +139,116 @@ describe('AC-M04-26 LeadRecordScreen', () => {
 
   it('AC-M04-26 displays qualification form', async () => {
     render(
-      <BrowserRouter>
-        <ApiProvider client={mockApiClient}>
-          <I18nProvider>
-            <LeadRecordScreen />
-          </I18nProvider>
-        </ApiProvider>
-      </BrowserRouter>
+      <MemoryRouter initialEntries={['/crm/leads/lead-1']}>
+        <Routes>
+          <Route path="/crm/leads/:id" element={
+            <ApiProvider client={mockApiClient}>
+              <I18nProvider>
+                <LeadRecordScreen />
+              </I18nProvider>
+            </ApiProvider>
+          } />
+        </Routes>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
       expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
     });
 
-    // Should have qualification section
     const qualificationHeadings = screen.getAllByRole('heading').filter((h) => h.textContent?.toLowerCase().includes('qualification'));
     expect(qualificationHeadings.length).toBeGreaterThan(0);
   });
 
   it('AC-M04-26 displays activity composer', async () => {
     render(
-      <BrowserRouter>
-        <ApiProvider client={mockApiClient}>
-          <I18nProvider>
-            <LeadRecordScreen />
-          </I18nProvider>
-        </ApiProvider>
-      </BrowserRouter>
+      <MemoryRouter initialEntries={['/crm/leads/lead-1']}>
+        <Routes>
+          <Route path="/crm/leads/:id" element={
+            <ApiProvider client={mockApiClient}>
+              <I18nProvider>
+                <LeadRecordScreen />
+              </I18nProvider>
+            </ApiProvider>
+          } />
+        </Routes>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
       expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
     });
 
-    // Should have activity section
     const activityHeadings = screen.getAllByRole('heading').filter((h) => h.textContent?.toLowerCase().includes('activity'));
     expect(activityHeadings.length).toBeGreaterThan(0);
   });
 
   it('AC-M04-26 disables convert sheet when stage is not QUALIFIED', async () => {
     render(
-      <BrowserRouter>
-        <ApiProvider client={mockApiClient}>
-          <I18nProvider>
-            <LeadRecordScreen />
-          </I18nProvider>
-        </ApiProvider>
-      </BrowserRouter>
+      <MemoryRouter initialEntries={['/crm/leads/lead-1']}>
+        <Routes>
+          <Route path="/crm/leads/:id" element={
+            <ApiProvider client={mockApiClient}>
+              <I18nProvider>
+                <LeadRecordScreen />
+              </I18nProvider>
+            </ApiProvider>
+          } />
+        </Routes>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
       expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
     });
 
-    // Convert section should not be visible for NEW stage
     const convertHeadings = screen.queryAllByRole('heading').filter((h) => h.textContent?.toLowerCase().includes('convert'));
-    expect(convertHeadings.length === 0 || convertHeadings[0].closest('.disabled')).toBeTruthy();
+    expect(convertHeadings.length === 0).toBeTruthy();
   });
 
   it('AC-M04-26 shows convert sheet when stage is QUALIFIED', async () => {
-    (mockApiClient.get as any) = vi.fn(() =>
-      Promise.resolve({
-        ...mockLead,
-        stage: 'QUALIFIED',
-      } as any)
-    );
+    mockApiClient.get = vi.fn().mockResolvedValue({
+      ...mockLead,
+      stage: 'QUALIFIED',
+    });
 
     render(
-      <BrowserRouter>
-        <ApiProvider client={mockApiClient}>
-          <I18nProvider>
-            <LeadRecordScreen />
-          </I18nProvider>
-        </ApiProvider>
-      </BrowserRouter>
+      <MemoryRouter initialEntries={['/crm/leads/lead-1']}>
+        <Routes>
+          <Route path="/crm/leads/:id" element={
+            <ApiProvider client={mockApiClient}>
+              <I18nProvider>
+                <LeadRecordScreen />
+              </I18nProvider>
+            </ApiProvider>
+          } />
+        </Routes>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
       expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
     });
 
-    // Convert section should be visible for QUALIFIED stage
     const convertHeadings = screen.getAllByRole('heading').filter((h) => h.textContent?.toLowerCase().includes('convert'));
     expect(convertHeadings.length).toBeGreaterThan(0);
   });
 
   it('AC-M04-26 handles 404 when lead not found', async () => {
-    (mockApiClient.get as any) = vi.fn(() => Promise.reject(new ApiError(404, 'not_found', 'Not found')));
+    mockApiClient.get = vi.fn().mockRejectedValue(new ApiError(404, 'not_found', 'Not found'));
 
     render(
-      <BrowserRouter>
-        <ApiProvider client={mockApiClient}>
-          <I18nProvider>
-            <LeadRecordScreen />
-          </I18nProvider>
-        </ApiProvider>
-      </BrowserRouter>
+      <MemoryRouter initialEntries={['/crm/leads/lead-1']}>
+        <Routes>
+          <Route path="/crm/leads/:id" element={
+            <ApiProvider client={mockApiClient}>
+              <I18nProvider>
+                <LeadRecordScreen />
+              </I18nProvider>
+            </ApiProvider>
+          } />
+        </Routes>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -228,16 +257,20 @@ describe('AC-M04-26 LeadRecordScreen', () => {
   });
 
   it('AC-M04-26 handles permission denied errors', async () => {
-    (mockApiClient.get as any) = vi.fn(() => Promise.reject(new ApiError(403, 'forbidden', 'Forbidden')));
+    mockApiClient.get = vi.fn().mockRejectedValue(new ApiError(403, 'forbidden', 'Forbidden'));
 
     render(
-      <BrowserRouter>
-        <ApiProvider client={mockApiClient}>
-          <I18nProvider>
-            <LeadRecordScreen />
-          </I18nProvider>
-        </ApiProvider>
-      </BrowserRouter>
+      <MemoryRouter initialEntries={['/crm/leads/lead-1']}>
+        <Routes>
+          <Route path="/crm/leads/:id" element={
+            <ApiProvider client={mockApiClient}>
+              <I18nProvider>
+                <LeadRecordScreen />
+              </I18nProvider>
+            </ApiProvider>
+          } />
+        </Routes>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -246,35 +279,37 @@ describe('AC-M04-26 LeadRecordScreen', () => {
   });
 
   it('AC-M04-26 displays open tasks list', async () => {
-    (mockApiClient.get as any) = vi.fn(() =>
-      Promise.resolve({
-        ...mockLead,
-        openTasks: [
-          {
-            id: 'task-1',
-            ownerMemberId: 'member-1',
-            subjectType: 'LEAD',
-            subjectId: 'lead-1',
-            kind: 'CALL',
-            title: 'Follow up call',
-            dueAt: new Date().toISOString(),
-            status: 'OPEN',
-            source: 'ROUTING',
-            createdAt: new Date().toISOString(),
-            version: 1,
-          },
-        ],
-      } as any)
-    );
+    mockApiClient.get = vi.fn().mockResolvedValue({
+      ...mockLead,
+      openTasks: [
+        {
+          id: 'task-1',
+          ownerMemberId: 'member-1',
+          subjectType: 'LEAD' as const,
+          subjectId: 'lead-1',
+          kind: 'CALL' as const,
+          title: 'Follow up call',
+          dueAt: new Date().toISOString(),
+          status: 'OPEN' as const,
+          source: 'ROUTING',
+          createdAt: new Date().toISOString(),
+          version: 1,
+        },
+      ],
+    });
 
     render(
-      <BrowserRouter>
-        <ApiProvider client={mockApiClient}>
-          <I18nProvider>
-            <LeadRecordScreen />
-          </I18nProvider>
-        </ApiProvider>
-      </BrowserRouter>
+      <MemoryRouter initialEntries={['/crm/leads/lead-1']}>
+        <Routes>
+          <Route path="/crm/leads/:id" element={
+            <ApiProvider client={mockApiClient}>
+              <I18nProvider>
+                <LeadRecordScreen />
+              </I18nProvider>
+            </ApiProvider>
+          } />
+        </Routes>
+      </MemoryRouter>
     );
 
     await waitFor(() => {

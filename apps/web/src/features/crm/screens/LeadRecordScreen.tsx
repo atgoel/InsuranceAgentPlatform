@@ -8,7 +8,7 @@ import {
 } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
-import { createCrmApi, type LeadDetailView } from '../api';
+import { createCrmApi, type LeadDetailView, type LeadStage, type LostReason, type ProductLine, type OpportunityStage, type Qualification } from '../api';
 import { LeadHeader } from '../components/LeadHeader';
 import { StageBar } from '../components/StageBar';
 import { QualificationForm } from '../components/QualificationForm';
@@ -47,7 +47,7 @@ export function LeadRecordScreen() {
   }, [id, crmApi]);
 
   const handleQualificationSaved = useCallback(
-    async (qualification: any) => {
+    async (qualification: Qualification) => {
       if (!id || !lead) return;
       try {
         const updated = await crmApi.updateLeadQualification(id, qualification);
@@ -62,7 +62,7 @@ export function LeadRecordScreen() {
   );
 
   const handleStageTransition = useCallback(
-    async (toStage: any, lostReason?: any) => {
+    async (toStage: LeadStage, lostReason?: LostReason) => {
       if (!id) return;
       try {
         const updated = await crmApi.transitionLeadStage(id, { to: toStage, lostReason });
@@ -77,8 +77,8 @@ export function LeadRecordScreen() {
   );
 
   const handleActivityLogged = useCallback(
-    async (activityId: string) => {
-      if (!id || !lead) return;
+    async () => {
+      if (!id) return;
       try {
         const updated = await crmApi.getLead(id);
         setLead(updated);
@@ -88,11 +88,11 @@ export function LeadRecordScreen() {
         }
       }
     },
-    [id, lead, crmApi]
+    [id, crmApi]
   );
 
   const handleConvert = useCallback(
-    async (conversion: any) => {
+    async (conversion: { partyChoice: 'LEAD_PARTY' | { existingPartyId: string }; productInterest: ProductLine; expectedPremiumPaise: number; startStage: OpportunityStage }) => {
       if (!id) return;
       try {
         await crmApi.convertLead(id, conversion);

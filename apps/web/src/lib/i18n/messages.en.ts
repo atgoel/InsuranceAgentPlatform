@@ -266,6 +266,11 @@ export const messagesEn = {
   'crm.lead.activity_title': 'Activity',
   'crm.lead.tasks_title': 'Open tasks',
   'crm.lead.no_open_tasks': 'No open tasks',
+  'crm.lead.consent_title': 'Consent',
+  'crm.lead.consent_granted': 'Consent granted',
+  'crm.lead.consent_notice_v2': 'I consent to contact per notice v2',
+  'crm.lead.channel_call': 'Call',
+  'crm.lead.channel_whatsapp': 'WhatsApp',
 
   // CRM - Activity
   'crm.activity.kind': 'Activity kind',

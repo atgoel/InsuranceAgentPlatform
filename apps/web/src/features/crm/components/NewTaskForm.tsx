@@ -65,7 +65,7 @@ export function NewTaskForm({ onClose, onSubmitted }: NewTaskFormProps) {
             <select
               id="subjectType"
               value={subjectType}
-              onChange={(e) => setSubjectType(e.target.value as any)}
+              onChange={(e) => setSubjectType(e.target.value as 'LEAD' | 'PARTY' | 'OPPORTUNITY' | 'DUE' | 'PROPOSAL')}
             >
               <option value="LEAD">Lead</option>
               <option value="PARTY">Party</option>

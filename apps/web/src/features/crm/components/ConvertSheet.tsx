@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useT } from '../../../lib/i18n';
-import { type LeadDetailView, type ProductLine } from '../api';
+import { type LeadDetailView, type ProductLine, type OpportunityStage } from '../api';
 
 interface ConvertSheetProps {
   lead: LeadDetailView;
-  onConvert: (conversion: any) => void;
+  onConvert: (conversion: { partyChoice: 'LEAD_PARTY' | { existingPartyId: string }; productInterest: ProductLine; expectedPremiumPaise: number; startStage: OpportunityStage }) => void;
 }
 
 export function ConvertSheet({ lead, onConvert }: ConvertSheetProps) {

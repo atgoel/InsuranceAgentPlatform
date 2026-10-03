@@ -83,7 +83,7 @@ Disclosure texts (wireframe M08, exact):
 - BROKER: `Broker view: comparing across all configured insurers (<names>). Advice is documented in the advice record.`
 - POSP salesperson (any entity): `POSP view: only POSP-eligible products are shown. Other plans need an ISP or employee salesperson.`
 - INDIVIDUAL_AGENT: `Agent view: only your appointing insurer for this line is shown (one insurer per line today; limits are configurable).`
-Names are sorted alphabetically and joined with `, `.
+Names are sorted alphabetically and joined with `, `; an empty list renders as `none configured`.
 
 ## 4. Ports and services
 ```ts

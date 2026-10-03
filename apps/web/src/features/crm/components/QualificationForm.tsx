@@ -29,7 +29,7 @@ export function QualificationForm({ qualification, onSaved }: QualificationFormP
         <select
           id="need"
           value={formData.need || ''}
-          onChange={(e) => setFormData({ ...formData, need: e.target.value as any })}
+          onChange={(e) => setFormData({ ...formData, need: e.target.value as 'PROTECTION' | 'TAX_SAVING' | 'CHILD_EDUCATION' | 'RETIREMENT' | 'HEALTH_COVER' | 'VEHICLE' | undefined })}
         >
           <option value="">{t('crm.lead.select')}</option>
           <option value="PROTECTION">Protection</option>
@@ -46,7 +46,7 @@ export function QualificationForm({ qualification, onSaved }: QualificationFormP
         <select
           id="budgetBand"
           value={formData.budgetBand || ''}
-          onChange={(e) => setFormData({ ...formData, budgetBand: e.target.value as any })}
+          onChange={(e) => setFormData({ ...formData, budgetBand: e.target.value as 'LT_15K' | '15K_30K' | 'GT_30K' | undefined })}
         >
           <option value="">{t('crm.lead.select')}</option>
           <option value="LT_15K">Less than ₹15K</option>
@@ -60,7 +60,7 @@ export function QualificationForm({ qualification, onSaved }: QualificationFormP
         <select
           id="timeline"
           value={formData.timeline || ''}
-          onChange={(e) => setFormData({ ...formData, timeline: e.target.value as any })}
+          onChange={(e) => setFormData({ ...formData, timeline: e.target.value as 'THIS_MONTH' | '1_3_MONTHS' | 'EXPLORING' | undefined })}
         >
           <option value="">{t('crm.lead.select')}</option>
           <option value="THIS_MONTH">This Month</option>
