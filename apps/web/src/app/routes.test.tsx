@@ -111,18 +111,43 @@ describe('AC-M00-32 Routes', () => {
     expect(catchAllRoute).toBeDefined();
   });
 
-  it('renders coming soon for unknown mobile path', () => {
+  it('renders coming soon for mobile catch-all path', () => {
     renderWithRouter(['/m/unknown']);
     expect(screen.getByText('Coming in a later module')).toBeInTheDocument();
   });
 
-  it('renders coming soon for crm path', () => {
+  it('renders mobile shell for nested routes', () => {
+    renderWithRouter(['/m/today']);
+    expect(screen.getByText('Mobile Shell')).toBeInTheDocument();
+  });
+
+  it('renders crm shell placeholder', () => {
     renderWithRouter(['/crm']);
-    expect(screen.getByText('Coming in a later module')).toBeInTheDocument();
+    expect(screen.getByText('CRM Shell')).toBeInTheDocument();
+  });
+
+  it('renders console shell placeholder', () => {
+    renderWithRouter(['/console']);
+    expect(screen.getByText('Console Shell')).toBeInTheDocument();
   });
 
   it('renders catch-all for completely unknown route', () => {
     renderWithRouter(['/nonexistent']);
     expect(screen.getByText('Coming in a later module')).toBeInTheDocument();
+  });
+
+  it('renders mobile leads nested route', () => {
+    renderWithRouter(['/m/leads']);
+    expect(screen.getByText('Mobile Shell')).toBeInTheDocument();
+  });
+
+  it('renders mobile customers nested route', () => {
+    renderWithRouter(['/m/customers']);
+    expect(screen.getByText('Mobile Shell')).toBeInTheDocument();
+  });
+
+  it('renders mobile book nested route', () => {
+    renderWithRouter(['/m/book']);
+    expect(screen.getByText('Mobile Shell')).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import { BusinessRuleError, ValidationError, NotFoundError } from '../../../kernel/errors/domain-errors';
+import { BusinessRuleError, ValidationError } from '../../../kernel/errors/domain-errors';
 import { RoleCatalogue, LOCKED_PERMISSIONS, RecordScopeKind } from './roles';
 
 /**
@@ -49,8 +49,9 @@ describe('AC-M02-11 RoleCatalogue and permissions', () => {
       const catalogue = RoleCatalogue.defaults();
       const roles = catalogue.list();
 
-      expect(roles).toHaveLength(10);
+      expect(roles).toHaveLength(11);
       expect(roles.map(r => r.role)).toContain('TENANT_ADMIN');
+      expect(roles.map(r => r.role)).toContain('CMS_PUBLISHER');
       expect(roles.map(r => r.role)).toContain('SALESPERSON');
     });
   });

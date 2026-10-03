@@ -1,6 +1,7 @@
 import { ValidationError, BusinessRuleError } from '../../../kernel/errors/domain-errors';
 import { PhoneNumber, EmailAddress } from '../../../kernel/domain';
 import { Member } from './member';
+import type { OnboardingChecklist } from './member';
 
 /**
  * AC-M02-02: Member.invite validates contact, roles and salesperson-type consistency and sets
@@ -309,9 +310,9 @@ describe('AC-M02-02 Member aggregate', () => {
 
       member.acceptInvite('user_ref_001', now);
 
-      expect(() => {
-        (member as unknown).props.status = 'invited';
-      }).not.toThrow(); // setter test - actual enforcement in methods
+      // an onboarding member cannot accept the invite again (no way back to invited)
+      expect(() => member.acceptInvite('user_ref_002', now)).toThrow(BusinessRuleError);
+      expect(member.props.status).toBe('onboarding');
     });
 
     it('rejects transition from exited state', () => {
@@ -472,6 +473,6 @@ describe('AC-M02-02 Member aggregate', () => {
 // Helper stubs
 const now = new Date('2026-01-01T00:00:00Z');
 
-function createMockChecklist(_isComplete: boolean): Record<string, unknown> {
+function createMockChecklist(_isComplete: boolean): OnboardingChecklist {
   return { isComplete: () => _isComplete, missing: () => _isComplete ? [] : ['TRAINING'] };
 }

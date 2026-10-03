@@ -1,5 +1,5 @@
 import { ValidationError, BusinessRuleError, NotFoundError } from '../../../kernel/errors/domain-errors';
-import { OrgTree } from './org-unit';
+import { OrgTree, OrgUnit } from './org-unit';
 
 /**
  * AC-M02-01: OrgTree enforces a single HEAD_OFFICE root, valid parent kinds and no cycles;
@@ -245,6 +245,6 @@ describe('AC-M02-01 OrgTree aggregate', () => {
 });
 
 // Helper stub - will be implemented
-function createOrgTree(_units: Record<string, unknown>) {
-  return new OrgTree(_units as any);
+function createOrgTree(units: OrgUnit[]) {
+  return new OrgTree(units);
 }

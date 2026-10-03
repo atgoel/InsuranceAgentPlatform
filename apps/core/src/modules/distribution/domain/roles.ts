@@ -1,4 +1,4 @@
-import { NotFoundError, BusinessRuleError, ValidationError, ForbiddenError } from '../../../kernel/errors/domain-errors';
+import { NotFoundError, BusinessRuleError, ValidationError } from '../../../kernel/errors/domain-errors';
 
 export type RecordScopeKind = 'OWN' | 'UNIT_SUBTREE' | 'TENANT';
 
@@ -34,6 +34,7 @@ const DEFAULT_PERMISSIONS: Record<string, string[]> = {
 };
 
 const DEFAULT_SCOPES: Record<string, RecordScopeKind> = {
+  CMS_PUBLISHER: 'TENANT',
   TENANT_ADMIN: 'TENANT',
   PRINCIPAL_OFFICER: 'TENANT',
   BRANCH_MANAGER: 'UNIT_SUBTREE',
@@ -44,7 +45,6 @@ const DEFAULT_SCOPES: Record<string, RecordScopeKind> = {
   FINANCE: 'TENANT',
   COMPLIANCE: 'TENANT',
   CMS_AUTHOR: 'OWN',
-  CMS_PUBLISHER: 'TENANT',
 };
 
 const PRIVILEGED_ROLES = [
@@ -75,6 +75,7 @@ export const PERMISSION_REGISTRY: ReadonlySet<string> = new Set([
   'distribution.licence.read',
   'distribution.org.write',
   'distribution.role.read',
+  'distribution.role.write',
   'party.medical.read',
   'audit.delete',
   'ops.*',
@@ -104,6 +105,14 @@ export class RoleCatalogue {
 
   private constructor() {
     this.roles = new Map();
+  }
+
+  /** Applies a tenant's stored role versions over the defaults. */
+  withOverrides(overrides: RoleDefinition[]): RoleCatalogue {
+    const next = new RoleCatalogue();
+    next.roles = new Map(this.roles);
+    for (const def of overrides) if (next.roles.has(def.role)) next.roles.set(def.role, { ...def, permissions: [...def.permissions] });
+    return next;
   }
 
   get(role: string): RoleDefinition {

@@ -1,5 +1,4 @@
 import { ValidationError } from '../../../kernel/errors/domain-errors';
-import { IdGenerator } from '../../../kernel/domain';
 
 export type LicenceKind = 'POSP_LIFE' | 'POSP_GENERAL' | 'ISP' | 'INDIVIDUAL_AGENT' | 'OTHER';
 

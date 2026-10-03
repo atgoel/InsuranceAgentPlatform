@@ -156,7 +156,7 @@ describe('AC-M03-02 AesGcmFieldCipher', () => {
       expect(hash1).toBe(hash2);
     });
 
-    it('uses different keys for different purposes', () => {
+    it('uses different keys for different purposes', async () => {
       const cipher = new AesGcmFieldCipher(masterKey);
 
       // Data key is used for encryption, lookup key for hashing

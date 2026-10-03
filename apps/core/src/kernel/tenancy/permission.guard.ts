@@ -2,8 +2,8 @@ import { Injectable, CanActivate, ExecutionContext, Inject } from '@nestjs/commo
 import { Reflector } from '@nestjs/core';
 import { ForbiddenError } from '../errors/domain-errors';
 import { REQUIRED_PERMISSIONS_KEY } from './decorators';
-import { PERMISSION_POLICY } from '../tokens';
-import { PermissionPolicy, hasPermission } from './permissions';
+import { TENANT_PERMISSION_POLICY } from '../tokens';
+import { TenantPermissionPolicy, hasPermission } from './permissions';
 import { Principal } from './jwt';
 
 /**
@@ -15,10 +15,10 @@ import { Principal } from './jwt';
 export class PermissionGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    @Inject(PERMISSION_POLICY) private readonly permissionPolicy: PermissionPolicy,
+    @Inject(TENANT_PERMISSION_POLICY) private readonly permissionPolicy: TenantPermissionPolicy,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredPermissions = this.reflector.getAllAndOverride<string[]>(REQUIRED_PERMISSIONS_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -35,7 +35,7 @@ export class PermissionGuard implements CanActivate {
       return true; // Let auth guard handle it
     }
 
-    const grantedPermissions = this.permissionPolicy.permissionsFor(principal.roles);
+    const grantedPermissions = await this.permissionPolicy.permissionsFor(principal.roles, principal.tenantId);
 
     // All required permissions must be granted
     for (const permission of requiredPermissions) {

@@ -1,5 +1,7 @@
+import { createHash } from 'node:crypto';
+import { FieldCipher } from '../application/ports';
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { ContactPointFactory, ContactPoint } from './contact-point';
+import { ContactPointFactory } from './contact-point';
 import { ValidationError } from '../../../kernel/errors/domain-errors';
 
 /**
@@ -7,22 +9,19 @@ import { ValidationError } from '../../../kernel/errors/domain-errors';
  */
 describe('AC-M03-01 ContactPointFactory', () => {
   let factory: ContactPointFactory;
-  let fakeCipher: any;
+  let fakeCipher: FieldCipher;
 
   beforeEach(() => {
+    // Opaque but reversible test double: ciphertext and hash never contain the plaintext.
+    const seal = (tenantId: string, value: string) => Buffer.from(`${tenantId}|${value}`).toString('base64').split('').reverse().join('');
     fakeCipher = {
-      encrypt: async (tenantId: string, value: string) => {
-        return `enc:${value}:${tenantId}`;
-      },
+      encrypt: async (tenantId: string, value: string) => seal(tenantId, value),
       decrypt: async (tenantId: string, ciphertext: string) => {
-        if (!ciphertext.includes(tenantId)) {
-          throw new Error('Invalid ciphertext');
-        }
-        return ciphertext.split(':')[1];
+        const [owner, value] = Buffer.from(ciphertext.split('').reverse().join(''), 'base64').toString().split('|');
+        if (owner !== tenantId) throw new Error('Invalid ciphertext');
+        return value ?? '';
       },
-      hash: (tenantId: string, value: string) => {
-        return `hash:${value}:${tenantId}`;
-      },
+      hash: (tenantId: string, value: string) => createHash('sha256').update(`${tenantId}|${value}`).digest('hex'),
     };
 
     factory = new ContactPointFactory(fakeCipher);

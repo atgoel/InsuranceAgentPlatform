@@ -33,7 +33,7 @@ export interface OnboardingChecklist {
 }
 
 export class Member {
-  private props: MemberProps;
+  private _props: MemberProps;
 
   static invite(input: {
     id: string;
@@ -45,43 +45,15 @@ export class Member {
     orgUnitId: string;
     now: Date;
   }): Member {
-    if (!input.phone && !input.email) {
-      throw new ValidationError('contact_required', 'At least one contact method (phone or email) is required');
-    }
-
-    if (!input.roles || input.roles.length === 0) {
-      throw new ValidationError('roles_required', 'At least one role is required');
-    }
-
-    const catalogue = RoleCatalogue.defaults();
-    for (const role of input.roles) {
-      try {
-        catalogue.get(role);
-      } catch {
-        throw new ValidationError('unknown_role', `Unknown role: ${role}`);
-      }
-    }
-
-    const hasSalespersonRole = input.roles.includes('SALESPERSON');
-    const hasSoloOwnerRole = input.roles.includes('SOLO_OWNER');
-
-    if (hasSalespersonRole && !input.salespersonType) {
-      throw new BusinessRuleError('salesperson_type_mismatch', 'SALESPERSON role requires a salespersonType');
-    }
-
-    if (input.salespersonType && input.salespersonType !== 'SOLO' && !hasSalespersonRole) {
-      throw new BusinessRuleError('salesperson_type_mismatch', 'salespersonType without SALESPERSON role');
-    }
-
-    if (input.salespersonType === 'SOLO' && !hasSoloOwnerRole) {
-      throw new BusinessRuleError('salesperson_type_mismatch', 'SOLO type requires SOLO_OWNER role');
-    }
+    validateContact(input.phone, input.email);
+    validateRoles(input.roles);
+    validateSalespersonType(input.roles, input.salespersonType);
 
     const contactHash = computeContactHash(input.phone, input.email);
     const inviteExpiresAt = new Date(input.now);
     inviteExpiresAt.setDate(inviteExpiresAt.getDate() + 7);
 
-    const member = new Member({
+    return new Member({
       id: input.id,
       displayName: input.displayName,
       phoneMasked: input.phone?.masked(),
@@ -98,8 +70,6 @@ export class Member {
       inviteExpiresAt: inviteExpiresAt.toISOString(),
       version: 1,
     });
-
-    return member;
   }
 
   static restore(p: MemberProps): Member {
@@ -107,31 +77,36 @@ export class Member {
   }
 
   private constructor(props: MemberProps) {
-    this.props = props;
+    this._props = props;
+  }
+
+  /** Repository callback after an optimistic write; the aggregate now holds the stored version. */
+  markSaved(): void {
+    this._props = { ...this._props, version: this._props.version + 1 };
   }
 
   acceptInvite(userRef: string, now: Date): void {
-    if (this.props.status !== 'invited') {
-      throw new BusinessRuleError('illegal_member_transition', `Cannot accept invite from ${this.props.status} status`);
+    if (this._props.status !== 'invited') {
+      throw new BusinessRuleError('illegal_member_transition', `Cannot accept invite from ${this._props.status} status`);
     }
 
-    const expiresAt = new Date(this.props.inviteExpiresAt);
+    const expiresAt = new Date(this._props.inviteExpiresAt);
     if (now > expiresAt) {
       throw new BusinessRuleError('invite_expired', 'Invite has expired');
     }
 
-    this.props.userRef = userRef;
+    this._props.userRef = userRef;
     const isSeller = this.isSeller();
-    this.props.status = isSeller ? 'onboarding' : 'active';
+    this._props.status = isSeller ? 'onboarding' : 'active';
 
     if (!isSeller) {
-      this.props.activatedAt = now.toISOString();
+      this._props.activatedAt = now.toISOString();
     }
   }
 
   activate(now: Date, checklist: OnboardingChecklist): void {
-    if (this.props.status !== 'onboarding' && this.props.status !== 'suspended') {
-      throw new BusinessRuleError('illegal_member_transition', `Cannot activate from ${this.props.status} status`);
+    if (this._props.status !== 'onboarding' && this._props.status !== 'suspended') {
+      throw new BusinessRuleError('illegal_member_transition', `Cannot activate from ${this._props.status} status`);
     }
 
     if (this.isSeller() && !checklist.isComplete()) {
@@ -140,29 +115,29 @@ export class Member {
       });
     }
 
-    this.props.status = 'active';
-    this.props.activatedAt = now.toISOString();
+    this._props.status = 'active';
+    this._props.activatedAt = now.toISOString();
   }
 
-  suspend(now: Date): void {
-    if (this.props.status !== 'active') {
-      throw new BusinessRuleError('illegal_member_transition', `Cannot suspend from ${this.props.status} status`);
+  suspend(_now: Date): void {
+    if (this._props.status !== 'active') {
+      throw new BusinessRuleError('illegal_member_transition', `Cannot suspend from ${this._props.status} status`);
     }
 
-    this.props.status = 'suspended';
+    this._props.status = 'suspended';
   }
 
   exit(now: Date): void {
-    if (this.props.status === 'exited') {
+    if (this._props.status === 'exited') {
       throw new BusinessRuleError('illegal_member_transition', 'Member is already exited');
     }
 
-    this.props.status = 'exited';
-    this.props.exitedAt = now.toISOString();
+    this._props.status = 'exited';
+    this._props.exitedAt = now.toISOString();
   }
 
   changeRoles(roles: string[]): void {
-    if (this.props.status === 'exited') {
+    if (this._props.status === 'exited') {
       throw new BusinessRuleError('illegal_member_transition', 'Cannot change roles of exited member');
     }
 
@@ -179,27 +154,61 @@ export class Member {
       }
     }
 
-    this.props.roles = roles;
+    this._props.roles = roles;
   }
 
   moveTo(orgUnitId: string): void {
-    this.props.orgUnitId = orgUnitId;
+    this._props.orgUnitId = orgUnitId;
   }
 
   setCapacity(capacityPerDay: number): void {
-    this.props.capacityPerDay = capacityPerDay;
+    this._props.capacityPerDay = capacityPerDay;
   }
 
   isSeller(): boolean {
-    return !!this.props.salespersonType;
-  }
-
-  get readonly(): Readonly<MemberProps> {
-    return Object.freeze({ ...this.props });
+    return !!this._props.salespersonType;
   }
 
   get props(): Readonly<MemberProps> {
-    return Object.freeze({ ...this.props });
+    return { ...this._props };
+  }
+}
+
+function validateContact(phone?: PhoneNumber, email?: EmailAddress): void {
+  if (!phone && !email) {
+    throw new ValidationError('contact_required', 'At least one contact method (phone or email) is required');
+  }
+}
+
+function validateRoles(roles: string[]): void {
+  if (!roles || roles.length === 0) {
+    throw new ValidationError('roles_required', 'At least one role is required');
+  }
+
+  const catalogue = RoleCatalogue.defaults();
+  for (const role of roles) {
+    try {
+      catalogue.get(role);
+    } catch {
+      throw new ValidationError('unknown_role', `Unknown role: ${role}`);
+    }
+  }
+}
+
+function validateSalespersonType(roles: string[], salespersonType?: SalespersonType): void {
+  const hasSalespersonRole = roles.includes('SALESPERSON');
+  const hasSoloOwnerRole = roles.includes('SOLO_OWNER');
+
+  if (hasSalespersonRole && !salespersonType) {
+    throw new BusinessRuleError('salesperson_type_mismatch', 'SALESPERSON role requires a salespersonType');
+  }
+
+  if (salespersonType && salespersonType !== 'SOLO' && !hasSalespersonRole) {
+    throw new BusinessRuleError('salesperson_type_mismatch', 'salespersonType without SALESPERSON role');
+  }
+
+  if (salespersonType === 'SOLO' && !hasSoloOwnerRole) {
+    throw new BusinessRuleError('salesperson_type_mismatch', 'SOLO type requires SOLO_OWNER role');
   }
 }
 

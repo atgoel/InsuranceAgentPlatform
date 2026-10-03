@@ -75,3 +75,47 @@ export function hasPermission(granted: ReadonlySet<string>, required: string): b
 
   return false;
 }
+
+/** Tenant-aware permission resolution used by guards; modules may make it data-driven (M02 role editor). */
+export interface TenantPermissionPolicy {
+  permissionsFor(roles: readonly string[], tenantId: string): Promise<ReadonlySet<string>>;
+}
+
+/** Default: the static module-registered matrix, identical for every tenant. */
+export class StaticTenantPermissionPolicy implements TenantPermissionPolicy {
+  constructor(private readonly matrix: PermissionPolicy) {}
+
+  async permissionsFor(roles: readonly string[]): Promise<ReadonlySet<string>> {
+    return this.matrix.permissionsFor(roles);
+  }
+}
+
+/** Stable instance the guards depend on; a module swaps the strategy at startup (Strategy). */
+export class DelegatingPermissionPolicy implements TenantPermissionPolicy {
+  constructor(private delegate: TenantPermissionPolicy) {}
+
+  delegateTo(policy: TenantPermissionPolicy): void {
+    this.delegate = policy;
+  }
+
+  permissionsFor(roles: readonly string[], tenantId: string): Promise<ReadonlySet<string>> {
+    return this.delegate.permissionsFor(roles, tenantId);
+  }
+}
+
+/** Which role sets require a multi-factor sign-in (HLD K2; M02 §3.5). */
+export interface MfaPolicy {
+  requiresMfa(roles: readonly string[]): boolean;
+}
+
+export class DelegatingMfaPolicy implements MfaPolicy {
+  private delegate: MfaPolicy = { requiresMfa: () => false };
+
+  delegateTo(policy: MfaPolicy): void {
+    this.delegate = policy;
+  }
+
+  requiresMfa(roles: readonly string[]): boolean {
+    return this.delegate.requiresMfa(roles);
+  }
+}

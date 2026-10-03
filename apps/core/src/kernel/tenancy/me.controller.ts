@@ -1,8 +1,8 @@
 import { Controller, Get, Inject } from '@nestjs/common';
 import { CurrentPrincipal } from './decorators';
 import { Principal } from './principal';
-import { PERMISSION_POLICY } from '../tokens';
-import { PermissionPolicy } from './permissions';
+import { TENANT_PERMISSION_POLICY } from '../tokens';
+import { TenantPermissionPolicy } from './permissions';
 
 /**
  * AC-M00-18 (tenancy): GET /api/v1/me
@@ -10,11 +10,11 @@ import { PermissionPolicy } from './permissions';
  */
 @Controller('api/v1')
 export class MeController {
-  constructor(@Inject(PERMISSION_POLICY) private readonly permissionPolicy: PermissionPolicy) {}
+  constructor(@Inject(TENANT_PERMISSION_POLICY) private readonly permissionPolicy: TenantPermissionPolicy) {}
 
   @Get('me')
-  getMe(@CurrentPrincipal() principal: Principal) {
-    const permissions = Array.from(this.permissionPolicy.permissionsFor(principal.roles)).sort();
+  async getMe(@CurrentPrincipal() principal: Principal) {
+    const permissions = Array.from(await this.permissionPolicy.permissionsFor(principal.roles, principal.tenantId)).sort();
     return {
       userRef: principal.userRef,
       tenantId: principal.tenantId,

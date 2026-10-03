@@ -71,4 +71,53 @@ describe('AC-M00-32 DevLogin', () => {
       expect(agentButton.classList.contains('selected')).toBe(true);
     }
   });
+
+  it('displays all available roles', () => {
+    const mockFetch = vi.fn();
+    const client = new FetchApiClient({
+      baseUrl: '/api',
+      getToken: () => undefined,
+      fetchImpl: mockFetch as unknown as typeof fetch,
+    });
+
+    render(
+      <AuthProvider>
+        <ApiProvider client={client}>
+          <DevLogin />
+        </ApiProvider>
+      </AuthProvider>,
+    );
+
+    const roles = ['Agent', 'ISP', 'Manager', 'Operator', 'Compliance', 'Principal Officer', 'Admin'];
+    roles.forEach(role => {
+      expect(screen.getByText(role)).toBeInTheDocument();
+    });
+  });
+
+  it('clicking another role changes selection', async () => {
+    const mockFetch = vi.fn();
+    const client = new FetchApiClient({
+      baseUrl: '/api',
+      getToken: () => undefined,
+      fetchImpl: mockFetch as unknown as typeof fetch,
+    });
+
+    const user = userEvent.setup();
+    render(
+      <AuthProvider>
+        <ApiProvider client={client}>
+          <DevLogin />
+        </ApiProvider>
+      </AuthProvider>,
+    );
+
+    // First select Agent (which should be default)
+    const agentButton = screen.getAllByRole('button').find(b => b.textContent === 'Agent');
+    const managerButton = screen.getAllByRole('button').find(b => b.textContent === 'Manager');
+
+    if (agentButton && managerButton) {
+      await user.click(managerButton);
+      expect(managerButton.classList.contains('selected')).toBe(true);
+    }
+  });
 });

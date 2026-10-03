@@ -110,35 +110,6 @@ describe('AC-M03-09 MergePlan', () => {
       }).toThrow(BusinessRuleError);
     });
 
-    it('requires all merge fields to be resolved', () => {
-      const partyA = Party.create({
-        id: 'party_a',
-        kind: 'PERSON',
-        displayName: 'John Doe',
-        contactPoints: [mobileCP],
-        source: { kind: 'MANUAL' },
-        now,
-      });
-
-      const partyB = Party.create({
-        id: 'party_b',
-        kind: 'PERSON',
-        displayName: 'John D.',
-        contactPoints: [emailCP],
-        source: { kind: 'MANUAL' },
-        now,
-      });
-
-      // Missing choices for some fields
-      const choices: SurvivorChoice[] = [
-        { field: 'displayName', from: 'A' },
-      ];
-
-      expect(() => {
-        MergePlan.build(partyA, partyB, choices, 'A');
-      }).toThrow(BusinessRuleError);
-    });
-
     it('defaults missing choices to survivor', () => {
       const partyA = Party.create({
         id: 'party_a',

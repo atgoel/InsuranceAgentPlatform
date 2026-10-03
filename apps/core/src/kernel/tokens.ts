@@ -29,3 +29,6 @@ export const ERROR_DEDUPLICATOR = Symbol('ErrorDeduplicator');
 export const PLATFORM_POOL = Symbol('PlatformPool');
 /** RLS-enforced application pool. Undefined in memory mode. */
 export const APP_POOL = Symbol('AppPool');
+/** Guards resolve permissions through this tenant-aware delegator (DelegatingPermissionPolicy). */
+export const TENANT_PERMISSION_POLICY = Symbol('TenantPermissionPolicy');
+export const MFA_POLICY = Symbol('MfaPolicy');

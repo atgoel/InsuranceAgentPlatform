@@ -1,3 +1,4 @@
+import { Principal } from './principal';
 import { createHmac } from 'crypto';
 import { UnauthenticatedError } from '../errors/domain-errors';
 import { Clock } from '../domain/clock';
@@ -11,20 +12,14 @@ export interface JwtClaims {
   mid?: string;
   ou?: string;
   realm?: 'customers' | 'workforce';
+  amr?: string[];
   iat: number;
   exp: number;
   iss?: string;
   aud?: string;
 }
 
-export interface Principal {
-  userRef: string;
-  tenantId: string;
-  memberId?: string;
-  orgUnitId?: string;
-  roles: string[];
-  realm: 'customers' | 'workforce';
-}
+export type { Principal } from './principal';
 
 /**
  * AC-M00-17 (tenancy): signHs256
@@ -117,10 +112,11 @@ export class HmacJwtVerifier implements TokenVerifier {
   }
 
   private validateOptionalClaims(claims: JwtClaims): void {
-    if (this.opts?.issuer && claims.iss && claims.iss !== this.opts.issuer) {
+    // A configured issuer/audience is mandatory: a token that omits the claim is rejected.
+    if (this.opts?.issuer && claims.iss !== this.opts.issuer) {
       throw new Error('Invalid issuer');
     }
-    if (this.opts?.audience && claims.aud && claims.aud !== this.opts.audience) {
+    if (this.opts?.audience && claims.aud !== this.opts.audience) {
       throw new Error('Invalid audience');
     }
   }
@@ -133,6 +129,7 @@ export class HmacJwtVerifier implements TokenVerifier {
       orgUnitId: claims.ou,
       roles: claims.roles || [],
       realm: claims.realm || 'customers',
+      amr: Array.isArray(claims.amr) ? claims.amr : undefined,
     };
   }
 

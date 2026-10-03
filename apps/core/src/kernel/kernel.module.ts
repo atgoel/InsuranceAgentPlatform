@@ -24,7 +24,7 @@ import { RouteTemplateInterceptor } from './observability/route-template.interce
 import { ProblemDetailsFilter } from './errors/problem-details.filter';
 import { HmacJwtVerifier } from './tenancy/jwt';
 import { DelegatingTenantResolver, StaticTenantResolver } from './tenancy/tenant-resolver';
-import { RolePermissionMatrix } from './tenancy/permissions';
+import { DelegatingMfaPolicy, DelegatingPermissionPolicy, RolePermissionMatrix, StaticTenantPermissionPolicy } from './tenancy/permissions';
 import { AuthGuard } from './tenancy/auth.guard';
 import { PermissionGuard } from './tenancy/permission.guard';
 import { MeController } from './tenancy/me.controller';
@@ -68,6 +68,8 @@ function coreProviders(config: KernelConfig): Provider[] {
     { provide: T.TOKEN_VERIFIER, useFactory: (clock: Clock) => new HmacJwtVerifier(config.tokenSecret, clock), inject: [T.CLOCK] },
     { provide: T.TENANT_RESOLVER, useValue: new DelegatingTenantResolver(new StaticTenantResolver(config.staticTenants)) },
     { provide: T.PERMISSION_POLICY, useValue: new RolePermissionMatrix() },
+    { provide: T.TENANT_PERMISSION_POLICY, useFactory: (m: RolePermissionMatrix) => new DelegatingPermissionPolicy(new StaticTenantPermissionPolicy(m)), inject: [T.PERMISSION_POLICY] },
+    { provide: T.MFA_POLICY, useValue: new DelegatingMfaPolicy() },
     { provide: T.EVENT_BUS, useValue: new InProcessEventBus() },
     IdempotencyInterceptor,
   ];
@@ -107,7 +109,7 @@ function requireUrl(url: string | undefined, name: string): string {
 const EXPORTED = [
   T.KERNEL_OPTIONS, T.CLOCK, T.ID_GENERATOR, T.LOG_SINK, T.METRICS, T.REDACTOR, T.TRACER, T.ERROR_DEDUPLICATOR,
   T.LOG_OVERRIDES, T.LOGGER, T.DEBUG_TOKENS, T.FLUSH_POLICY, T.HEAD_SAMPLER, T.TOKEN_VERIFIER, T.TENANT_RESOLVER,
-  T.PERMISSION_POLICY, T.EVENT_BUS, T.APP_POOL, T.PLATFORM_POOL, T.UNIT_OF_WORK, T.OUTBOX, T.INBOX, T.AUDIT_LOG,
+  T.PERMISSION_POLICY, T.TENANT_PERMISSION_POLICY, T.MFA_POLICY, T.EVENT_BUS, T.APP_POOL, T.PLATFORM_POOL, T.UNIT_OF_WORK, T.OUTBOX, T.INBOX, T.AUDIT_LOG,
   T.IDEMPOTENCY_STORE, IdempotencyInterceptor,
 ];
 

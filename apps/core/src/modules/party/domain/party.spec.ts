@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { Party, PartyKind } from './party';
+import { Party } from './party';
 import { ContactPoint } from './contact-point';
 import { ValidationError, ConflictError, BusinessRuleError } from '../../../kernel/errors/domain-errors';
 

@@ -5,4 +5,6 @@ export interface Principal {
   orgUnitId?: string;
   roles: string[];
   realm: 'customers' | 'workforce';
+  /** Authentication methods from the IdP (e.g. ['otp'], ['pwd','mfa']); privileged roles need 'mfa' (M02 §3.5). */
+  amr?: string[];
 }

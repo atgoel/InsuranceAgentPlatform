@@ -12,7 +12,8 @@ import { TenantResolver } from './tenant-resolver';
 import { RequestContext } from '../observability/request-context';
 import { Logger } from '../observability/logger';
 import { pseudonymiseActor } from './actor-pseudonym';
-import { KERNEL_OPTIONS, LOGGER } from '../tokens';
+import { KERNEL_OPTIONS, LOGGER, MFA_POLICY } from '../tokens';
+import { MfaPolicy } from './permissions';
 import { KernelConfig } from '../config';
 
 /**
@@ -32,6 +33,7 @@ export class AuthGuard implements CanActivate {
     @Inject(TENANT_RESOLVER) private readonly tenantResolver: TenantResolver,
     @Inject(LOGGER) private readonly logger: Logger,
     @Inject(KERNEL_OPTIONS) private readonly config: KernelConfig,
+    @Inject(MFA_POLICY) private readonly mfaPolicy: MfaPolicy,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -118,6 +120,11 @@ export class AuthGuard implements CanActivate {
         hostTenant: tenant.tenantId,
       });
       throw new ForbiddenError('tenant_mismatch', 'Tenant mismatch');
+    }
+
+    if (this.mfaPolicy.requiresMfa(principal.roles) && !principal.amr?.includes('mfa')) {
+      this.logger.security('security.mfa_required', 'Privileged role used without multi-factor sign-in', { roles: principal.roles });
+      throw new ForbiddenError('mfa_required', 'This role requires multi-factor sign-in');
     }
 
     req.principal = principal;

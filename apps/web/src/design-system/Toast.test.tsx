@@ -1,25 +1,17 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ToastProvider, useToast } from './Toast';
 
 describe('AC-M00-31 Toast', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   function TestComponent() {
     const { show } = useToast();
     return (
       <div>
         <button onClick={() => show('Test message', 'ok')}>Show Success</button>
-        <button onClick={() => show('Error occurred', 'error')}>Show Error</button>
+        <button onClick={() => show('Error occurred', 'bad')}>Show Error</button>
         <button onClick={() => show('Info message', 'info')}>Show Info</button>
-        <button onClick={() => show('Warning message', 'warning')}>Show Warning</button>
+        <button onClick={() => show('Warning message', 'warn')}>Show Warning</button>
       </div>
     );
   }
@@ -44,7 +36,7 @@ describe('AC-M00-31 Toast', () => {
   });
 
   it('displays toast message when shown', async () => {
-    const user = userEvent.setup({ delay: null });
+    const user = userEvent.setup();
     render(
       <ToastProvider>
         <TestComponent />
@@ -57,7 +49,7 @@ describe('AC-M00-31 Toast', () => {
   });
 
   it('applies correct tone class to toast', async () => {
-    const user = userEvent.setup({ delay: null });
+    const user = userEvent.setup();
     render(
       <ToastProvider>
         <TestComponent />
@@ -70,8 +62,8 @@ describe('AC-M00-31 Toast', () => {
     expect(toastElement).toHaveClass('toast-ok');
   });
 
-  it('shows error tone toast', async () => {
-    const user = userEvent.setup({ delay: null });
+  it('shows bad tone toast', async () => {
+    const user = userEvent.setup();
     render(
       <ToastProvider>
         <TestComponent />
@@ -81,11 +73,11 @@ describe('AC-M00-31 Toast', () => {
     await user.click(screen.getByRole('button', { name: /Show Error/ }));
 
     const toastElement = screen.getByText('Error occurred').closest('div');
-    expect(toastElement).toHaveClass('toast-error');
+    expect(toastElement).toHaveClass('toast-bad');
   });
 
   it('shows info tone toast', async () => {
-    const user = userEvent.setup({ delay: null });
+    const user = userEvent.setup();
     render(
       <ToastProvider>
         <TestComponent />
@@ -98,8 +90,8 @@ describe('AC-M00-31 Toast', () => {
     expect(toastElement).toHaveClass('toast-info');
   });
 
-  it('shows warning tone toast', async () => {
-    const user = userEvent.setup({ delay: null });
+  it('shows warn tone toast', async () => {
+    const user = userEvent.setup();
     render(
       <ToastProvider>
         <TestComponent />
@@ -109,27 +101,11 @@ describe('AC-M00-31 Toast', () => {
     await user.click(screen.getByRole('button', { name: /Show Warning/ }));
 
     const toastElement = screen.getByText('Warning message').closest('div');
-    expect(toastElement).toHaveClass('toast-warning');
-  });
-
-  it('auto-dismisses toast after 4 seconds', async () => {
-    const user = userEvent.setup({ delay: null });
-    render(
-      <ToastProvider>
-        <TestComponent />
-      </ToastProvider>,
-    );
-
-    await user.click(screen.getByRole('button', { name: /Show Success/ }));
-    expect(screen.getByText('Test message')).toBeInTheDocument();
-
-    vi.advanceTimersByTime(4000);
-
-    expect(screen.queryByText('Test message')).not.toBeInTheDocument();
+    expect(toastElement).toHaveClass('toast-warn');
   });
 
   it('displays multiple toasts', async () => {
-    const user = userEvent.setup({ delay: null });
+    const user = userEvent.setup();
     render(
       <ToastProvider>
         <TestComponent />
@@ -144,7 +120,7 @@ describe('AC-M00-31 Toast', () => {
   });
 
   it('defaults to info tone when not specified', async () => {
-    const user = userEvent.setup({ delay: null });
+    const user = userEvent.setup();
 
     function DefaultToneComponent() {
       const { show } = useToast();

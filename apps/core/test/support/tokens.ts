@@ -15,6 +15,7 @@ export function tokenFor(
     memberId?: string;
     orgUnitId?: string;
     realm?: 'customers' | 'workforce';
+    amr?: string[];
     expiresInSeconds?: number;
   },
   secret: string = TEST_TOKEN_SECRET,
@@ -29,6 +30,7 @@ export function tokenFor(
     mid: input.memberId,
     ou: input.orgUnitId,
     realm: input.realm ?? 'customers',
+    amr: input.amr ?? ['pwd', 'mfa'], // privileged roles need MFA (M02); pass amr: ['pwd'] to test the refusal
     iat: now,
     exp: now + expiresInSeconds,
   };
