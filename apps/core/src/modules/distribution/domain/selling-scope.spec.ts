@@ -1,3 +1,5 @@
+import { SellingScope } from './selling-scope';
+
 /**
  * AC-M02-09: SellingScope for active sellers
  */
