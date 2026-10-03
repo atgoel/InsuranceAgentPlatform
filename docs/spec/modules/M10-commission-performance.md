@@ -43,7 +43,7 @@ export class CommissionLedger {
   expected(): number; received(): number; adjustments(): number; outstanding(): number   // expected + adjustments − received
   clawbackFor(cancelledOn: string, rule: RateRule, issuedOn: string): CommissionEntry | undefined   // within clawbackMonths → negative ADJUSTMENT of the first-year expected
 }
-export function expectedCommission(premiumPaise: number, ratePct: number): number   // round half-up to paisa; integer math only
+export function expectedCommission(netPremiumPaise: number, ratePct: number): number   // base = premium WITHOUT GST (insurers pay commission on net premium); round half-up to paisa; integer math only (CR-001 §4)
 export class PersistencyCalculator {
   cohortRate(policies: Array<{ issuedOn: string; paidInstallments: Array<{ dueDate: string; paidOn?: string }> }>, month: 13 | 25 | 37 | 49 | 61, asOf: string): { eligible: number; persisting: number; ratePct: number | null }
   // eligible = policies whose (issue + month) ≤ asOf; persisting = premium due at that month paid within grace; null when eligible = 0
@@ -74,7 +74,7 @@ W05 `CommissionSetupScreen` (rate rules table by insurer/product/basis/years, ef
 
 ## 9. Acceptance criteria
 - **AC-M10-01** Rate resolution picks the most specific effective rule; overlaps rejected; boundary dates inclusive.
-- **AC-M10-02** Expected commission uses integer paise with half-up rounding; first-year on issuance and renewal on payment for platform-sold policies.
+- **AC-M10-02** Expected commission is computed on premium without GST, in integer paise with half-up rounding; first-year on issuance and renewal on payment for platform-sold policies.
 - **AC-M10-03** Ledger balances (expected, received, adjustments, outstanding); entries are never edited — corrections are adjustments with reasons.
 - **AC-M10-04** Free-look/lapse within the clawback window creates exactly one negative adjustment.
 - **AC-M10-05** Statement rows match exactly by policy and period; unmatched go to a queue and can be linked manually.
