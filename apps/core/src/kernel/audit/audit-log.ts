@@ -1,3 +1,4 @@
+import { canonicalJson, sha256Hex } from '../domain/canonical-json';
 import { createHash } from 'crypto';
 import { Clock } from '../domain/clock';
 import { IdGenerator } from '../domain/id-generator';
@@ -38,16 +39,7 @@ export interface AuditLog {
  * Keys are sorted for determinism; undefined values return undefined.
  */
 export function canonicalHash(value: unknown): string | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-
-  try {
-    const json = JSON.stringify(value, Object.keys(value as any).sort());
-    return createHash('sha256').update(json).digest('hex');
-  } catch {
-    return undefined;
-  }
+  return value === undefined ? undefined : sha256Hex(canonicalJson(value));
 }
 
 /**

@@ -1,7 +1,12 @@
+/**
+ * In-process metrics registry with Prometheus text exposition (spec 02 §5, M00 §4.9).
+ * Memory is bounded: series per metric are capped and histograms keep bucket counts, never raw samples.
+ */
 export type Labels = Record<string, string>;
 
 export interface Counter {
   inc(labels?: Labels, by?: number): void;
+  /** Without labels on a labelled counter, returns the total across all series. */
   get(labels?: Labels): number;
 }
 
@@ -18,244 +23,204 @@ export interface Histogram {
   sum(labels?: Labels): number;
 }
 
-class MetricCounter implements Counter {
-  private values: Map<string, number> = new Map();
+type MetricType = 'counter' | 'gauge' | 'histogram';
+type OnReject = (metric: string) => void;
 
-  inc(labels?: Labels, by: number = 1): void {
-    const key = this.labelsToKey(labels);
-    const current = this.values.get(key) ?? 0;
-    this.values.set(key, current + by);
+export const DEFAULT_BUCKETS = [25, 50, 100, 200, 400, 800, 1600, 3200];
+const REJECTED_METRIC = 'metrics_cardinality_rejected_total';
+
+/** Shared series bookkeeping: label validation, stable keys and the cardinality cap. */
+class SeriesStore<V> {
+  private readonly series = new Map<string, { labels: Labels; value: V }>();
+
+  constructor(
+    private readonly name: string,
+    private readonly labelNames: readonly string[],
+    private readonly maxSeries: number,
+    private readonly onReject: OnReject,
+  ) {}
+
+  /** Returns the series value holder, creating it when allowed; undefined when the cap rejects a new series. */
+  upsert(labels: Labels | undefined, init: () => V): { value: V } | undefined {
+    const normalised = this.validate(labels);
+    const key = keyOf(normalised);
+    const existing = this.series.get(key);
+    if (existing) return existing;
+    if (this.series.size >= this.maxSeries) {
+      this.onReject(this.name);
+      return undefined;
+    }
+    const created = { labels: normalised, value: init() };
+    this.series.set(key, created);
+    return created;
   }
 
-  get(labels?: Labels): number {
-    const key = this.labelsToKey(labels);
-    return this.values.get(key) ?? 0;
+  find(labels: Labels | undefined): V | undefined {
+    return this.series.get(keyOf(this.validate(labels)))?.value;
   }
 
-  private labelsToKey(labels?: Labels): string {
-    if (!labels || Object.keys(labels).length === 0) return '';
-    const sorted = Object.keys(labels).sort();
-    return JSON.stringify(Object.fromEntries(sorted.map(k => [k, labels[k]])));
+  hasLabels(): boolean {
+    return this.labelNames.length > 0;
   }
 
-  serialize(): Array<[Labels | undefined, number]> {
-    return Array.from(this.values.entries()).map(([key, value]) => [
-      key ? JSON.parse(key) : undefined,
-      value
-    ]);
+  entries(): Array<{ labels: Labels; value: V }> {
+    return [...this.series.values()];
+  }
+
+  private validate(labels: Labels | undefined): Labels {
+    const out: Labels = {};
+    for (const [k, v] of Object.entries(labels ?? {})) {
+      if (!this.labelNames.includes(k)) throw new Error(`Unknown label "${k}" for metric ${this.name}`);
+      out[k] = v;
+    }
+    return out;
   }
 }
 
-class MetricGauge implements Gauge {
-  private values: Map<string, number> = new Map();
+function keyOf(labels: Labels): string {
+  return Object.keys(labels).sort().map((k) => `${k}=${labels[k]}`).join('\u0001');
+}
+
+function formatLabels(labels: Labels): string {
+  const keys = Object.keys(labels).sort();
+  if (keys.length === 0) return '';
+  return `{${keys.map((k) => `${k}="${escapeLabel(labels[k])}"`).join(',')}}`;
+}
+
+function escapeLabel(v: string): string {
+  return v.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+}
+
+class CounterImpl implements Counter {
+  constructor(readonly store: SeriesStore<number[]>) {}
+
+  inc(labels?: Labels, by = 1): void {
+    const s = this.store.upsert(labels, () => [0]);
+    if (s) s.value[0] += by;
+  }
+
+  get(labels?: Labels): number {
+    if (!labels && this.store.hasLabels()) return this.store.entries().reduce((a, e) => a + e.value[0], 0);
+    return this.store.find(labels)?.[0] ?? 0;
+  }
+}
+
+class GaugeImpl implements Gauge {
+  constructor(readonly store: SeriesStore<number[]>) {}
 
   set(value: number, labels?: Labels): void {
-    const key = this.labelsToKey(labels);
-    this.values.set(key, value);
+    const s = this.store.upsert(labels, () => [0]);
+    if (s) s.value[0] = value;
   }
 
-  inc(labels?: Labels, by: number = 1): void {
-    const key = this.labelsToKey(labels);
-    const current = this.values.get(key) ?? 0;
-    this.values.set(key, current + by);
+  inc(labels?: Labels, by = 1): void {
+    const s = this.store.upsert(labels, () => [0]);
+    if (s) s.value[0] += by;
   }
 
-  dec(labels?: Labels, by: number = 1): void {
-    const key = this.labelsToKey(labels);
-    const current = this.values.get(key) ?? 0;
-    this.values.set(key, current - by);
+  dec(labels?: Labels, by = 1): void {
+    this.inc(labels, -by);
   }
 
   get(labels?: Labels): number {
-    const key = this.labelsToKey(labels);
-    return this.values.get(key) ?? 0;
-  }
-
-  private labelsToKey(labels?: Labels): string {
-    if (!labels || Object.keys(labels).length === 0) return '';
-    const sorted = Object.keys(labels).sort();
-    return JSON.stringify(Object.fromEntries(sorted.map(k => [k, labels[k]])));
-  }
-
-  serialize(): Array<[Labels | undefined, number]> {
-    return Array.from(this.values.entries()).map(([key, value]) => [
-      key ? JSON.parse(key) : undefined,
-      value
-    ]);
+    return this.store.find(labels)?.[0] ?? 0;
   }
 }
 
-class MetricHistogram implements Histogram {
-  private observations: Map<string, number[]> = new Map();
-  private buckets: number[];
+interface HistogramState {
+  bucketCounts: number[];
+  count: number;
+  sum: number;
+}
 
-  constructor(buckets?: number[]) {
-    this.buckets = buckets ?? [25, 50, 100, 200, 400, 800, 1600, 3200];
-  }
+class HistogramImpl implements Histogram {
+  constructor(readonly store: SeriesStore<HistogramState>, readonly buckets: readonly number[]) {}
 
   observe(value: number, labels?: Labels): void {
-    const key = this.labelsToKey(labels);
-    const list = this.observations.get(key) ?? [];
-    list.push(value);
-    this.observations.set(key, list);
+    const s = this.store.upsert(labels, () => ({ bucketCounts: this.buckets.map(() => 0), count: 0, sum: 0 }));
+    if (!s) return;
+    this.buckets.forEach((le, i) => {
+      if (value <= le) s.value.bucketCounts[i] += 1;
+    });
+    s.value.count += 1;
+    s.value.sum += value;
   }
 
   count(labels?: Labels): number {
-    const key = this.labelsToKey(labels);
-    return (this.observations.get(key) ?? []).length;
+    return this.store.find(labels)?.count ?? 0;
   }
 
   sum(labels?: Labels): number {
-    const key = this.labelsToKey(labels);
-    return (this.observations.get(key) ?? []).reduce((a, b) => a + b, 0);
-  }
-
-  private labelsToKey(labels?: Labels): string {
-    if (!labels || Object.keys(labels).length === 0) return '';
-    const sorted = Object.keys(labels).sort();
-    return JSON.stringify(Object.fromEntries(sorted.map(k => [k, labels[k]])));
-  }
-
-  serialize(): Array<[Labels | undefined, number[]]> {
-    return Array.from(this.observations.entries()).map(([key, value]) => [
-      key ? JSON.parse(key) : undefined,
-      value
-    ]);
-  }
-
-  getBuckets(): number[] {
-    return this.buckets;
+    return this.store.find(labels)?.sum ?? 0;
   }
 }
 
-function formatLabels(labels?: Labels): string {
-  if (!labels || Object.keys(labels).length === 0) return '';
-  const sorted = Object.keys(labels).sort();
-  const pairs = sorted.map(k => `${k}="${labels[k]}"`).join(',');
-  return `{${pairs}}`;
-}
-
-function mergeLabels(baseLabels?: Labels, additional?: Labels): Labels {
-  if (!baseLabels && !additional) return {};
-  return { ...baseLabels, ...additional };
+interface Registered {
+  type: MetricType;
+  help: string;
+  impl: CounterImpl | GaugeImpl | HistogramImpl;
 }
 
 export class MetricsRegistry {
-  private counters: Map<string, MetricCounter> = new Map();
-  private gauges: Map<string, MetricGauge> = new Map();
-  private histograms: Map<string, MetricHistogram> = new Map();
-  private metrics: Map<string, { help: string; type: string; labelNames?: string[] }> = new Map();
-  private maxSeriesPerMetric: number;
-  private cardinalityRejected: Map<string, number> = new Map();
+  private readonly metrics = new Map<string, Registered>();
+  private readonly maxSeries: number;
+  private readonly rejected: CounterImpl;
 
   constructor(opts?: { maxSeriesPerMetric?: number }) {
-    this.maxSeriesPerMetric = opts?.maxSeriesPerMetric ?? 1000;
+    this.maxSeries = opts?.maxSeriesPerMetric ?? 1000;
+    // The rejection counter has one series per metric name; it is uncapped by design (bounded by metric count).
+    this.rejected = new CounterImpl(new SeriesStore(REJECTED_METRIC, ['metric'], Number.MAX_SAFE_INTEGER, () => undefined));
+    this.metrics.set(REJECTED_METRIC, { type: 'counter', help: 'Observations dropped by the per-metric series cap', impl: this.rejected });
   }
 
-  counter(name: string, help: string, labelNames?: string[]): Counter {
-    if (this.counters.has(name)) {
-      return this.counters.get(name)!;
-    }
-    if (this.metrics.has(name) && this.metrics.get(name)!.type !== 'counter') {
-      throw new Error(`Metric ${name} already exists with different type`);
-    }
-    this.metrics.set(name, { help, type: 'counter', labelNames });
-    this.counters.set(name, new MetricCounter());
-    return this.counters.get(name)!;
+  counter(name: string, help: string, labelNames: string[] = []): Counter {
+    return this.register(name, 'counter', help, () => new CounterImpl(this.store(name, labelNames))) as CounterImpl;
   }
 
-  gauge(name: string, help: string, labelNames?: string[]): Gauge {
-    if (this.gauges.has(name)) {
-      return this.gauges.get(name)!;
-    }
-    if (this.metrics.has(name) && this.metrics.get(name)!.type !== 'gauge') {
-      throw new Error(`Metric ${name} already exists with different type`);
-    }
-    this.metrics.set(name, { help, type: 'gauge', labelNames });
-    this.gauges.set(name, new MetricGauge());
-    return this.gauges.get(name)!;
+  gauge(name: string, help: string, labelNames: string[] = []): Gauge {
+    return this.register(name, 'gauge', help, () => new GaugeImpl(this.store(name, labelNames))) as GaugeImpl;
   }
 
-  histogram(name: string, help: string, labelNames?: string[], buckets?: number[]): Histogram {
-    if (this.histograms.has(name)) {
-      return this.histograms.get(name)!;
-    }
-    if (this.metrics.has(name) && this.metrics.get(name)!.type !== 'histogram') {
-      throw new Error(`Metric ${name} already exists with different type`);
-    }
-    this.metrics.set(name, { help, type: 'histogram', labelNames });
-    this.histograms.set(name, new MetricHistogram(buckets));
-    return this.histograms.get(name)!;
+  histogram(name: string, help: string, labelNames: string[] = [], buckets: number[] = DEFAULT_BUCKETS): Histogram {
+    const sorted = [...buckets].sort((a, b) => a - b);
+    return this.register(name, 'histogram', help, () => new HistogramImpl(this.store(name, labelNames), sorted)) as HistogramImpl;
   }
 
   render(): string {
     const lines: string[] = [];
-
-    for (const [name, counter] of this.counters) {
-      const meta = this.metrics.get(name)!;
-      lines.push(`# HELP ${name} ${meta.help}`);
-      lines.push(`# TYPE ${name} counter`);
-      for (const [labels, value] of counter.serialize()) {
-        const labelStr = formatLabels(labels);
-        lines.push(`${name}${labelStr} ${value}`);
+    for (const [name, m] of this.metrics) {
+      if (m.impl instanceof CounterImpl || m.impl instanceof GaugeImpl) {
+        if (m.impl.store.entries().length === 0) continue;
+        lines.push(`# HELP ${name} ${m.help}`, `# TYPE ${name} ${m.type}`);
+        for (const e of m.impl.store.entries()) lines.push(`${name}${formatLabels(e.labels)} ${e.value[0]}`);
+      } else {
+        if (m.impl.store.entries().length === 0) continue;
+        lines.push(`# HELP ${name} ${m.help}`, `# TYPE ${name} histogram`);
+        for (const e of m.impl.store.entries()) this.renderHistogram(lines, name, e.labels, e.value, m.impl.buckets);
       }
     }
-
-    for (const [name, gauge] of this.gauges) {
-      const meta = this.metrics.get(name)!;
-      lines.push(`# HELP ${name} ${meta.help}`);
-      lines.push(`# TYPE ${name} gauge`);
-      for (const [labels, value] of gauge.serialize()) {
-        const labelStr = formatLabels(labels);
-        lines.push(`${name}${labelStr} ${value}`);
-      }
-    }
-
-    for (const [name, hist] of this.histograms) {
-      const meta = this.metrics.get(name)!;
-      lines.push(`# HELP ${name} ${meta.help}`);
-      lines.push(`# TYPE ${name} histogram`);
-      for (const [labels, values] of hist.serialize()) {
-        this.renderHistogramMetrics(lines, name, labels, values, hist.getBuckets());
-      }
-    }
-
-    // Add cardinality rejection metrics
-    if (this.cardinalityRejected.size > 0) {
-      lines.push(`# HELP metrics_cardinality_rejected_total Cardinality rejections`);
-      lines.push(`# TYPE metrics_cardinality_rejected_total counter`);
-      for (const [metric, count] of this.cardinalityRejected) {
-        lines.push(`metrics_cardinality_rejected_total{metric="${metric}"} ${count}`);
-      }
-    }
-
-    return lines.join('\n');
+    return lines.join('\n') + '\n';
   }
 
-  private renderHistogramMetrics(
-    lines: string[],
-    name: string,
-    labels: Labels | undefined,
-    values: number[],
-    buckets: number[]
-  ): void {
-    const sorted = values.sort((a, b) => a - b);
+  private renderHistogram(lines: string[], name: string, labels: Labels, s: HistogramState, buckets: readonly number[]): void {
+    buckets.forEach((le, i) => lines.push(`${name}_bucket${formatLabels({ ...labels, le: String(le) })} ${s.bucketCounts[i]}`));
+    lines.push(`${name}_bucket${formatLabels({ ...labels, le: '+Inf' })} ${s.count}`);
+    lines.push(`${name}_sum${formatLabels(labels)} ${s.sum}`);
+    lines.push(`${name}_count${formatLabels(labels)} ${s.count}`);
+  }
 
-    for (const bucket of buckets) {
-      const count = sorted.filter(v => v <= bucket).length;
-      const mergedLabels = mergeLabels(labels, { le: bucket.toString() });
-      const labelStr = formatLabels(mergedLabels);
-      lines.push(`${name}_bucket${labelStr} ${count}`);
+  private store<V>(name: string, labelNames: string[]): SeriesStore<V> {
+    return new SeriesStore<V>(name, labelNames, this.maxSeries, (metric) => this.rejected.inc({ metric }));
+  }
+
+  private register(name: string, type: MetricType, help: string, create: () => Registered['impl']): Registered['impl'] {
+    const existing = this.metrics.get(name);
+    if (existing) {
+      if (existing.type !== type) throw new Error(`Metric ${name} is already registered as a ${existing.type}`);
+      return existing.impl;
     }
-
-    const infCount = sorted.length;
-    const mergedLabels = mergeLabels(labels, { le: '+Inf' });
-    const labelStr = formatLabels(mergedLabels);
-    lines.push(`${name}_bucket${labelStr} ${infCount}`);
-
-    const sum = sorted.reduce((a, b) => a + b, 0);
-    const sumLabelStr = formatLabels(labels);
-    lines.push(`${name}_sum${sumLabelStr} ${sum}`);
-    lines.push(`${name}_count${sumLabelStr} ${sorted.length}`);
+    const impl = create();
+    this.metrics.set(name, { type, help, impl });
+    return impl;
   }
 }

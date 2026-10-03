@@ -13,14 +13,7 @@ export interface IdempotencyStore {
   release(tenantId: string, key: string): Promise<void>;
 }
 
-/**
- * AC-M00-20 (idempotency): requestHash
- * Generates a SHA256 hash from method, route, and canonical JSON body.
- */
-export function requestHash(method: string, route: string, body: unknown): string {
-  const message = method + route + JSON.stringify(body, Object.keys(body as any).sort());
-  return createHash('sha256').update(message).digest('hex');
-}
+export { requestHash } from './idempotency.interceptor';
 
 interface IdempotencyRecord {
   requestHash: string;
@@ -99,31 +92,4 @@ export class InMemoryIdempotencyStore implements IdempotencyStore {
     this.records.delete(compositeKey);
   }
 }
-
-/**
- * AC-M00-20 (idempotency): PgIdempotencyStore
- * Postgres implementation of idempotency store.
- * Uses the idempotency_record table for persistent storage.
- */
-export class PgIdempotencyStore implements IdempotencyStore {
-  constructor(
-    private readonly pool: any, // Pool type
-    private readonly clock: Clock,
-    private readonly ttlMs?: number,
-  ) {}
-
-  async begin(tenantId: string, key: string, requestHash: string): Promise<IdempotencyBegin> {
-    // To be implemented when PgUnitOfWork is available
-    throw new Error('PgIdempotencyStore not yet implemented');
-  }
-
-  async complete(tenantId: string, key: string, status: number, body: unknown): Promise<void> {
-    // To be implemented
-    throw new Error('PgIdempotencyStore not yet implemented');
-  }
-
-  async release(tenantId: string, key: string): Promise<void> {
-    // To be implemented
-    throw new Error('PgIdempotencyStore not yet implemented');
-  }
-}
+export { PgIdempotencyStore } from './pg-idempotency-store';

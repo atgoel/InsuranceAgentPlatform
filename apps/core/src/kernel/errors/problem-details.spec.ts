@@ -10,6 +10,7 @@ import {
 import {
   ValidationError,
   NotFoundError,
+  BusinessRuleError,
 } from './domain-errors';
 import { z } from 'zod';
 import { HttpException, NotFoundException, BadRequestException } from '@nestjs/common';
@@ -135,6 +136,8 @@ describe('AC-M00-06 Problem Details', () => {
       expect(problem.detail).toBe('Lead not found');
     });
 
+    it('maps BusinessRuleError', () => {
+      const err = new BusinessRuleError('insufficient_balance', 'Balance too low');
 
       const mapper = new DomainErrorMapper();
       const problem = mapper.map(err, 'trace_123');
@@ -171,7 +174,7 @@ describe('AC-M00-06 Problem Details', () => {
       });
 
       const result = schema.safeParse({ email: 'invalid', age: 15 });
-      expect(result.ok).toBe(false);
+      expect(result.success).toBe(false);
       const zodError = result.error as z.ZodError;
 
       const mapper = new ZodErrorMapper();

@@ -72,8 +72,8 @@ describe('AC-M00-03 IdGenerator', () => {
       const id = gen.next('xy');
       const ulid = id.substring(3); // Remove 'xy_'
       expect(ulid).toMatch(/^[A-Z0-9]+$/);
-      // Crockford base32 uses: 0-9, A-V (no I, L, O, U for confusion)
-      expect(ulid).toMatch(/^[0-9A-V]+$/);
+      // Crockford base32: 0-9 and A-Z without I, L, O, U
+      expect(ulid).toMatch(/^[0-9A-HJKMNP-TV-Z]{26}$/);
     });
   });
 

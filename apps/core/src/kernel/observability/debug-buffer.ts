@@ -39,7 +39,7 @@ export class DebugBuffer {
   }
 
   entries(): readonly BufferedEntry[] {
-    return this.entries_array;
+    return [...this.entries_array];
   }
 
   clear(): void {

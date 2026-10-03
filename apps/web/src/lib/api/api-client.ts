@@ -90,7 +90,6 @@ export class FetchApiClient implements ApiClient {
 
     const contentType = response.headers.get('content-type');
     const isJson = contentType?.includes('application/json');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return isJson ? response.json() : null;
   }
 

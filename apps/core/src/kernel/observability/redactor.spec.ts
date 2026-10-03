@@ -39,7 +39,7 @@ describe('AC-M00-08 Redactor', () => {
 
     it('scrubs Aadhaar', () => {
       const r = new Redactor();
-      const redacted = r.redact({ note: 'id 1234 5678 9012' });
+      const redacted = r.redact({ note: 'id 2345 6789 0123' });
       expect((redacted as Record<string, unknown>).note).toBe('id [AADHAAR]');
     });
   });

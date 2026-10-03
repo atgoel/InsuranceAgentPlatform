@@ -3,49 +3,40 @@ export interface StringScrubber {
   scrub(value: string): string;
 }
 
+// Scrubbers replace every match inside a string and keep the surrounding text (02-observability §3).
+// Order matters: Aadhaar (12 digits) runs before phone so it is not half-masked as a mobile.
+// Aadhaar never starts with 0/1 (UIDAI); an ungrouped 91+[6-9]… run is a phone with country code, not Aadhaar.
+const AADHAAR = /(?<![\d+])(?!91[6-9]\d{9}(?!\d))[2-9]\d{3}[\s-]?\d{4}[\s-]?\d{4}(?!\d)/g;
+const PHONE = /(?<![\d+])(?:\+91[\s-]?|91[\s-]?|0)?([6-9]\d{4})[\s-]?(\d{5})(?!\d)/g;
+const EMAIL = /([A-Za-z0-9])[A-Za-z0-9._%+-]*(@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g;
+const PAN = /\b[A-Z]{5}[0-9]{4}[A-Z]\b/g;
+
 export const phoneScrubber: StringScrubber = {
   name: 'phone',
-  scrub: (value: string): string => {
-    // Match Indian mobiles (+91/91/0 optional prefix, 10 digits starting 6-9)
-    const match = value.match(/(?:\+91|91|0)?([6-9]\d{9})/);
-    if (match) {
-      return '+91' + '******' + match[1].slice(-4);
-    }
-    return value;
-  },
+  scrub: (value: string): string => value.replace(PHONE, (_m, _a: string, b: string) => `+91******${b.slice(-4)}`),
 };
 
 export const emailScrubber: StringScrubber = {
   name: 'email',
-  scrub: (value: string): string => {
-    const atIndex = value.indexOf('@');
-    if (atIndex > 0) {
-      return value.charAt(0) + '***' + value.substring(atIndex);
-    }
-    return value;
-  },
+  scrub: (value: string): string => value.replace(EMAIL, (_m, first: string, domain: string) => `${first}***${domain}`),
 };
 
 export const panScrubber: StringScrubber = {
   name: 'pan',
-  scrub: (value: string): string => {
-    if (/[A-Z]{5}[0-9]{4}[A-Z]/.test(value)) {
-      return '[PAN]';
-    }
-    return value;
-  },
+  scrub: (value: string): string => value.replace(PAN, '[PAN]'),
 };
 
 export const aadhaarScrubber: StringScrubber = {
   name: 'aadhaar',
-  scrub: (value: string): string => {
-    // 12 digits optionally grouped 4-4-4 by space/hyphen
-    if (/^\d{4}[\s-]?\d{4}[\s-]?\d{4}$/.test(value) || /^\d{12}$/.test(value)) {
-      return '[AADHAAR]';
-    }
-    return value;
-  },
+  scrub: (value: string): string => value.replace(AADHAAR, '[AADHAAR]'),
 };
+
+
+
+
+
+
+
 
 export class Redactor {
   private scrubbers: StringScrubber[];

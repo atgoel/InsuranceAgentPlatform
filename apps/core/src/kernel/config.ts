@@ -51,6 +51,8 @@ export interface KernelConfig {
   port: number;
   persistence: 'memory' | 'pg';
   databaseUrl?: string;
+  /** Owner-role DSN for cross-tenant platform work (outbox relay, tenant directory); defaults to databaseUrl. */
+  platformDatabaseUrl?: string;
   tokenSecret: string;
   actorPepper: string;
   debugTokenSecret: string;
@@ -113,6 +115,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): KernelConfig {
     port,
     persistence,
     databaseUrl: env.DATABASE_URL,
+    platformDatabaseUrl: env.PLATFORM_DATABASE_URL ?? env.DATABASE_URL,
     tokenSecret,
     actorPepper,
     debugTokenSecret,

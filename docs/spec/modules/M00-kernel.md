@@ -147,7 +147,7 @@ export abstract class DomainError extends Error {
   readonly details?: Record<string, unknown>;  // safe (no PII) extra data for Problem Details
   constructor(code: string, message: string, details?: Record<string, unknown>)
 }
-export class ValidationError extends DomainError          // 400; constructor(code: string, message: string, readonly errors: FieldError[] = [])
+export class ValidationError extends DomainError          // 400; constructor(code: string, message: string, readonly errors: FieldError[] = [], details?)
 export class UnauthenticatedError extends DomainError     // 401; constructor(code = 'unauthenticated', message = 'Authentication required')
 export class ForbiddenError extends DomainError           // 403; constructor(code = 'forbidden', message = 'Not allowed')
 export class NotFoundError extends DomainError            // 404; constructor(entity: string, id?: string) → code `${snake(entity)}_not_found` (`'AuditEvent'` → `audit_event_not_found`), details.id when given, message `${Entity} not found`
@@ -316,7 +316,7 @@ Rules:
 ### 4.9 MetricsRegistry
 ```ts
 export type Labels = Record<string, string>;
-export interface Counter { inc(labels?: Labels, by?: number): void; get(labels?: Labels): number }
+export interface Counter { inc(labels?: Labels, by?: number): void; get(labels?: Labels): number /* no labels on a labelled counter = total across series */ }
 export interface Gauge { set(value: number, labels?: Labels): void; inc(labels?: Labels, by?: number): void; dec(labels?: Labels, by?: number): void; get(labels?: Labels): number }
 export interface Histogram { observe(value: number, labels?: Labels): void; count(labels?: Labels): number; sum(labels?: Labels): number }
 export class MetricsRegistry {
@@ -388,7 +388,7 @@ On `res` `finish`:
 | `GET /health/live` | public | `{ status: 'ok' }` |
 | `GET /health/ready` | public | `{ status: 'ok', checks: { db: 'ok' | 'skipped' } }` |
 | `GET /metrics` | public (network-restricted in infra) | `text/plain; version=0.0.4` from `render()` |
-| `POST /api/v1/telemetry/client-errors` | authenticated or public with tenant host | body `{ events: ClientEvent[] }` max 20; `ClientEvent = { kind: 'error' \| 'vital'; fingerprint: string(≤64); message?: string(≤500); route?: string(≤200); name?: string; value?: number; release?: string }`; errors → `logger.warn('client.error', …)` deduped by fingerprint via ErrorDeduplicator; vitals → histogram `web_vital{name}`; returns `202 { accepted: n }` |
+| `POST /api/v1/telemetry/client-errors` | authenticated or public with tenant host | body `{ events: ClientEvent[] }` max 20; `ClientEvent = { kind: 'error'; fingerprint: string(≤64); message?: string(≤500); route?: string(≤200); release? } \| { kind: 'vital'; name: 'LCP'\|'INP'\|'CLS'\|'FCP'\|'TTFB'; value: number ≥ 0; route?; release? }`; errors → `logger.warn('client.error', …)` deduped by fingerprint via ErrorDeduplicator; vitals → histogram `web_vital{name}`; returns `202 { accepted: n }` |
 | `PUT /api/v1/ops/log-overrides` | operator | body `{ scope: { tenantId?, module?, actor? }, ttlMinutes }` → 201 `LogOverride`; security log `security.log_override.created` |
 | `GET /api/v1/ops/log-overrides` | operator | `{ items: LogOverride[] }` |
 | `DELETE /api/v1/ops/log-overrides/:id` | operator | 204 / 404 |
@@ -529,6 +529,7 @@ export interface OutboxSource {
   fetchUnpublished(limit: number): Promise<DomainEvent[]>
   markPublished(ids: string[]): Promise<void>
   markFailed(id: string, error: string): Promise<number>   // returns attempts after increment
+  countPending(): Promise<number>                          // feeds the outbox_pending gauge
 }
 export class InMemoryOutbox implements Outbox, OutboxSource { readonly events: DomainEvent[]; published(): DomainEvent[]; pending(): DomainEvent[] }
 export class PgOutbox implements Outbox, OutboxSource { constructor(pool: Pool) }   // add() uses tx.query (same transaction as the state change)

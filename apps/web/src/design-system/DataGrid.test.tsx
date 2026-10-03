@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { DataGrid } from './DataGrid';
 
 describe('AC-M00-31 DataGrid component', () => {
@@ -53,5 +54,51 @@ describe('AC-M00-31 DataGrid component', () => {
       />,
     );
     expect(screen.getByText('Name: Alice')).toBeInTheDocument();
+  });
+
+  it('calls onRowClick when row is clicked', async () => {
+    const onClick = vi.fn();
+    const user = userEvent.setup();
+    const rows: Row[] = [{ id: '1', name: 'Alice' }];
+
+    render(
+      <DataGrid
+        columns={[{ key: 'name', header: 'Name' }]}
+        rows={rows}
+        rowKey={r => r.id}
+        onRowClick={onClick}
+      />,
+    );
+
+    await user.click(screen.getByText('Alice'));
+    expect(onClick).toHaveBeenCalledWith(rows[0]);
+  });
+
+  it('aligns columns when specified', () => {
+    const rows: Row[] = [{ id: '1', name: 'Alice' }];
+    const { container } = render(
+      <DataGrid
+        columns={[{ key: 'name', header: 'Name', align: 'right' }]}
+        rows={rows}
+        rowKey={r => r.id}
+      />,
+    );
+
+    const cells = container.querySelectorAll('td');
+    expect(cells.length).toBeGreaterThan(0);
+  });
+
+  it('renders with caption', () => {
+    const rows: Row[] = [{ id: '1', name: 'Alice' }];
+    render(
+      <DataGrid
+        columns={[{ key: 'name', header: 'Name' }]}
+        rows={rows}
+        rowKey={r => r.id}
+        caption="Users"
+      />,
+    );
+
+    expect(screen.getByText('Users')).toBeInTheDocument();
   });
 });

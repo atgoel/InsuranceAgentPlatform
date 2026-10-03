@@ -21,8 +21,8 @@ export class ValidationError extends DomainError {
   readonly httpStatus = 400;
   readonly errors: FieldError[];
 
-  constructor(code: string, message: string, errors: FieldError[] = []) {
-    super(code, message);
+  constructor(code: string, message: string, errors: FieldError[] = [], details?: Record<string, unknown>) {
+    super(code, message, details);
     this.errors = errors;
     Object.setPrototypeOf(this, ValidationError.prototype);
   }

@@ -21,3 +21,11 @@ export const PERMISSION_POLICY = Symbol('PermissionPolicy');
 export const LOG_OVERRIDES = Symbol('LogOverrideStore');
 export const DEBUG_TOKENS = Symbol('DebugTokenService');
 export const KERNEL_OPTIONS = Symbol('KernelOptions');
+export const FLUSH_POLICY = Symbol('FlushPolicy');
+export const HEAD_SAMPLER = Symbol('HeadSampler');
+export const REDACTOR = Symbol('Redactor');
+export const ERROR_DEDUPLICATOR = Symbol('ErrorDeduplicator');
+/** Owner-role pool for cross-tenant platform work (outbox relay, tenant directory). Undefined in memory mode. */
+export const PLATFORM_POOL = Symbol('PlatformPool');
+/** RLS-enforced application pool. Undefined in memory mode. */
+export const APP_POOL = Symbol('AppPool');

@@ -14,6 +14,8 @@ export interface RequestContextData {
   tenantId?: string;
   actor?: string;
   module?: string;
+  /** Route template (e.g. /api/v1/leads/:id), set by RouteTemplateInterceptor once Nest has matched a handler. */
+  route?: string;
   forceDebug: boolean;
   hasError: boolean;
   buffer: DebugBuffer;
@@ -41,6 +43,7 @@ export class RequestContext {
     if (patch.tenantId !== undefined) current.tenantId = patch.tenantId;
     if (patch.actor !== undefined) current.actor = patch.actor;
     if (patch.module !== undefined) current.module = patch.module;
+    if (patch.route !== undefined) current.route = patch.route;
     if (patch.forceDebug !== undefined) current.forceDebug = patch.forceDebug;
     if (patch.hasError !== undefined) current.hasError = patch.hasError;
     if (patch.startedAtMs !== undefined) current.startedAtMs = patch.startedAtMs;

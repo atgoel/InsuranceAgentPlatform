@@ -109,7 +109,7 @@ describe('operator endpoints (AC-M00-12, 25)', () => {
         });
 
       expect(response.status).toBe(403);
-      expect(response.body.code).toBe('permission_denied');
+      expect(response.body.code).toBe('operator_only');
     });
   });
 

@@ -1,3 +1,5 @@
+import { PERMISSION_POLICY } from '../../src/kernel/tokens';
+import { RolePermissionMatrix } from '../../src/kernel/tenancy/permissions';
 import { Controller, Get } from '@nestjs/common';
 import { createTestApp, TestApp } from '../support/test-app';
 import { tokenFor, operatorToken } from '../support/tokens';
@@ -45,6 +47,10 @@ describe('auth and tenancy (AC-M00-18, 19)', () => {
     testApp = await createTestApp({
       controllers: [AuthTestController],
     });
+    // Modules register role → permission rows at init; the test does the same through the port.
+    const policy = testApp.app.get<RolePermissionMatrix>(PERMISSION_POLICY);
+    policy.grant('crm.agent', ['crm.lead.read']);
+    policy.grant('crm.manager', ['crm.*']);
   });
 
   afterAll(async () => {
@@ -164,7 +170,7 @@ describe('auth and tenancy (AC-M00-18, 19)', () => {
 
       expect(response.status).toBe(403);
       expect(response.body.code).toBe('permission_denied');
-      expect(response.body.details?.required).toContain('crm.lead.read');
+      expect(response.body.required).toContain('crm.lead.read');
     });
 
     it('allows wildcard permission grants', async () => {
@@ -175,13 +181,12 @@ describe('auth and tenancy (AC-M00-18, 19)', () => {
         roles: ['crm.manager'],
       });
 
-      await testApp.http
+      const response = await testApp.http
         .get('/auth/protected')
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`);
 
-      // Depends on module registering 'crm.*' permission
-      // For this test to work, the permission matrix must have been initialized
+      expect(response.status).toBe(200);
     });
   });
 

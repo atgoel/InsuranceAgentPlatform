@@ -10,11 +10,20 @@ export class Tracer {
     fn: () => Promise<T>,
     opts?: { dep?: string; op?: string }
   ): Promise<T> {
-    const start = this.clock.now().getTime();
+    return this.track(name, this.clock.now().getTime(), fn, opts);
+  }
+
+  /** Current clock reading in ms; lets callers start timing before they invoke the work (see traced()). */
+  nowMs(): number {
+    return this.clock.now().getTime();
+  }
+
+  /** Completes a span whose work started at `start` (ms). */
+  async track<T>(name: string, start: number, work: () => Promise<T>, opts?: { dep?: string; op?: string }): Promise<T> {
     let outcome: 'ok' | 'error' | 'timeout' = 'ok';
 
     try {
-      return await fn();
+      return await work();
     } catch (error) {
       outcome = (error as Record<string, unknown>).code === 'timeout' ? 'timeout' : 'error';
       throw error;

@@ -7,7 +7,7 @@ import { PgAuditLog } from '../../src/kernel/audit/pg-audit-log';
 import { PgOutbox } from '../../src/kernel/outbox/pg-outbox';
 import { PgIdempotencyStore } from '../../src/kernel/idempotency/pg-idempotency-store';
 import { DomainEventFactory } from '../../src/kernel/domain/domain-event';
-import { runMigrations } from '../../src/kernel/db/migrate';
+import { runMigrations, MIGRATIONS_DIR } from '../../src/kernel/db/migrate';
 import { Tracer } from '../../src/kernel/observability/tracer';
 import { MetricsRegistry } from '../../src/kernel/observability/metrics';
 
@@ -16,7 +16,7 @@ import { MetricsRegistry } from '../../src/kernel/observability/metrics';
  * Postgres integration tests for RLS, migrations, and persistence layer.
  * Skip when DATABASE_URL is not set.
  */
-describe.skipIf(!process.env.DATABASE_URL)(
+(process.env.DATABASE_URL ? describe : describe.skip)(
   'postgres integration (AC-M00-23)',
   () => {
     let migrationPool: Pool;
@@ -27,9 +27,6 @@ describe.skipIf(!process.env.DATABASE_URL)(
 
     beforeAll(async () => {
       const databaseUrl = process.env.DATABASE_URL;
-      if (!databaseUrl) {
-        skip();
-      }
 
       // Migration pool (owner role)
       migrationPool = new Pool({
@@ -47,7 +44,7 @@ describe.skipIf(!process.env.DATABASE_URL)(
       tracer = new Tracer(clock, metrics);
 
       // Run migrations
-      await runMigrations(migrationPool, 'apps/core/migrations');
+      await runMigrations(migrationPool, MIGRATIONS_DIR);
     });
 
     afterAll(async () => {
@@ -68,10 +65,7 @@ describe.skipIf(!process.env.DATABASE_URL)(
 
       it('runs migrations twice without error', async () => {
         // Run migrations again
-        const result = await runMigrations(
-          migrationPool,
-          'apps/core/migrations',
-        );
+        const result = await runMigrations(migrationPool, MIGRATIONS_DIR);
 
         // Should complete without error
         expect(Array.isArray(result)).toBe(true);
@@ -89,7 +83,7 @@ describe.skipIf(!process.env.DATABASE_URL)(
         const tenantId = 'ten_rls_test_' + Date.now();
 
         await unitOfWork.run(tenantId, async (tx) => {
-          const result = await tx.query('SELECT current_setting(?)', [
+          const result = await tx.query('SELECT current_setting($1)', [
             'app.tenant_id',
           ]);
           expect(result.rows[0].current_setting).toBe(tenantId);
@@ -244,7 +238,7 @@ describe.skipIf(!process.env.DATABASE_URL)(
       let eventFactory: DomainEventFactory;
 
       beforeAll(() => {
-        outbox = new PgOutbox(appPool);
+        outbox = new PgOutbox(migrationPool) /* relay reads across tenants as the owner role */;
         unitOfWork = new PgUnitOfWork(appPool, tracer);
         eventFactory = new DomainEventFactory(clock, ids);
       });

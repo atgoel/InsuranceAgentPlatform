@@ -301,7 +301,8 @@ describe('HTTP observability (AC-M00-07, 09, 10, 13, 06)', () => {
       const response = await testApp.http.get('/metrics');
 
       expect(response.status).toBe(200);
-      expect(response.headers['content-type']).toBe('text/plain; charset=utf-8');
+      expect(response.headers['content-type']).toMatch(/^text\/plain/);
+      expect(response.headers['content-type']).toContain('version=0.0.4');
       expect(response.text).toContain('http_requests_total');
       expect(response.text).toContain('http_request_duration_ms');
     });

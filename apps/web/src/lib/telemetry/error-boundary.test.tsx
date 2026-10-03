@@ -4,7 +4,7 @@ import { ErrorBoundary } from './error-boundary';
 import { ClientTelemetry } from './client-telemetry';
 
 describe('AC-M00-30 ErrorBoundary', () => {
-  function ThrowError() {
+  function ThrowError(): never {
     throw new Error('Test error');
   }
 

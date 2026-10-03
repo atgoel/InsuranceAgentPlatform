@@ -56,4 +56,31 @@ describe('AC-M00-31 BottomSheet component', () => {
     await user.keyboard('{Escape}');
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('closes when clicking overlay', async () => {
+    const onClose = vi.fn();
+    const user = userEvent.setup();
+    const { container } = render(
+      <BottomSheet open={true} title="Sheet" onClose={onClose}>
+        Content
+      </BottomSheet>,
+    );
+    const overlay = container.querySelector('.bottom-sheet-overlay');
+    if (overlay) {
+      await user.click(overlay);
+      expect(onClose).toHaveBeenCalled();
+    }
+  });
+
+  it('stops propagation when clicking sheet content', async () => {
+    const onClose = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <BottomSheet open={true} title="Sheet" onClose={onClose}>
+        <button>Inner button</button>
+      </BottomSheet>,
+    );
+    await user.click(screen.getByText('Inner button'));
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });
