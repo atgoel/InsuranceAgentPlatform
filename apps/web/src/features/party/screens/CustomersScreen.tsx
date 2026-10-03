@@ -89,7 +89,7 @@ export function CustomersScreen() {
   }
 
   return (
-    <div className="customers-screen">
+    <main className="customers-screen" role="main">
       <div className="screen-header">
         <div>
           <h1>{t('party.customers.title')}</h1>
@@ -101,10 +101,10 @@ export function CustomersScreen() {
         <input
           type="text"
           className="search-box"
-          placeholder={t('party.customers.search_placeholder')}
+          placeholder="Search name, mobile, email, PAN or policy no."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          aria-label="Search customers"
+          aria-label="Search customers by name, mobile, email, PAN or policy number"
         />
         <FilterChips
           options={SEGMENT_OPTIONS}
@@ -131,6 +131,6 @@ export function CustomersScreen() {
           onOpenRecord={handleOpenRecord}
         />
       )}
-    </div>
+    </main>
   );
 }
