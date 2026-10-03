@@ -56,7 +56,7 @@ export function PipelineBoard({ columns, closed, onMoveOpportunity, onMarkLost }
                   <p className="opp-amount">₹{(opp.expectedPremium.amountPaise / 100).toLocaleString('en-IN')}</p>
 
                   <div className="opp-actions">
-                    {column.stage !== 'INSURER_PENDING' && column.stage !== 'ISSUED' && column.stage !== 'LOST' && (
+                    {(column.stage === 'DISCOVERY' || column.stage === 'QUOTE_SHARED' || column.stage === 'PROPOSAL_COMPLETE' || column.stage === 'INSURER_PENDING') && (
                       <>
                         {column.stage !== 'DISCOVERY' && (
                           <button

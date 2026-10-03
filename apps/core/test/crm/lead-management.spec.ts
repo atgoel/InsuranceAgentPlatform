@@ -56,7 +56,15 @@ describe('AC-M04-02/03/13/16 Stage transitions, assignment and activities', () =
     it('AC-M04-02 NEW→QUALIFIED without rules met → 422 stage_rule_failed with missing labels', async () => {
       const leadId = await createLead('+919876543231');
 
-      // First transition to CONTACTED (which is allowed without rules)
+      // First log a CONNECTED call (required to enter CONTACTED)
+      const actRes = await post(`/api/v1/leads/${leadId}/activities`, {
+        kind: 'CALL',
+        outcome: 'CONNECTED',
+        occurredAt: new Date().toISOString(),
+      });
+      expect(actRes.status).toBe(201);
+
+      // Transition to CONTACTED (now allowed with CONNECTED activity)
       const contRes = await post(`/api/v1/leads/${leadId}/stage-transitions`, { to: 'CONTACTED' });
       expect(contRes.status).toBe(200);
 

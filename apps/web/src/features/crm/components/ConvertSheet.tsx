@@ -18,8 +18,8 @@ export function ConvertSheet({ lead, onConvert }: ConvertSheetProps) {
 
   const isDisabled = lead.stage !== 'QUALIFIED';
 
-  const handleSubmit = async (_e: React.FormEvent) => {
-    (e as React.FormEvent).preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     try {
       onConvert({

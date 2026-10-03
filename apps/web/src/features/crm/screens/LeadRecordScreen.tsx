@@ -62,7 +62,7 @@ export function LeadRecordScreen() {
   );
 
   const handleStageTransition = useCallback(
-    async (toStage: any, lostReason?: string) => {
+    async (toStage: any, lostReason?: any) => {
       if (!id) return;
       try {
         const updated = await crmApi.transitionLeadStage(id, { to: toStage, lostReason });
