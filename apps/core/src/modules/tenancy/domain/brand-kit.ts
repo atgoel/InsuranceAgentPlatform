@@ -48,6 +48,11 @@ export class BrandKit {
     this.state = props;
   }
 
+  /** Rehydrates a persisted kit (plan checks ran when it was saved). */
+  static restore(props: BrandKitProps): BrandKit {
+    return new BrandKit({ ...props });
+  }
+
   static create(props: BrandKitProps, plan: Plan): BrandKit {
     // Validate hex colours
     const hexRegex = /^#[0-9A-Fa-f]{6}$/;

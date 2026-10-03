@@ -65,6 +65,11 @@ export class TieUpSet {
     this.tieUps = tieUps;
   }
 
+  /** Every tie-up, past and future (for persistence). */
+  all(): TieUp[] {
+    return this.tieUps.map((t) => ({ ...t }));
+  }
+
   private validateDates(): void {
     for (const tieUp of this.tieUps) {
       if (tieUp.effectiveTo && tieUp.effectiveTo < tieUp.effectiveFrom) {

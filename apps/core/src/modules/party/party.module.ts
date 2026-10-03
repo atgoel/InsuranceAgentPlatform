@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { Inject, Module, OnModuleInit, Provider } from '@nestjs/common';
 import { KERNEL_OPTIONS, PERMISSION_POLICY } from '../../kernel/tokens';
 import { KernelConfig } from '../../kernel/config';
@@ -18,7 +17,8 @@ import { SensitivePartyAccessor } from './application/sensitive-party.accessor';
 import { DuplicateService } from './application/duplicate.service';
 import { HouseholdService } from './application/household.service';
 import { PartyFacadeService } from './application/party.facade';
-import { AesGcmFieldCipher } from './infrastructure/aes-gcm-field-cipher';
+import { AesGcmFieldCipher, fieldMasterKey } from '../../kernel/crypto/aes-gcm-field-cipher';
+export { fieldMasterKey };
 import {
   InMemoryConsentRepository, InMemoryDuplicateRepository, InMemoryHouseholdRepository, InMemoryPartyRepository, InMemoryRoleLinkRepository,
   InMemorySuppressionRepository, NoPolicyNumberLookup,
@@ -43,12 +43,6 @@ export const PARTY_PERMISSIONS: Record<string, string[]> = {
 };
 
 /** Field master key: FIELD_MASTER_KEY (64 hex chars) is mandatory in production; a fixed dev key elsewhere. */
-export function fieldMasterKey(config: KernelConfig, env: NodeJS.ProcessEnv = process.env): Buffer {
-  const hex = env.FIELD_MASTER_KEY;
-  if (hex && /^[0-9a-f]{64}$/i.test(hex)) return Buffer.from(hex, 'hex');
-  if (config.env === 'production') throw new Error('FIELD_MASTER_KEY (64 hex chars) is required in production');
-  return createHash('sha256').update('iap-development-field-key').digest();
-}
 
 const adapters: Provider[] = [
   { provide: PARTY_REPOSITORY, useClass: InMemoryPartyRepository },

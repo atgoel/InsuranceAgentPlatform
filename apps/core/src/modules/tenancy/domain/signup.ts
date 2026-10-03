@@ -19,7 +19,7 @@ export function hashOtp(otp: string, pepper: string): string {
   return createHmac('sha256', pepper).update(otp).digest('hex');
 }
 
-interface SoloSignupState {
+export interface SoloSignupState {
   id: string;
   state: SignupState;
   expiresAt: Date;
@@ -55,6 +55,11 @@ export class SoloSignup {
     this.consentNoticeVersion = props.consentNoticeVersion;
     this.internalAttempts = props.attempts ?? 0;
     this.tenantId = props.tenantId;
+  }
+
+  /** Rehydrates a persisted signup. */
+  static restore(props: SoloSignupState): SoloSignup {
+    return new SoloSignup(props);
   }
 
   static start(input: {

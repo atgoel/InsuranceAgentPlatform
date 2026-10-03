@@ -3,7 +3,7 @@ import { TenantKind } from './tenant';
 
 export type EntityType = 'IMF' | 'BROKER' | 'INDIVIDUAL_AGENT' | 'CORPORATE_AGENT';
 
-interface DistributorEntityProps {
+export interface DistributorEntityProps {
   entityType: EntityType;
   legalName: string;
   registrationNo: string;
@@ -24,6 +24,15 @@ export class DistributorEntity {
     this.registrationNo = props.registrationNo;
     this.registrationValidTo = props.registrationValidTo;
     this.principalOfficerName = props.principalOfficerName;
+  }
+
+  /** Rehydrates a persisted entity (validated when it was created). */
+  static restore(props: DistributorEntityProps): DistributorEntity {
+    return new DistributorEntity(props);
+  }
+
+  get props(): DistributorEntityProps {
+    return { entityType: this.entityType, legalName: this.legalName, registrationNo: this.registrationNo, registrationValidTo: this.registrationValidTo, principalOfficerName: this.principalOfficerName };
   }
 
   private static validateEntityTypeForKind(tenantKind: TenantKind, entityType: EntityType): void {

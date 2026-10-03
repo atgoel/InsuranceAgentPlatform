@@ -1,4 +1,5 @@
-import { createCipheriv, createDecipheriv, hkdfSync, randomBytes, createHmac } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes, createHmac } from 'node:crypto';
+import { KernelConfig } from '../config';
 
 export interface FieldCipher {
   encrypt(tenantId: string, plaintext: string): Promise<string>;
@@ -62,4 +63,12 @@ export class AesGcmFieldCipher implements FieldCipher {
   private deriveLookupKey(tenantId: string): Buffer {
     return Buffer.from(hkdfSync('sha256', this.masterKey, tenantId, 'iap-lookup-key', 32));
   }
+}
+
+/** FIELD_MASTER_KEY (64 hex chars) in production; a fixed development key elsewhere. Data keys are derived per tenant (HKDF). */
+export function fieldMasterKey(config: KernelConfig, env: NodeJS.ProcessEnv = process.env): Buffer {
+  const hex = env.FIELD_MASTER_KEY;
+  if (hex && /^[0-9a-f]{64}$/i.test(hex)) return Buffer.from(hex, 'hex');
+  if (config.env === 'production') throw new Error('FIELD_MASTER_KEY (64 hex chars) is required in production');
+  return createHash('sha256').update('iap-development-field-key').digest();
 }

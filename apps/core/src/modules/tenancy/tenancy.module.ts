@@ -1,5 +1,7 @@
 import { Inject, Module, OnModuleInit, Provider } from '@nestjs/common';
-import { CLOCK, KERNEL_OPTIONS, LOGGER, METRICS, PERMISSION_POLICY, TENANT_RESOLVER, UNIT_OF_WORK } from '../../kernel/tokens';
+import { Pool } from 'pg';
+import { APP_POOL, CLOCK, KERNEL_OPTIONS, LOGGER, METRICS, PERMISSION_POLICY, PLATFORM_POOL, TENANT_RESOLVER, UNIT_OF_WORK } from '../../kernel/tokens';
+import { AesGcmFieldCipher, fieldMasterKey } from '../../kernel/crypto/aes-gcm-field-cipher';
 import { KernelConfig } from '../../kernel/config';
 import { Clock } from '../../kernel/domain/clock';
 import { Logger } from '../../kernel/observability/logger';
@@ -9,7 +11,7 @@ import { RolePermissionMatrix } from '../../kernel/tenancy/permissions';
 import { DelegatingTenantResolver } from '../../kernel/tenancy/tenant-resolver';
 import {
   CONTENT_PROVISIONER, CRM_PROVISIONER, ContentProvisioner, CrmProvisioner, ENTITLEMENT_CHECKER, IDENTITY_PROVISIONER, IdentityProvisioner,
-  OTP_GENERATOR, OTP_SENDER, PLAN_CATALOGUE, PROVISIONING_SAGA, PROVISIONING_STATE_REPOSITORY, ProvisioningStateRepository, SIGNUP_REPOSITORY,
+  OTP_GENERATOR, OTP_SENDER, PLAN_CATALOGUE, PROVISIONING_SAGA, PROVISIONING_STATE_REPOSITORY, ProvisioningStateRepository, SIGNUP_REPOSITORY, SignupRepository,
   TENANCY_OPTIONS, TENANT_DIRECTORY, TENANT_SETTINGS_REPOSITORY, TIE_UP_LIMIT_POLICY, TIE_UP_READER, TenancyOptions, TenantDirectory, TenantSettingsRepository,
 } from './application/ports';
 import { PlanCatalogue } from './domain/plan';
@@ -35,6 +37,7 @@ import {
   FixedOtpGenerator, LoggingOtpSender, RandomOtpGenerator, StubContentProvisioner, StubCrmProvisioner, StubIdentityProvisioner,
 } from './infrastructure/stub-provisioners';
 import { seedStaticTenants } from './infrastructure/static-tenant-seeder';
+import { PgProvisioningStateRepository, PgSignupRepository, PgTenantDirectory, PgTenantSettingsRepository } from './infrastructure/pg-tenancy.repositories';
 import { OperatorTenantsController } from './api/operator-tenants.controller';
 import { TenantController } from './api/tenant.controller';
 import { PublicTenantController } from './api/public-tenant.controller';
@@ -62,12 +65,24 @@ function tenancyOptions(config: KernelConfig): TenancyOptions {
   };
 }
 
+/** In-memory adapters by default; Postgres when PERSISTENCE=pg (directory/signups/provisioning via the owner pool). */
+function byPersistence(): Provider[] {
+  const pick = <T>(provide: symbol, memory: () => T, pgFactory: (app: Pool, owner: Pool, config: KernelConfig) => T): Provider => ({
+    provide,
+    useFactory: (config: KernelConfig, app?: Pool, owner?: Pool) => (config.persistence === 'pg' && app && owner ? pgFactory(app, owner, config) : memory()),
+    inject: [KERNEL_OPTIONS, APP_POOL, PLATFORM_POOL],
+  });
+  return [
+    pick<TenantDirectory>(TENANT_DIRECTORY, () => new InMemoryTenantDirectory(), (app, owner) => new PgTenantDirectory(app, owner)),
+    pick<TenantSettingsRepository>(TENANT_SETTINGS_REPOSITORY, () => new InMemoryTenantSettingsRepository(), () => new PgTenantSettingsRepository()),
+    pick<ProvisioningStateRepository>(PROVISIONING_STATE_REPOSITORY, () => new InMemoryProvisioningStateRepository(), (_app, owner) => new PgProvisioningStateRepository(owner)),
+    pick<SignupRepository>(SIGNUP_REPOSITORY, () => new InMemorySignupRepository(), (_app, owner, config) => new PgSignupRepository(owner, new AesGcmFieldCipher(fieldMasterKey(config)))),
+  ];
+}
+
 const adapters: Provider[] = [
   { provide: TENANCY_OPTIONS, useFactory: tenancyOptions, inject: [KERNEL_OPTIONS] },
-  { provide: TENANT_DIRECTORY, useClass: InMemoryTenantDirectory },
-  { provide: TENANT_SETTINGS_REPOSITORY, useClass: InMemoryTenantSettingsRepository },
-  { provide: PROVISIONING_STATE_REPOSITORY, useClass: InMemoryProvisioningStateRepository },
-  { provide: SIGNUP_REPOSITORY, useClass: InMemorySignupRepository },
+  ...byPersistence(),
   { provide: PLAN_CATALOGUE, useValue: PlanCatalogue.default() },
   { provide: TIE_UP_LIMIT_POLICY, useValue: TieUpLimitPolicy.default() },
   { provide: IDENTITY_PROVISIONER, useFactory: (l: Logger) => new StubIdentityProvisioner(l.child({ module: 'tenancy' })), inject: [LOGGER] },

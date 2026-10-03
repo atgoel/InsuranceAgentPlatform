@@ -30,6 +30,13 @@ export class FeatureFlagSet {
     this.flags = flags;
   }
 
+  /** Persisted flags over the defaults: keys added since the row was written keep their default (off, gated). */
+  static restore(stored: readonly FeatureFlag[]): FeatureFlagSet {
+    const set = FeatureFlagSet.defaults();
+    for (const flag of stored) if (set.flags.has(flag.key)) set.flags.set(flag.key, { ...flag, ...(flag.gate ? { gate: { ...flag.gate } } : {}) });
+    return set;
+  }
+
   static defaults(): FeatureFlagSet {
     const flags = new Map<FeatureFlagKey, FeatureFlag>();
 
