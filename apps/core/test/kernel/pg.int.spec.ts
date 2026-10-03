@@ -227,8 +227,8 @@ import { MetricsRegistry } from '../../src/kernel/observability/metrics';
 
         expect(event.beforeHash).toBeDefined();
         expect(event.afterHash).toBeDefined();
-        expect(event.before).toBeUndefined();
-        expect(event.after).toBeUndefined();
+        expect((event as unknown as { before?: unknown }).before).toBeUndefined();
+        expect((event as unknown as { after?: unknown }).after).toBeUndefined();
       });
     });
 

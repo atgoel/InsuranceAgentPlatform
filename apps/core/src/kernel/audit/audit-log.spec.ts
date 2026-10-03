@@ -28,8 +28,8 @@ describe('audit-log (AC-M00-22)', () => {
 
       expect(event.beforeHash).toBe(canonicalHash(beforeValue));
       expect(event.afterHash).toBe(canonicalHash(afterValue));
-      expect(event.before).toBeUndefined();
-      expect(event.after).toBeUndefined();
+      expect((event as unknown as { before?: unknown }).before).toBeUndefined();
+      expect((event as unknown as { after?: unknown }).after).toBeUndefined();
     });
 
     it('uses actor from RequestContext or defaults to system', async () => {

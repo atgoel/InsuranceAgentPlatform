@@ -1,5 +1,4 @@
 import { canonicalJson, sha256Hex } from '../domain/canonical-json';
-import { createHash } from 'crypto';
 import { Clock } from '../domain/clock';
 import { IdGenerator } from '../domain/id-generator';
 import { Redactor } from '../observability/redactor';
@@ -57,7 +56,7 @@ export class InMemoryAuditLog implements AuditLog {
   ) {}
 
   async append(tx: Transaction, entry: AuditEntry): Promise<StoredAuditEvent> {
-    const context: any = RequestContext.current();
+    const context = RequestContext.current();
     const actor = context?.actor ?? 'system';
     const traceId = context?.traceId;
 
