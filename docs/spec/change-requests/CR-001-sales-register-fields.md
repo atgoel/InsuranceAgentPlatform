@@ -1,6 +1,6 @@
 # CR-001 · Sales/booking register fields and an extensible data model
 
-Status: Proposed (planned; not yet implemented) · Raised: 2026-10-03 from a customer sample of their office sales register · Affects: M07 Book & Retention, M09 Proposal & Issuance (policy sale), M10 Commission, M03 Party, M04 lead attribution, kernel (custom-field registry) · Target: before the M07 build starts, so import, the held-policy tables and commission are built once.
+Status: Approved 2026-10-03 (not yet implemented) · Raised: 2026-10-03 from a customer sample of their office sales register · Affects: M07 Book & Retention, M09 Proposal & Issuance (policy sale), M10 Commission, M03 Party, M04 lead attribution, kernel (custom-field registry) · Target: before the M07 build starts, so import, the held-policy tables and commission are built once.
 
 ## 1. Sample received
 One register row per booked policy (health and motor, possibly life):

@@ -11,8 +11,9 @@ Read this first in every new session (see "Session protocol" in CLAUDE.md), then
 | M03 Party & consent | done; Postgres adapters done (031) | M03.md — 94.2 A |
 | M04 CRM (+ M04b Twenty sync) | done; Postgres adapters done (041) | M04.md — 92 A |
 | M05 Product catalogue | done; Postgres adapters done | M05.md — 98.8 A |
-| M06–M14 | specs written in docs/spec/modules; **not started — do not start without the user's go-ahead** | — |
-| CR-001 sales-register fields | docs/spec/change-requests/CR-001-sales-register-fields.md; Reference = referrer (customer-confirmed); **awaiting approval**; planned before M07 | — |
+| M06 Advice & quote | **approved 2026-10-03 — next** | — |
+| M07–M14 | specs written; not started — need the user's go-ahead | — |
+| CR-001 sales-register fields | docs/spec/change-requests/CR-001-sales-register-fields.md; Reference = referrer (customer-confirmed); **approved 2026-10-03**; build after M06, before M07 | — |
 
 ## Environment
 - Windows workstation; Postgres via `docker compose -f infra/dev/docker-compose.yml up -d` (port 5433).
@@ -37,5 +38,6 @@ Read this first in every new session (see "Session protocol" in CLAUDE.md), then
 - Local dev DB can be reset any time: `docker compose -f infra/dev/docker-compose.yml down -v && … up -d`.
 
 ## Next steps
-1. **Stop: ask the user before starting M06** (advice & quotes). CR-001 still awaits approval (planned before M07).
-2. When approved, start a fresh session per module: read this file, the module LLD, then brief the Sonnet agents in .claude/agents.
+1. **M06 Advice & quote** (approved). Fresh session: read this file, `docs/spec/modules/M06-advice-quote.md`, and the M05 ComparisonScopeFacade (`assertInScope`, `quote.option.created` locks the version). Keep the money/state design (validity, BI acknowledgement, share link) yourself; brief `backend-builder` / `web-builder` for slices; finish with `module-reviewer`, `scripts/quality-report.mjs M06`, handover update.
+2. **CR-001** (approved): implement after M06 per the CR (held-policy/sale fields, risk_details schemas, custom-field registry, "Office sales register" import profile, AC-CR001-01..06).
+3. Then stop and ask before M07.
