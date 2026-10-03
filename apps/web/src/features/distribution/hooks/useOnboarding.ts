@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { ApiError } from '../../../lib/api/api-error';
 import { createDistributionApi, OrgUnitNode, MemberDetail, ChecklistItemKey } from '../api';
 import { ApiClient } from '../../../lib/api/api-client';
@@ -28,7 +28,7 @@ export function useOnboarding({ apiClient }: UseOnboardingOptions) {
     missingItems: [],
   });
 
-  const api = createDistributionApi(apiClient);
+  const api = useMemo(() => createDistributionApi(apiClient), [apiClient]);
 
   const loadTree = useCallback(async () => {
     try {

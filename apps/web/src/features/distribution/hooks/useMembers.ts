@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { ApiError } from '../../../lib/api/api-error';
 import { createDistributionApi, MemberView, SalespersonType } from '../api';
 import { ApiClient } from '../../../lib/api/api-client';
@@ -20,7 +20,7 @@ export function useMembers({ apiClient }: UseMembersOptions) {
     error: undefined,
   });
 
-  const api = createDistributionApi(apiClient);
+  const api = useMemo(() => createDistributionApi(apiClient), [apiClient]);
 
   const loadMembers = useCallback(
     async (filter?: Parameters<typeof api.listMembers>[0]) => {

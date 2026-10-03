@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useApi } from '../../../lib/api';
 import { Button, Card, LoadingSkeleton, ErrorState, PermissionDenied } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
@@ -11,7 +11,7 @@ const APPROVED_TYPEFACES = ['IBM Plex Sans', 'Noto Sans', 'Mukta'] as const;
 
 export function BrandKitScreen() {
   const api = useApi();
-  const tenancyApi = createTenancyApi(api);
+  const tenancyApi = useMemo(() => createTenancyApi(api), [api]);
   const { t } = useT();
 
   const [brandKit, setBrandKit] = useState<BrandKitResponse | undefined>();

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useApi } from '../../../lib/api';
 import {
   Button,
@@ -14,7 +14,7 @@ import '../styles/SoloPlanScreen.css';
 
 export function SoloPlanScreen() {
   const api = useApi();
-  const tenancyApi = createTenancyApi(api);
+  const tenancyApi = useMemo(() => createTenancyApi(api), [api]);
   const { t } = useT();
 
   const [profile, setProfile] = useState<TenantProfile | undefined>();

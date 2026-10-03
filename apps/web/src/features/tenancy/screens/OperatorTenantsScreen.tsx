@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useApi } from '../../../lib/api';
 import {
   Button,
@@ -17,7 +17,7 @@ import '../styles/OperatorTenantsScreen.css';
 
 export function OperatorTenantsScreen() {
   const api = useApi();
-  const tenancyApi = createTenancyApi(api);
+  const tenancyApi = useMemo(() => createTenancyApi(api), [api]);
   const { t } = useT();
 
   const [tenants, setTenants] = useState<TenantSummary[]>([]);

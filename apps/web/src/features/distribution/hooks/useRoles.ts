@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { ApiError } from '../../../lib/api/api-error';
 import { createDistributionApi, RoleDefinition, RolePreview } from '../api';
 import { ApiClient } from '../../../lib/api/api-client';
@@ -22,7 +22,7 @@ export function useRoles({ apiClient }: UseRolesOptions) {
     error: undefined,
   });
 
-  const api = createDistributionApi(apiClient);
+  const api = useMemo(() => createDistributionApi(apiClient), [apiClient]);
 
   const loadRoles = useCallback(async () => {
     try {

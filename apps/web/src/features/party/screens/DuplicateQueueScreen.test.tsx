@@ -125,7 +125,7 @@ describe('AC-M03-17 DuplicateQueueScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/queue is clear/i)).toBeInTheDocument();
+      expect(screen.getByText('Queue is clear.')).toBeInTheDocument();
     });
   });
 
@@ -294,7 +294,7 @@ describe('AC-M03-17 DuplicateQueueScreen', () => {
     await user.click(compareButtons[0]);
 
     await waitFor(() => {
-      expect(screen.getByText(/30/i)).toBeInTheDocument();
+      expect(screen.getByText('Merges are reversible for 30 days')).toBeInTheDocument();
     });
   });
 
@@ -346,7 +346,7 @@ describe('AC-M03-17 DuplicateQueueScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/permission/i)).toBeInTheDocument();
+      expect(screen.getByText('Access Denied')).toBeInTheDocument();
     });
   });
 

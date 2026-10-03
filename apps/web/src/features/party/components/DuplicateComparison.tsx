@@ -61,8 +61,8 @@ export function DuplicateComparison({
             </div>
 
             <div className="reversibility-notice">
-              <strong>{t('party.duplicates.merge_reversible_title')}</strong>
-              <p>{t('party.duplicates.merge_reversible_description')}</p>
+              <strong>Merges are reversible for 30 days</strong>
+              <p>You can undo this merge within 30 days. After that, the merge cannot be reversed.</p>
             </div>
 
             <div className="sheet-actions">

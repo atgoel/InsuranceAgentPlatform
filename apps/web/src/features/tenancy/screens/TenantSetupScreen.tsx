@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useApi } from '../../../lib/api';
 import { Button, Card, StatusChip, LoadingSkeleton, ErrorState, PermissionDenied } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
@@ -132,7 +132,7 @@ function GatedCapabilities({ t }: GatedCapabilitiesProps) {
 
 export function TenantSetupScreen() {
   const api = useApi();
-  const tenancyApi = createTenancyApi(api);
+  const tenancyApi = useMemo(() => createTenancyApi(api), [api]);
   const { t } = useT();
 
   const [profile, setProfile] = useState<TenantProfile | undefined>();

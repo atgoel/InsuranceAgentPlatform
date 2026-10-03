@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ApiProvider } from '../../../lib/api';
 import { ApiError } from '../../../lib/api/api-error';
 import { I18nProvider } from '../../../lib/i18n';
@@ -104,7 +105,8 @@ describe('AC-M03-16 CustomerRecordScreen', () => {
       expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Kumar Family')).toBeInTheDocument();
+    const kumartFamilyElements = screen.getAllByText('Kumar Family');
+    expect(kumartFamilyElements.length).toBeGreaterThan(0);
   });
 
   it('AC-M03-16 displays initials avatar with correct letters', async () => {
@@ -122,6 +124,7 @@ describe('AC-M03-16 CustomerRecordScreen', () => {
   });
 
   it('AC-M03-16 displays consent summary with granted/withdrawn chips', async () => {
+    const user = userEvent.setup();
     render(
       <ApiProvider client={mockApiClient}>
         <I18nProvider>
@@ -134,9 +137,15 @@ describe('AC-M03-16 CustomerRecordScreen', () => {
       expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
     });
 
+    // Click on consent tab
+    const consentTab = screen.getByRole('tab', { name: /consent/i });
+    await user.click(consentTab);
+
     // Check for SERVICE in consent items
-    const serviceText = screen.queryByText(/SERVICE/i);
-    expect(serviceText).toBeInTheDocument();
+    await waitFor(() => {
+      const serviceText = screen.getByText(/SERVICE/i);
+      expect(serviceText).toBeInTheDocument();
+    });
   });
 
   it('AC-M03-16 disables WhatsApp button when contactability denies', async () => {
@@ -213,7 +222,7 @@ describe('AC-M03-16 CustomerRecordScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/permission/i)).toBeInTheDocument();
+      expect(screen.getByText('Access Denied')).toBeInTheDocument();
     });
   });
 
@@ -231,6 +240,50 @@ describe('AC-M03-16 CustomerRecordScreen', () => {
     });
 
     // Household should be displayed in the header
-    expect(screen.getByText('Kumar Family')).toBeInTheDocument();
+    const kumartFamilyElements = screen.getAllByText('Kumar Family');
+    expect(kumartFamilyElements.length).toBeGreaterThan(0);
+  });
+
+  async function openConsentSheet() {
+    const user = userEvent.setup();
+    render(
+      <ApiProvider client={mockApiClient}>
+        <I18nProvider>
+          <CustomerRecordScreen />
+        </I18nProvider>
+      </ApiProvider>
+    );
+    expect(await screen.findByText('Rajesh Kumar')).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Consent' }));
+    await user.click(screen.getByRole('button', { name: 'Record consent' }));
+    return user;
+  }
+
+  it('AC-M03-16 records a consent withdrawal with an Idempotency-Key, as ASSISTED, and refreshes the record', async () => {
+    const user = await openConsentSheet();
+    expect(screen.getByText(/Notice version: 1\.0/)).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText('Purpose'), 'MARKETING');
+    await user.selectOptions(screen.getByLabelText('Channel'), 'SMS');
+    await user.click(screen.getByRole('radio', { name: 'Withdrawn' }));
+    const getsBefore = (mockApiClient.get as Mock).mock.calls.filter(([url]) => url === '/api/v1/parties/cust-1').length;
+
+    await user.click(screen.getByRole('button', { name: 'Save consent' }));
+
+    await waitFor(() => expect(mockApiClient.post).toHaveBeenCalledTimes(1));
+    const [url, body, options] = (mockApiClient.post as Mock).mock.calls[0];
+    expect(url).toBe('/api/v1/parties/cust-1/consents');
+    expect(body).toEqual({ purpose: 'MARKETING', channel: 'SMS', granted: false, noticeVersion: '1.0', source: 'ASSISTED' });
+    expect(options.idempotencyKey).toMatch(/^[0-9a-f-]{36}$/);
+    await waitFor(() =>
+      expect((mockApiClient.get as Mock).mock.calls.filter(([u]) => u === '/api/v1/parties/cust-1').length).toBe(getsBefore + 1),
+    );
+  });
+
+  it('AC-M03-16 keeps the sheet open and shows an error when saving consent fails', async () => {
+    (mockApiClient.post as Mock).mockRejectedValueOnce(new ApiError(503, 'unavailable', 'Unavailable'));
+    const user = await openConsentSheet();
+    await user.click(screen.getByRole('button', { name: 'Save consent' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Consent could not be saved. Please try again.');
+    expect(screen.getByRole('button', { name: 'Save consent' })).toBeInTheDocument();
   });
 });

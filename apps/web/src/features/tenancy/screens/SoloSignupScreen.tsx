@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApi } from '../../../lib/api';
 import {
@@ -195,7 +195,7 @@ function Step2Success(props: Step2Props) {
 
 export function SoloSignupScreen() {
   const api = useApi();
-  const tenancyApi = createTenancyApi(api);
+  const tenancyApi = useMemo(() => createTenancyApi(api), [api]);
   const navigate = useNavigate();
   const { t } = useT();
 

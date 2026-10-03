@@ -1,4 +1,4 @@
-import { Tabs, StatusChip, type TabDef } from '../../../design-system';
+import { Tabs, StatusChip, Button, type TabDef } from '../../../design-system';
 import { ConsentSummaryItem, PartyRoleLink, HouseholdView } from '../api';
 import { useT } from '../../../lib/i18n';
 
@@ -8,6 +8,7 @@ interface PartyTabsProps {
   household?: HouseholdView;
   roles: PartyRoleLink[];
   consentSummary: ConsentSummaryItem[];
+  onOpenConsentSheet: () => void;
 }
 
 export function PartyTabs({
@@ -16,6 +17,7 @@ export function PartyTabs({
   household,
   roles,
   consentSummary,
+  onOpenConsentSheet,
 }: PartyTabsProps) {
   const { t } = useT();
 
@@ -79,6 +81,10 @@ export function PartyTabs({
                 </div>
               ))}
             </div>
+
+            <Button variant="secondary" onClick={onOpenConsentSheet}>
+              {t('party.record.record_consent')}
+            </Button>
           </div>
         )}
 

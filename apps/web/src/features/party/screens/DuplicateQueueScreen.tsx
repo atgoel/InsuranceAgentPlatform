@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useApi } from '../../../lib/api';
 import {
   LoadingSkeleton,
@@ -27,7 +27,7 @@ interface ComparisonState {
 
 export function DuplicateQueueScreen() {
   const api = useApi();
-  const partyApi = createPartyApi(api);
+  const partyApi = useMemo(() => createPartyApi(api), [api]);
   const { t } = useT();
 
   const [loading, setLoading] = useState(true);
@@ -119,17 +119,14 @@ export function DuplicateQueueScreen() {
 
   if (queue.length === 0) {
     return (
-      <div className="duplicate-queue-screen">
-        <EmptyState
-          title={t('party.duplicates.queue_empty')}
-          body={t('party.duplicates.queue_empty_description')}
-        />
-      </div>
+      <main className="duplicate-queue-screen" role="main">
+        <EmptyState title="Queue is clear." />
+      </main>
     );
   }
 
   return (
-    <div className="duplicate-queue-screen">
+    <main className="duplicate-queue-screen" role="main">
       <div className="screen-header">
         <h1>{t('party.duplicates.title')}</h1>
         <p>{t('party.duplicates.description')}</p>
@@ -148,6 +145,6 @@ export function DuplicateQueueScreen() {
         merging={merging}
         dismissing={dismissing}
       />
-    </div>
+    </main>
   );
 }

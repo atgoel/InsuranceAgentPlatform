@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useApi } from '../../../lib/api';
 import {
   LoadingSkeleton,
@@ -30,7 +30,7 @@ const SEGMENT_OPTIONS: FilterOption[] = [
 
 export function CustomersScreen() {
   const api = useApi();
-  const partyApi = createPartyApi(api);
+  const partyApi = useMemo(() => createPartyApi(api), [api]);
   const { t } = useT();
 
   const [loading, setLoading] = useState(true);
