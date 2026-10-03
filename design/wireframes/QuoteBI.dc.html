@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Quote and benefit illustration</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+<header style="display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0"><a href="Calculators.dc.html" aria-label="Back" style="width: 44px; height: 44px; flex: none; color: #1B1F27; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Term top-up · Sunita Sharma</div></div><button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header><main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px">
+<div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><div><div style="font-weight: 600; font-size: 15px">[Term plan] · Insurer A</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4A5262">UIN [UIN] · TIED INSURER · ISP ELIGIBLE</div></div></div>
+  <div style="display: flex; flex-wrap: wrap; gap: 6px"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">Age 41</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">Non-smoker</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">Cover ₹70 L</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">Till age 65</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">Annual</span></div>
+</div>
+<div role="tablist" style="display: flex; gap: 4px; padding: 3px; background: #E6E9EE; border-radius: 9px"><sc-for list="{{sources}}" as="tb" hint-placeholder-count="3"><button type="button" role="tab" aria-selected="{{tb.on}}" onClick="{{tb.pick}}" style="flex: 1; min-height: 40px; border: 0; border-radius: 7px; background: {{tb.bg}}; font: inherit; font-size: 12px; font-weight: {{tb.weight}}; color: #1B1F27">{{tb.label}}</button></sc-for></div>
+<sc-if value="{{isApi}}" hint-placeholder-val="{{ true }}"><div style="padding: 10px 12px; border-radius: 10px; background: #EEF3FB; border: 1px solid #B9CBEA; color: #1B1F27; font-size: 12px; line-height: 1.45">Fetched from Insurer A quote API · 10:42 · ref [quote ref] · valid till 10 Oct (7 days)</div></sc-if>
+<sc-if value="{{isManual}}" hint-placeholder-val="{{ false }}">
+  <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px">
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Base premium from insurer quote (₹)<input type="number" value="{{base}}" onChange="{{setBase}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Insurer quote reference<input value="{{qref}}" onChange="{{setQref}}" placeholder="[quote ref]" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    <button type="button" onClick="{{uploadQuote}}" style="min-height: 44px; padding: 0 12px; border: 1.5px dashed #8A93A3; border-radius: 8px; background: #F4F5F7; font: inherit; font-size: 13px; color: #1B1F27">{{uploadLabel}}</button>
+  </div>
+</sc-if>
+<div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; font-size: 13px">
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span>Base premium</span><span>{{baseText}}</span></div>
+  <sc-for list="{{riders}}" as="r" hint-placeholder-count="3">
+    <label style="display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 40px"><span style="display: flex; align-items: center; gap: 8px"><input type="checkbox" checked="{{r.on}}" onChange="{{r.toggle}}" style="width: 18px; height: 18px">{{r.label}}</span><span style="color: #4A5262">+{{r.amt}}</span></label>
+  </sc-for>
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; color: #4A5262"><span>GST</span><span>{{gstText}}</span></div>
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px solid #E6E9EE; padding-top: 8px; font-size: 15px"><strong>Total annual premium</strong><strong>{{totalText}}</strong></div>
+  <div style="font-size: 11px; color: #5F6776">Premiums and rider prices come from the insurer quote. The platform does not price.</div>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px">
+  <div style="display: flex; gap: 12px">
+    <div style="width: 64px; height: 84px; flex: none; border: 1px solid #D5D9E0; border-radius: 6px; background: repeating-linear-gradient(45deg, #E6E9EE 0 8px, #F4F5F7 8px 16px); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4A5262">BI PDF</div>
+    <div><div style="font-weight: 600; font-size: 14px">Insurer benefit illustration · v[x]</div><div style="font-size: 12px; color: #5F6776; line-height: 1.45">Generated by Insurer A for this quote. The platform never creates its own illustration.</div></div>
+  </div>
+  <div style="display: flex; gap: 6px; flex-wrap: wrap"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E8F4EC; color: #1D5F3A; border: 1px solid #B7D9C3">Attached ✓</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: {{sentBg}}; color: {{sentColor}}">Sent to customer</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: {{ackBg}}; color: {{ackColor}}">Acknowledged</span></div>
+  <sc-if value="{{biIdle}}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{sendBi}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">Send to Sunita for acknowledgement</button></sc-if>
+  <sc-if value="{{biWaiting}}" hint-placeholder-val="{{ false }}"><div style="display: flex; flex-direction: column; gap: 8px"><div style="font-size: 12px; color: #5F6776">Secure link sent on WhatsApp · waiting for her OTP</div><button type="button" onClick="{{ackBi}}" style="min-height: 44px; padding: 0 12px; border: 1.5px dashed #8A93A3; border-radius: 8px; background: #F4F5F7; font: inherit; font-size: 13px; color: #1B1F27">Demo: Sunita acknowledges</button></div></sc-if>
+  <sc-if value="{{biDone}}" hint-placeholder-val="{{ false }}"><div style="padding: 12px; border-radius: 10px; background: #E8F4EC; border: 1px solid #B7D9C3; color: #1D5F3A; font-size: 13px">Acknowledged by Sunita · OTP verified 10:51 · BI v[x] stored with the advice record</div></sc-if>
+</div>
+<sc-if value="{{biDone}}" hint-placeholder-val="{{ false }}"><a href="ProposalForm.dc.html" style="min-height: 48px; padding: 0 14px; box-sizing: border-box; border-radius: 10px; background: {{accent}}; font-size: 14px; font-weight: 600; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center">Continue to proposal</a></sc-if>
+<sc-if value="{{notDone}}" hint-placeholder-val="{{ true }}"><button type="button" disabled style="min-height: 48px; border: 0; border-radius: 10px; background: #C9CED6; font: inherit; font-size: 14px; font-weight: 600; color: #3B4352">Proposal unlocks after BI acknowledgement</button></sc-if>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; z-index: 5; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { source: 'api', base: '14200', qref: '', uploaded: false, riders: { adb: true }, bi: 'idle' });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const base = parseFloat(s.base) || 0;
+    const defs = [['adb', 'Accidental death benefit', 1050], ['ci', 'Critical illness', 3400], ['wop', 'Waiver of premium', 620]];
+    const riders = defs.map((d) => ({ label: d[1], amt: inr(d[2]), on: !!s.riders[d[0]],
+      toggle: () => this.setState({ riders: Object.assign({}, s.riders, { [d[0]]: !s.riders[d[0]] }) }) }));
+    const rsum = defs.reduce((a, d) => a + (s.riders[d[0]] ? d[2] : 0), 0);
+    const gst = (base + rsum) * 0.18;
+    const R = {
+      sources: this.tabs([['manual', 'Manual entry (always available)'], ['api', 'Insurer API · if contracted']], 'source'),
+      isApi: s.source === 'api', isManual: s.source === 'manual',
+      base: s.base, setBase: this.set('base'), qref: s.qref, setQref: this.set('qref'),
+      uploadQuote: () => this.setState({ uploaded: true }), uploadLabel: s.uploaded ? 'insurer_quote.pdf · attached ✓' : 'Attach insurer quote PDF or screenshot (required)',
+      riders: riders, baseText: inr(base), gstText: inr(gst), totalText: inr(base + rsum + gst),
+      biIdle: s.bi === 'idle', biWaiting: s.bi === 'waiting', biDone: s.bi === 'done', notDone: s.bi !== 'done',
+      sentBg: s.bi !== 'idle' ? '#E8F4EC' : '#E6E9EE', sentColor: s.bi !== 'idle' ? '#1D5F3A' : '#4A5262',
+      ackBg: s.bi === 'done' ? '#E8F4EC' : '#E6E9EE', ackColor: s.bi === 'done' ? '#1D5F3A' : '#4A5262',
+      sendBi: () => { this.setState({ bi: 'waiting' }); this.flash('BI link sent on WhatsApp under tenant sender ID'); },
+      ackBi: () => { this.pset('proto.biAck', '1'); this.setState({ bi: 'done' }); }
+    };
+    R.scrTitle = s.lang === 'hi' ? 'कोटेशन और इलस्ट्रेशन' : 'Quote & illustration';
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

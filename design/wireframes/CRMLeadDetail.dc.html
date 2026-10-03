@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CRM lead record</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1250px; display: flex; flex-wrap: wrap; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+<nav aria-label="Console" style="flex: 1 1 240px; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #D5D9E0; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 12px"><div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #5F6776">LOGO</div><div><div style="font-weight: 600; font-size: 14px">[IMF tenant name]</div><div style="font-size: 11px; color: #5F6776">Business plan · Principal Officer view</div></div></div>
+<a href="LeadsPipeline.dc.html" style="margin: 0 4px 6px; min-height: 40px; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 13px; color: #5F6776; text-decoration: none">Search customers, policies, ISPs</a>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CRM<span style="font-weight: 400">8</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CRMLeads.dc.html" aria-current="page" style="padding: 9px 12px; border-radius: 8px; background: #EEF3FB; color: {{accent}}; font-weight: 600; font-size: 14px; text-decoration: none">Leads</a>
+<a href="CRMPipeline.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Opportunities</a>
+<a href="CRMCustomers.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Customers &amp; households</a>
+<a href="CRMTasks.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tasks &amp; activities</a>
+<a href="CRMCampaigns.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Campaigns &amp; segments</a>
+<a href="CRMAssignment.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Routing rules</a>
+<a href="CRMImportDedup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Import &amp; duplicates</a>
+<a href="PortalFillSheet.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal desk</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">NETWORK<span style="font-weight: 400">4</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ManagerConsole.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Dashboard</a>
+<a href="OnboardingHierarchy.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Onboarding &amp; hierarchy</a>
+<a href="ProductDrives.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Product drives &amp; contests</a>
+<a href="ReportsLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Reports</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTENT<span style="font-weight: 400">2</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CampaignPublish.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Landing pages</a>
+<a href="ContentLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Content library</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTROL<span style="font-weight: 400">3</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ComplianceCentre.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Compliance centre</a>
+<a href="CommissionSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Commission</a>
+<a href="AIControls.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">AI controls</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">SETUP<span style="font-weight: 400">6</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="TenantSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenant &amp; catalogue</a>
+<a href="UsersRoles.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Users &amp; roles</a>
+<a href="Configuration.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Configuration</a>
+<a href="FormTemplates.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal forms</a>
+<a href="Integrations.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Integrations</a>
+<a href="WhiteLabel.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Brand &amp; white-label</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">PLATFORM OPERATOR<span style="font-weight: 400">1</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="OperatorTenants.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenants &amp; plans</a>
+</div></details>
+<a href="Start.dc.html" style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #1B1F27; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none">⌂ Prototype map</a>
+<a href="Main.dc.html" style="margin-top: 6px; padding: 10px 12px; border: 1px dashed #8A93A3; border-radius: 8px; color: #1B1F27; font-size: 13px; text-decoration: none">Open agent app</a>
+</nav>
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 1320px">
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+  <a href="CRMLeads.dc.html" style="font-size: 13px">← Leads</a>
+  <div style="flex: 1 1 320px"><div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center"><h1 style="margin: 0; font-size: 26px; font-weight: 600">Priya Nair</h1><span style="font-size: 11px; font-weight: 600; color: #FFFFFF; background: #B45309; border-radius: 4px; padding: 2px 6px">HOT</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">Term life</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">Agent microsite · /ravi-kumar</span></div>
+  <div style="font-size: 12px; color: #5F6776; margin-top: 4px">Lead L2 · created today 08:15 · first response in 6 min</div></div>
+  <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Owner<select value="{{owner}}" onChange="{{setOwner}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%; width: 170px"><option>Ravi K.</option><option>Kavya R.</option><option>Neha P.</option></select></label>
+  <button type="button" onClick="{{call}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; align-self: flex-end">Call</button>
+  <a href="AIDraft.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center; align-self: flex-end">WhatsApp</a>
+  <button type="button" onClick="{{openConvert}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF; align-self: flex-end">Convert</button>
+</div>
+<div style="display: flex; gap: 4px; overflow-x: auto">
+  <sc-for list="{{stages}}" as="sg" hint-placeholder-count="7">
+    <button type="button" onClick="{{sg.pick}}" aria-current="{{sg.cur}}" style="flex: 1 0 120px; min-height: 44px; border: 0; border-radius: 6px; background: {{sg.bg}}; font: inherit; font-size: 13px; font-weight: {{sg.weight}}; color: {{sg.color}}">{{sg.label}}</button>
+  </sc-for>
+</div>
+<sc-if value="{{hasBlock}}" hint-placeholder-val="{{ false }}"><div style="padding: 12px; border-radius: 10px; background: #FFF4E5; border: 1px solid #F0C48A; color: #7A3E06; font-size: 13px">To move to <strong>{{blockTo}}</strong>, complete: {{blockList}}.</div></sc-if>
+<sc-if value="{{converted}}" hint-placeholder-val="{{ false }}"><div style="padding: 12px; border-radius: 10px; background: #E8F4EC; border: 1px solid #B7D9C3; color: #1D5F3A; font-size: 13px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center"><span><strong>Converted.</strong> Customer record and opportunity “Term life · ₹70 L cover” created. Source and campaign attribution carried over.</span><a href="CRMPipeline.dc.html" style="font-weight: 600">Open in pipeline</a><a href="Customer360.dc.html" style="font-weight: 600">Open customer</a></div></sc-if>
+<sc-if value="{{convertOpen}}" hint-placeholder-val="{{ false }}">
+  <section style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; align-items: end; border: 2px solid {{accent}}">
+    <div style="grid-column: 1 / -1; font-size: 14px; font-weight: 600">Convert lead to customer and opportunity</div>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Customer<select style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option>Create new: Priya Nair</option><option>Link to existing: Priya N. (2023)</option></select></label>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Opportunity product<select style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option>Term life</option><option>Health floater</option></select></label>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Expected annual premium (₹)<input value="18000" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Starting stage<select style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option>Needs analysis</option><option>Quoted</option></select></label>
+    <sc-if value="{{canConvert}}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{doConvert}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">Convert</button></sc-if>
+    <sc-if value="{{cantConvert}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: #7A3E06; font-weight: 600">Qualify the lead first (stage Qualified or later).</div></sc-if>
+  </section>
+</sc-if>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+  <section style="flex: 1 1 280px; display: flex; flex-direction: column; gap: 12px">
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; font-size: 13px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 600">Contact</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="color: #5F6776">Mobile · primary</span><span>+91 ••••• ••290</span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="color: #5F6776">WhatsApp</span><span>Same as mobile</span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="color: #5F6776">Email</span><span>p••@[mail]</span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="color: #5F6776">City · pincode</span><span>Mumbai · 400053</span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="color: #5F6776">Best time</span><span>After 7 pm</span></div>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; font-size: 13px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 600">Consent · notice v2</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span>Calls</span><strong style="color: #1D5F3A">Granted</strong></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span>WhatsApp service</span><strong style="color: #1D5F3A">Granted</strong></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span>Marketing SMS</span><strong style="color: #8A1F1F">Not given</strong></div>
+      <div style="font-size: 12px; color: #5F6776">Captured on microsite form · 3 Oct 08:15</div>
+    </div>
+    <sc-if value="{{dupOpen}}" hint-placeholder-val="{{ true }}">
+      <div style="padding: 12px; border-radius: 10px; background: #FFF4E5; border: 1px solid #F0C48A; color: #7A3E06; font-size: 13px; display: flex; flex-direction: column; gap: 8px"><div><strong>Possible match</strong> · Priya N., customer since 2023 (health, Insurer C). Same mobile, name similarity 92%.</div><div style="display: flex; gap: 8px"><button type="button" onClick="{{merge}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF; flex: 1">Link to customer</button><button type="button" onClick="{{notSame}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; flex: 1">Not the same</button></div></div>
+    </sc-if>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 600">Attribution</h2>
+      <div><span style="color: #5F6776">First touch · </span>Agent microsite /ravi-kumar · 1 Oct</div>
+      <div><span style="color: #5F6776">Last touch · </span>Greeting card shared on WhatsApp · 2 Oct</div>
+      <div><span style="color: #5F6776">Campaign · </span>none</div>
+      <div style="font-size: 12px; color: #5F6776">Credited to source only when the insurer confirms issuance.</div>
+    </div>
+  </section>
+  <section style="flex: 2 1 420px; min-width: 0; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-size: 15px; font-weight: 600">Activity</h2>
+<div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px"><sc-for list="{{kinds}}" as="ch" hint-placeholder-count="4"><button type="button" onClick="{{ch.pick}}" aria-pressed="{{ch.on}}" style="flex: none; min-height: 36px; padding: 0 12px; border: 1px solid {{ch.border}}; border-radius: 18px; background: {{ch.bg}}; font: inherit; font-size: 12px; font-weight: {{ch.weight}}; color: #1B1F27">{{ch.label}}</button></sc-for></div>
+    <textarea aria-label="Activity details" rows="3" value="{{draft}}" onChange="{{setDraft}}" placeholder="{{draftHint}}" style="font: inherit; font-size: 13px; padding: 10px; border: 1px solid #D5D9E0; border-radius: 8px; resize: vertical"></textarea>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+      <sc-if value="{{isCall}}" hint-placeholder-val="{{ false }}"><select aria-label="Call outcome" value="{{outcome}}" onChange="{{setOutcome}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%; width: 200px"><option>Connected</option><option>No answer</option><option>Call back later</option><option>Wrong number</option><option>Not interested</option></select></sc-if>
+      <button type="button" onClick="{{log}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">{{logLabel}}</button>
+      <span style="font-size: 12px; color: #5F6776">Logged activities update the SLA and the owner’s daily plan.</span>
+    </div>
+    <ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+      <sc-for list="{{timeline}}" as="tl" hint-placeholder-count="4">
+        <li style="display: flex; gap: 12px; padding: 10px 0; border-top: 1px solid #E6E9EE; font-size: 13px"><span style="width: 76px; flex: none; font-size: 12px; color: #5F6776">{{tl.when}}</span><span style="width: 92px; flex: none"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">{{tl.kind}}</span></span><span style="line-height: 1.45">{{tl.text}}<br><span style="font-size: 12px; color: #5F6776">{{tl.who}}</span></span></li>
+      </sc-for>
+    </ol>
+  </section>
+  <section style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 12px">
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 600">Qualification</h2>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Need<select value="{{need}}" onChange="{{setNeed}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option value="">Select</option><option>Protection for family</option><option>Tax saving</option><option>Child education</option></select></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Annual premium budget<select value="{{budget}}" onChange="{{setBudget}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option value="">Select</option><option>Under ₹15,000</option><option>₹15,000–30,000</option><option>Above ₹30,000</option></select></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Decision timeline<select value="{{timeline2}}" onChange="{{setTimeline2}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option value="">Select</option><option>This month</option><option>1–3 months</option><option>Just exploring</option></select></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Existing cover<input value="Employer health ₹3 L · no term" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <div style="font-size: 12px; color: #5F6776">Required to reach Qualified (tenant stage rule).</div>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><h2 style="margin: 0; font-size: 15px; font-weight: 600">Tasks</h2><button type="button" onClick="{{addTask}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; min-height: 36px">+ Task</button></div>
+      <sc-for list="{{tasks}}" as="tk" hint-placeholder-count="3">
+        <label style="display: flex; gap: 10px; align-items: center; min-height: 40px; font-size: 13px"><input type="checkbox" checked="{{tk.done}}" onChange="{{tk.toggle}}" style="width: 18px; height: 18px"><span style="flex: 1; text-decoration: {{tk.deco}}; color: {{tk.color}}">{{tk.t}}</span><span style="font-size: 12px; color: #5F6776">{{tk.due}}</span></label>
+      </sc-for>
+    </div>
+  </section>
+</div>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: fixed; right: 24px; bottom: 24px; z-index: 5; max-width: 380px; padding: 12px 16px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":1440,"height":1250}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { stage: 'Contacted', block: null, owner: 'Ravi K.', kind: 'call', draft: '', outcome: 'Connected', need: '', budget: '', timeline2: '', dup: true, done: {}, extraTasks: [], convertOpen: false, converted: false, acts: [{ when: 'today 08:21', kind: 'Call', text: 'Connected · wants cover for family; spouse self-employed; asked for quote this evening', who: 'Ravi K.' }, { when: 'today 08:15', kind: 'System', text: 'Lead created from microsite form · consent v2 · routed to Ravi K. (microsite owner rule)', who: 'Routing' }, { when: '2 Oct', kind: 'WhatsApp', text: 'Opened Diwali greeting shared by Ravi', who: 'Engagement' }, { when: '1 Oct', kind: 'Visit', text: 'Viewed /ravi-kumar microsite · 3 pages', who: 'Web' }] });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const ST = ['New', 'Contacted', 'Qualified', 'Needs analysis', 'Quoted', 'Proposal', 'Won · insurer issued'];
+    const idx = ST.indexOf(s.stage);
+    const qualMissing = [!s.need && 'need', !s.budget && 'budget', !s.timeline2 && 'decision timeline'].filter(Boolean);
+    const rule = (to) => {
+      const t = ST.indexOf(to);
+      if (to === 'Won · insurer issued') return ['set only by the insurer issuance callback'];
+      if (t >= 2 && qualMissing.length) return qualMissing;
+      if (t >= 4 && !s.converted) return ['convert to customer and opportunity'];
+      return [];
+    };
+    const stages = ST.map((st, i) => ({ label: (i < idx ? '✓ ' : '') + st, cur: i === idx,
+      bg: i === idx ? accent : (i < idx ? '#E8F4EC' : '#E6E9EE'), color: i === idx ? '#FFFFFF' : (i < idx ? '#1D5F3A' : '#4A5262'), weight: i === idx ? '600' : '400',
+      pick: () => { const m = rule(st); if (i > idx && m.length) { this.setState({ block: { to: st, list: m } }); } else { this.setState({ stage: st, block: null }); this.flash('Stage changed to ' + st + ' · history recorded'); } } }));
+    const kinds = this.chips([['note', 'Note'], ['call', 'Call log'], ['wa', 'WhatsApp'], ['meet', 'Meeting']], 'kind');
+    const KL = { note: 'Note', call: 'Call', wa: 'WhatsApp', meet: 'Meeting' };
+    const timeline = s.acts.map((a) => a);
+    const T = [['t1', 'Send term quote for ₹70 L', 'today 19:30'], ['t2', 'Share needs-analysis summary', 'tomorrow'], ['t3', 'Book tele-medical slot if proposal proceeds', '—']].concat(s.extraTasks);
+    const tasks = T.map((x) => { const d = !!s.done[x[0]]; return { t: x[1], due: x[2], done: d, deco: d ? 'line-through' : 'none', color: d ? '#5F6776' : '#1B1F27', toggle: () => this.setState({ done: Object.assign({}, s.done, { [x[0]]: !d }) }) }; });
+    const canConvert = idx >= 2;
+    const R = {
+      owner: s.owner, setOwner: (e) => { this.setState({ owner: e.target.value }); this.flash('Reassigned to ' + e.target.value + ' · eligibility checked · previous owner notified'); },
+      call: () => this.flash('Calling via click-to-call… outcome prompt opens after the call (demo)'),
+      stages: stages, hasBlock: !!s.block, blockTo: s.block ? s.block.to : '', blockList: s.block ? s.block.list.join(', ') : '',
+      kinds: kinds, isCall: s.kind === 'call', draft: s.draft, setDraft: this.set('draft'), outcome: s.outcome, setOutcome: this.set('outcome'),
+      draftHint: { note: 'Add a note', call: 'What was discussed?', wa: 'Paste or summarise the WhatsApp exchange', meet: 'Meeting notes' }[s.kind],
+      logLabel: 'Log ' + KL[s.kind].toLowerCase(),
+      log: () => { if (!s.draft.trim() && s.kind !== 'call') { this.flash('Add details first'); return; }
+        const text = (s.kind === 'call' ? s.outcome + (s.draft.trim() ? ' · ' + s.draft.trim() : '') : s.draft.trim());
+        this.setState({ acts: [{ when: 'just now', kind: KL[s.kind], text: text, who: s.owner }].concat(s.acts), draft: '' }); },
+      timeline: timeline, tasks: tasks,
+      addTask: () => this.setState({ extraTasks: s.extraTasks.concat([['x' + s.extraTasks.length, 'Follow up after quote review', 'in 2 days']]) }),
+      need: s.need, setNeed: this.set('need'), budget: s.budget, setBudget: this.set('budget'), timeline2: s.timeline2, setTimeline2: this.set('timeline2'),
+      dupOpen: s.dup, merge: () => { this.setState({ dup: false }); this.flash('Linked to existing customer Priya N. · both histories kept'); },
+      notSame: () => { this.setState({ dup: false }); this.flash('Marked not the same person · will not be suggested again'); },
+      convertOpen: s.convertOpen && !s.converted, openConvert: () => this.setState({ convertOpen: true }),
+      canConvert: canConvert, cantConvert: !canConvert, converted: s.converted,
+      doConvert: () => { this.pset('proto.converted', '1'); this.setState({ converted: true, convertOpen: false, stage: 'Needs analysis' }); this.flash('Converted · attribution preserved'); }
+    };
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

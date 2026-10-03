@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Income and persistency</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+  <header style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0">
+    <h1 style="flex: 1; margin: 0; font-size: 18px; font-weight: 600">{{scrTitle}}</h1>
+    <div role="radiogroup" aria-label="Period" style="display: flex; padding: 3px; background: #E6E9EE; border-radius: 8px">
+      <sc-for list="{{periods}}" as="pd" hint-placeholder-count="2">
+        <button type="button" role="radio" aria-checked="{{pd.on}}" onClick="{{pd.pick}}" style="min-height: 38px; padding: 0 10px; border: 0; border-radius: 6px; background: {{pd.bg}}; font: inherit; font-size: 12px; font-weight: {{pd.weight}}; color: #1B1F27">{{pd.label}}</button>
+      </sc-for>
+    </div>
+  <button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header>
+  <main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px">
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <a href="MicrositeGreetings.dc.html" style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; text-decoration: none; color: #1B1F27"><div style="font-size: 13px; font-weight: 600">My card &amp; greetings</div><div style="font-size: 11px; color: #5F6776">214 views this month</div></a>
+      <a href="ResearchAssistant.dc.html" style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; text-decoration: none; color: #1B1F27"><div style="font-size: 13px; font-weight: 600">Research &amp; Ask AI</div><div style="font-size: 11px; color: #5F6776">Cited answers only</div></a>
+      <a href="Calculators.dc.html" style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; text-decoration: none; color: #1B1F27"><div style="font-size: 13px; font-weight: 600">Needs calculators</div><div style="font-size: 11px; color: #5F6776">Protection, retirement, child</div></a>
+      <a href="IssuanceTracker.dc.html" style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; text-decoration: none; color: #1B1F27"><div style="font-size: 13px; font-weight: 600">Proposals</div><div style="font-size: 11px; color: #5F6776">3 in progress</div></a>
+      <a href="HelpCentre.dc.html" style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; text-decoration: none; color: #1B1F27"><div style="font-size: 13px; font-weight: 600">Help &amp; setup</div><div style="font-size: 11px; color: #5F6776">3 of 6 setup steps done</div></a>
+      <a href="SoloPlan.dc.html" style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; text-decoration: none; color: #1B1F27"><div style="font-size: 13px; font-weight: 600">Plan &amp; billing</div><div style="font-size: 11px; color: #5F6776">Free · 76% of AI actions used</div></a>
+      <a href="Start.dc.html" style="grid-column: 1 / -1; padding: 12px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; text-decoration: none; font-size: 13px; font-weight: 600; text-align: center">⌂ Prototype map · all roles and journeys</a>
+    </div>
+    <h2 style="margin: 4px 0 0; font-size: 15px; font-weight: 600">Income and persistency</h2>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px"><div style="font-size: 11px; color: #5F6776">Expected commission</div><div style="font-size: 20px; font-weight: 600">{{d.expected}}</div></div>
+      <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px"><div style="font-size: 11px; color: #5F6776">Received</div><div style="font-size: 20px; font-weight: 600">{{d.received}}</div></div>
+    </div>
+    <div style="background: #FFF4E5; border: 1px solid #F0C48A; border-radius: 10px; font-size: 12px; color: #7A3E06">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 4px 4px 12px"><span>{{d.gap}} expected but not yet received</span><button type="button" onClick="{{toggleGap}}" aria-expanded="{{gapOpen}}" style="min-height: 40px; padding: 0 10px; border: 0; background: none; font: inherit; font-size: 12px; font-weight: 600; color: #7A3E06">{{gapLabel}}</button></div>
+      <sc-if value="{{gapOpen}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; border-top: 1px solid #F0C48A">
+          <sc-for list="{{d.pending}}" as="pi" hint-placeholder-count="3">
+            <div style="display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #F6DDB8"><span>{{pi.what}}</span><strong>{{pi.amt}}</strong></div>
+          </sc-for>
+          <div style="padding: 8px 12px">Statement matching and disputes arrive in a later release.</div>
+        </div>
+      </sc-if>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-size: 14px; font-weight: 600">By insurer</h2>
+      <sc-for list="{{d.insurers}}" as="ins" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 4px"><div style="display: flex; justify-content: space-between; font-size: 12px"><span>{{ins.name}}</span><span>{{ins.amt}}</span></div><div style="height: 8px; background: #E6E9EE; border-radius: 4px"><div style="width: {{ins.pct}}%; height: 8px; background: {{accent}}; border-radius: 4px"></div></div></div>
+      </sc-for>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-size: 14px; font-weight: 600">Persistency by cohort</h2>
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; text-align: center">
+        <div style="border: 1px solid #E6E9EE; border-radius: 8px; padding: 8px 2px"><div style="font-size: 15px; font-weight: 600">86%</div><div style="font-size: 10px; color: #5F6776">13th</div></div>
+        <div style="border: 1px solid #E6E9EE; border-radius: 8px; padding: 8px 2px"><div style="font-size: 15px; font-weight: 600">78%</div><div style="font-size: 10px; color: #5F6776">25th</div></div>
+        <div style="border: 1px solid #E6E9EE; border-radius: 8px; padding: 8px 2px"><div style="font-size: 15px; font-weight: 600">71%</div><div style="font-size: 10px; color: #5F6776">37th</div></div>
+        <div style="border: 1px solid #E6E9EE; border-radius: 8px; padding: 8px 2px"><div style="font-size: 15px; font-weight: 600">66%</div><div style="font-size: 10px; color: #5F6776">49th</div></div>
+        <div style="border: 1px solid #E6E9EE; border-radius: 8px; padding: 8px 2px"><div style="font-size: 15px; font-weight: 600">60%</div><div style="font-size: 10px; color: #5F6776">61st</div></div>
+      </div>
+      <a href="Main.dc.html" style="font-size: 12px">2 policies at lapse risk · see dues</a>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; justify-content: space-between; font-size: 13px"><span style="font-weight: 600">Annual target · issued premium</span><span>64%</span></div>
+      <div style="height: 8px; background: #E6E9EE; border-radius: 4px"><div style="width: 64%; height: 8px; background: #3B4352; border-radius: 4px"></div></div>
+      <div style="font-size: 11px; color: #5F6776">₹7.7 L of ₹12 L · [Club name] qualification ₹2.1 L to go</div>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+        <div><div style="font-size: 13px; font-weight: 600">Licence valid till 14 Mar 2027</div><div style="font-size: 11px; color: {{hoursColor}}">{{hoursText}}</div></div>
+        <button type="button" onClick="{{addHours}}" disabled="{{trainingDone}}" style="min-height: 44px; padding: 0 10px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">Add 2 h evidence</button>
+      </div>
+      <div style="height: 6px; background: #E6E9EE; border-radius: 3px"><div style="width: {{hoursPct}}%; height: 6px; background: {{hoursBar}}; border-radius: 3px"></div></div>
+    </div>
+  </main>
+  <nav aria-label="Primary" style="display: flex; background: #FFFFFF; border-top: 1px solid #D5D9E0; padding: 4px 4px 8px">
+  <a href="Main.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>{{navL.today}}</a>
+  <a href="LeadsPipeline.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8z"></path></svg>{{navL.leads}}</a>
+  <a href="Customer360.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path></svg>{{navL.cust}}</a>
+  <a href="DueCalendar.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>{{navL.book}}</a>
+  <a href="Income.dc.html" aria-current="page" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; font-weight: 600; color: {{accent}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4.5 4.3-7 8-7s7 2.5 8 7"></path></svg>{{navL.me}}</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { period: 'fy', gapOpen: false, hours: 18 };
+    this.state = Object.assign({}, this.state, { lang: this.loadLang() });
+  }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि', scrTitle: hi ? 'मैं' : 'Me',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  renderVals() {
+    const s = this.state;
+    const data = {
+      month: { expected: '₹38,600', received: '₹29,100', gap: '₹9,500',
+        insurers: [{ name: 'Insurer A · Life', amt: '₹22,400', pct: 58 }, { name: 'Insurer C · Health', amt: '₹11,600', pct: 30 }, { name: 'Insurer D · Motor', amt: '₹4,600', pct: 12 }],
+        pending: [{ what: 'Insurer A · 1 new policy', amt: '₹6,100' }, { what: 'Insurer C · 1 renewal', amt: '₹2,600' }, { what: 'Insurer D · 1 policy', amt: '₹800' }] },
+      fy: { expected: '₹3,42,000', received: '₹2,61,500', gap: '₹80,500',
+        insurers: [{ name: 'Insurer A · Life', amt: '₹1,98,000', pct: 58 }, { name: 'Insurer C · Health', amt: '₹1,02,000', pct: 30 }, { name: 'Insurer D · Motor', amt: '₹42,000', pct: 12 }],
+        pending: [{ what: 'Insurer A · 4 policies', amt: '₹52,000' }, { what: 'Insurer C · 2 renewals', amt: '₹21,300' }, { what: 'Insurer D · 1 policy', amt: '₹7,200' }] }
+    };
+    const periods = [['month', 'Month'], ['fy', 'FY 26–27']].map((p) => ({
+      label: p[1], on: s.period === p[0], bg: s.period === p[0] ? '#FFFFFF' : 'transparent', weight: s.period === p[0] ? '600' : '400',
+      pick: () => this.setState({ period: p[0] })
+    }));
+    const done = s.hours >= 25;
+    return Object.assign(this.langVals(), {
+      accent: this.props.accent ?? '#1F5FBF',
+      periods: periods, d: data[s.period],
+      gapOpen: s.gapOpen, gapLabel: s.gapOpen ? 'Hide' : 'Review',
+      toggleGap: () => this.setState({ gapOpen: !s.gapOpen }),
+      hoursText: done ? 'Renewal training complete · 25 of 25 hours' : 'Renewal training ' + s.hours + ' of 25 hours logged',
+      hoursColor: done ? '#1D5F3A' : '#5F6776',
+      hoursPct: Math.round(Math.min(s.hours, 25) / 25 * 100),
+      hoursBar: done ? '#1D5F3A' : '#3B4352',
+      trainingDone: done,
+      addHours: () => this.setState({ hours: Math.min(25, s.hours + 2) })
+    });
+  }
+}
+</script>
+</body>
+</html>

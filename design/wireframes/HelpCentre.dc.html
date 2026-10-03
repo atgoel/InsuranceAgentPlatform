@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Help and guided setup</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+<header style="display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0"><a href="Income.dc.html" aria-label="Back" style="width: 44px; height: 44px; flex: none; color: #1B1F27; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Guided setup, help in your language, WhatsApp support</div></div><button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header><main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px">
+<div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><strong style="font-size: 15px">{{setupTitle}}</strong><span style="font-size: 12px; color: #5F6776">{{doneCount}} / 6</span></div>
+  <div style="height: 8px; border-radius: 4px; background: #E6E9EE"><div style="width: {{pct}}%; height: 8px; border-radius: 4px; background: {{accent}}"></div></div>
+  <sc-for list="{{steps}}" as="st" hint-placeholder-count="6">
+    <div style="display: flex; align-items: center; gap: 10px; min-height: 44px; border-top: 1px solid #E6E9EE; font-size: 13px">
+      <span style="width: 22px; height: 22px; flex: none; border-radius: 11px; background: {{st.dotBg}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700">{{st.mark}}</span>
+      <span style="flex: 1; text-decoration: {{st.deco}}; color: {{st.color}}">{{st.t}}</span>
+      <sc-if value="{{st.isLink}}" hint-placeholder-val="{{ false }}"><a href="{{st.href}}" style="font-size: 12px; font-weight: 600">{{st.cta}}</a></sc-if>
+      <sc-if value="{{st.isBtn}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{st.act}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; min-height: 36px; font-size: 12px">{{st.cta}}</button></sc-if>
+    </div>
+  </sc-for>
+</div>
+<a href="SoloSignup.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">Helping a colleague start? Create a Solo account</a>
+<label style="display: flex; gap: 10px; align-items: center; font-size: 13px; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px"><input type="checkbox" checked="{{demo}}" onChange="{{toggleDemo}}" style="width: 20px; height: 20px">Show demo customers while I learn (hidden from reports)</label>
+<h2 style="margin: 0; font-size: 15px; font-weight: 600">{{helpTitle}}</h2>
+<sc-for list="{{topics}}" as="tp" hint-placeholder-count="4">
+  <button type="button" onClick="{{tp.open}}" style="min-height: 48px; text-align: left; padding: 10px 12px; border: 1px solid #D5D9E0; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">{{tp.t}}<br><span style="font-size: 12px; color: #5F6776">{{tp.meta}}</span></button>
+</sc-for>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+  <button type="button" onClick="{{waSupport}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">WhatsApp support</button>
+  <button type="button" onClick="{{callback}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Call me back in Hindi</button>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+  <sc-if value="{{npsOpen}}" hint-placeholder-val="{{ true }}">
+    <div style="font-size: 13px; font-weight: 600">How likely are you to recommend this app to another agent?</div>
+    <div style="display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 3px"><sc-for list="{{nps}}" as="np" hint-placeholder-count="11"><button type="button" onClick="{{np.pick}}" style="min-height: 36px; padding: 0; border: 1px solid #D5D9E0; border-radius: 6px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{np.v}}</button></sc-for></div>
+  </sc-if>
+  <sc-if value="{{npsDone}}" hint-placeholder-val="{{ false }}"><div style="font-size: 13px; color: #1D5F3A">Thank you. Your score of {{score}} goes straight to the product team.</div></sc-if>
+</div>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; z-index: 5; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { done: {}, demo: true, score: null });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const hi = s.lang === 'hi';
+    const S = [
+      ['import', hi ? 'अपनी बुक इम्पोर्ट करें' : 'Import your book', 'link', 'BookImport.dc.html', hi ? 'खोलें' : 'Open', true],
+      ['card', hi ? 'अपना कार्ड बनाएँ' : 'Set up your card', 'link', 'MicrositeGreetings.dc.html', hi ? 'खोलें' : 'Open', true],
+      ['langs', hi ? 'अपनी भाषाएँ चुनें' : 'Choose your languages', 'link', 'MicrositeGreetings.dc.html', hi ? 'खोलें' : 'Open', true],
+      ['wa', hi ? 'WhatsApp जोड़ें' : 'Connect WhatsApp (click-to-chat)', 'btn', '', hi ? 'जोड़ें' : 'Connect', false],
+      ['greet', hi ? 'पहली शुभकामना भेजें' : 'Send your first greeting', 'link', 'MicrositeGreetings.dc.html', hi ? 'भेजें' : 'Send', false],
+      ['rem', hi ? 'रिन्यूअल रिमाइंडर चालू करें' : 'Turn on renewal reminders', 'btn', '', hi ? 'चालू' : 'Turn on', false]
+    ];
+    const steps = S.map((x) => { const done = x[5] || !!s.done[x[0]]; return { t: x[1], href: x[3], cta: x[4], mark: done ? '✓' : '', dotBg: done ? '#1D5F3A' : '#C9CED6', deco: done ? 'line-through' : 'none', color: done ? '#5F6776' : '#1B1F27',
+      isLink: !done && x[2] === 'link', isBtn: !done && x[2] === 'btn', act: () => { this.setState({ done: Object.assign({}, s.done, { [x[0]]: true }) }); this.flash(hi ? 'हो गया' : 'Done'); } }; });
+    const n = steps.filter((x) => x.mark).length;
+    const T = hi ? [['रिन्यूअल रिमाइंडर कैसे काम करते हैं', '2 मिनट · वीडियो'], ['इंश्योरर पोर्टल से इम्पोर्ट करें', '3 मिनट'], ['AI पुष्टि क्यों माँगता है', '1 मिनट'], ['मेरे ग्राहकों को कौन देख सकता है', '1 मिनट']]
+      : [['How renewal reminders work', '2 min · video'], ['Importing from an insurer portal export', '3 min'], ['Why AI asks you to confirm', '1 min'], ['Who can see my customers', '1 min']];
+    const R = {
+      setupTitle: hi ? 'सेटअप पूरा करें' : 'Finish setting up', helpTitle: hi ? 'मदद के विषय' : 'Help topics',
+      steps: steps, doneCount: n, pct: Math.round(n / 6 * 100),
+      demo: s.demo, toggleDemo: this.tog('demo'),
+      topics: T.map((x) => ({ t: x[0], meta: x[1], open: () => this.flash((hi ? 'खुल रहा है: ' : 'Opening: ') + x[0]) })),
+      waSupport: () => this.flash('Support chat opened on WhatsApp · replies in Hindi or English'),
+      callback: () => this.flash('Callback requested · a Hindi-speaking specialist will call within 2 working hours'),
+      nps: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => ({ v: v, pick: () => this.setState({ score: v }) })),
+      npsOpen: s.score === null, npsDone: s.score !== null, score: s.score
+    };
+    R.scrTitle = s.lang === 'hi' ? 'मदद और सेटअप' : 'Help & setup';
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

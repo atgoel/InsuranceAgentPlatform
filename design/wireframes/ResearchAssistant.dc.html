@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Product research and grounded assistant</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+<header style="display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0"><a href="Income.dc.html" aria-label="Back" style="width: 44px; height: 44px; flex: none; color: #1B1F27; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Approved content for your tied insurers only</div></div><button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header><main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px"><div role="tablist" style="display: flex; gap: 4px; padding: 3px; background: #E6E9EE; border-radius: 9px"><sc-for list="{{rtabs}}" as="tb" hint-placeholder-count="3"><button type="button" role="tab" aria-selected="{{tb.on}}" onClick="{{tb.pick}}" style="flex: 1; min-height: 40px; border: 0; border-radius: 7px; background: {{tb.bg}}; font: inherit; font-size: 12px; font-weight: {{tb.weight}}; color: #1B1F27">{{tb.label}}</button></sc-for></div>
+<sc-if value="{{isLib}}" hint-placeholder-val="{{ true }}">
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <input type="search" aria-label="Search plans" value="{{q}}" onChange="{{setQ}}" placeholder="Search plans, riders or benefits" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%">
+<div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px"><sc-for list="{{lines}}" as="ch" hint-placeholder-count="4"><button type="button" onClick="{{ch.pick}}" aria-pressed="{{ch.on}}" style="flex: none; min-height: 36px; padding: 0 12px; border: 1px solid {{ch.border}}; border-radius: 18px; background: {{ch.bg}}; font: inherit; font-size: 12px; font-weight: {{ch.weight}}; color: #1B1F27">{{ch.label}}</button></sc-for></div>
+    <sc-for list="{{plans}}" as="pl" hint-placeholder-count="3">
+      <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><strong style="font-size: 14px">{{pl.n}}</strong><sc-if value="{{pl.posp}}" hint-placeholder-val="{{ false }}"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">POSP-eligible</span></sc-if></div>
+        <div style="font-size: 12px; color: #5F6776">{{pl.ins}} · {{pl.line}}</div>
+        <div style="font-size: 13px; line-height: 1.45">{{pl.pts}}</div>
+        <sc-if value="{{pl.stale}}" hint-placeholder-val="{{ false }}"><div style="padding: 12px; border-radius: 10px; background: #FFF4E5; border: 1px solid #F0C48A; color: #7A3E06; font-size: 13px; font-size: 12px; padding: 8px 10px">Insurer updated the wording on 28 Sep. Summary is under review; quote from the wording only.</div></sc-if>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4A5262">{{pl.src}}</div>
+        <div style="display: flex; gap: 8px"><a href="NeedsCompare.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center; flex: 1">Compare</a><button type="button" onClick="{{pl.share}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; flex: 1">Share summary</button></div>
+      </div>
+    </sc-for>
+  </div>
+</sc-if>
+<sc-if value="{{isAsk}}" hint-placeholder-val="{{ false }}">
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <sc-for list="{{msgs}}" as="m" hint-placeholder-count="2">
+      <div style="display: flex; justify-content: {{m.align}}">
+        <div style="max-width: 88%; padding: 10px 12px; border-radius: 12px; background: {{m.bg}}; border: 1px solid {{m.border}}; color: {{m.color}}; display: flex; flex-direction: column; gap: 6px">
+          <sc-if value="{{m.isBot}}" hint-placeholder-val="{{ false }}"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4A5262">{{m.tag}}</span></sc-if>
+          <span style="font-size: 13px; line-height: 1.5">{{m.text}}</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px"><sc-for list="{{m.cites}}" as="ct" hint-placeholder-count="1"><span style="font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #EEF3FB; color: #1B1F27; border: 1px solid #B9CBEA">{{ct}}</span></sc-for></div>
+          <sc-if value="{{m.toQuote}}" hint-placeholder-val="{{ false }}"><a href="QuoteBI.dc.html" style="font-size: 12px; font-weight: 600">Get an insurer quote →</a></sc-if>
+        </div>
+      </div>
+    </sc-for>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span style="font-size: 12px; color: #5F6776">Try asking</span>
+      <sc-for list="{{sugs}}" as="sg" hint-placeholder-count="3"><button type="button" onClick="{{sg.ask}}" style="min-height: 40px; text-align: left; padding: 8px 12px; border: 1px solid #D5D9E0; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{sg.q}}</button></sc-for>
+    </div>
+    <div style="display: flex; gap: 8px"><input aria-label="Ask a product question" value="{{draft}}" onChange="{{setDraft}}" placeholder="Ask in English or Hindi" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><button type="button" onClick="{{send}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">Ask</button></div>
+  </div>
+</sc-if>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; z-index: 5; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { rtab: 'ask', line: 'all', q: '', draft: '', msgs: [{ who: 'user', text: 'Is OPD covered under [Health floater] · Insurer C?' }, { who: 'bot', kind: 'ok', text: 'Yes, on the [Plus] variant only. OPD consultations are covered up to [₹ limit] a year; the base variant excludes OPD.', cites: ['Policy wording v2 · §3.7 · p.12', 'Brochure v3 · p.5'] }] });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const A = {
+      mat: { q: 'Does [Health floater] cover maternity?', kind: 'ok', text: 'Yes, after a waiting period of [24] months, up to [₹ limit] per delivery for up to two deliveries. Newborn cover starts from day [1].', cites: ['Policy wording v2 · §4.2 · p.9'] },
+      ped: { q: 'Pre-existing disease waiting period on [Health floater]?', kind: 'ok', text: '[3] years of continuous cover. Porting from another insurer carries over completed waiting time, subject to underwriting.', cites: ['Policy wording v2 · §5.1 · p.14', 'Brochure v3 · p.3'] },
+      prem: { q: 'What premium will Sunita pay at 45?', kind: 'abstain', text: 'I can’t estimate premiums or eligibility. Premiums come only from the insurer’s quote.', toQuote: true },
+      claim: { q: 'Will a knee surgery claim be approved?', kind: 'abstain', text: 'I can’t predict claim outcomes; the insurer decides claims. I can show the wording on day-care procedures and exclusions instead.' }
+    };
+    const answer = (text) => {
+      const t = text.toLowerCase();
+      if (/premium|price|cost|कीमत|प्रीमियम/.test(t)) return A.prem;
+      if (/claim|approve|क्लेम/.test(t)) return A.claim;
+      if (/maternity|मातृत्व/.test(t)) return A.mat;
+      if (/pre-existing|ped|waiting/.test(t)) return A.ped;
+      return { kind: 'abstain', text: 'I couldn’t find this in approved content for your tied insurers. Ask your product desk, or check the policy wording.' };
+    };
+    const push = (text) => {
+      if (!text.trim()) return;
+      const a = answer(text);
+      this.setState({ msgs: s.msgs.concat([{ who: 'user', text: text }, { who: 'bot', kind: a.kind, text: a.text, cites: a.cites || [], toQuote: !!a.toQuote }]), draft: '' });
+    };
+    const msgs = s.msgs.map((m) => {
+      const bot = m.who === 'bot'; const ab = m.kind === 'abstain';
+      return { text: m.text, cites: m.cites || [], toQuote: !!m.toQuote, isBot: bot,
+        tag: ab ? 'ABSTAINED · OUTSIDE APPROVED CONTENT' : 'FROM APPROVED CONTENT · CITED',
+        align: bot ? 'flex-start' : 'flex-end', bg: bot ? (ab ? '#FFF4E5' : '#FFFFFF') : accent,
+        border: bot ? (ab ? '#F0C48A' : '#D5D9E0') : accent, color: bot ? '#1B1F27' : '#FFFFFF' };
+    });
+    const P = [
+      { n: '[Term plan]', ins: 'Insurer A', line: 'Term', pts: 'Cover to age 85 · lump sum or monthly income payout · riders: accidental death, critical illness, waiver', src: 'BROCHURE V4 · WORDING V4 · UPDATED 12 SEP 2026' },
+      { n: '[Health floater]', ins: 'Insurer C', line: 'Health', pts: 'No room-rent cap on Plus · 3-year PED wait · restore benefit once a year', src: 'BROCHURE V3 · WORDING V2 · UPDATED 2 SEP 2026' },
+      { n: '[Standard health product]', ins: 'Insurer C', line: 'Health', posp: true, pts: 'Standard cover · simple proposal · suitable for first-time buyers', src: 'WORDING V1 · UPDATED 20 AUG 2026' },
+      { n: '[Child plan]', ins: 'Insurer A', line: 'Child', pts: 'Premium waiver on parent’s death · staggered payouts for education milestones', src: 'BROCHURE V2 · UPDATED 1 JUL 2026' },
+      { n: '[Endowment plan]', ins: 'Insurer E', line: 'Savings', stale: true, pts: 'Guaranteed additions · policy loan facility', src: 'WORDING V3 · INSURER UPDATE 28 SEP 2026' }
+    ];
+    const q = s.q.trim().toLowerCase();
+    const plans = P.filter((p) => (s.line === 'all' || p.line === s.line) && (!q || (p.n + p.pts + p.ins).toLowerCase().indexOf(q) >= 0))
+      .map((p) => Object.assign({ posp: false, stale: false }, p, { share: () => this.flash('Summary shared with source and date · no premium claims') }));
+    const R = {
+      rtabs: this.tabs([['lib', 'Library'], ['ask', 'Ask AI']], 'rtab'), isLib: s.rtab === 'lib', isAsk: s.rtab === 'ask',
+      lines: this.chips([['all', 'All'], ['Term', 'Term'], ['Health', 'Health'], ['Child', 'Child'], ['Savings', 'Savings']], 'line'),
+      plans: plans, q: s.q, setQ: this.set('q'), msgs: msgs,
+      sugs: ['mat', 'ped', 'prem', 'claim'].map((k) => ({ q: A[k].q, ask: () => push(A[k].q) })),
+      draft: s.draft, setDraft: this.set('draft'), send: () => push(s.draft)
+    };
+    R.scrTitle = s.lang === 'hi' ? 'रिसर्च' : 'Research';
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proposal desk: assisted portal fill sheet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1150px; display: flex; flex-wrap: wrap; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+<nav aria-label="Console" style="flex: 1 1 240px; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #D5D9E0; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 12px"><div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #5F6776">LOGO</div><div><div style="font-weight: 600; font-size: 14px">[IMF tenant name]</div><div style="font-size: 11px; color: #5F6776">Business plan · Principal Officer view</div></div></div>
+<a href="LeadsPipeline.dc.html" style="margin: 0 4px 6px; min-height: 40px; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 13px; color: #5F6776; text-decoration: none">Search customers, policies, ISPs</a>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CRM<span style="font-weight: 400">8</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CRMLeads.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Leads</a>
+<a href="CRMPipeline.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Opportunities</a>
+<a href="CRMCustomers.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Customers &amp; households</a>
+<a href="CRMTasks.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tasks &amp; activities</a>
+<a href="CRMCampaigns.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Campaigns &amp; segments</a>
+<a href="CRMAssignment.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Routing rules</a>
+<a href="CRMImportDedup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Import &amp; duplicates</a>
+<a href="PortalFillSheet.dc.html" aria-current="page" style="padding: 9px 12px; border-radius: 8px; background: #EEF3FB; color: {{accent}}; font-weight: 600; font-size: 14px; text-decoration: none">Proposal desk</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">NETWORK<span style="font-weight: 400">4</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ManagerConsole.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Dashboard</a>
+<a href="OnboardingHierarchy.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Onboarding &amp; hierarchy</a>
+<a href="ProductDrives.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Product drives &amp; contests</a>
+<a href="ReportsLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Reports</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTENT<span style="font-weight: 400">2</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CampaignPublish.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Landing pages</a>
+<a href="ContentLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Content library</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTROL<span style="font-weight: 400">3</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ComplianceCentre.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Compliance centre</a>
+<a href="CommissionSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Commission</a>
+<a href="AIControls.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">AI controls</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">SETUP<span style="font-weight: 400">6</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="TenantSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenant &amp; catalogue</a>
+<a href="UsersRoles.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Users &amp; roles</a>
+<a href="Configuration.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Configuration</a>
+<a href="FormTemplates.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal forms</a>
+<a href="Integrations.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Integrations</a>
+<a href="WhiteLabel.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Brand &amp; white-label</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">PLATFORM OPERATOR<span style="font-weight: 400">1</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="OperatorTenants.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenants &amp; plans</a>
+</div></details>
+<a href="Start.dc.html" style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #1B1F27; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none">⌂ Prototype map</a>
+<a href="Main.dc.html" style="margin-top: 6px; padding: 10px 12px; border: 1px dashed #8A93A3; border-radius: 8px; color: #1B1F27; font-size: 13px; text-decoration: none">Open agent app</a>
+</nav>
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 1320px">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end"><div style="flex: 1 1 320px"><h1 style="margin: 0; font-size: 24px; font-weight: 600">Proposal desk</h1><div style="margin-top: 4px; font-size: 13px; color: #4A5262">For insurers without an API. Answers are already mapped to the insurer’s portal order and codes; you enter them in the insurer’s own portal under your login.</div></div><a href="ProposalForm.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">Open proposal on mobile</a></div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+  <section style="flex: 1 1 260px; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+    <h2 style="margin: 0; font-size: 15px; font-weight: 600">Waiting for portal entry · {{queueCount}}</h2>
+    <sc-for list="{{queue}}" as="q" hint-placeholder-count="3">
+      <button type="button" onClick="{{q.pick}}" style="text-align: left; padding: 10px 12px; border: 1px solid {{q.border}}; border-radius: 10px; background: {{q.bg}}; font: inherit; color: #1B1F27"><div style="font-size: 13px; font-weight: 600">{{q.n}}</div><div style="font-size: 12px; color: #5F6776">{{q.meta}}</div><div style="font-size: 11px; font-weight: 600; color: {{q.stColor}}">{{q.st}}</div></button>
+    </sc-for>
+  </section>
+  <section style="flex: 3 1 600px; min-width: 0; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><div><h2 style="margin: 0; font-size: 15px; font-weight: 600; font-size: 18px">{{cur.n}}</h2><div style="font-size: 12px; color: #5F6776">{{cur.meta}} · mapped to {{cur.form}}</div></div><button type="button" onClick="{{openPortal}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Open {{cur.ins}} portal ↗</button></div>
+<div role="tablist" style="display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid #D5D9E0"><sc-for list="{{pages}}" as="tb" hint-placeholder-count="4"><button type="button" role="tab" aria-selected="{{tb.on}}" onClick="{{tb.pick}}" style="min-height: 44px; padding: 0 14px; border: 0; border-bottom: 3px solid {{tb.line}}; background: none; font: inherit; font-size: 14px; font-weight: {{tb.weight}}; color: #1B1F27">{{tb.label}}</button></sc-for></div>
+    <div style="display: flex; flex-direction: column">
+      <sc-for list="{{fields}}" as="f" hint-placeholder-count="6">
+        <div style="display: grid; grid-template-columns: 34px 1.3fr 1.6fr 110px; align-items: center; gap: 10px; min-height: 52px; border-bottom: 1px solid #E6E9EE; font-size: 13px">
+          <span style="font-size: 12px; color: #5F6776">{{f.no}}</span>
+          <span><span style="display: block; font-weight: 600">{{f.label}}</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4A5262">{{f.code}}</span></span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">{{f.value}}</span>
+          <button type="button" onClick="{{f.copy}}" disabled="{{f.locked}}" style="min-height: 36px; border: 1px solid {{f.border}}; border-radius: 8px; background: {{f.bg}}; font: inherit; font-size: 12px; color: {{f.color}}">{{f.btn}}</button>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center"><button type="button" onClick="{{copyPage}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Copy whole page</button><button type="button" onClick="{{nextPage}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">{{nextPageLabel}}</button><span style="font-size: 12px; color: #5F6776">{{copiedText}}</span></div>
+    <sc-if value="{{isHealthPage}}" hint-placeholder-val="{{ false }}"><div style="padding: 12px; border-radius: 10px; background: #FFF4E5; border: 1px solid #F0C48A; color: #7A3E06; font-size: 13px; font-size: 12px">Customer’s declarations, frozen as v1 · copy exactly as answered. Changing an answer needs the customer to re-confirm.</div></sc-if>
+  </section>
+  <section style="flex: 1 1 280px; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+    <h2 style="margin: 0; font-size: 15px; font-weight: 600">Record the submission</h2>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Insurer proposal number<input value="{{propNo}}" onChange="{{setPropNo}}" placeholder="from the insurer portal" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Payment<select value="{{pay}}" onChange="{{setPay}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option>Not yet paid</option><option>Paid on insurer link</option></select></label>
+    <button type="button" onClick="{{shot}}" style="min-height: 44px; padding: 0 12px; border: 1.5px dashed #8A93A3; border-radius: 8px; background: #F4F5F7; font: inherit; font-size: 13px; color: #1B1F27">{{shotLabel}}</button>
+    <button type="button" onClick="{{save}}" disabled="{{saveOff}}" style="min-height: 44px; border: 0; border-radius: 8px; background: {{saveBg}}; font: inherit; font-size: 13px; font-weight: 600; color: {{saveColor}}">Save evidence</button>
+    <div style="font-size: 12px; color: #5F6776; line-height: 1.5">No portal passwords are stored and nothing is scraped. Status comes from the insurer’s confirmation or your recorded evidence.</div>
+  </section>
+</div>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: fixed; right: 24px; bottom: 24px; z-index: 5; max-width: 380px; padding: 12px 16px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { qid: 'q1', page: 'prop', copied: {}, propNo: '', pay: 'Not yet paid', shot: false, saved: {} });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const Q = [
+      { id: 'q1', n: 'Sunita Sharma', meta: '[Term plan] · Insurer E', ins: 'Insurer E', form: 'Insurer E term form v3', st: 'Ready · customer confirmed' },
+      { id: 'q2', n: 'Imran Khan', meta: '[Health floater] · Insurer C', ins: 'Insurer C', form: 'Insurer C health form v4', st: 'Ready · 1 document pending' },
+      { id: 'q3', n: 'Ramesh Gupta', meta: '[Endowment plan] · Insurer E', ins: 'Insurer E', form: 'Insurer E savings form v2', st: 'Submitted · evidence saved' }
+    ];
+    const cur = Q.find((q) => q.id === s.qid) || Q[0];
+    const P = {
+      prop: [['1.1', 'Name of proposer', 'PROP_NAME', 'SUNITA SHARMA'], ['1.2', 'Date of birth (DD/MM/YYYY)', 'PROP_DOB', '14/02/1985'], ['1.3', 'Gender', 'PROP_GENDER', 'F'], ['1.4', 'Marital status', 'PROP_MSTAT', '02 · Married'], ['1.5', 'PAN', 'PROP_PAN', 'XXXXX1234X'], ['1.6', 'Life assured same as proposer', 'LA_SAME', 'Y']],
+      addr: [['2.1', 'Address line 1', 'ADDR1', '[Flat, building]'], ['2.2', 'Locality', 'ADDR2', 'Andheri West'], ['2.3', 'City', 'CITY', 'MUMBAI'], ['2.4', 'PIN', 'PIN', '400053'], ['2.5', 'Mobile', 'MOB', '98XXXXX210'], ['2.6', 'Email', 'EMAIL', 's••@[mail]']],
+      occ: [['3.1', 'Occupation', 'OCC_CODE', '04 · Service (salaried)'], ['3.2', 'Nature of duties', 'DUTY_CLASS', 'D1 · Office / desk'], ['3.3', 'Annual income (₹)', 'ANN_INC', '1200000'], ['3.4', 'Income proof type', 'INC_PROOF', 'SS · Salary slips'], ['3.5', 'Education', 'EDU', 'G · Graduate'], ['3.6', 'Tax resident only in India', 'FATCA_IN', 'Y']],
+      hlth: [['4.1', 'Height (cm)', 'HT_CM', '158'], ['4.2', 'Weight (kg)', 'WT_KG', '62'], ['4.3', 'Tobacco in last 12 months', 'TOB_12M', 'N'], ['4.4', 'Alcohol', 'ALC', 'N'], ['4.5', 'Hospitalised in last 5 years', 'HOSP_5Y', 'N'], ['4.6', 'Family history before 60', 'FAM_HIST', 'Y · father, heart']],
+      nom: [['5.1', 'Nominee name', 'NOM_NAME', 'RAKESH SHARMA'], ['5.2', 'Relationship', 'NOM_REL', '01 · Spouse'], ['5.3', 'Nominee DOB', 'NOM_DOB', '02/03/1983'], ['5.4', 'Share (%)', 'NOM_SHARE', '100'], ['5.5', 'Travel abroad > 6 months', 'TRAVEL_6M', 'N']]
+    };
+    const PN = [['prop', '1 Proposer'], ['addr', '2 Address'], ['occ', '3 Occupation'], ['hlth', '4 Health'], ['nom', '5 Nominee']];
+    const fields = P[s.page].map((f) => { const k = cur.id + f[2]; const c = !!s.copied[k];
+      return { no: f[0], label: f[1], code: f[2], value: f[3], locked: false, btn: c ? 'Copied ✓' : 'Copy', bg: c ? '#E8F4EC' : '#FFFFFF', border: c ? '#B7D9C3' : '#D5D9E0', color: c ? '#1D5F3A' : '#1B1F27',
+        copy: () => { try { navigator.clipboard.writeText(f[3]); } catch (e) {} this.setState({ copied: Object.assign({}, s.copied, { [k]: true }) }); } }; });
+    const nCopied = P[s.page].filter((f) => s.copied[cur.id + f[2]]).length;
+    const pi = PN.findIndex((p) => p[0] === s.page);
+    const ok = !!s.propNo.trim() && s.shot;
+    const R = {
+      queue: Q.map((q) => Object.assign({}, q, { st: s.saved[q.id] ? 'Submitted · evidence saved' : q.st, stColor: (s.saved[q.id] || q.id === 'q3') ? '#1D5F3A' : '#7A3E06', bg: q.id === cur.id ? '#EEF3FB' : '#FFFFFF', border: q.id === cur.id ? accent : '#D5D9E0', pick: () => this.setState({ qid: q.id, page: 'prop' }) })),
+      queueCount: Q.filter((q) => !s.saved[q.id] && q.id !== 'q3').length, cur: cur,
+      pages: PN.map((p) => ({ label: p[1], on: s.page === p[0], weight: s.page === p[0] ? '600' : '400', line: s.page === p[0] ? accent : 'transparent', pick: () => this.setState({ page: p[0] }) })),
+      fields: fields, isHealthPage: s.page === 'hlth',
+      copiedText: nCopied + ' of ' + P[s.page].length + ' copied on this page',
+      copyPage: () => { const c = Object.assign({}, s.copied); P[s.page].forEach((f) => { c[cur.id + f[2]] = true; }); this.setState({ copied: c }); this.flash('Page copied in portal order · paste field by field or use the insurer’s bulk paste if offered'); },
+      nextPageLabel: pi < PN.length - 1 ? 'Next portal page' : 'Back to page 1', nextPage: () => this.setState({ page: PN[(pi + 1) % PN.length][0] }),
+      propNo: s.propNo, setPropNo: this.set('propNo'), pay: s.pay, setPay: this.set('pay'),
+      shot: () => this.setState({ shot: true }), shotLabel: s.shot ? 'portal_confirmation.png · attached ✓' : 'Attach portal confirmation screenshot',
+      saveOff: !ok, saveBg: ok ? accent : '#C9CED6', saveColor: ok ? '#FFFFFF' : '#3B4352',
+      openPortal: () => this.flash('Opens the insurer’s portal in a new tab using its approved link · you sign in with your own insurer login'),
+      save: () => { this.pset('proto.portal', '1'); this.setState({ saved: Object.assign({}, s.saved, { [cur.id]: true }), propNo: '', shot: false }); this.flash('Evidence saved · proposal moves to Submitted · issuance still waits for the insurer'); }
+    };
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

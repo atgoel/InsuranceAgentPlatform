@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Customer 360</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+  <header style="display: flex; align-items: center; gap: 8px; padding: 8px 8px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0">
+    <a href="Main.dc.html" aria-label="Back to Today" style="width: 44px; height: 44px; color: #1B1F27; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <div style="flex: 1; font-weight: 600; font-size: 16px">{{scrTitle}}</div>
+    <a href="IssuanceTracker.dc.html" style="min-height: 44px; padding: 0 10px; box-sizing: border-box; display: flex; align-items: center; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 12px; color: #1B1F27; text-decoration: none">Proposals</a><a href="BookImport.dc.html" style="min-height: 44px; padding: 0 10px; box-sizing: border-box; display: flex; align-items: center; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 12px; color: #1B1F27; text-decoration: none">Add policy</a>
+  <button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header>
+  <main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px">
+    <div style="display: flex; gap: 12px; align-items: center">
+      <div style="width: 52px; height: 52px; flex: none; border-radius: 26px; background: #E6E9EE; display: flex; align-items: center; justify-content: center; font-weight: 600">SS</div>
+      <div>
+        <h1 style="margin: 0; font-size: 19px; font-weight: 600">Sunita Sharma</h1>
+        <div style="font-size: 12px; color: #5F6776">Proposer · Payer · Household of 3</div>
+        <div style="margin-top: 4px; display: inline-flex; font-size: 11px; color: #1D5F3A; background: #E8F4EC; border: 1px solid #B7D9C3; border-radius: 4px; padding: 1px 6px">WhatsApp consent · notice v2</div>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <button type="button" onClick="{{call}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Call</button>
+      <a href="AIDraft.dc.html" style="min-height: 44px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">WhatsApp</a>
+      <a href="AIDraft.dc.html" style="min-height: 44px; box-sizing: border-box; border-radius: 8px; background: {{accent}}; font-size: 13px; font-weight: 600; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center">AI draft</a>
+    </div>
+    <div role="tablist" aria-label="Customer sections" style="display: flex; gap: 4px; padding: 3px; background: #E6E9EE; border-radius: 9px">
+      <sc-for list="{{tabs}}" as="tb" hint-placeholder-count="4">
+        <button type="button" role="tab" aria-selected="{{tb.selected}}" onClick="{{tb.pick}}" style="flex: 1; min-height: 40px; border: 0; border-radius: 7px; background: {{tb.bg}}; font: inherit; font-size: 12px; font-weight: {{tb.weight}}; color: #1B1F27">{{tb.label}}</button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{isPolicies}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <div style="background: #FFFFFF; border: 1.5px dashed #8A93A3; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 13px; font-weight: 600">Protection gap summary</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4A5262; border: 1px solid #D5D9E0; border-radius: 4px; padding: 1px 5px">{{gapBadge}}</span></div>
+          <div style="font-size: 13px; line-height: 1.45">Life cover ₹50 L against an estimated need of ₹1.2 Cr. Health sum insured ₹5 L for a family of 3.</div>
+          <div style="font-size: 11px; color: #5F6776">From needs analysis · assumptions v1 · educational, not advice</div>
+          <sc-if value="{{notReviewed}}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; gap: 8px">
+              <a href="Calculators.dc.html" style="flex: 1; min-height: 40px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 12px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">Open calculator</a>
+              <button type="button" onClick="{{review}}" style="flex: 1; min-height: 40px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 12px; font-weight: 600; color: #FFFFFF">Mark reviewed</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{reviewed}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between"><span style="font-size: 12px; color: #1D5F3A">Reviewed by Ravi · ready to share</span><a href="AIDraft.dc.html" style="font-size: 12px; font-weight: 600">Share on WhatsApp</a></div>
+          </sc-if>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; gap: 8px; align-items: flex-start"><div><div style="font-weight: 600; font-size: 14px">Term life</div><div style="font-size: 12px; color: #5F6776">Insurer A · [Policy no.]</div></div><span style="font-size: 10px; color: #4A5262; background: #E6E9EE; border-radius: 4px; padding: 2px 6px">Imported · as of 12 Sep</span></div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; font-size: 12px">
+            <div><div style="color: #5F6776">Sum assured</div><div style="font-weight: 500">₹50,00,000</div></div>
+            <div><div style="color: #5F6776">Premium</div><div style="font-weight: 500">₹24,500 · Yr</div></div>
+            <div><div style="color: #5F6776">Due 6 Sep</div><div style="font-weight: 600; color: #9A4A06">In grace</div></div>
+          </div>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; gap: 8px; align-items: flex-start"><div><div style="font-weight: 600; font-size: 14px">Health floater</div><div style="font-size: 12px; color: #5F6776">Insurer C · [Policy no.]</div></div><span style="font-size: 10px; color: #FFFFFF; background: #3B4352; border-radius: 4px; padding: 2px 6px">Sold via platform</span></div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; font-size: 12px">
+            <div><div style="color: #5F6776">Sum insured</div><div style="font-weight: 500">₹5,00,000</div></div>
+            <div><div style="color: #5F6776">Premium</div><div style="font-weight: 500">₹18,200 · Yr</div></div>
+            <div><div style="color: #5F6776">Renewal</div><div style="font-weight: 500">9 Oct</div></div>
+          </div>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between"><span style="font-size: 13px; font-weight: 600">Servicing request</span><a href="#" style="font-size: 12px">Insurer portal</a></div>
+          <div style="font-size: 12px; color: #4A5262">Nominee update · Insurer ref [ref no.] · follow up 6 Oct</div>
+          <div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 12px; font-weight: 600; color: {{svcColor}}">Status: {{svcStatus}}</span><button type="button" onClick="{{advanceSvc}}" disabled="{{svcClosed}}" style="min-height: 36px; padding: 0 10px; border: 1px solid #D5D9E0; border-radius: 6px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{svcAction}}</button></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isDues}}" hint-placeholder-val="{{ false }}">
+      <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; display: flex; flex-direction: column">
+        <div style="padding: 12px; border-bottom: 1px solid #E6E9EE"><div style="display: flex; justify-content: space-between; font-size: 13px"><strong>Term life · 6 Sep 2026</strong><span>₹24,500</span></div><div style="font-size: 12px; color: #9A4A06; font-weight: 600">Unpaid · grace ends 6 Oct</div></div>
+        <div style="padding: 12px; border-bottom: 1px solid #E6E9EE"><div style="display: flex; justify-content: space-between; font-size: 13px"><strong>Health floater · renewal 9 Oct 2026</strong><span>₹18,200</span></div><div style="font-size: 12px; color: #5F6776">Renewal quote requested</div></div>
+        <div style="padding: 12px; border-bottom: 1px solid #E6E9EE"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Term life · 6 Sep 2025</span><span>₹24,500</span></div><div style="font-size: 12px; color: #1D5F3A">Paid · reported by insurer</div></div>
+        <div style="padding: 12px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Term life · 6 Sep 2024</span><span>₹24,500</span></div><div style="font-size: 12px; color: #1D5F3A">Paid · from imported book</div></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isDeals}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <a href="NeedsCompare.dc.html" style="display: block; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; text-decoration: none; color: #1B1F27"><div style="font-weight: 600; font-size: 14px">Health floater · add spouse</div><div style="font-size: 12px; color: #5F6776">Stage: needs analysis · next: compare plans →</div></a>
+        <a href="Calculators.dc.html" style="display: block; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; text-decoration: none; color: #1B1F27"><div style="font-weight: 600; font-size: 14px">Term top-up · ₹70 L gap</div><div style="font-size: 12px; color: #5F6776">Stage: needs analysis · next: quote and illustration →</div></a>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isActivity}}" hint-placeholder-val="{{ false }}">
+      <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; display: flex; flex-direction: column">
+        <div style="padding: 12px; border-bottom: 1px solid #E6E9EE; font-size: 13px"><div style="font-size: 11px; color: #5F6776">2 Oct · Call · from voice note</div>Wants renewal quote by Friday; add spouse to health cover.</div>
+        <div style="padding: 12px; border-bottom: 1px solid #E6E9EE; font-size: 13px"><div style="font-size: 11px; color: #5F6776">28 Sep · WhatsApp · Hindi</div>Premium due reminder sent (template v3).</div>
+        <div style="padding: 12px; font-size: 13px"><div style="font-size: 11px; color: #5F6776">12 Sep · Import</div>Term life policy created from insurer export after review.</div>
+      </div>
+    </sc-if>
+  </main>
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div>
+  </sc-if>
+  <nav aria-label="Primary" style="display: flex; background: #FFFFFF; border-top: 1px solid #D5D9E0; padding: 4px 4px 8px">
+  <a href="Main.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>{{navL.today}}</a>
+  <a href="LeadsPipeline.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8z"></path></svg>{{navL.leads}}</a>
+  <a href="Customer360.dc.html" aria-current="page" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; font-weight: 600; color: {{accent}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path></svg>{{navL.cust}}</a>
+  <a href="DueCalendar.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>{{navL.book}}</a>
+  <a href="Income.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4.5 4.3-7 8-7s7 2.5 8 7"></path></svg>{{navL.me}}</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'policies', reviewed: false, svc: 0, toast: '' };
+    this.state = Object.assign({}, this.state, { lang: this.loadLang() });
+  }
+  componentWillUnmount() { clearTimeout(this._t); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2400);
+  }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि', scrTitle: hi ? 'ग्राहक' : 'Customer',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  renderVals() {
+    const s = this.state;
+    const tabs = [
+      { id: 'policies', label: 'Policies 2' },
+      { id: 'dues', label: 'Dues' },
+      { id: 'deals', label: 'Deals 2' },
+      { id: 'activity', label: 'Activity' }
+    ].map((t) => ({
+      label: t.label,
+      selected: s.tab === t.id,
+      bg: s.tab === t.id ? '#FFFFFF' : 'transparent',
+      weight: s.tab === t.id ? '600' : '400',
+      pick: () => this.setState({ tab: t.id })
+    }));
+    const svcStates = ['Open', 'Submitted to insurer', 'Closed by insurer'];
+    const svcActions = ['Mark submitted', 'Mark closed', 'Closed'];
+    return Object.assign(this.langVals(), {
+      accent: this.props.accent ?? '#1F5FBF',
+      tabs: tabs,
+      isPolicies: s.tab === 'policies', isDues: s.tab === 'dues', isDeals: s.tab === 'deals', isActivity: s.tab === 'activity',
+      reviewed: s.reviewed, notReviewed: !s.reviewed,
+      gapBadge: s.reviewed ? 'REVIEWED' : 'AI DRAFT',
+      review: () => { this.setState({ reviewed: true }); this.flash('Summary reviewed · logged to audit trail'); },
+      svcStatus: svcStates[s.svc], svcAction: svcActions[s.svc], svcClosed: s.svc === 2,
+      svcColor: s.svc === 2 ? '#1D5F3A' : '#1B1F27',
+      advanceSvc: () => { const n = Math.min(2, s.svc + 1); this.setState({ svc: n }); this.flash('Servicing status updated · follow-up reminder ' + (n === 2 ? 'cleared' : 'set')); },
+      call: () => this.flash('Starting call… (demo)'),
+      toast: s.toast, hasToast: !!s.toast
+    });
+  }
+}
+</script>
+</body>
+</html>

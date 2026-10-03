@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CRM customers and households</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1150px; display: flex; flex-wrap: wrap; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+<nav aria-label="Console" style="flex: 1 1 240px; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #D5D9E0; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 12px"><div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #5F6776">LOGO</div><div><div style="font-weight: 600; font-size: 14px">[IMF tenant name]</div><div style="font-size: 11px; color: #5F6776">Business plan · Principal Officer view</div></div></div>
+<a href="LeadsPipeline.dc.html" style="margin: 0 4px 6px; min-height: 40px; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 13px; color: #5F6776; text-decoration: none">Search customers, policies, ISPs</a>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CRM<span style="font-weight: 400">8</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CRMLeads.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Leads</a>
+<a href="CRMPipeline.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Opportunities</a>
+<a href="CRMCustomers.dc.html" aria-current="page" style="padding: 9px 12px; border-radius: 8px; background: #EEF3FB; color: {{accent}}; font-weight: 600; font-size: 14px; text-decoration: none">Customers &amp; households</a>
+<a href="CRMTasks.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tasks &amp; activities</a>
+<a href="CRMCampaigns.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Campaigns &amp; segments</a>
+<a href="CRMAssignment.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Routing rules</a>
+<a href="CRMImportDedup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Import &amp; duplicates</a>
+<a href="PortalFillSheet.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal desk</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">NETWORK<span style="font-weight: 400">4</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ManagerConsole.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Dashboard</a>
+<a href="OnboardingHierarchy.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Onboarding &amp; hierarchy</a>
+<a href="ProductDrives.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Product drives &amp; contests</a>
+<a href="ReportsLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Reports</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTENT<span style="font-weight: 400">2</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CampaignPublish.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Landing pages</a>
+<a href="ContentLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Content library</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTROL<span style="font-weight: 400">3</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ComplianceCentre.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Compliance centre</a>
+<a href="CommissionSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Commission</a>
+<a href="AIControls.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">AI controls</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">SETUP<span style="font-weight: 400">6</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="TenantSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenant &amp; catalogue</a>
+<a href="UsersRoles.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Users &amp; roles</a>
+<a href="Configuration.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Configuration</a>
+<a href="FormTemplates.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal forms</a>
+<a href="Integrations.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Integrations</a>
+<a href="WhiteLabel.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Brand &amp; white-label</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">PLATFORM OPERATOR<span style="font-weight: 400">1</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="OperatorTenants.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenants &amp; plans</a>
+</div></details>
+<a href="Start.dc.html" style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #1B1F27; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none">⌂ Prototype map</a>
+<a href="Main.dc.html" style="margin-top: 6px; padding: 10px 12px; border: 1px dashed #8A93A3; border-radius: 8px; color: #1B1F27; font-size: 13px; text-decoration: none">Open agent app</a>
+</nav>
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 1320px">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end"><div style="flex: 1 1 320px"><h1 style="margin: 0; font-size: 24px; font-weight: 600">Customers &amp; households</h1><div style="margin-top: 4px; font-size: 13px; color: #4A5262">Parties with roles across policies. Shared numbers never merge people automatically.</div></div><a href="CRMImportDedup.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">Import book</a></div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+  <section style="flex: 3 1 640px; min-width: 0; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px"><sc-for list="{{segs}}" as="ch" hint-placeholder-count="4"><button type="button" onClick="{{ch.pick}}" aria-pressed="{{ch.on}}" style="flex: none; min-height: 36px; padding: 0 12px; border: 1px solid {{ch.border}}; border-radius: 18px; background: {{ch.bg}}; font: inherit; font-size: 12px; font-weight: {{ch.weight}}; color: #1B1F27">{{ch.label}}</button></sc-for></div>
+    <input type="search" aria-label="Search customers" value="{{q}}" onChange="{{setQ}}" placeholder="Search name, mobile, policy number or PAN (last 4)" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%">
+<div style="overflow-x: auto"><div role="table" style="min-width: 1040px; font-size: 13px"><div role="row" style="display: grid; grid-template-columns: 1.5fr 1.1fr 1.2fr 0.7fr 1fr 1fr 0.9fr 1.3fr; border-bottom: 1px solid #D5D9E0; font-size: 11px; color: #5F6776"><span role="columnheader" style="padding: 8px 6px">Customer</span><span role="columnheader" style="padding: 8px 6px">Household</span><span role="columnheader" style="padding: 8px 6px">Roles</span><span role="columnheader" style="padding: 8px 6px">Policies</span><span role="columnheader" style="padding: 8px 6px">Premium / yr</span><span role="columnheader" style="padding: 8px 6px">Next due</span><span role="columnheader" style="padding: 8px 6px">Owner</span><span role="columnheader" style="padding: 8px 6px">Tags</span></div><sc-for list="{{rows}}" as="c" hint-placeholder-count="4"><div role="row" style="display: grid; grid-template-columns: 1.5fr 1.1fr 1.2fr 0.7fr 1fr 1fr 0.9fr 1.3fr; align-items: center; border-bottom: 1px solid #E6E9EE"><span role="cell" style="padding: 10px 6px; "><button type="button" onClick="{{c.pick}}" style="border: 0; background: none; padding: 0; font: inherit; font-weight: 600; color: #1F5FBF; text-align: left">{{c.n}}</button><br><span style="font-size: 12px; color: #5F6776">{{c.mob}}</span></span><span role="cell" style="padding: 10px 6px; ">{{c.hh}}</span><span role="cell" style="padding: 10px 6px; font-size: 12px; color: #4A5262">{{c.roles}}</span><span role="cell" style="padding: 10px 6px; ">{{c.pols}}</span><span role="cell" style="padding: 10px 6px; ">{{c.prem}}</span><span role="cell" style="padding: 10px 6px; "><span style="color: {{c.dueColor}}; font-weight: 600">{{c.due}}</span></span><span role="cell" style="padding: 10px 6px; ">{{c.owner}}</span><span role="cell" style="padding: 10px 6px; font-size: 12px; color: #4A5262">{{c.tags}}</span></div></sc-for></div></div>
+    <div style="font-size: 12px; color: #5F6776">Showing {{shown}} of 1,842 customers</div>
+  </section>
+  <section style="flex: 1 1 320px; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+    <div><div style="font-size: 12px; color: #5F6776">Household</div><h2 style="margin: 0; font-size: 15px; font-weight: 600; font-size: 18px">{{sel.hh}}</h2></div>
+    <sc-for list="{{members}}" as="m" hint-placeholder-count="3">
+      <div style="border: 1px solid #E6E9EE; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 4px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><strong style="font-size: 13px">{{m.n}}</strong><span style="font-size: 12px; color: #5F6776">{{m.rel}}</span></div>
+        <div style="font-size: 12px; color: #4A5262">{{m.roles}}</div>
+        <div style="font-size: 12px">{{m.pols}}</div>
+      </div>
+    </sc-for>
+    <div style="padding: 10px 12px; border-radius: 10px; background: #EEF3FB; border: 1px solid #B9CBEA; color: #1B1F27; font-size: 12px; line-height: 1.45"><strong>Cross-sell gaps</strong><br>{{gaps}}</div>
+    <div style="display: flex; gap: 8px"><a href="CRMCustomerRecord.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center; flex: 1">Open full record</a><button type="button" onClick="{{makeOpp}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF; flex: 1">Create opportunity</button></div>
+  </section>
+</div>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: fixed; right: 24px; bottom: 24px; z-index: 5; max-width: 380px; padding: 12px 16px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { seg: 'all', q: '', selId: 'c1' });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const C = [
+      { id: 'c1', n: 'Sunita Sharma', mob: '••3210', hh: 'Sharma household · 3', roles: 'Proposer, payer', pols: 2, prem: '₹42,700', due: 'Grace ends 6 Oct', dueColor: '#7A3E06', owner: 'Ravi K.', tags: 'Hindi · WhatsApp', seg: ['due', 'hh'],
+        members: [['Sunita Sharma', 'Self', 'Proposer · payer · life assured (term)', 'Term · Insurer A · Health floater · Insurer C'], ['Rakesh Sharma', 'Spouse', 'Insured (health) · nominee (term)', 'No individual life cover'], ['Aarav Sharma', 'Son, 9', 'Insured (health)', 'No education plan']], gaps: 'Term cover for Rakesh · child education goal not planned · health top-up to ₹10 L' },
+      { id: 'c2', n: 'Arjun Mehta', mob: '••8812', hh: 'Mehta household · 4', roles: 'Proposer, payer', pols: 1, prem: '₹18,200', due: 'Renews 9 Oct', dueColor: '#1B1F27', owner: 'Kavya R.', tags: 'English', seg: ['due', 'hh'],
+        members: [['Arjun Mehta', 'Self', 'Proposer · payer', 'Health floater · Insurer C'], ['Kavita Mehta', 'Spouse', 'Insured (health)', '—'], ['2 children', 'Children', 'Insured (health)', '—']], gaps: 'No term cover in the household · motor not with us' },
+      { id: 'c3', n: 'Imran Khan', mob: '••1123', hh: 'Khan household · 2', roles: 'Proposer', pols: 1, prem: '₹15,600', due: 'Lapsed 12 Aug', dueColor: '#8A1F1F', owner: 'Kavya R.', tags: 'Hindi · revival', seg: ['lapsed'],
+        members: [['Imran Khan', 'Self', 'Proposer · life assured', 'Endowment · Insurer A · lapsed'], ['Sana Khan', 'Spouse', 'Nominee', '—']], gaps: 'Revival of lapsed endowment · health cover pending (open proposal)' },
+      { id: 'c4', n: 'Meena Iyer', mob: '••5521', hh: 'Iyer · 1', roles: 'Proposer, payer', pols: 1, prem: '₹15,000', due: '14 Oct', dueColor: '#1B1F27', owner: 'Neha P.', tags: 'Tamil · birthday today', seg: ['due'],
+        members: [['Meena Iyer', 'Self', 'Proposer · payer · life assured', 'Term · Insurer A · monthly']], gaps: 'No health cover on record' },
+      { id: 'c5', n: 'Gurpreet Singh', mob: '••9021', hh: 'Singh household · 2', roles: 'Proposer', pols: 0, prem: '—', due: '—', dueColor: '#5F6776', owner: 'Asha K.', tags: 'Retirement lead · no contact 94 d', seg: ['quiet'],
+        members: [['Gurpreet Singh', 'Self', 'Prospect', 'Quoted retirement plan'], ['Harpreet Kaur', 'Spouse', '—', '—']], gaps: 'Re-engage: no contact in 94 days' },
+      { id: 'c6', n: 'Anil Joshi', mob: '••7034', hh: 'Joshi household · 3', roles: 'Proposer, payer', pols: 3, prem: '₹88,400', due: 'Survival benefit 15 Oct', dueColor: '#1F5FBF', owner: 'Ravi K.', tags: 'High value', seg: ['hh', 'due'],
+        members: [['Anil Joshi', 'Self', 'Proposer · payer', 'Money-back · Term · Health'], ['Rekha Joshi', 'Spouse', 'Insured', 'Health'], ['Neel Joshi', 'Son, 22', 'Nominee', '—']], gaps: 'Reinvestment conversation before survival benefit payout' }
+    ];
+    const q = s.q.trim().toLowerCase();
+    const list = C.filter((c) => (s.seg === 'all' || c.seg.indexOf(s.seg) >= 0) && (!q || (c.n + c.mob + c.tags).toLowerCase().indexOf(q) >= 0));
+    const sel = C.find((c) => c.id === s.selId) || C[0];
+    const R = {
+      segs: this.chips([['all', 'All'], ['hh', 'Households'], ['due', 'Due in 30 days'], ['lapsed', 'Lapsed'], ['quiet', 'No contact 90+ days']], 'seg'),
+      q: s.q, setQ: this.set('q'), shown: list.length,
+      rows: list.map((c) => Object.assign({}, c, { pick: () => this.setState({ selId: c.id }) })),
+      sel: sel, members: sel.members.map((m) => ({ n: m[0], rel: m[1], roles: m[2], pols: m[3] })), gaps: sel.gaps,
+      makeOpp: () => this.flash('Opportunity created for ' + sel.hh + ' · source: household cross-sell')
+    };
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

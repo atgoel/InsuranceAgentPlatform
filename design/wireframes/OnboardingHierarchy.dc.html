@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ISP and POSP onboarding and hierarchy</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1400px; display: flex; flex-wrap: wrap; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+<nav aria-label="Console" style="flex: 1 1 240px; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #D5D9E0; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 12px"><div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #5F6776">LOGO</div><div><div style="font-weight: 600; font-size: 14px">[IMF tenant name]</div><div style="font-size: 11px; color: #5F6776">Business plan · Principal Officer view</div></div></div>
+<a href="LeadsPipeline.dc.html" style="margin: 0 4px 6px; min-height: 40px; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 13px; color: #5F6776; text-decoration: none">Search customers, policies, ISPs</a>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CRM<span style="font-weight: 400">8</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CRMLeads.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Leads</a>
+<a href="CRMPipeline.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Opportunities</a>
+<a href="CRMCustomers.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Customers &amp; households</a>
+<a href="CRMTasks.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tasks &amp; activities</a>
+<a href="CRMCampaigns.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Campaigns &amp; segments</a>
+<a href="CRMAssignment.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Routing rules</a>
+<a href="CRMImportDedup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Import &amp; duplicates</a>
+<a href="PortalFillSheet.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal desk</a>
+</div></details>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">NETWORK<span style="font-weight: 400">4</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ManagerConsole.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Dashboard</a>
+<a href="OnboardingHierarchy.dc.html" aria-current="page" style="padding: 9px 12px; border-radius: 8px; background: #EEF3FB; color: {{accent}}; font-weight: 600; font-size: 14px; text-decoration: none">Onboarding &amp; hierarchy</a>
+<a href="ProductDrives.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Product drives &amp; contests</a>
+<a href="ReportsLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Reports</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTENT<span style="font-weight: 400">2</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CampaignPublish.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Landing pages</a>
+<a href="ContentLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Content library</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTROL<span style="font-weight: 400">3</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ComplianceCentre.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Compliance centre</a>
+<a href="CommissionSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Commission</a>
+<a href="AIControls.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">AI controls</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">SETUP<span style="font-weight: 400">6</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="TenantSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenant &amp; catalogue</a>
+<a href="UsersRoles.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Users &amp; roles</a>
+<a href="Configuration.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Configuration</a>
+<a href="FormTemplates.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal forms</a>
+<a href="Integrations.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Integrations</a>
+<a href="WhiteLabel.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Brand &amp; white-label</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">PLATFORM OPERATOR<span style="font-weight: 400">1</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="OperatorTenants.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenants &amp; plans</a>
+</div></details>
+<a href="Start.dc.html" style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #1B1F27; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none">⌂ Prototype map</a>
+<a href="Main.dc.html" style="margin-top: 6px; padding: 10px 12px; border: 1px dashed #8A93A3; border-radius: 8px; color: #1B1F27; font-size: 13px; text-decoration: none">Open agent app</a>
+</nav>
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 1320px">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end"><div style="flex: 1 1 320px"><h1 style="margin: 0; font-size: 24px; font-weight: 600">Onboarding &amp; hierarchy</h1><div style="margin-top: 4px; font-size: 13px; color: #4A5262">ISP and POSP activation with evidence. Salesperson qualification, insurer appointment and tenant registration stay separate records.</div></div><button type="button" onClick="{{invite}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">+ Invite salesperson</button></div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px"><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">In onboarding</div><div style="font-size: 24px; font-weight: 600">{{inOnb}}</div><div style="font-size: 11px; color: #5F6776">Across both branches</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Median days to activate</div><div style="font-size: 24px; font-weight: 600">9</div><div style="font-size: 11px; color: #5F6776">Target [x] days</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Training due this month</div><div style="font-size: 24px; font-weight: 600">7</div><div style="font-size: 11px; color: #5F6776">Renewal CPD hours</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Licences expiring in 60 days</div><div style="font-size: 24px; font-weight: 600">3</div><div style="font-size: 11px; color: #5F6776">Reminders sent</div></div></div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+  <section style="flex: 1 1 240px; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 4px">
+    <h2 style="margin: 0; font-size: 15px; font-weight: 600; margin-bottom: 8px">Hierarchy</h2>
+    <sc-for list="{{tree}}" as="tr" hint-placeholder-count="6">
+      <button type="button" onClick="{{tr.pick}}" aria-pressed="{{tr.on}}" style="display: flex; justify-content: space-between; align-items: center; min-height: 40px; padding: 0 10px 0 {{tr.indent}}px; border: 0; border-radius: 8px; background: {{tr.bg}}; font: inherit; font-size: 13px; font-weight: {{tr.weight}}; color: #1B1F27; text-align: left"><span>{{tr.label}}</span><span style="font-size: 12px; color: #5F6776">{{tr.count}}</span></button>
+    </sc-for>
+    <div style="border-top: 1px solid #E6E9EE; margin-top: 8px; padding-top: 10px; font-size: 12px; color: #5F6776; line-height: 1.5">Transfer a leaving ISP’s customers to another eligible ISP. The move is audited and follows the tenant’s contract rules.</div>
+    <button type="button" onClick="{{transfer}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; margin-top: 6px">Transfer ownership</button>
+  </section>
+  <section style="flex: 3 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><h2 style="margin: 0; font-size: 15px; font-weight: 600">Onboarding pipeline · {{scopeLabel}}</h2><span style="font-size: 12px; color: #5F6776">Evidence from external training and exam providers</span></div>
+    <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px">
+      <sc-for list="{{cols}}" as="c" hint-placeholder-count="6">
+        <div style="flex: none; width: 158px; background: #F4F5F7; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 6px">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; font-weight: 600"><span>{{c.name}}</span><span>{{c.count}}</span></div>
+          <sc-for list="{{c.items}}" as="cd" hint-placeholder-count="1">
+            <button type="button" onClick="{{cd.pick}}" style="text-align: left; padding: 8px; border: {{cd.border}}; border-radius: 8px; background: #FFFFFF; font: inherit; color: #1B1F27"><div style="font-size: 13px; font-weight: 600">{{cd.n}}</div><div style="font-size: 11px; color: #5F6776">{{cd.type}} · {{cd.branch}} · {{cd.days}} d</div></button>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  <section style="flex: 1 1 300px; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+    <div><div style="font-size: 12px; color: #5F6776">Selected</div><h2 style="margin: 0; font-size: 15px; font-weight: 600; font-size: 18px">{{sel.n}}</h2><div style="font-size: 12px; color: #5F6776">{{sel.type}} · {{sel.branch}} branch · stage: {{sel.stage}}</div></div>
+    <sc-for list="{{checks}}" as="ck" hint-placeholder-count="5">
+      <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 13px"><span style="width: 18px; font-weight: 700; color: {{ck.color}}">{{ck.mark}}</span><span>{{ck.label}}<br><span style="font-size: 12px; color: #5F6776">{{ck.note}}</span></span></div>
+    </sc-for>
+    <sc-if value="{{needsCode}}" hint-placeholder-val="{{ false }}"><label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Insurer A agent / POSP code<input value="{{code}}" onChange="{{setCode}}" placeholder="[code issued by insurer]" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label></sc-if>
+    <div style="padding: 10px 12px; border-radius: 10px; background: #EEF3FB; border: 1px solid #B9CBEA; color: #1B1F27; font-size: 12px; line-height: 1.45"><strong>Product scope after activation:</strong> {{sel.scope}}</div>
+    <sc-if value="{{canAct}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{activate}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">Activate {{sel.n}}</button></sc-if>
+    <sc-if value="{{cantAct}}" hint-placeholder-val="{{ true }}"><button type="button" disabled style="min-height: 44px; border: 0; border-radius: 8px; background: #C9CED6; font: inherit; font-size: 13px; font-weight: 600; color: #3B4352">Activate · checklist incomplete</button></sc-if>
+    <sc-if value="{{isActive}}" hint-placeholder-val="{{ false }}"><div style="padding: 12px; border-radius: 10px; background: #E8F4EC; border: 1px solid #B7D9C3; color: #1D5F3A; font-size: 13px">Active · can now sell within scope. Deactivation is one click and immediate.</div></sc-if>
+  </section>
+</div>
+<section style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><h2 style="margin: 0; font-size: 15px; font-weight: 600">Salesperson exit · Suresh P. (ISP, Andheri)</h2><span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 10px; background: {{exitBg}}; color: {{exitColor}}">{{exitStatus}}</span></div>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px">
+    <sc-for list="{{exitSteps}}" as="ex" hint-placeholder-count="4">
+      <div style="border: 1px solid #E6E9EE; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 13px; font-weight: 600"><span style="color: {{ex.color}}">{{ex.mark}}</span> {{ex.t}}</div>
+        <div style="font-size: 12px; color: #5F6776; line-height: 1.45">{{ex.d}}</div>
+        <sc-if value="{{ex.pending}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ex.act}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; min-height: 38px">{{ex.btn}}</button></sc-if>
+      </div>
+    </sc-for>
+  </div>
+  <div style="font-size: 12px; color: #5F6776">Data ownership on exit follows the tenant contract (F97): customers stay with the tenant; the ISP receives no customer export.</div>
+</section>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: fixed; right: 24px; bottom: 24px; z-index: 5; max-width: 380px; padding: 12px 16px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { branch: 'all', selId: 'c1', code: '', active: {}, exit: {} });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const C = [
+      { id: 'c1', n: 'Deepak S.', type: 'POSP', branch: 'Andheri', stage: 'Insurer codes', days: 2, ck: [['Identity and PAN verified', 1, 'via [KYC provider]'], ['Training · 15 hours', 1, 'provider ref [ref]'], ['Exam passed', 1, 'score [x] / [y]'], ['POSP certificate uploaded', 1, 'checksum stored'], ['Insurer code mapping', 0, 'enter the code issued by Insurer A']] },
+      { id: 'c2', n: 'Anjali M.', type: 'ISP', branch: 'Pune', stage: 'Training & exam', days: 6, ck: [['Identity and PAN verified', 1, ''], ['Training', 0, '9 of 25 hours logged'], ['Exam', 0, 'booked for 9 Oct'], ['Certificate', 0, ''], ['Insurer code mapping', 0, '']] },
+      { id: 'c3', n: 'Rohit P.', type: 'ISP', branch: 'Andheri', stage: 'Documents', days: 3, ck: [['Identity and PAN verified', 0, 'PAN name mismatch · re-upload requested'], ['Training', 0, ''], ['Exam', 0, ''], ['Certificate', 0, ''], ['Insurer code mapping', 0, '']] },
+      { id: 'c4', n: 'Sana Q.', type: 'POSP', branch: 'Pune', stage: 'Invited', days: 1, ck: [['Invite accepted', 0, 'reminder sent on WhatsApp']] },
+      { id: 'c5', n: 'Vivek T.', type: 'ISP', branch: 'Andheri', stage: 'Certificate', days: 4, ck: [['Identity and PAN verified', 1, ''], ['Training · 25 hours', 1, ''], ['Exam passed', 1, ''], ['Certificate', 0, 'awaiting upload'], ['Insurer code mapping', 0, '']] },
+      { id: 'c6', n: 'Kiran B.', type: 'POSP', branch: 'Andheri', stage: 'Invited', days: 2, ck: [['Invite accepted', 0, '']] }
+    ];
+    const stageOf = (c) => s.active[c.id] ? 'Active' : c.stage;
+    const vis = C.filter((c) => s.branch === 'all' || c.branch === s.branch);
+    const stages = ['Invited', 'Documents', 'Training & exam', 'Certificate', 'Insurer codes', 'Active'];
+    const cols = stages.map((st) => { const items = vis.filter((c) => stageOf(c) === st).map((c) => Object.assign({}, c, { border: s.selId === c.id ? '2px solid ' + accent : '1px solid #D5D9E0', pick: () => this.setState({ selId: c.id, code: '' }) })); return { name: st, count: items.length, items: items }; });
+    const sel0 = C.find((c) => c.id === s.selId) || C[0];
+    const codeDone = sel0.id === 'c1' && !!s.code.trim();
+    const checks = sel0.ck.map((k) => { const done = k[1] === 1 || (k[0] === 'Insurer code mapping' && codeDone) || !!s.active[sel0.id]; return { label: k[0], note: k[2], mark: done ? '✓' : '○', color: done ? '#1D5F3A' : '#9A4A06' }; });
+    const complete = checks.every((k) => k.mark === '✓');
+    const isActive = !!s.active[sel0.id];
+    const T = [['all', '[IMF tenant name]', 16, 14], ['Andheri', 'Andheri branch', 104, 28], ['AndheriK', 'Team Kavya R. · manager', 12, 44], ['AndheriN', 'Team Neha P. · manager', 9, 44], ['Pune', 'Pune branch', 76, 28], ['PuneA', 'Team Asha K. · manager', 11, 44]];
+    const branchOf = (id) => id.indexOf('Andheri') === 0 ? 'Andheri' : (id.indexOf('Pune') === 0 ? 'Pune' : 'all');
+    const R = {
+      tree: T.map((x) => ({ label: x[1], count: x[2], indent: x[3], on: s.branch === branchOf(x[0]) && (x[0] === 'all' || x[0] === s.branch || x[0].length > 5), bg: branchOf(x[0]) === s.branch && x[0] === (s.branch === 'all' ? 'all' : s.branch) ? '#EEF3FB' : 'transparent', weight: x[3] === 14 ? '600' : '400', pick: () => this.setState({ branch: branchOf(x[0]) }) })),
+      scopeLabel: s.branch === 'all' ? 'all branches' : s.branch,
+      cols: cols, inOnb: C.filter((c) => stageOf(c) !== 'Active').length + 10,
+      sel: Object.assign({}, sel0, { stage: stageOf(sel0), scope: sel0.type === 'POSP' ? 'POSP-eligible products of tied insurers only (simple, specified products).' : 'All products of tied insurers in Life and Health; comparison limited to tied insurers.' }),
+      checks: checks, needsCode: sel0.id === 'c1' && !isActive, code: s.code, setCode: this.set('code'),
+      canAct: complete && !isActive, cantAct: !complete && !isActive, isActive: isActive,
+      activate: () => { this.setState({ active: Object.assign({}, s.active, { [sel0.id]: true }) }); this.flash(sel0.n + ' activated · product scope applied · audit event recorded'); },
+      invite: () => this.flash('Invite sent by SMS and WhatsApp under the tenant sender ID'),
+      transfer: () => this.flash('Choose source and target ISP · customers move with full history (demo)'),
+      exitSteps: [['access', 'Access revoked', 'Sessions ended and login disabled at 09:12', 'done'], ['xfer', 'Customers transferred', '64 customers to eligible ISPs by rule; owners notified', 'Transfer now'], ['codes', 'Insurer codes unmapped', 'Insurer A and Insurer C notified to close the code', 'Notify insurers'], ['hold', 'Retention hold set', 'His activity history stays for audit per retention schedule', 'Apply hold']].map((x) => {
+        const done = x[3] === 'done' || !!s.exit[x[0]];
+        return { t: x[1], d: x[2], mark: done ? '✓' : '○', color: done ? '#1D5F3A' : '#9A4A06', pending: !done, btn: x[3], act: () => { this.setState({ exit: Object.assign({}, s.exit, { [x[0]]: true }) }); this.flash(x[1] + ' · audit recorded'); } }; }),
+      exitStatus: ['xfer', 'codes', 'hold'].every((k) => s.exit[k]) ? 'Exit complete' : 'Exit in progress',
+      exitBg: ['xfer', 'codes', 'hold'].every((k) => s.exit[k]) ? '#E8F4EC' : '#FFF4E5', exitColor: ['xfer', 'codes', 'hold'].every((k) => s.exit[k]) ? '#1D5F3A' : '#7A3E06'
+    };
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

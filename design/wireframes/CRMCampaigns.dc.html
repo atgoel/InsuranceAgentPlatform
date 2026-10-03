@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CRM campaigns and segments</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1150px; display: flex; flex-wrap: wrap; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+<nav aria-label="Console" style="flex: 1 1 240px; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #D5D9E0; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 12px"><div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #5F6776">LOGO</div><div><div style="font-weight: 600; font-size: 14px">[IMF tenant name]</div><div style="font-size: 11px; color: #5F6776">Business plan · Principal Officer view</div></div></div>
+<a href="LeadsPipeline.dc.html" style="margin: 0 4px 6px; min-height: 40px; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 13px; color: #5F6776; text-decoration: none">Search customers, policies, ISPs</a>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CRM<span style="font-weight: 400">8</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CRMLeads.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Leads</a>
+<a href="CRMPipeline.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Opportunities</a>
+<a href="CRMCustomers.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Customers &amp; households</a>
+<a href="CRMTasks.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tasks &amp; activities</a>
+<a href="CRMCampaigns.dc.html" aria-current="page" style="padding: 9px 12px; border-radius: 8px; background: #EEF3FB; color: {{accent}}; font-weight: 600; font-size: 14px; text-decoration: none">Campaigns &amp; segments</a>
+<a href="CRMAssignment.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Routing rules</a>
+<a href="CRMImportDedup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Import &amp; duplicates</a>
+<a href="PortalFillSheet.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal desk</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">NETWORK<span style="font-weight: 400">4</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ManagerConsole.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Dashboard</a>
+<a href="OnboardingHierarchy.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Onboarding &amp; hierarchy</a>
+<a href="ProductDrives.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Product drives &amp; contests</a>
+<a href="ReportsLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Reports</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTENT<span style="font-weight: 400">2</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CampaignPublish.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Landing pages</a>
+<a href="ContentLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Content library</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTROL<span style="font-weight: 400">3</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ComplianceCentre.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Compliance centre</a>
+<a href="CommissionSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Commission</a>
+<a href="AIControls.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">AI controls</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">SETUP<span style="font-weight: 400">6</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="TenantSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenant &amp; catalogue</a>
+<a href="UsersRoles.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Users &amp; roles</a>
+<a href="Configuration.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Configuration</a>
+<a href="FormTemplates.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal forms</a>
+<a href="Integrations.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Integrations</a>
+<a href="WhiteLabel.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Brand &amp; white-label</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">PLATFORM OPERATOR<span style="font-weight: 400">1</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="OperatorTenants.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenants &amp; plans</a>
+</div></details>
+<a href="Start.dc.html" style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #1B1F27; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none">⌂ Prototype map</a>
+<a href="Main.dc.html" style="margin-top: 6px; padding: 10px 12px; border: 1px dashed #8A93A3; border-radius: 8px; color: #1B1F27; font-size: 13px; text-decoration: none">Open agent app</a>
+</nav>
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 1320px">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end"><div style="flex: 1 1 320px"><h1 style="margin: 0; font-size: 24px; font-weight: 600">Campaigns &amp; segments</h1><div style="margin-top: 4px; font-size: 13px; color: #4A5262">Audiences from the book, sent through approved templates, attributed to insurer-confirmed issuance.</div></div><a href="CampaignPublish.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">Landing pages</a></div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+  <section style="flex: 1 1 300px; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+    <h2 style="margin: 0; font-size: 15px; font-weight: 600">Saved segments</h2>
+    <sc-for list="{{segs}}" as="sg" hint-placeholder-count="4">
+      <button type="button" onClick="{{sg.pick}}" aria-pressed="{{sg.on}}" style="text-align: left; padding: 10px 12px; border: 1px solid {{sg.border}}; border-radius: 10px; background: {{sg.bg}}; font: inherit; color: #1B1F27"><div style="font-size: 13px; font-weight: 600">{{sg.n}}</div><div style="font-size: 12px; color: #5F6776">{{sg.size}} people · {{sg.cons}} with marketing consent</div></button>
+    </sc-for>
+  </section>
+  <section style="flex: 2 1 520px; min-width: 0; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><h2 style="margin: 0; font-size: 15px; font-weight: 600">Segment rules · {{cur.n}}</h2><span style="font-size: 13px"><strong>{{eligible}}</strong> reachable now</span></div>
+    <sc-for list="{{cur.rules}}" as="ru" hint-placeholder-count="3">
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">{{ru.a}}</span><span style="font-size: 12px; color: #5F6776">{{ru.op}}</span><span style="font-weight: 600">{{ru.v}}</span></div>
+    </sc-for>
+    <label style="display: flex; gap: 10px; align-items: center; font-size: 13px"><input type="checkbox" checked="{{exQuiet}}" onChange="{{toggleQuiet}}" style="width: 18px; height: 18px">Exclude people contacted in the last 7 days</label>
+    <div style="padding: 10px 12px; border-radius: 10px; background: #EEF3FB; border: 1px solid #B9CBEA; color: #1B1F27; font-size: 12px; line-height: 1.45">Always excluded: suppression list, withdrawn consent, open complaints. Suppression is rechecked at send time.</div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; align-items: end; border-top: 1px solid #E6E9EE; padding-top: 12px">
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Channel<select value="{{ch}}" onChange="{{setCh}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option>WhatsApp Business API</option><option>SMS (DLT template)</option><option>Email</option></select></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Approved template<select style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option>{{cur.tpl}}</option></select></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Send at<input type="datetime-local" value="2026-10-04T10:00" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <button type="button" onClick="{{schedule}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">Schedule to {{eligible}}</button>
+    </div>
+  </section>
+</div>
+<section style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+  <h2 style="margin: 0; font-size: 15px; font-weight: 600">Campaign results · attribution to issuance</h2>
+<div style="overflow-x: auto"><div role="table" style="min-width: 1000px; font-size: 13px"><div role="row" style="display: grid; grid-template-columns: 1.8fr 1fr 1.2fr 0.8fr 0.8fr 0.7fr 0.8fr 1fr; border-bottom: 1px solid #D5D9E0; font-size: 11px; color: #5F6776"><span role="columnheader" style="padding: 8px 6px">Campaign</span><span role="columnheader" style="padding: 8px 6px">Channel</span><span role="columnheader" style="padding: 8px 6px">Content version</span><span role="columnheader" style="padding: 8px 6px">Sent</span><span role="columnheader" style="padding: 8px 6px">Delivered</span><span role="columnheader" style="padding: 8px 6px">Leads</span><span role="columnheader" style="padding: 8px 6px">Proposals</span><span role="columnheader" style="padding: 8px 6px">Issued premium</span></div><sc-for list="{{camps}}" as="cp" hint-placeholder-count="4"><div role="row" style="display: grid; grid-template-columns: 1.8fr 1fr 1.2fr 0.8fr 0.8fr 0.7fr 0.8fr 1fr; align-items: center; border-bottom: 1px solid #E6E9EE"><span role="cell" style="padding: 10px 6px; "><strong>{{cp.n}}</strong><br><span style="font-size: 12px; color: #5F6776">{{cp.state}}</span></span><span role="cell" style="padding: 10px 6px; ">{{cp.ch}}</span><span role="cell" style="padding: 10px 6px; font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{cp.ver}}</span><span role="cell" style="padding: 10px 6px; ">{{cp.sent}}</span><span role="cell" style="padding: 10px 6px; ">{{cp.del}}</span><span role="cell" style="padding: 10px 6px; ">{{cp.leads}}</span><span role="cell" style="padding: 10px 6px; ">{{cp.props}}</span><span role="cell" style="padding: 10px 6px; "><strong>{{cp.iss}}</strong></span></div></sc-for></div></div>
+</section>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: fixed; right: 24px; bottom: 24px; z-index: 5; max-width: 380px; padding: 12px 16px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { sid: 's1', exQuiet: true, ch: 'WhatsApp Business API' });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const S = [
+      { id: 's1', n: 'Health renewals in 30 days', size: 412, cons: 371, tpl: 'Health renewal reminder · WA v3 (approved)', rules: [['Policy line', 'is', 'Health'], ['Renewal date', 'within', 'next 30 days'], ['Consent · WhatsApp marketing', 'is', 'Granted']] },
+      { id: 's2', n: 'Term gap · parents with child under 10', size: 228, cons: 190, tpl: 'Protection check-in · WA v2 (approved)', rules: [['Household has child', 'age under', '10'], ['Term cover', 'is', 'none or < 10× income'], ['Consent · WhatsApp marketing', 'is', 'Granted']] },
+      { id: 's3', n: 'Lapsed · revival window open', size: 64, cons: 64, tpl: 'Revival service message · WA v1 (approved)', rules: [['Policy status', 'is', 'Lapsed'], ['Lapsed for', 'less than', 'revival window'], ['Message type', 'is', 'Service (not marketing)']] },
+      { id: 's4', n: 'Birthdays this week', size: 39, cons: 39, tpl: 'Birthday greeting · WA v1 (no product claims)', rules: [['Date of birth', 'in', 'this week'], ['Opt-out of greetings', 'is', 'No']] }
+    ];
+    const cur = S.find((x) => x.id === s.sid) || S[0];
+    const eligible = cur.cons - (s.exQuiet ? Math.round(cur.cons * 0.12) : 0);
+    const R = {
+      segs: S.map((x) => ({ n: x.n, size: x.size, cons: x.cons, on: x.id === s.sid, bg: x.id === s.sid ? '#EEF3FB' : '#FFFFFF', border: x.id === s.sid ? accent : '#D5D9E0', pick: () => this.setState({ sid: x.id }) })),
+      cur: Object.assign({}, cur, { rules: cur.rules.map((r) => ({ a: r[0], op: r[1], v: r[2] })) }), eligible: eligible,
+      exQuiet: s.exQuiet, toggleQuiet: this.tog('exQuiet'), ch: s.ch, setCh: this.set('ch'),
+      schedule: () => this.flash('Scheduled · ' + eligible + ' recipients · suppression rechecked at send · results attribute to issuance'),
+      camps: [
+        ['Diwali health renewal', 'Running · ends 15 Nov', 'WhatsApp', 'tpl v3 · page v4', '371', '366', '58', '14', '₹2.6 L'],
+        ['Family health landing page', 'Running', 'Landing page', 'page v2', '—', '—', '96', '11', '₹1.9 L'],
+        ['Protection check-in · Sept', 'Completed', 'WhatsApp', 'tpl v2', '204', '199', '23', '6', '₹1.1 L'],
+        ['Pune auto expo', 'Completed · import', 'Event', '—', '—', '—', '1,180', '41', '₹3.8 L']
+      ].map((c) => ({ n: c[0], state: c[1], ch: c[2], ver: c[3], sent: c[4], del: c[5], leads: c[6], props: c[7], iss: c[8] }))
+    };
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

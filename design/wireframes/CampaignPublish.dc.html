@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Campaign page editor with approval gate</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1150px; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+  <header style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 14px 24px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0">
+    <a href="ManagerConsole.dc.html" style="font-size: 13px">← Console</a> <a href="ComplianceCentre.dc.html" style="font-size: 13px">Approval register</a>
+    <h1 style="margin: 0; flex: 1 1 280px; font-size: 18px; font-weight: 600">Health renewal · Diwali landing page</h1>
+    <ol aria-label="Approval state" style="display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 12px">
+      <sc-for list="{{stages}}" as="st" hint-placeholder-count="4">
+        <li style="padding: 6px 10px; border-radius: 14px; border: 1px solid {{st.border}}; background: {{st.bg}}; color: {{st.color}}; font-weight: {{st.weight}}">{{st.label}}</li>
+      </sc-for>
+    </ol>
+    <button type="button" onClick="{{reset}}" style="min-height: 44px; padding: 0 14px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Reset demo</button>
+  </header>
+  <sc-if value="{{published}}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="margin: 16px 24px 0; padding: 12px 16px; border-radius: 10px; background: #E8F4EC; border: 1px solid #B7D9C3; color: #1D5F3A; font-size: 14px">Published · live at insure.[tenantdomain].in/health-renewal · ISPs can now share personalised links on WhatsApp</div>
+  </sc-if>
+  <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 20px; padding: 20px 24px 40px; align-items: flex-start">
+    <aside aria-label="Approved blocks" style="flex: 1 1 200px; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0 0 4px; font-size: 13px; font-weight: 600">Approved blocks</h2>
+      <sc-for list="{{blocks}}" as="bk" hint-placeholder-count="5">
+        <button type="button" onClick="{{bk.toggle}}" aria-pressed="{{bk.on}}" style="display: flex; justify-content: space-between; align-items: center; min-height: 44px; text-align: left; padding: 0 12px; border: 1px {{bk.borderStyle}} {{bk.borderColor}}; border-radius: 8px; background: {{bk.bg}}; font: inherit; font-size: 13px; color: #1B1F27"><span>{{bk.label}}</span><span style="font-size: 11px; color: #4A5262">{{bk.state}}</span></button>
+      </sc-for>
+      <div style="font-size: 11px; color: #5F6776; line-height: 1.4; margin-top: 4px">Blocks come from the design system. Authors cannot add arbitrary code or edit insurer wording.</div>
+    </aside>
+    <section aria-label="Page preview" style="flex: 3 1 520px; min-width: 0; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; overflow: hidden">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #E6E9EE; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #4A5262"><span style="width: 8px; height: 8px; border-radius: 4px; background: #8A93A3"></span><span style="width: 8px; height: 8px; border-radius: 4px; background: #8A93A3"></span>insure.[tenantdomain].in/health-renewal</div>
+      <div style="padding: 24px; display: flex; flex-direction: column; gap: 20px">
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center">
+          <div style="flex: 1 1 260px"><div style="font-size: 26px; font-weight: 600; line-height: 1.2">Renew your family health cover before it lapses</div><div style="margin-top: 8px; font-size: 14px; color: #4A5262">Talk to a certified advisor in your language.</div></div>
+          <div style="flex: 1 1 220px; height: 170px; border-radius: 8px; background: repeating-linear-gradient(45deg, #E6E9EE 0 8px, #F4F5F7 8px 16px); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #4A5262">[HERO IMAGE · approved asset]</div>
+        </div>
+        <div style="border: 2px dashed {{accent}}; border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 6px">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4A5262">PRODUCT SUMMARY · INSURER C · UIN [UIN] · WORDING v[x] · LOCKED TEXT</span>
+          <div style="font-size: 15px; font-weight: 600">[Plan name] family floater</div>
+          <div style="font-size: 13px; color: #4A5262">[Approved product summary text from the catalogue. Marketing cannot edit pricing or wording.]</div>
+        </div>
+        <sc-if value="{{showAgent}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; gap: 12px; align-items: center; padding: 12px; border: 1px solid #D5D9E0; border-radius: 8px">
+            <div style="width: 48px; height: 48px; border-radius: 24px; background: #E6E9EE; display: flex; align-items: center; justify-content: center; font-weight: 600">[ ]</div>
+            <div style="font-size: 13px"><strong>[Salesperson name]</strong> · auto-filled for each ISP who shares the link<br><span style="color: #5F6776">Registration no. [number] · Hindi, English</span></div>
+          </div>
+        </sc-if>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; padding: 16px; border: 1px solid #D5D9E0; border-radius: 8px">
+          <sc-if value="{{noLead}}" hint-placeholder-val="{{ true }}">
+            <div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px">
+              <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px">Name<input value="{{leadName}}" onChange="{{setLeadName}}" style="min-height: 40px; border: 1px solid #D5D9E0; border-radius: 6px; padding: 0 8px; font: inherit"></label>
+              <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px">Mobile<input type="tel" value="{{leadMobile}}" onChange="{{setLeadMobile}}" style="min-height: 40px; border: 1px solid #D5D9E0; border-radius: 6px; padding: 0 8px; font: inherit"></label>
+              <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px">City<input value="{{leadCity}}" onChange="{{setLeadCity}}" style="min-height: 40px; border: 1px solid #D5D9E0; border-radius: 6px; padding: 0 8px; font: inherit"></label>
+              <label style="grid-column: 1 / -1; display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: #4A5262"><input type="checkbox" checked="{{leadConsent}}" onChange="{{toggleLeadConsent}}" style="width: 16px; height: 16px; margin: 1px 0 0">I agree to be contacted on phone and WhatsApp about this enquiry (notice v2).</label>
+              <button type="button" onClick="{{submitLead}}" disabled="{{leadDisabled}}" style="grid-column: 1 / -1; min-height: 44px; border: 0; border-radius: 8px; background: {{leadBg}}; font: inherit; font-size: 14px; font-weight: 600; color: {{leadColor}}">{{leadBtn}}</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{leadDone}}" hint-placeholder-val="{{ false }}">
+            <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; font-size: 13px">
+              <strong>Thank you, {{leadName}}. An advisor will call you shortly.</strong>
+              <div style="padding: 10px 12px; border: 1.5px dashed #8A93A3; border-radius: 8px; font-size: 12px; line-height: 1.6; color: #4A5262">Behind the scenes · lead validated · consent v2 stored · deduplicated (no match) · source: Diwali health page · assigned to Kavya R. (eligible ISP · Health · {{leadCityOrBranch}}) · follow-up due in 2 h</div>
+              <button type="button" onClick="{{clearLead}}" style="align-self: flex-start; min-height: 36px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 6px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">Submit another</button>
+            </div>
+          </sc-if>
+        </div>
+        <sc-if value="{{showFaq}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <div style="font-size: 15px; font-weight: 600">Frequently asked questions</div>
+            <div style="padding: 10px 12px; border: 1px solid #E6E9EE; border-radius: 6px; font-size: 13px">What happens if I miss my renewal date? [Approved answer]</div>
+            <div style="padding: 10px 12px; border: 1px solid #E6E9EE; border-radius: 6px; font-size: 13px">Can I add a family member at renewal? [Approved answer]</div>
+          </div>
+        </sc-if>
+        <div style="font-size: 11px; color: #4A5262; line-height: 1.5; border-top: 1px solid #E6E9EE; padding-top: 12px">[Tenant legal name] · IRDAI Registration No. [number], valid till [date] · Principal Officer: [name] · Grievance: [contact] · Insurance is the subject matter of solicitation.</div>
+      </div>
+    </section>
+    <aside aria-label="Publish checklist" style="flex: 1 1 280px; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 14px; font-weight: 600">Publish checklist</h2>
+      <div style="display: flex; gap: 8px; font-size: 13px"><span style="color: #1D5F3A; font-weight: 700">✓</span>Approved blocks only</div>
+      <div style="display: flex; gap: 8px; font-size: 13px"><span style="color: #1D5F3A; font-weight: 700">✓</span>Product UIN and wording linked</div>
+      <div style="display: flex; gap: 8px; font-size: 13px"><span style="color: #1D5F3A; font-weight: 700">✓</span>Mandatory disclosures present</div>
+      <div style="display: flex; gap: 8px; font-size: 13px"><span style="color: #1D5F3A; font-weight: 700">✓</span>Form consent version attached</div>
+      <sc-if value="{{notAttached}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1.5px solid #B45309; border-radius: 8px; background: #FFF4E5">
+          <div style="display: flex; gap: 8px; font-size: 13px; font-weight: 600; color: #7A3E06"><span>✕</span>Insurer advertisement approval missing</div>
+          <div style="font-size: 12px; color: #7A3E06; line-height: 1.4">Tenant rules require an approval reference for product creatives.</div>
+          <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px">Insurer<select value="{{insurer}}" onChange="{{setInsurer}}" style="min-height: 40px; border: 1px solid #D5D9E0; border-radius: 6px; padding: 0 8px; font: inherit; background: #FFFFFF"><option value="Insurer C">Insurer C</option><option value="Insurer A">Insurer A</option></select></label>
+          <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px">Approval reference<input value="{{ref}}" onChange="{{setRef}}" placeholder="e.g. ADV/2026/0193" style="min-height: 40px; border: 1px solid #D5D9E0; border-radius: 6px; padding: 0 8px; font: inherit"></label>
+          <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px">Valid until<input type="date" value="{{until}}" onChange="{{setUntil}}" style="min-height: 40px; border: 1px solid #D5D9E0; border-radius: 6px; padding: 0 8px; font: inherit"></label>
+          <button type="button" onClick="{{attach}}" style="min-height: 40px; border: 1px solid #D5D9E0; border-radius: 6px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Attach approval</button>
+          <sc-if value="{{attachError}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: #7A3E06; font-weight: 600">Enter the reference and a future expiry date.</div></sc-if>
+        </div>
+      </sc-if>
+      <sc-if value="{{attached}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid #B7D9C3; border-radius: 8px; background: #E8F4EC; font-size: 13px; color: #1D5F3A">
+          <strong>✓ Advertisement approval attached</strong>
+          <span style="font-size: 12px">{{insurer}} · {{ref}} · valid until {{until}}</span>
+          <span style="font-size: 12px">Page auto-unpublishes when the approval expires.</span>
+        </div>
+      </sc-if>
+      <div style="font-size: 12px; color: #4A5262">Reviewer: [Compliance reviewer] · Publisher: [CMS publisher]</div>
+      <button type="button" onClick="{{publish}}" disabled="{{publishDisabled}}" style="min-height: 48px; border: 0; border-radius: 8px; background: {{publishBg}}; font: inherit; font-size: 14px; font-weight: 600; color: {{publishColor}}">{{publishLabel}}</button>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = this.initial();
+  }
+  initial() {
+    return { insurer: 'Insurer C', ref: '', until: '', attached: false, attachError: false, published: false, faq: false, agent: false,
+      leadName: '', leadMobile: '', leadCity: '', leadConsent: false, leadDone: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const stageIdx = s.published ? 3 : (s.attached ? 2 : 1);
+    const stages = ['Draft', 'In review', 'Approved', 'Published'].map((l, i) => {
+      const cur = i === stageIdx; const past = i < stageIdx;
+      return { label: past ? l + ' ✓' : l, bg: cur ? accent : (past ? '#E6E9EE' : '#FFFFFF'), color: cur ? '#FFFFFF' : (past ? '#1B1F27' : '#4A5262'),
+        border: cur ? accent : (past ? '#E6E9EE' : '#D5D9E0'), weight: cur ? '600' : '400' };
+    });
+    const blockDefs = [['hero', 'Hero with image', true], ['product', 'Product summary', true], ['agent', 'Agent card', s.agent], ['lead', 'Lead form', true], ['faq', 'FAQ', s.faq]];
+    const blocks = blockDefs.map((b) => {
+      const fixed = b[0] === 'hero' || b[0] === 'product' || b[0] === 'lead';
+      return { label: b[1], on: b[2], state: fixed ? 'On page' : (b[2] ? 'Remove' : 'Add'),
+        bg: b[2] ? '#EEF3FB' : '#F4F5F7', borderStyle: b[2] ? 'solid' : 'dashed', borderColor: b[2] ? '#B9CBEA' : '#8A93A3',
+        toggle: () => { if (b[0] === 'faq') this.setState({ faq: !s.faq }); if (b[0] === 'agent') this.setState({ agent: !s.agent }); } };
+    });
+    const leadOk = s.leadName.trim() && s.leadMobile.replace(/\D/g, '').length >= 10 && s.leadConsent;
+    const today = '2026-10-03';
+    const canPublish = s.attached && !s.published;
+    return {
+      accent: accent, stages: stages, blocks: blocks,
+      published: s.published, showFaq: s.faq, showAgent: s.agent,
+      insurer: s.insurer, setInsurer: (e) => this.setState({ insurer: e.target.value }),
+      ref: s.ref, setRef: (e) => this.setState({ ref: e.target.value }),
+      until: s.until, setUntil: (e) => this.setState({ until: e.target.value }),
+      attached: s.attached, notAttached: !s.attached, attachError: s.attachError,
+      attach: () => {
+        if (s.ref.trim() && s.until && s.until > today) this.setState({ attached: true, attachError: false });
+        else this.setState({ attachError: true });
+      },
+      publishDisabled: !canPublish,
+      publishBg: canPublish ? accent : (s.published ? '#1D5F3A' : '#C9CED6'),
+      publishColor: canPublish || s.published ? '#FFFFFF' : '#3B4352',
+      publishLabel: s.published ? 'Published ✓' : (s.attached ? 'Publish page' : 'Publish · blocked until approval attached'),
+      publish: () => this.setState({ published: true }),
+      leadName: s.leadName, setLeadName: (e) => this.setState({ leadName: e.target.value }),
+      leadMobile: s.leadMobile, setLeadMobile: (e) => this.setState({ leadMobile: e.target.value }),
+      leadCity: s.leadCity, setLeadCity: (e) => this.setState({ leadCity: e.target.value }),
+      leadCityOrBranch: s.leadCity.trim() || 'Andheri',
+      leadConsent: s.leadConsent, toggleLeadConsent: () => this.setState({ leadConsent: !s.leadConsent }),
+      leadDisabled: !leadOk, leadBg: leadOk ? '#3B4352' : '#C9CED6', leadColor: leadOk ? '#FFFFFF' : '#3B4352',
+      leadBtn: s.published ? 'Request a callback' : 'Request a callback (test submission)',
+      submitLead: () => this.setState({ leadDone: true }),
+      leadDone: s.leadDone, noLead: !s.leadDone,
+      clearLead: () => this.setState({ leadDone: false, leadName: '', leadMobile: '', leadCity: '', leadConsent: false }),
+      reset: () => this.setState(this.initial())
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Agent home and daily plan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+  <header style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0">
+    <div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #5F6776">LOGO</div>
+    <div style="flex: 1; font-weight: 600; font-size: 15px">[Tenant brand]</div>
+    <button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; padding: 0 10px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langLabel}}</button>
+    <a href="SoloPlan.dc.html" aria-label="Account and plan" style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 22px; border: 1px solid #D5D9E0; background: #E6E9EE; font-size: 13px; font-weight: 600; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">RK</a>
+  </header>
+  <main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 14px 16px 24px">
+    <sc-if value="{{offline}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; border-radius: 8px; background: #FFF4E5; border: 1px solid #F0C48A; font-size: 12px; color: #7A3E06">
+        <span style="flex: 1">{{T.offline}}</span>
+        <button type="button" onClick="{{sync}}" style="min-height: 36px; padding: 0 10px; border: 1px solid #F0C48A; border-radius: 6px; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600; color: #7A3E06">{{T.sync}}</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{synced}}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 8px 12px; border-radius: 8px; background: #E8F4EC; border: 1px solid #B7D9C3; font-size: 12px; color: #1D5F3A">{{T.synced}}</div>
+    </sc-if>
+    <div>
+      <div style="font-size: 13px; color: #5F6776">{{T.date}}</div>
+      <h1 style="margin: 2px 0 0; font-size: 22px; font-weight: 600">{{T.greet}}</h1>
+    </div>
+    <a href="HelpCentre.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #B9CBEA; border-radius: 10px; background: #EEF3FB; text-decoration: none; color: #1B1F27"><span style="flex: 1"><span style="display: block; font-size: 13px; font-weight: 600">{{T.setup}}</span><span style="display: block; height: 6px; border-radius: 3px; background: #D5D9E0; margin: 6px 0 4px"><span style="display: block; width: 50%; height: 6px; border-radius: 3px; background: {{accent}}"></span></span><span style="font-size: 11px; color: #4A5262">{{T.setupNext}}</span></span><span style="font-size: 18px; color: {{accent}}">›</span></a>
+    <a href="LeadsPipeline.dc.html" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 10px; background: #FFFFFF; font-size: 13px; color: #5F6776; text-decoration: none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>{{T.search}}</a>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+      <a href="LeadsPipeline.dc.html" style="min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1px solid #D5D9E0; border-radius: 10px; background: #FFFFFF; font-size: 11px; color: #1B1F27; text-decoration: none; text-align: center"><span style="font-size: 18px; color: {{accent}}">+</span>{{T.qaLead}}</a>
+      <a href="BookImport.dc.html" style="min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1px solid #D5D9E0; border-radius: 10px; background: #FFFFFF; font-size: 11px; color: #1B1F27; text-decoration: none; text-align: center"><span style="font-size: 18px; color: {{accent}}">▣</span>{{T.qaScan}}</a>
+      <a href="Calculators.dc.html" style="min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1px solid #D5D9E0; border-radius: 10px; background: #FFFFFF; font-size: 11px; color: #1B1F27; text-decoration: none; text-align: center"><span style="font-size: 18px; color: {{accent}}">%</span>{{T.qaNeeds}}</a>
+      <a href="ResearchAssistant.dc.html" style="min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1px solid #D5D9E0; border-radius: 10px; background: #FFFFFF; font-size: 11px; color: #1B1F27; text-decoration: none; text-align: center"><span style="font-size: 18px; color: {{accent}}">?</span>{{T.qaAsk}}</a>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <a href="DueCalendar.dc.html" style="display: block; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 10px; text-decoration: none; color: #1B1F27"><div style="font-size: 22px; font-weight: 600">12</div><div style="font-size: 11px; color: #5F6776">{{T.dues}}</div></a>
+      <a href="MyTasks.dc.html" style="display: block; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 10px; text-decoration: none; color: #1B1F27"><div style="font-size: 22px; font-weight: 600">{{openTasks}}</div><div style="font-size: 11px; color: #5F6776">{{T.follow}}</div></a>
+      <a href="IssuanceTracker.dc.html" style="display: block; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 10px; text-decoration: none; color: #1B1F27"><div style="font-size: 22px; font-weight: 600">3</div><div style="font-size: 11px; color: #5F6776">{{T.proposals}}</div></a>
+    </div>
+    <a href="AIDraft.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 14px; border: 1.5px dashed #8A93A3; border-radius: 12px; background: #FFFFFF; text-decoration: none; color: #1B1F27">
+      <span style="width: 40px; height: 40px; flex: none; border-radius: 20px; background: {{accent}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3"></path></svg></span>
+      <span><span style="display: block; font-weight: 600; font-size: 14px">{{T.voiceTitle}}</span><span style="display: block; font-size: 12px; color: #5F6776">{{T.voiceSub}}</span></span>
+    </a>
+    <div style="display: flex; justify-content: space-between; align-items: baseline">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 600">{{T.sectionDues}}</h2>
+      <a href="DueCalendar.dc.html" style="font-size: 12px">{{T.seeAll}}</a>
+    </div>
+    <sc-for list="{{dues}}" as="d" hint-placeholder-count="2">
+      <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; gap: 8px">
+          <div><a href="Customer360.dc.html" style="font-weight: 600; font-size: 14px; color: #1B1F27">{{d.name}}</a><div style="font-size: 12px; color: #5F6776">{{d.meta}}</div></div>
+          <div style="text-align: right"><div style="font-weight: 600; font-size: 14px">{{d.amt}}</div><div style="font-size: 11px; font-weight: 600; color: {{d.whenColor}}">{{d.when}}</div></div>
+        </div>
+        <sc-if value="{{d.logged}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border-radius: 6px; background: #E8F4EC; font-size: 12px; color: #1D5F3A"><span>{{d.loggedText}}</span><button type="button" onClick="{{d.undo}}" style="min-height: 32px; border: 0; background: none; font: inherit; font-size: 12px; color: #1F5FBF">{{T.undo}}</button></div>
+        </sc-if>
+        <div style="display: flex; gap: 8px">
+          <button type="button" onClick="{{d.call}}" style="flex: 1; min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">{{T.call}}</button>
+          <a href="AIDraft.dc.html" style="flex: 1; min-height: 44px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">WhatsApp</a>
+          <button type="button" onClick="{{d.toggle}}" aria-expanded="{{d.open}}" style="flex: 1; min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">{{T.log}}</button>
+          <a href="{{d.link}}" style="flex: 1; min-height: 44px; box-sizing: border-box; border-radius: 8px; background: {{accent}}; font-size: 13px; font-weight: 600; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center">{{d.linkLabel}}</a>
+        </div>
+        <sc-if value="{{d.open}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-wrap: wrap; gap: 6px">
+            <sc-for list="{{d.options}}" as="o" hint-placeholder-count="3">
+              <button type="button" onClick="{{o.pick}}" style="min-height: 40px; padding: 0 12px; border: 1px solid {{accent}}; border-radius: 20px; background: #EEF3FB; font: inherit; font-size: 12px; color: #1B1F27">{{o.label}}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-for>
+    <h2 style="margin: 4px 0 0; font-size: 15px; font-weight: 600">{{T.today}}</h2>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; display: flex; flex-direction: column">
+      <sc-for list="{{tasks}}" as="t" hint-placeholder-count="3">
+        <label style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 4px 12px; border-bottom: 1px solid #E6E9EE">
+          <input type="checkbox" checked="{{t.done}}" onChange="{{t.toggle}}" style="width: 18px; height: 18px">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5F6776; width: 48px">{{t.time}}</span>
+          <span style="font-size: 13px; text-decoration: {{t.deco}}; color: {{t.color}}">{{t.text}}</span>
+        </label>
+      </sc-for>
+    </div>
+  </main>
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div>
+  </sc-if>
+  <nav aria-label="Primary" style="display: flex; background: #FFFFFF; border-top: 1px solid #D5D9E0; padding: 4px 4px 8px">
+  <a href="Main.dc.html" aria-current="page" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; font-weight: 600; color: {{accent}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>{{T.navToday}}</a>
+  <a href="LeadsPipeline.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8z"></path></svg>{{T.navLeads}}</a>
+  <a href="Customer360.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path></svg>{{T.navCust}}</a>
+  <a href="DueCalendar.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>{{T.navBook}}</a>
+  <a href="Income.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4.5 4.3-7 8-7s7 2.5 8 7"></path></svg>{{T.navMe}}</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { lang: (() => { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } })(), synced: false, openLog: null, outcomes: {}, done: {}, toast: '' };
+  }
+  componentWillUnmount() { clearTimeout(this._t); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2400);
+  }
+  renderVals() {
+    const s = this.state;
+    const hi = s.lang === 'hi';
+    const T = hi ? {
+      offline: 'ऑफ़लाइन · 3 नोट्स कतार में', sync: 'अभी सिंक करें', synced: 'सब सिंक हो गया · 3 नोट्स सहेजे गए',
+      date: 'शनिवार, 3 अक्टूबर', greet: 'सुप्रभात, रवि', dues: 'इस हफ़्ते देय', follow: 'आज के फ़ॉलो-अप', proposals: 'लंबित प्रस्ताव',
+      voiceTitle: 'आवाज़ से कॉल दर्ज करें', voiceSub: 'हिंदी, अंग्रेज़ी या हिंग्लिश · AI गतिविधि बनाएगा',
+      sectionDues: 'देय प्रीमियम और रिन्यूअल', seeAll: 'सभी 12 देखें', today: 'आज',
+      call: 'कॉल', log: 'नतीजा', open: 'खोलें', quote: 'कोटेशन', undo: 'वापस लें',
+      grace: 'ग्रेस 3 दिन में समाप्त', renews: '9 अक्टूबर को रिन्यूअल', loggedPrefix: 'दर्ज: ', calling: 'कॉल शुरू हो रही है… (डेमो)', saved: 'CRM में दर्ज किया गया',
+      out: { paid: 'भुगतान हो गया', promised: 'भुगतान का वादा', unreachable: 'संपर्क नहीं हुआ' },
+      navToday: 'आज', navCust: 'ग्राहक', navLeads: 'लीड', navMe: 'मैं', navBook: 'बुक', search: 'नाम, मोबाइल या पॉलिसी नंबर खोजें', setup: 'सेटअप पूरा करें · 6 में से 3', setupNext: 'अगला: WhatsApp जोड़ें', qaLead: 'नई लीड', qaScan: 'पॉलिसी स्कैन', qaNeeds: 'ज़रूरत जाँच', qaAsk: 'AI से पूछें',
+      metaA: 'बीमा कंपनी A · टर्म लाइफ़ · वार्षिक', metaC: 'बीमा कंपनी C · हेल्थ फ़्लोटर · रिन्यूअल',
+      t1: 'प्रिया नायर · टर्म लाइफ़ कोटेशन भेजें', t2: 'इमरान ख़ान · प्रस्ताव दस्तावेज़ लें', t3: 'जन्मदिन · मीना अय्यर · शुभकामना भेजें', allDay: 'पूरा दिन'
+    } : {
+      offline: 'Offline · 3 notes queued', sync: 'Sync now', synced: 'All synced · 3 notes saved to CRM',
+      date: 'Saturday, 3 October', greet: 'Good morning, Ravi', dues: 'Dues this week', follow: 'Follow-ups today', proposals: 'Proposals pending',
+      voiceTitle: 'Log a call by voice', voiceSub: 'English, Hindi or Hinglish · AI drafts the activity',
+      sectionDues: 'Dues and renewals', seeAll: 'See all 12', today: 'Today',
+      call: 'Call', log: 'Outcome', open: 'Open', quote: 'Quote', undo: 'Undo',
+      grace: 'Grace ends in 3 days', renews: 'Renews 9 Oct', loggedPrefix: 'Logged: ', calling: 'Starting call… (demo)', saved: 'Saved to CRM activity',
+      out: { paid: 'Paid', promised: 'Promised to pay', unreachable: 'Not reachable' },
+      navToday: 'Today', navCust: 'Customers', navLeads: 'Leads', navMe: 'Me', navBook: 'Book', search: 'Search name, mobile or policy no.', setup: 'Finish setup · 3 of 6 done', setupNext: 'Next: connect WhatsApp', qaLead: 'New lead', qaScan: 'Scan policy', qaNeeds: 'Needs check', qaAsk: 'Ask AI',
+      metaA: 'Insurer A · Term life · Annual', metaC: 'Insurer C · Health floater · Renewal',
+      t1: 'Priya Nair · send term life quote', t2: 'Imran Khan · collect proposal documents', t3: 'Birthday · Meena Iyer · send greeting', allDay: 'All day'
+    };
+    const dueSrc = [
+      { id: 'd1', name: 'Sunita Sharma', meta: T.metaA, amt: '₹24,500', when: T.grace, whenColor: '#9A4A06', link: 'Customer360.dc.html', linkLabel: T.open },
+      { id: 'd2', name: 'Arjun Mehta', meta: T.metaC, amt: '₹18,200', when: T.renews, whenColor: '#5F6776', link: 'NeedsCompare.dc.html', linkLabel: T.quote }
+    ];
+    const dues = dueSrc.map((d) => {
+      const o = s.outcomes[d.id];
+      return Object.assign({}, d, {
+        open: s.openLog === d.id,
+        logged: !!o,
+        loggedText: o ? T.loggedPrefix + T.out[o] : '',
+        call: () => this.flash(T.calling),
+        toggle: () => this.setState({ openLog: s.openLog === d.id ? null : d.id }),
+        undo: () => { const n = Object.assign({}, s.outcomes); delete n[d.id]; this.setState({ outcomes: n }); },
+        options: ['paid', 'promised', 'unreachable'].map((k) => ({
+          label: T.out[k],
+          pick: () => { this.setState({ outcomes: Object.assign({}, s.outcomes, { [d.id]: k }), openLog: null }); this.flash(T.saved); }
+        }))
+      });
+    });
+    const taskSrc = [
+      { id: 't1', time: '11:30', text: T.t1 },
+      { id: 't2', time: '15:00', text: T.t2 },
+      { id: 't3', time: T.allDay, text: T.t3 }
+    ];
+    const tasks = taskSrc.map((t) => {
+      const done = !!s.done[t.id];
+      return Object.assign({}, t, {
+        done: done,
+        deco: done ? 'line-through' : 'none',
+        color: done ? '#5F6776' : '#1B1F27',
+        toggle: () => this.setState({ done: Object.assign({}, s.done, { [t.id]: !done }) })
+      });
+    });
+    const openTasks = 5 + tasks.filter((t) => !t.done).length;
+    return {
+      accent: this.props.accent ?? '#1F5FBF',
+      T: T, dues: dues, tasks: tasks, openTasks: openTasks,
+      offline: !s.synced, synced: s.synced,
+      sync: () => { this.setState({ synced: true }); this.flash(T.saved); },
+      langLabel: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      toast: s.toast, hasToast: !!s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plan comparison within permitted scope</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+  <header style="display: flex; align-items: center; gap: 8px; padding: 8px 8px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0">
+    <a href="Customer360.dc.html" aria-label="Back to customer" style="width: 44px; height: 44px; color: #1B1F27; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <div style="flex: 1"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776">For Sunita Sharma</div></div>
+    <button type="button" onClick="{{share}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">Share</button>
+  <button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header>
+  <div style="display: flex; align-items: center; gap: 8px; padding: 6px 16px; background: #1B1F27; color: #FFFFFF; font-size: 11px">
+    <label for="persona" style="flex: 1">Demo · selling as</label>
+    <select id="persona" value="{{persona}}" onChange="{{setPersona}}" style="min-height: 34px; border: 0; border-radius: 6px; padding: 0 8px; font: inherit; font-size: 12px; background: #FFFFFF; color: #1B1F27">
+      <option value="imf">IMF · ISP</option>
+      <option value="broker">Broker</option>
+      <option value="posp">POSP</option>
+      <option value="agent">Individual agent</option>
+    </select>
+  </div>
+
+  <main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 14px 16px 20px">
+  <sc-if value="{{comparing}}" hint-placeholder-val="{{ true }}">
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+          <div><div style="font-size: 11px; color: #5F6776">Needs analysis · family floater</div><div style="font-size: 13px; font-weight: 500">{{needsText}}</div></div>
+          <button type="button" onClick="{{toggleEdit}}" aria-expanded="{{editing}}" style="min-height: 40px; padding: 0 10px; border: 0; background: none; font: inherit; font-size: 12px; color: #1F5FBF">{{editLabel}}</button>
+        </div>
+        <sc-if value="{{editing}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #E6E9EE; padding-top: 10px">
+            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px"><span>Adults</span><span style="display: flex; align-items: center; gap: 10px"><button type="button" aria-label="Fewer adults" onClick="{{adultsDown}}" style="width: 40px; height: 40px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 18px; color: #1B1F27">−</button><strong>{{adults}}</strong><button type="button" aria-label="More adults" onClick="{{adultsUp}}" style="width: 40px; height: 40px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 18px; color: #1B1F27">+</button></span></div>
+            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px"><span>Children</span><span style="display: flex; align-items: center; gap: 10px"><button type="button" aria-label="Fewer children" onClick="{{kidsDown}}" style="width: 40px; height: 40px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 18px; color: #1B1F27">−</button><strong>{{kids}}</strong><button type="button" aria-label="More children" onClick="{{kidsUp}}" style="width: 40px; height: 40px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 18px; color: #1B1F27">+</button></span></div>
+            <div style="font-size: 11px; color: #5F6776">Illustrative sizing rule for the demo; the real calculator shows its stated assumptions.</div>
+          </div>
+        </sc-if>
+      </div>
+      <div style="display: flex; gap: 8px; padding: 10px 12px; background: #EEF3FB; border: 1px solid #B9CBEA; border-radius: 10px; font-size: 12px; line-height: 1.45">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1B1F27" stroke-width="1.8" stroke-linecap="round" style="flex: none; margin-top: 1px" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg>
+        <span>{{disclosure}}</span>
+      </div>
+      <sc-for list="{{plans}}" as="pl" hint-placeholder-count="2">
+        <div style="background: #FFFFFF; border: {{pl.border}}; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px">
+            <div><div style="font-weight: 600; font-size: 14px">{{pl.name}}</div><div style="font-size: 11px; color: #5F6776">{{pl.meta}}</div></div>
+            <button type="button" onClick="{{pl.pick}}" aria-pressed="{{pl.selected}}" style="min-height: 36px; padding: 0 12px; border: 1px solid {{pl.btnBorder}}; border-radius: 6px; background: {{pl.btnBg}}; font: inherit; font-size: 12px; font-weight: 600; color: {{pl.btnColor}}">{{pl.btnLabel}}</button>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; font-size: 12px">
+            <div><span style="color: #5F6776">Premium / yr</span><br><strong>{{pl.prem}}</strong></div>
+            <div><span style="color: #5F6776">Sum insured</span><br><strong>{{pl.si}}</strong></div>
+            <div><span style="color: #5F6776">Pre-existing wait</span><br>{{pl.ped}}</div>
+            <div><span style="color: #5F6776">Room rent</span><br>{{pl.room}}</div>
+            <div><span style="color: #5F6776">Co-pay</span><br>{{pl.copay}}</div>
+            <div><span style="color: #5F6776">Exclusions</span><br><a href="ResearchAssistant.dc.html">View wording</a></div>
+          </div>
+        </div>
+      </sc-for>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600">Suitability note (required for advice record)
+        <textarea rows="3" value="{{note}}" onChange="{{setNote}}" placeholder="Why this plan suits the customer’s stated needs" style="font: inherit; font-size: 13px; font-weight: 400; padding: 8px 10px; border: 1px solid #D5D9E0; border-radius: 8px; resize: none"></textarea>
+        <span style="font-weight: 400; color: #5F6776">{{noteHint}}</span>
+      </label>
+      <button type="button" onClick="{{save}}" disabled="{{saveDisabled}}" style="width: 100%; min-height: 48px; border: 0; border-radius: 10px; background: {{saveBg}}; font: inherit; font-size: 14px; font-weight: 600; color: {{saveColor}}">Save advice record</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{saved}}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <div style="width: 44px; height: 44px; border-radius: 22px; background: #E8F4EC; color: #1D5F3A; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></div>
+      <h2 style="margin: 0; font-size: 20px; font-weight: 600">Advice record saved</h2>
+      <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; display: flex; flex-direction: column; font-size: 13px">
+        <div style="padding: 10px 12px; border-bottom: 1px solid #E6E9EE"><span style="color: #5F6776">Recommended · </span>{{chosenName}}</div>
+        <div style="padding: 10px 12px; border-bottom: 1px solid #E6E9EE"><span style="color: #5F6776">Sold as · </span>{{personaLabel}} · scope enforced</div>
+        <div style="padding: 10px 12px; border-bottom: 1px solid #E6E9EE"><span style="color: #5F6776">Needs · </span>{{needsText}}</div>
+        <div style="padding: 10px 12px"><span style="color: #5F6776">Suitability · </span>{{note}}</div>
+      </div>
+      <div style="padding: 10px 12px; border: 1.5px dashed #8A93A3; border-radius: 10px; font-size: 12px; line-height: 1.5">Health plans carry no benefit illustration; the insurer quote and wording version are stored with this record. Next: proposal form.</div>
+      <a href="ProposalForm.dc.html" style="min-height: 48px; border-radius: 10px; background: {{accent}}; color: #FFFFFF; font-weight: 600; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center">Continue to proposal</a><a href="Customer360.dc.html" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 10px; color: #1B1F27; font-size: 13px; text-decoration: none; display: flex; align-items: center; justify-content: center">Back to customer</a>
+      <button type="button" onClick="{{reset}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Compare again</button>
+    </div>
+  </sc-if>
+  </main>
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 90px; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { persona: 'imf', selected: 'c', adults: 2, kids: 1, editing: false, note: '', saved: false, toast: '' };
+    this.state = Object.assign({}, this.state, { lang: this.loadLang() });
+  }
+  componentWillUnmount() { clearTimeout(this._t); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2400);
+  }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि', scrTitle: hi ? 'हेल्थ प्लान की तुलना' : 'Compare health plans',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const all = {
+      c: { name: '[Plan name] · Insurer C', meta: 'UIN [UIN] · quote valid till 10 Oct', prem: '₹21,400', si: '₹10 L', ped: '3 years', room: 'No cap', copay: 'None' },
+      a: { name: '[Plan name] · Insurer A', meta: 'UIN [UIN] · quote valid till 12 Oct', prem: '₹19,800', si: '₹10 L', ped: '4 years', room: '1% of SI / day', copay: 'None' },
+      b: { name: '[Plan name] · Insurer B', meta: 'UIN [UIN] · quote valid till 11 Oct', prem: '₹20,600', si: '₹10 L', ped: '3 years', room: 'Single private room', copay: '10% above age 60' },
+      s: { name: '[Standard health product] · Insurer C', meta: 'POSP-eligible · UIN [UIN]', prem: '₹16,900', si: '₹5 L', ped: '4 years', room: '2% of SI / day', copay: 'None' },
+      g: { name: '[Plan name] · Insurer G', meta: 'Your appointing insurer for health · UIN [UIN]', prem: '₹20,100', si: '₹10 L', ped: '3 years', room: '1% of SI / day', copay: 'None' }
+    };
+    const scope = { imf: ['c', 'a'], broker: ['c', 'a', 'b'], posp: ['s'], agent: ['g'] };
+    const labels = { imf: 'IMF · ISP', broker: 'Broker', posp: 'POSP', agent: 'Individual agent' };
+    const disclosures = {
+      imf: 'Showing plans from your tied insurers only: Insurer A, Insurer C. This disclosure appears on shared comparisons.',
+      broker: 'Broker view: comparing across all configured insurers (A, B, C). Advice is documented in the advice record.',
+      posp: 'POSP view: only POSP-eligible products are shown. Other plans need an ISP or employee salesperson.',
+      agent: 'Agent view: only your appointing insurer for this line is shown (one insurer per line today; limits are configurable).'
+    };
+    const ids = scope[s.persona];
+    const sel = ids.indexOf(s.selected) >= 0 ? s.selected : ids[0];
+    const plans = ids.map((id) => {
+      const on = id === sel;
+      return Object.assign({}, all[id], {
+        selected: on,
+        border: on ? '2px solid ' + accent : '1px solid #D5D9E0',
+        btnLabel: on ? 'Selected' : 'Select',
+        btnBg: on ? accent : '#FFFFFF', btnColor: on ? '#FFFFFF' : '#1B1F27', btnBorder: on ? accent : '#D5D9E0',
+        pick: () => this.setState({ selected: id })
+      });
+    });
+    const lo = Math.max(5, s.adults * 4 + s.kids * 2);
+    const needsText = s.adults + (s.adults === 1 ? ' adult, ' : ' adults, ') + s.kids + (s.kids === 1 ? ' child' : ' children') + ' · suggested ₹' + lo + '–' + (lo + 5) + ' L';
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const noteOk = s.note.trim().length >= 15;
+    return Object.assign(this.langVals(), {
+      accent: accent,
+      persona: s.persona, personaLabel: labels[s.persona],
+      setPersona: (e) => { this.setState({ persona: e.target.value }); this.flash('Scope switched to ' + labels[e.target.value]); },
+      comparing: !s.saved, saved: s.saved,
+      editing: s.editing, editLabel: s.editing ? 'Done' : 'Edit',
+      toggleEdit: () => this.setState({ editing: !s.editing }),
+      adults: s.adults, kids: s.kids,
+      adultsUp: () => this.setState({ adults: clamp(s.adults + 1, 1, 4) }),
+      adultsDown: () => this.setState({ adults: clamp(s.adults - 1, 1, 4) }),
+      kidsUp: () => this.setState({ kids: clamp(s.kids + 1, 0, 4) }),
+      kidsDown: () => this.setState({ kids: clamp(s.kids - 1, 0, 4) }),
+      needsText: needsText,
+      disclosure: disclosures[s.persona],
+      plans: plans,
+      chosenName: all[sel].name,
+      note: s.note, setNote: (e) => this.setState({ note: e.target.value }),
+      noteHint: noteOk ? 'Ready to save' : 'Write at least a short sentence to enable saving',
+      saveDisabled: !noteOk,
+      saveBg: noteOk ? accent : '#C9CED6', saveColor: noteOk ? '#FFFFFF' : '#3B4352',
+      save: () => this.setState({ saved: true }),
+      reset: () => this.setState({ saved: false, note: '' }),
+      share: () => this.flash('Comparison link created · disclosure included'),
+      toast: s.toast, hasToast: !!s.toast
+    });
+  }
+}
+</script>
+</body>
+</html>

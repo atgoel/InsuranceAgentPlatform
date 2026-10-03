@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Users, roles and permissions</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1150px; display: flex; flex-wrap: wrap; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+<nav aria-label="Console" style="flex: 1 1 240px; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #D5D9E0; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 12px"><div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #5F6776">LOGO</div><div><div style="font-weight: 600; font-size: 14px">[IMF tenant name]</div><div style="font-size: 11px; color: #5F6776">Business plan · Principal Officer view</div></div></div>
+<a href="LeadsPipeline.dc.html" style="margin: 0 4px 6px; min-height: 40px; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 13px; color: #5F6776; text-decoration: none">Search customers, policies, ISPs</a>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CRM<span style="font-weight: 400">8</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CRMLeads.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Leads</a>
+<a href="CRMPipeline.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Opportunities</a>
+<a href="CRMCustomers.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Customers &amp; households</a>
+<a href="CRMTasks.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tasks &amp; activities</a>
+<a href="CRMCampaigns.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Campaigns &amp; segments</a>
+<a href="CRMAssignment.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Routing rules</a>
+<a href="CRMImportDedup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Import &amp; duplicates</a>
+<a href="PortalFillSheet.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal desk</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">NETWORK<span style="font-weight: 400">4</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ManagerConsole.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Dashboard</a>
+<a href="OnboardingHierarchy.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Onboarding &amp; hierarchy</a>
+<a href="ProductDrives.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Product drives &amp; contests</a>
+<a href="ReportsLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Reports</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTENT<span style="font-weight: 400">2</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CampaignPublish.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Landing pages</a>
+<a href="ContentLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Content library</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTROL<span style="font-weight: 400">3</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ComplianceCentre.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Compliance centre</a>
+<a href="CommissionSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Commission</a>
+<a href="AIControls.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">AI controls</a>
+</div></details>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">SETUP<span style="font-weight: 400">6</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="TenantSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenant &amp; catalogue</a>
+<a href="UsersRoles.dc.html" aria-current="page" style="padding: 9px 12px; border-radius: 8px; background: #EEF3FB; color: {{accent}}; font-weight: 600; font-size: 14px; text-decoration: none">Users &amp; roles</a>
+<a href="Configuration.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Configuration</a>
+<a href="FormTemplates.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal forms</a>
+<a href="Integrations.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Integrations</a>
+<a href="WhiteLabel.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Brand &amp; white-label</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">PLATFORM OPERATOR<span style="font-weight: 400">1</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="OperatorTenants.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenants &amp; plans</a>
+</div></details>
+<a href="Start.dc.html" style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #1B1F27; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none">⌂ Prototype map</a>
+<a href="Main.dc.html" style="margin-top: 6px; padding: 10px 12px; border: 1px dashed #8A93A3; border-radius: 8px; color: #1B1F27; font-size: 13px; text-decoration: none">Open agent app</a>
+</nav>
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 1320px">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end"><div style="flex: 1 1 320px"><h1 style="margin: 0; font-size: 24px; font-weight: 600">Users &amp; roles</h1><div style="margin-top: 4px; font-size: 13px; color: #4A5262">Who can see and do what. Salesperson qualification, insurer appointment and tenant registration stay separate records.</div></div><button type="button" onClick="{{invite}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">+ Invite user</button></div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px"><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Active users</div><div style="font-size: 24px; font-weight: 600">214</div><div style="font-size: 11px; color: #5F6776">Across 2 branches</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Privileged users with MFA</div><div style="font-size: 24px; font-weight: 600">18 / 18</div><div style="font-size: 11px; color: #5F6776">Required by policy</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Invites pending</div><div style="font-size: 24px; font-weight: 600">{{pending}}</div><div style="font-size: 11px; color: #5F6776">Expire in 7 days</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Deactivated this month</div><div style="font-size: 24px; font-weight: 600">{{deact}}</div><div style="font-size: 11px; color: #5F6776">Sessions revoked</div></div></div><div role="tablist" style="display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid #D5D9E0"><sc-for list="{{utabs}}" as="tb" hint-placeholder-count="4"><button type="button" role="tab" aria-selected="{{tb.on}}" onClick="{{tb.pick}}" style="min-height: 44px; padding: 0 14px; border: 0; border-bottom: 3px solid {{tb.line}}; background: none; font: inherit; font-size: 14px; font-weight: {{tb.weight}}; color: #1B1F27">{{tb.label}}</button></sc-for></div>
+<sc-if value="{{isUsers}}" hint-placeholder-val="{{ true }}">
+  <section style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px"><sc-for list="{{rf}}" as="ch" hint-placeholder-count="4"><button type="button" onClick="{{ch.pick}}" aria-pressed="{{ch.on}}" style="flex: none; min-height: 36px; padding: 0 12px; border: 1px solid {{ch.border}}; border-radius: 18px; background: {{ch.bg}}; font: inherit; font-size: 12px; font-weight: {{ch.weight}}; color: #1B1F27">{{ch.label}}</button></sc-for></div><div style="overflow-x: auto"><div role="table" style="min-width: 1000px; font-size: 13px"><div role="row" style="display: grid; grid-template-columns: 1.4fr 1.3fr 1.3fr 0.8fr 1fr 0.9fr 1.1fr; border-bottom: 1px solid #D5D9E0; font-size: 11px; color: #5F6776"><span role="columnheader" style="padding: 8px 6px">User</span><span role="columnheader" style="padding: 8px 6px">Role</span><span role="columnheader" style="padding: 8px 6px">Record scope</span><span role="columnheader" style="padding: 8px 6px">Sign-in</span><span role="columnheader" style="padding: 8px 6px">Last active</span><span role="columnheader" style="padding: 8px 6px">Status</span><span role="columnheader" style="padding: 8px 6px"></span></div><sc-for list="{{users}}" as="u" hint-placeholder-count="4"><div role="row" style="display: grid; grid-template-columns: 1.4fr 1.3fr 1.3fr 0.8fr 1fr 0.9fr 1.1fr; align-items: center; border-bottom: 1px solid #E6E9EE"><span role="cell" style="padding: 10px 6px; "><strong>{{u.n}}</strong><br><span style="font-size: 12px; color: #5F6776">{{u.mail}}</span></span><span role="cell" style="padding: 10px 6px; ">{{u.role}}</span><span role="cell" style="padding: 10px 6px; font-size: 12px; color: #4A5262">{{u.scope}}</span><span role="cell" style="padding: 10px 6px; font-size: 12px">{{u.mfa}}</span><span role="cell" style="padding: 10px 6px; font-size: 12px; color: #4A5262">{{u.last}}</span><span role="cell" style="padding: 10px 6px; "><span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 10px; background: {{u.bg}}; color: {{u.color}}">{{u.status}}</span></span><span role="cell" style="padding: 10px 6px; "><button type="button" onClick="{{u.act}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; min-height: 34px; font-size: 12px">{{u.actLabel}}</button></span></div></sc-for></div></div>
+  </section>
+</sc-if>
+<sc-if value="{{isRoles}}" hint-placeholder-val="{{ false }}">
+  <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+    <section style="flex: 2 1 520px; min-width: 0; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px"><sc-for list="{{roles}}" as="ch" hint-placeholder-count="4"><button type="button" onClick="{{ch.pick}}" aria-pressed="{{ch.on}}" style="flex: none; min-height: 36px; padding: 0 12px; border: 1px solid {{ch.border}}; border-radius: 18px; background: {{ch.bg}}; font: inherit; font-size: 12px; font-weight: {{ch.weight}}; color: #1B1F27">{{ch.label}}</button></sc-for></div>
+      <div style="display: flex; flex-direction: column">
+        <sc-for list="{{perms}}" as="p" hint-placeholder-count="8">
+          <label style="display: flex; align-items: center; gap: 12px; min-height: 46px; border-top: 1px solid #E6E9EE; font-size: 13px"><input type="checkbox" checked="{{p.on}}" onChange="{{p.toggle}}" disabled="{{p.locked}}" style="width: 18px; height: 18px"><span style="flex: 1">{{p.label}}<br><span style="font-size: 12px; color: #5F6776">{{p.note}}</span></span><sc-if value="{{p.locked}}" hint-placeholder-val="{{ false }}"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">Locked</span></sc-if></label>
+        </sc-for>
+      </div>
+      <button type="button" onClick="{{saveRole}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF; align-self: flex-start">Save as role version {{ver}}</button>
+    </section>
+    <section style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 12px">
+      <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; font-size: 15px; font-weight: 600">What a {{roleName}} sees</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px"><sc-for list="{{sees}}" as="se" hint-placeholder-count="4"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">{{se}}</span></sc-for></div>
+      </div>
+      <div style="padding: 10px 12px; border-radius: 10px; background: #EEF3FB; border: 1px solid #B9CBEA; color: #1B1F27; font-size: 12px; line-height: 1.45"><strong>Sign-in policy.</strong> MFA is required for Principal Officer, managers, operations, finance, compliance, CMS publisher and admins. Salespeople sign in with mobile OTP. Enterprise SSO arrives with the Dedicated plan.</div>
+      <div style="padding: 12px; border-radius: 10px; background: #FFF4E5; border: 1px solid #F0C48A; color: #7A3E06; font-size: 13px; font-size: 12px; line-height: 1.5"><strong>Medical documents</strong> are visible only to the assigned salesperson, operations users on that proposal and the insurer, whatever the role says.</div>
+    </section>
+  </div>
+</sc-if>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: fixed; right: 24px; bottom: 24px; z-index: 5; max-width: 380px; padding: 12px 16px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { tab: 'users', rf: 'all', status: {}, role: 'isp', over: {}, ver: 4 });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+    const COL = { ok: ['#E8F4EC', '#1D5F3A'], warn: ['#FFF4E5', '#7A3E06'], bad: ['#FDECEC', '#8A1F1F'], neu: ['#E6E9EE', '#1B1F27'], info: ['#EEF3FB', '#1B1F27'] };
+
+    const U = [
+      ['u1', 'Meera J.', 'meera@[tenant]', 'Compliance reviewer', 'Tenant-wide, read + approve', 'MFA ✓', '10:20 today', 'Active'],
+      ['u2', 'Raj T.', 'raj@[tenant]', 'Finance reader', 'Commission and sales, read', 'MFA ✓', '09:47 today', 'Active'],
+      ['u3', 'Kavya R.', 'kavya@[tenant]', 'Sales manager', 'Team Kavya · 12 ISPs', 'MFA ✓', '11:02 today', 'Active'],
+      ['u4', 'Ravi K.', '+91 ••3311', 'ISP', 'Own customers and leads', 'OTP', '11:06 today', 'Active'],
+      ['u5', 'Deepak S.', '+91 ••7720', 'POSP', 'Own records · POSP products', 'OTP', 'Yesterday', 'Active'],
+      ['u6', 'Anil P.', 'anil@[tenant]', 'Operations user', 'Andheri branch proposals', 'MFA ✓', '10:58 today', 'Active'],
+      ['u7', 'Tanvi S.', 'tanvi@[tenant]', 'CMS author', 'Content only', 'MFA ✓', '2 Oct', 'Active'],
+      ['u8', '[Name]', 'publisher@[tenant]', 'CMS publisher', 'Content approve + publish', 'MFA required', '—', 'Invited'],
+      ['u9', 'Suresh P.', '+91 ••4410', 'ISP', 'Revoked', 'OTP', '2 Oct', 'Deactivated']
+    ];
+    const grp = { managers: ['Sales manager'], isp: ['ISP'], posp: ['POSP'], ops: ['Operations user'], fin: ['Finance reader'], comp: ['Compliance reviewer'], cms: ['CMS author', 'CMS publisher'] };
+    const st = (u) => s.status[u[0]] || u[7];
+    const users = U.filter((u) => s.rf === 'all' || grp[s.rf].indexOf(u[3]) >= 0).map((u) => { const status = st(u); const c = status === 'Active' ? COL.ok : (status === 'Invited' ? COL.info : COL.bad);
+      return { n: u[1], mail: u[2], role: u[3], scope: u[4], mfa: u[5], last: u[6], status: status, bg: c[0], color: c[1],
+        actLabel: status === 'Active' ? 'Deactivate' : (status === 'Invited' ? 'Resend' : 'Reactivate'),
+        act: () => { const next = status === 'Active' ? 'Deactivated' : (status === 'Invited' ? 'Invited' : 'Active'); this.setState({ status: Object.assign({}, s.status, { [u[0]]: next }) });
+          this.flash(status === 'Active' ? u[1] + ' deactivated · sessions revoked · customers stay with tenant' : (status === 'Invited' ? 'Invite resent' : u[1] + ' reactivated · role re-checked')); } }; });
+    const P = [
+      ['view', 'View customers and leads', 'Within record scope'], ['export', 'Export data', 'Logged; scoped to role'], ['rates', 'Edit commission rates', 'Maker-checker applies'],
+      ['content', 'Approve and publish content', 'Requires advertisement approval reference'], ['onb', 'Approve ISP / POSP activation', ''], ['med', 'Open medical documents', 'Assigned proposals only'],
+      ['ai', 'Use AI skills', 'Human approval always required'], ['users', 'Manage users and roles', 'Admin only']
+    ];
+    const DEF = { po: ['view', 'export', 'content', 'onb', 'ai', 'users'], bm: ['view', 'export', 'onb', 'ai'], sm: ['view', 'onb', 'ai'], isp: ['view', 'ai', 'med'], posp: ['view', 'ai'], ops: ['view', 'med'], fin: ['view', 'export', 'rates'], cmsa: [], cmsp: ['content'], comp: ['view', 'export', 'content'] };
+    const LOCK = { med: ['po', 'bm', 'sm', 'fin', 'cmsa', 'cmsp', 'comp'], users: ['isp', 'posp', 'ops', 'fin', 'cmsa', 'cmsp', 'sm'], rates: ['isp', 'posp', 'cmsa', 'cmsp'] };
+    const SEES = { po: ['Dashboard', 'CRM', 'Onboarding', 'Compliance', 'Commission', 'Reports', 'Setup'], bm: ['Dashboard', 'CRM (branch)', 'Onboarding', 'Reports'], sm: ['CRM (team)', 'Tasks', 'Reports (team)'], isp: ['Agent app', 'Own CRM records'], posp: ['Agent app', 'POSP products only'], ops: ['Proposals', 'Documents', 'Servicing'], fin: ['Commission', 'Finance export', 'Reports'], cmsa: ['Content library', 'Landing pages (draft)'], cmsp: ['Content library', 'Landing pages', 'Publish'], comp: ['Compliance centre', 'Audit', 'Approvals', 'Reports'] };
+    const RN = [['po', 'Principal Officer'], ['bm', 'Branch manager'], ['sm', 'Sales manager'], ['isp', 'ISP'], ['posp', 'POSP'], ['ops', 'Operations'], ['fin', 'Finance reader'], ['cmsa', 'CMS author'], ['cmsp', 'CMS publisher'], ['comp', 'Compliance reviewer']];
+    const has = (k) => (s.over[s.role + k] !== undefined ? s.over[s.role + k] : DEF[s.role].indexOf(k) >= 0);
+    const perms = P.map((p) => { const locked = (LOCK[p[0]] || []).indexOf(s.role) >= 0; return { label: p[1], note: p[2], on: locked ? false : has(p[0]), locked: locked,
+      toggle: () => this.setState({ over: Object.assign({}, s.over, { [s.role + p[0]]: !has(p[0]) }) }) }; });
+    const R = {
+      utabs: this.tabs([['users', 'Users'], ['roles', 'Roles & permissions']], 'tab'), isUsers: s.tab === 'users', isRoles: s.tab === 'roles',
+      rf: this.chips([['all', 'All'], ['managers', 'Managers'], ['isp', 'ISPs'], ['posp', 'POSPs'], ['ops', 'Operations'], ['fin', 'Finance'], ['comp', 'Compliance'], ['cms', 'CMS']], 'rf'),
+      users: users, pending: U.filter((u) => st(u) === 'Invited').length + 5, deact: U.filter((u) => st(u) === 'Deactivated').length + 2,
+      roles: this.chips(RN, 'role'), perms: perms, roleName: RN.find((r) => r[0] === s.role)[1], sees: SEES[s.role], ver: s.ver,
+      saveRole: () => { this.setState({ ver: s.ver + 1 }); this.flash('Role saved as version ' + s.ver + ' · applies at next sign-in · audit recorded'); },
+      invite: () => this.flash('Invite sent · role and record scope set before first sign-in')
+    };
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

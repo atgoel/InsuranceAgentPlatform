@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tenant entity, tie-ups and product catalogue</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1300px; display: flex; flex-wrap: wrap; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+<nav aria-label="Console" style="flex: 1 1 240px; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #D5D9E0; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 12px"><div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #5F6776">LOGO</div><div><div style="font-weight: 600; font-size: 14px">[IMF tenant name]</div><div style="font-size: 11px; color: #5F6776">Business plan · Principal Officer view</div></div></div>
+<a href="LeadsPipeline.dc.html" style="margin: 0 4px 6px; min-height: 40px; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 13px; color: #5F6776; text-decoration: none">Search customers, policies, ISPs</a>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CRM<span style="font-weight: 400">8</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CRMLeads.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Leads</a>
+<a href="CRMPipeline.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Opportunities</a>
+<a href="CRMCustomers.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Customers &amp; households</a>
+<a href="CRMTasks.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tasks &amp; activities</a>
+<a href="CRMCampaigns.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Campaigns &amp; segments</a>
+<a href="CRMAssignment.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Routing rules</a>
+<a href="CRMImportDedup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Import &amp; duplicates</a>
+<a href="PortalFillSheet.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal desk</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">NETWORK<span style="font-weight: 400">4</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ManagerConsole.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Dashboard</a>
+<a href="OnboardingHierarchy.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Onboarding &amp; hierarchy</a>
+<a href="ProductDrives.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Product drives &amp; contests</a>
+<a href="ReportsLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Reports</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTENT<span style="font-weight: 400">2</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CampaignPublish.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Landing pages</a>
+<a href="ContentLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Content library</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTROL<span style="font-weight: 400">3</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ComplianceCentre.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Compliance centre</a>
+<a href="CommissionSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Commission</a>
+<a href="AIControls.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">AI controls</a>
+</div></details>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">SETUP<span style="font-weight: 400">6</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="TenantSetup.dc.html" aria-current="page" style="padding: 9px 12px; border-radius: 8px; background: #EEF3FB; color: {{accent}}; font-weight: 600; font-size: 14px; text-decoration: none">Tenant &amp; catalogue</a>
+<a href="UsersRoles.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Users &amp; roles</a>
+<a href="Configuration.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Configuration</a>
+<a href="FormTemplates.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal forms</a>
+<a href="Integrations.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Integrations</a>
+<a href="WhiteLabel.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Brand &amp; white-label</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">PLATFORM OPERATOR<span style="font-weight: 400">1</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="OperatorTenants.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenants &amp; plans</a>
+</div></details>
+<a href="Start.dc.html" style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #1B1F27; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none">⌂ Prototype map</a>
+<a href="Main.dc.html" style="margin-top: 6px; padding: 10px 12px; border: 1px dashed #8A93A3; border-radius: 8px; color: #1B1F27; font-size: 13px; text-decoration: none">Open agent app</a>
+</nav>
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 1320px">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end"><div style="flex: 1 1 320px"><h1 style="margin: 0; font-size: 24px; font-weight: 600">Tenant &amp; catalogue</h1><div style="margin-top: 4px; font-size: 13px; color: #4A5262">Distributor entity, insurer tie-ups and the products your salespeople may sell. Limits are configuration, not code.</div></div><button type="button" onClick="{{save}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">Save configuration</button></div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+  <section style="flex: 1 1 340px; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+    <h2 style="margin: 0; font-size: 15px; font-weight: 600">Distributor entity</h2>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Entity type<select value="{{etype}}" onChange="{{setEtype}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option value="imf">Insurance Marketing Firm</option><option value="broker">Broker (direct / composite)</option><option value="agent">Individual agent (solo)</option></select></label>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">IRDAI registration no.<input value="[number]" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Valid until<input type="date" value="2028-03-31" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    </div>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">{{officerLabel}}<input value="[name]" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    <div style="padding: 10px 12px; border-radius: 10px; background: #EEF3FB; border: 1px solid #B9CBEA; color: #1B1F27; font-size: 12px; line-height: 1.45"><strong>Comparison scope:</strong> {{scopeText}}</div>
+    <div style="font-size: 12px; color: #5F6776">Confirm the current limits with Compliance/Legal against IRDAI rules before go-live.</div>
+    <div style="border-top: 1px solid #E6E9EE; padding-top: 12px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 600">Gated capabilities</h2>
+      <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><strong>Online purchase journeys</strong><span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 10px; background: {{isnpBg}}; color: {{isnpColor}}">{{isnpStatus}}</span></div>
+        <div style="font-size: 12px; color: #5F6776; line-height: 1.5">Customer self-purchase may engage insurance self-network platform rules. Assisted sales stay available either way.</div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap"><sc-if value="{{isnpPending}}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{recordReview}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Record Compliance review</button></sc-if><label style="display: flex; gap: 8px; align-items: center"><input type="checkbox" checked="{{online}}" onChange="{{toggleOnline}}" disabled="{{isnpPending}}" style="width: 18px; height: 18px">Enable for this tenant</label></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><strong>Referral rewards</strong><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #FDECEC; color: #8A1F1F; border: 1px solid #F2B8B8">Off · legal review required</span></div>
+        <div style="font-size: 12px; color: #5F6776; line-height: 1.5">Rebates and inducements to policyholders are prohibited (Insurance Act s.41). Any reward scheme needs written Legal approval before it can be switched on.</div>
+      </div>
+    </div>
+  </section>
+  <section style="flex: 2 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><h2 style="margin: 0; font-size: 15px; font-weight: 600">Insurer tie-ups by line</h2><span style="font-size: 12px; color: #5F6776">{{limitText}}</span></div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+      <sc-for list="{{lines}}" as="ln" hint-placeholder-count="3">
+        <div style="border: 1px solid #E6E9EE; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><strong>{{ln.name}}</strong><span style="font-size: 12px; color: #5F6776">{{ln.used}}</span></div>
+          <div style="height: 6px; border-radius: 3px; background: #E6E9EE"><div style="width: {{ln.pct}}%; height: 6px; border-radius: 3px; background: {{accent}}"></div></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px"><sc-for list="{{ln.ins}}" as="ii" hint-placeholder-count="2"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">{{ii}}</span></sc-for></div>
+          <button type="button" onClick="{{ln.add}}" disabled="{{ln.full}}" style="min-height: 44px; padding: 0 12px; border: 1.5px dashed #8A93A3; border-radius: 8px; background: #F4F5F7; font: inherit; font-size: 13px; color: #1B1F27; min-height: 38px">{{ln.addLabel}}</button>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+</div>
+<section style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><h2 style="margin: 0; font-size: 15px; font-weight: 600">Product catalogue</h2><span style="font-size: 12px; color: #5F6776">Only products of active tie-ups are saleable</span></div>
+<div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px"><sc-for list="{{pfilters}}" as="ch" hint-placeholder-count="4"><button type="button" onClick="{{ch.pick}}" aria-pressed="{{ch.on}}" style="flex: none; min-height: 36px; padding: 0 12px; border: 1px solid {{ch.border}}; border-radius: 18px; background: {{ch.bg}}; font: inherit; font-size: 12px; font-weight: {{ch.weight}}; color: #1B1F27">{{ch.label}}</button></sc-for></div><div style="overflow-x: auto"><div role="table" style="min-width: 960px; font-size: 13px"><div role="row" style="display: grid; grid-template-columns: 1.6fr 1fr 0.8fr 1fr 0.7fr 0.7fr 0.9fr 1.6fr; border-bottom: 1px solid #D5D9E0; font-size: 11px; color: #5F6776"><span role="columnheader" style="padding: 8px 6px">Product</span><span role="columnheader" style="padding: 8px 6px">Insurer</span><span role="columnheader" style="padding: 8px 6px">Line</span><span role="columnheader" style="padding: 8px 6px">UIN</span><span role="columnheader" style="padding: 8px 6px">ISP</span><span role="columnheader" style="padding: 8px 6px">POSP</span><span role="columnheader" style="padding: 8px 6px">Wording</span><span role="columnheader" style="padding: 8px 6px">Status</span></div><sc-for list="{{products}}" as="pr" hint-placeholder-count="4"><div role="row" style="display: grid; grid-template-columns: 1.6fr 1fr 0.8fr 1fr 0.7fr 0.7fr 0.9fr 1.6fr; align-items: center; border-bottom: 1px solid #E6E9EE"><span role="cell" style="padding: 10px 6px; "><strong>{{pr.n}}</strong></span><span role="cell" style="padding: 10px 6px; ">{{pr.ins}}</span><span role="cell" style="padding: 10px 6px; ">{{pr.line}}</span><span role="cell" style="padding: 10px 6px; font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{pr.uin}}</span><span role="cell" style="padding: 10px 6px; ">{{pr.isp}}</span><span role="cell" style="padding: 10px 6px; ">{{pr.posp}}</span><span role="cell" style="padding: 10px 6px; ">{{pr.wv}}</span><span role="cell" style="padding: 10px 6px; "><span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 10px; background: {{pr.bg}}; color: {{pr.color}}">{{pr.status}}</span></span></div></sc-for></div></div>
+</section>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: fixed; right: 24px; bottom: 24px; z-index: 5; max-width: 380px; padding: 12px 16px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { etype: 'imf', pf: 'all', extra: { Life: 0, General: 0, Health: 0 }, isnp: 'pending', online: false });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const L = { Life: ['Insurer A', 'Insurer E'], General: ['Insurer D'], Health: ['Insurer C', 'Insurer F'] };
+    const pool = ['Insurer G', 'Insurer H', 'Insurer J', 'Insurer K'];
+    const limit = { imf: 6, broker: null, agent: 1 }[s.etype];
+    const lines = Object.keys(L).map((k) => {
+      let ins = L[k].concat(pool.slice(0, s.extra[k]));
+      if (s.etype === 'agent') ins = ins.slice(0, 1);
+      const full = limit !== null && ins.length >= limit;
+      return { name: k, ins: ins, used: limit === null ? ins.length + ' configured · no tie-up limit' : ins.length + ' of ' + limit + ' tie-ups',
+        pct: limit === null ? 100 : Math.round(ins.length / limit * 100), full: full,
+        addLabel: full ? 'Limit reached for this line' : '+ Add tie-up',
+        add: () => { this.setState({ extra: Object.assign({}, s.extra, { [k]: Math.min(4, s.extra[k] + 1) }) }); this.flash('Tie-up added for ' + k + ' · start and end dates required'); } };
+    });
+    const PR = [
+      ['[Term plan]', 'Insurer A', 'Life', '[UIN]', '✓', '—', 'v4', 'Active', 'ok'],
+      ['[Child plan]', 'Insurer A', 'Life', '[UIN]', '✓', '—', 'v2', 'Active', 'ok'],
+      ['[Endowment plan]', 'Insurer E', 'Life', '[UIN]', '✓', '—', 'v3', 'Stale · insurer updated 28 Sep', 'warn'],
+      ['[Motor package]', 'Insurer D', 'General', '[UIN]', '✓', '✓', 'v5', 'Active', 'ok'],
+      ['[Health floater]', 'Insurer C', 'Health', '[UIN]', '✓', '—', 'v2', 'Active', 'ok'],
+      ['[Standard health product]', 'Insurer C', 'Health', '[UIN]', '✓', '✓', 'v1', 'Active', 'ok']
+    ];
+    const col = { ok: ['#E8F4EC', '#1D5F3A'], warn: ['#FFF4E5', '#7A3E06'] };
+    const products = PR.filter((p) => s.pf === 'all' || p[2] === s.pf || (s.pf === 'posp' && p[5] === '✓'))
+      .map((p) => ({ n: p[0], ins: p[1], line: p[2], uin: p[3], isp: p[4], posp: p[5], wv: p[6], status: p[7], bg: col[p[8]][0], color: col[p[8]][1] }));
+    const R = {
+      etype: s.etype, setEtype: (e) => this.setState({ etype: e.target.value }),
+      officerLabel: s.etype === 'agent' ? 'Licence holder' : 'Principal Officer',
+      scopeText: { imf: 'salespeople compare only products of tied insurers; POSPs see POSP-eligible products only.', broker: 'market-wide comparison across all configured insurers, with a documented advice record.', agent: 'the appointing insurer for each line only (open architecture for agents is proposed, not yet in force).' }[s.etype],
+      limitText: { imf: 'IMF: up to 6 insurers per line', broker: 'Broker: represents the client, no tie-up limit', agent: 'Agent: 1 insurer per line today' }[s.etype],
+      lines: lines, pfilters: this.chips([['all', 'All'], ['Life', 'Life'], ['General', 'General'], ['Health', 'Health'], ['posp', 'POSP-eligible']], 'pf'), products: products,
+      save: () => this.flash('Configuration saved · catalogue and comparison scope recalculated'),
+      isnpPending: s.isnp !== 'done', isnpStatus: s.isnp === 'done' ? (s.online ? 'Reviewed · enabled' : 'Reviewed · off') : 'Review pending',
+      isnpBg: s.isnp === 'done' ? '#E8F4EC' : '#FFF4E5', isnpColor: s.isnp === 'done' ? '#1D5F3A' : '#7A3E06',
+      recordReview: () => { this.setState({ isnp: 'done' }); this.flash('Review recorded by [Compliance officer] · reference stored in audit'); },
+      online: s.online, toggleOnline: () => { if (s.isnp === 'done') this.setState({ online: !s.online }); }
+    };
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

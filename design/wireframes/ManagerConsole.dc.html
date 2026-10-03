@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Manager console: team dashboard and supervision</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1150px; display: flex; flex-wrap: wrap; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+  <nav aria-label="Console" style="flex: 1 1 240px; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #D5D9E0; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 12px"><div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #5F6776">LOGO</div><div><div style="font-weight: 600; font-size: 14px">[IMF tenant name]</div><div style="font-size: 11px; color: #5F6776">Business plan · Principal Officer view</div></div></div>
+<a href="LeadsPipeline.dc.html" style="margin: 0 4px 6px; min-height: 40px; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 13px; color: #5F6776; text-decoration: none">Search customers, policies, ISPs</a>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CRM<span style="font-weight: 400">8</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CRMLeads.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Leads</a>
+<a href="CRMPipeline.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Opportunities</a>
+<a href="CRMCustomers.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Customers &amp; households</a>
+<a href="CRMTasks.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tasks &amp; activities</a>
+<a href="CRMCampaigns.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Campaigns &amp; segments</a>
+<a href="CRMAssignment.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Routing rules</a>
+<a href="CRMImportDedup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Import &amp; duplicates</a>
+<a href="PortalFillSheet.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal desk</a>
+</div></details>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">NETWORK<span style="font-weight: 400">4</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ManagerConsole.dc.html" aria-current="page" style="padding: 9px 12px; border-radius: 8px; background: #EEF3FB; color: {{accent}}; font-weight: 600; font-size: 14px; text-decoration: none">Dashboard</a>
+<a href="OnboardingHierarchy.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Onboarding &amp; hierarchy</a>
+<a href="ProductDrives.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Product drives &amp; contests</a>
+<a href="ReportsLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Reports</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTENT<span style="font-weight: 400">2</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CampaignPublish.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Landing pages</a>
+<a href="ContentLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Content library</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTROL<span style="font-weight: 400">3</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ComplianceCentre.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Compliance centre</a>
+<a href="CommissionSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Commission</a>
+<a href="AIControls.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">AI controls</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">SETUP<span style="font-weight: 400">6</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="TenantSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenant &amp; catalogue</a>
+<a href="UsersRoles.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Users &amp; roles</a>
+<a href="Configuration.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Configuration</a>
+<a href="FormTemplates.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal forms</a>
+<a href="Integrations.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Integrations</a>
+<a href="WhiteLabel.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Brand &amp; white-label</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">PLATFORM OPERATOR<span style="font-weight: 400">1</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="OperatorTenants.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenants &amp; plans</a>
+</div></details>
+<a href="Start.dc.html" style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #1B1F27; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none">⌂ Prototype map</a>
+<a href="Main.dc.html" style="margin-top: 6px; padding: 10px 12px; border: 1px dashed #8A93A3; border-radius: 8px; color: #1B1F27; font-size: 13px; text-decoration: none">Open agent app</a>
+</nav>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 20px; max-width: 1240px">
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+      <h1 style="margin: 0; flex: 1 1 260px; font-size: 24px; font-weight: 600">Team dashboard</h1>
+      <label style="display: flex; flex-direction: column; font-size: 11px; color: #4A5262; gap: 2px">Branch<select value="{{branch}}" onChange="{{setBranch}}" style="min-height: 40px; min-width: 150px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 13px; background: #FFFFFF"><option value="all">All branches</option><option value="Andheri">Andheri</option><option value="Pune">Pune</option></select></label>
+      <button type="button" onClick="{{exportCsv}}" style="min-height: 44px; padding: 0 16px; align-self: flex-end; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Export CSV</button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+      <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+        <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">{{k.label}}</div><div style="font-size: 26px; font-weight: 600">{{k.value}}</div><div style="font-size: 11px; color: #5F6776">{{k.sub}}</div></div>
+      </sc-for>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 16px">
+      <section style="flex: 1 1 320px; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0 0 4px; font-size: 15px; font-weight: 600">Funnel · this month</h2>
+        <sc-for list="{{funnel}}" as="f" hint-placeholder-count="5">
+          <div style="display: flex; align-items: center; gap: 10px; font-size: 12px"><span style="width: 90px">{{f.label}}</span><div style="flex: 1; height: 18px; background: #E6E9EE; border-radius: 3px"><div style="width: {{f.pct}}%; height: 18px; background: {{f.color}}; border-radius: 3px"></div></div><span style="width: 44px; text-align: right">{{f.value}}</span></div>
+        </sc-for>
+        <div style="font-size: 11px; color: #5F6776">Issued counts only insurer-confirmed policies.</div>
+      </section>
+      <section id="queue" style="flex: 2 1 480px; min-width: 0; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-size: 15px; font-weight: 600">Supervision queue</h2><span style="font-size: 12px; color: #5F6776">{{pending}} open</span></div>
+        <div style="overflow-x: auto">
+          <div role="table" aria-label="Supervision queue" style="min-width: 600px; font-size: 13px">
+            <div role="row" style="display: grid; grid-template-columns: minmax(240px, 2.4fr) minmax(130px, 1fr) 56px minmax(170px, 1.2fr); color: #5F6776; font-size: 11px; border-bottom: 1px solid #D5D9E0"><span role="columnheader" style="padding: 8px 6px">Item</span><span role="columnheader" style="padding: 8px 6px">Raised by</span><span role="columnheader" style="padding: 8px 6px">Age</span><span role="columnheader" style="padding: 8px 6px; text-align: right">Action</span></div>
+            <sc-for list="{{queue}}" as="q" hint-placeholder-count="4">
+              <div role="row" style="display: grid; grid-template-columns: minmax(240px, 2.4fr) minmax(130px, 1fr) 56px minmax(170px, 1.2fr); align-items: center; border-bottom: 1px solid #E6E9EE">
+                <span role="cell" style="padding: 10px 6px; color: {{q.textColor}}"><strong style="color: {{q.titleColor}}">{{q.title}}</strong> · {{q.detail}}</span>
+                <span role="cell" style="padding: 10px 6px; color: {{q.textColor}}">{{q.by}}</span>
+                <span role="cell" style="padding: 10px 6px; color: {{q.textColor}}">{{q.age}}</span>
+                <span role="cell" style="padding: 6px; text-align: right">
+                  <sc-if value="{{q.isOpenButton}}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{q.act}}" style="min-height: 36px; padding: 0 12px; border: 0; border-radius: 6px; background: {{accent}}; font: inherit; font-size: 12px; font-weight: 600; color: #FFFFFF">{{q.action}}</button></sc-if>
+                  <sc-if value="{{q.isOpenLink}}" hint-placeholder-val="{{ false }}"><a href="CampaignPublish.dc.html" style="display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 6px; font-size: 12px; color: #1B1F27; text-decoration: none">{{q.action}}</a></sc-if>
+                  <sc-if value="{{q.resolved}}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; color: #1D5F3A">✓ {{q.result}}</span></sc-if>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+    </div>
+    <section id="team" style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center"><h2 style="margin: 0; font-size: 15px; font-weight: 600">Team · {{branchLabel}}</h2><input type="search" aria-label="Search salespeople" value="{{query}}" onChange="{{setQuery}}" placeholder="Search name or type" style="min-height: 40px; width: 240px; max-width: 100%; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 13px"></div>
+      <div style="overflow-x: auto">
+        <div role="table" aria-label="Team" style="min-width: 820px; font-size: 13px">
+          <div role="row" style="display: grid; grid-template-columns: 1.2fr 0.9fr 0.8fr 1.6fr 0.6fr 1fr 1fr 1.3fr; color: #5F6776; font-size: 11px; border-bottom: 1px solid #D5D9E0"><span role="columnheader" style="padding: 8px 6px">Salesperson</span><span role="columnheader" style="padding: 8px 6px">Branch</span><span role="columnheader" style="padding: 8px 6px">Type</span><span role="columnheader" style="padding: 8px 6px">Product scope</span><span role="columnheader" style="padding: 8px 6px">Leads</span><span role="columnheader" style="padding: 8px 6px">Issued premium</span><span role="columnheader" style="padding: 8px 6px">13M persistency</span><span role="columnheader" style="padding: 8px 6px">Status</span></div>
+          <sc-for list="{{team}}" as="m" hint-placeholder-count="4">
+            <div role="row" style="display: grid; grid-template-columns: 1.2fr 0.9fr 0.8fr 1.6fr 0.6fr 1fr 1fr 1.3fr; border-bottom: 1px solid #E6E9EE"><span role="cell" style="padding: 10px 6px">{{m.name}}</span><span role="cell" style="padding: 10px 6px">{{m.branch}}</span><span role="cell" style="padding: 10px 6px">{{m.type}}</span><span role="cell" style="padding: 10px 6px">{{m.scope}}</span><span role="cell" style="padding: 10px 6px">{{m.leads}}</span><span role="cell" style="padding: 10px 6px">{{m.issued}}</span><span role="cell" style="padding: 10px 6px">{{m.pers}}</span><span role="cell" style="padding: 10px 6px; font-weight: {{m.statusWeight}}; color: {{m.statusColor}}">{{m.status}}</span></div>
+          </sc-for>
+        </div>
+        <sc-if value="{{noTeam}}" hint-placeholder-val="{{ false }}"><div style="padding: 16px 6px; font-size: 13px; color: #5F6776">No salespeople match.</div></sc-if>
+      </div>
+    </section>
+  </main>
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="position: fixed; right: 24px; bottom: 24px; max-width: 360px; padding: 12px 16px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { resolved: {}, branch: 'all', query: '', activated: false, toast: '' };
+  }
+  componentWillUnmount() { clearTimeout(this._t); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  renderVals() {
+    const s = this.state;
+    const qSrc = [
+      { id: 'q1', title: 'Proposal review', detail: 'Health floater, Arjun Mehta', by: 'Kavya R. · ISP', age: '2 h', action: 'Approve', result: 'Approved · submitted to insurer', link: false },
+      { id: 'q2', title: 'POSP activation', detail: 'certificate and exam evidence uploaded', by: 'Deepak S. · POSP', age: '1 d', action: 'Activate', result: 'Activated · POSP-eligible scope set', link: false },
+      { id: 'q3', title: 'Ad approval missing', detail: 'Diwali health campaign', by: 'Marketing', age: '3 h', action: 'Open', result: '', link: true, warn: true },
+      { id: 'q4', title: 'Paid, not issued', detail: 'Insurer A ref [ref no.]', by: 'Neha P. · ISP', age: '2 d', action: 'Reconcile', result: 'Insurer follow-up task created', link: false }
+    ];
+    const queue = qSrc.map((q) => {
+      const done = !!s.resolved[q.id];
+      return Object.assign({}, q, {
+        resolved: done, isOpenButton: !done && !q.link, isOpenLink: !done && q.link,
+        titleColor: q.warn ? '#9A4A06' : (done ? '#5F6776' : '#1B1F27'),
+        textColor: done ? '#5F6776' : '#1B1F27',
+        act: () => {
+          const patch = { resolved: Object.assign({}, s.resolved, { [q.id]: true }) };
+          if (q.id === 'q2') patch.activated = true;
+          this.setState(patch);
+          this.flash(q.result + ' · audit event recorded');
+        }
+      });
+    });
+    const pending = queue.filter((q) => !q.resolved).length + 5;
+    const teamSrc = [
+      { name: 'Kavya R.', branch: 'Andheri', type: 'ISP', scope: 'Life, Health', leads: 64, issued: '₹2.8 L', pers: '88%', status: 'Active' },
+      { name: 'Neha P.', branch: 'Andheri', type: 'ISP', scope: 'Life, General', leads: 51, issued: '₹1.9 L', pers: '82%', status: 'Active' },
+      { name: 'Deepak S.', branch: 'Andheri', type: 'POSP', scope: 'POSP-eligible only', leads: '—', issued: '—', pers: '—', status: s.activated ? 'Active' : 'Pending activation' },
+      { name: 'Rahul V.', branch: 'Pune', type: 'Employee', scope: 'Health', leads: 38, issued: '₹1.1 L', pers: '79%', status: 'Active' },
+      { name: 'Asha K.', branch: 'Pune', type: 'ISP', scope: 'Life, Health, General', leads: 47, issued: '₹2.2 L', pers: '84%', status: 'Active' }
+    ];
+    const q = s.query.trim().toLowerCase();
+    const team = teamSrc
+      .filter((m) => (s.branch === 'all' || m.branch === s.branch) && (!q || (m.name + ' ' + m.type).toLowerCase().indexOf(q) >= 0))
+      .map((m) => Object.assign({}, m, {
+        statusColor: m.status === 'Active' ? '#1B1F27' : '#9A4A06',
+        statusWeight: m.status === 'Active' ? '400' : '600'
+      }));
+    const kpiSets = {
+      all: [['Issued premium · MTD', '₹18.4 L', 'Insurer-confirmed only'], ['Renewal premium retained', '₹42.1 L', 'Of ₹49.6 L due'], ['Dues actioned before grace end', '81%', 'Target [x]%'], ['Weekly active ISPs / POSPs', '146 / 180', 'Book imported: 132']],
+      Andheri: [['Issued premium · MTD', '₹10.2 L', 'Insurer-confirmed only'], ['Renewal premium retained', '₹23.8 L', 'Of ₹27.0 L due'], ['Dues actioned before grace end', '84%', 'Target [x]%'], ['Weekly active ISPs / POSPs', '88 / 104', 'Book imported: 80']],
+      Pune: [['Issued premium · MTD', '₹8.2 L', 'Insurer-confirmed only'], ['Renewal premium retained', '₹18.3 L', 'Of ₹22.6 L due'], ['Dues actioned before grace end', '77%', 'Target [x]%'], ['Weekly active ISPs / POSPs', '58 / 76', 'Book imported: 52']]
+    };
+    const kpis = kpiSets[s.branch].map((k) => ({ label: k[0], value: k[1], sub: k[2] }));
+    const accent = this.props.accent ?? '#1F5FBF';
+    const fSrc = [['Leads', 1240], ['Contacted', 890], ['Quoted', 412], ['Proposal', 198], ['Issued', 121]];
+    const scale = s.branch === 'all' ? 1 : (s.branch === 'Andheri' ? 0.56 : 0.44);
+    const funnel = fSrc.map((f, i) => ({ label: f[0], value: Math.round(f[1] * scale).toLocaleString('en-IN'), pct: Math.max(4, Math.round(f[1] / 1240 * 100)), color: i === 4 ? '#3B4352' : accent }));
+    return {
+      accent: accent,
+      kpis: kpis, funnel: funnel, queue: queue, pending: pending,
+      branch: s.branch, branchLabel: s.branch === 'all' ? 'all branches' : s.branch + ' branch',
+      setBranch: (e) => this.setState({ branch: e.target.value }),
+      query: s.query, setQuery: (e) => this.setState({ query: e.target.value }),
+      team: team, noTeam: team.length === 0,
+      exportCsv: () => this.flash('Export prepared · scoped to your role and branch (demo)'),
+      toast: s.toast, hasToast: !!s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

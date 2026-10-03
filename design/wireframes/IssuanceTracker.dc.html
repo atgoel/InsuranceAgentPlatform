@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proposals: payment and issuance tracking</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+<header style="display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0"><a href="Main.dc.html" aria-label="Back" style="width: 44px; height: 44px; flex: none; color: #1B1F27; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">A sale counts only when the insurer confirms issuance</div></div><button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header><main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px"><sc-if value="{{fromForm}}" hint-placeholder-val="{{ false }}"><div style="padding: 12px; border-radius: 10px; background: #E8F4EC; border: 1px solid #B7D9C3; color: #1D5F3A; font-size: 13px; font-size: 12px">{{fromFormText}}</div></sc-if><div role="tablist" style="display: flex; gap: 4px; padding: 3px; background: #E6E9EE; border-radius: 9px"><sc-for list="{{tabsP}}" as="tb" hint-placeholder-count="3"><button type="button" role="tab" aria-selected="{{tb.on}}" onClick="{{tb.pick}}" style="flex: 1; min-height: 40px; border: 0; border-radius: 7px; background: {{tb.bg}}; font: inherit; font-size: 12px; font-weight: {{tb.weight}}; color: #1B1F27">{{tb.label}}</button></sc-for></div>
+<sc-if value="{{isPending}}" hint-placeholder-val="{{ true }}">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><div><a href="Customer360.dc.html" style="font-weight: 600; font-size: 14px; color: #1B1F27">Sunita Sharma</a><div style="font-size: 12px; color: #5F6776">[Term plan] · Insurer A · ₹17,995 / yr</div></div></div>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E8F4EC; color: #1D5F3A; border: 1px solid #B7D9C3">Submitted ✓</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E8F4EC; color: #1D5F3A; border: 1px solid #B7D9C3">Paid ✓</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: {{suBg}}; color: {{suColor}}; border: 1px solid {{suBorder}}">{{suLabel}}</span></div>
+      <ol style="margin: 0; padding: 0 0 0 4px; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 12px">
+        <li style="display: flex; gap: 10px"><span style="width: 10px; height: 10px; margin-top: 3px; border-radius: 5px; background: #1D5F3A; flex: none"></span><span><strong>Submitted to Insurer A</strong> · op ref OP-[ref] · 3 Oct 10:58</span></li>
+        <li style="display: flex; gap: 10px"><span style="width: 10px; height: 10px; margin-top: 3px; border-radius: 5px; background: #1D5F3A; flex: none"></span><span><strong>Payment received by insurer</strong> · insurer link · ref [ref] · 11:06</span></li>
+        <li style="display: flex; gap: 10px"><span style="width: 10px; height: 10px; margin-top: 3px; border-radius: 5px; background: #1D5F3A; flex: none"></span><span><strong>Tele-medical</strong> · scheduled by insurer · 5 Oct 10:00</span></li>
+        <li style="display: flex; gap: 10px"><span style="width: 10px; height: 10px; margin-top: 3px; border-radius: 5px; background: {{suDot}}; flex: none"></span><span><strong>{{suLast}}</strong></span></li>
+      </ol>
+      <sc-if value="{{suPending}}" hint-placeholder-val="{{ true }}">
+        <div style="padding: 12px; border-radius: 10px; background: #FFF4E5; border: 1px solid #F0C48A; color: #7A3E06; font-size: 13px; font-size: 12px">Paid but not issued. Follow up if not issued by 5 Oct.</div>
+        <div style="display: flex; gap: 8px"><button type="button" onClick="{{followUp}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; flex: 1">Log insurer follow-up</button><button type="button" onClick="{{issue}}" style="min-height: 44px; padding: 0 12px; border: 1.5px dashed #8A93A3; border-radius: 8px; background: #F4F5F7; font: inherit; font-size: 13px; color: #1B1F27; flex: 1">Demo: insurer issues</button></div>
+      </sc-if>
+      <sc-if value="{{suIssued}}" hint-placeholder-val="{{ false }}">
+        <div style="padding: 12px; border-radius: 10px; background: #E8F4EC; border: 1px solid #B7D9C3; color: #1D5F3A; font-size: 13px; display: flex; flex-direction: column; gap: 6px; font-size: 12px">
+          <strong style="font-size: 13px">Policy [Policy no.] issued · 6 Oct</strong>
+          <span>✓ e-Policy delivered by email and WhatsApp · delivery evidence stored</span>
+          <span>✓ Free-look end date alert set on the calendar</span>
+          <span>✓ Servicing route: Insurer A helpline [number] · portal link saved</span>
+          <span>✓ Held policy created · next premium due 6 Oct 2027</span>
+          <span>✓ Expected commission recorded from rate card</span>
+        </div>
+        <a href="Customer360.dc.html" style="min-height: 48px; padding: 0 14px; box-sizing: border-box; border-radius: 10px; background: {{accent}}; font-size: 14px; font-weight: 600; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center">Open Sunita’s record</a>
+      </sc-if>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+      <div><div style="font-weight: 600; font-size: 14px">Imran Khan</div><div style="font-size: 12px; color: #5F6776">[Health floater] · Insurer C · ₹18,200</div></div>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E8F4EC; color: #1D5F3A; border: 1px solid #B7D9C3">Submitted ✓</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: {{imBg}}; color: {{imColor}}">{{imLabel}}</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">Issuance –</span></div>
+      <button type="button" onClick="{{payLink}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Send insurer payment link</button>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+      <div><div style="font-weight: 600; font-size: 14px">Lakshmi Rao</div><div style="font-size: 12px; color: #5F6776">[Child plan] · Insurer A · ₹36,000</div></div>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: {{lkBg}}; color: {{lkColor}}; border: 1px dashed {{lkBorder}}">{{lkLabel}}</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">Payment –</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">Issuance –</span></div>
+      <div style="font-size: 12px; color: #4A5262">{{lkText}}</div>
+      <sc-if value="{{lkUnknown}}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{reconcile}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">Reconcile with insurer</button></sc-if>
+      <sc-if value="{{lkReady}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{resubmit}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">Resubmit with same key</button></sc-if>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+      <div><div style="font-weight: 600; font-size: 14px">Ramesh Gupta</div><div style="font-size: 12px; color: #5F6776">[Endowment plan] · Insurer E · ₹25,600</div></div>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E8F4EC; color: #1D5F3A; border: 1px solid #B7D9C3">Submitted ✓</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E8F4EC; color: #1D5F3A; border: 1px solid #B7D9C3">Paid ✓</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #FFF4E5; color: #7A3E06; border: 1px solid #F0C48A">Medical requested</span></div>
+      <div style="font-size: 12px; color: #4A5262">Insurer booked a home lab visit · 7 Oct, 08:00 · fasting required</div>
+      <button type="button" onClick="{{shareMed}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Share appointment on WhatsApp</button>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+      <div><div style="font-weight: 600; font-size: 14px">Pooja Shah</div><div style="font-size: 12px; color: #5F6776">[Health floater] · Insurer C · ₹22,900</div></div>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E8F4EC; color: #1D5F3A; border: 1px solid #B7D9C3">Submitted ✓</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">Refund by insurer</span><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #FDECEC; color: #8A1F1F; border: 1px solid #F2B8B8">Declined</span></div>
+      <div style="font-size: 12px; color: #4A5262">Declined by Insurer C underwriting · reason as stated by insurer: [reason] · refund initiated by insurer</div>
+      <div style="display: flex; gap: 8px"><button type="button" onClick="{{informDecline}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; flex: 1">Inform customer</button><a href="NeedsCompare.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center; flex: 1">Explore alternatives</a></div>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{isIssued}}" hint-placeholder-val="{{ false }}">
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px"><div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><strong style="font-size: 14px">Arjun Mehta</strong><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E8F4EC; color: #1D5F3A; border: 1px solid #B7D9C3">Issued</span></div><div style="font-size: 12px; color: #5F6776">[Health floater] · Insurer C · 28 Sep · e-policy delivered ✓</div></div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px"><div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><strong style="font-size: 14px">Meena Iyer</strong><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E8F4EC; color: #1D5F3A; border: 1px solid #B7D9C3">Issued</span></div><div style="font-size: 12px; color: #5F6776">[Term plan] · Insurer A · 22 Sep · free-look ends 22 Oct</div></div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px"><div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><strong style="font-size: 14px">Kiran Desai</strong><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E8F4EC; color: #1D5F3A; border: 1px solid #B7D9C3">Issued</span></div><div style="font-size: 12px; color: #5F6776">[Motor package] · Insurer D · 15 Sep · e-policy delivered ✓</div></div>
+  </div>
+</sc-if>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; z-index: 5; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { tabP: 'pending', su: 'pending', im: 'pending', lk: 'unknown' });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const issued = s.su === 'issued';
+    const lk = { unknown: ['Submission status unknown', '#FFF4E5', '#7A3E06', '#B45309', 'Insurer timed out. We reconcile before any retry, so nothing is submitted twice.'],
+      ready: ['Not received by insurer', '#FDECEC', '#8A1F1F', '#A12C2C', 'Insurer has no record. Safe to resubmit with the same idempotency key.'],
+      done: ['Submitted ✓', '#E8F4EC', '#1D5F3A', '#B7D9C3', 'Resubmitted · awaiting payment link from the insurer.'] }[s.lk];
+    const R = {
+      tabsP: [['pending', 'In progress 5'], ['issued', 'Issued this month 12']].map((d) => ({ label: d[1], on: s.tabP === d[0], bg: s.tabP === d[0] ? '#FFFFFF' : 'transparent', weight: s.tabP === d[0] ? '600' : '400', pick: () => this.setState({ tabP: d[0] }) })),
+      isPending: s.tabP === 'pending', isIssued: s.tabP === 'issued',
+      suPending: !issued, suIssued: issued,
+      suLabel: issued ? 'Issued ✓' : 'Issuance pending', suBg: issued ? '#E8F4EC' : '#FFF4E5', suColor: issued ? '#1D5F3A' : '#7A3E06', suBorder: issued ? '#B7D9C3' : '#F0C48A',
+      suDot: issued ? '#1D5F3A' : '#C9CED6', suLast: issued ? 'Issued by insurer · policy [Policy no.] · 6 Oct' : 'Issuance · waiting for insurer',
+      followUp: () => this.flash('Follow-up logged with insurer reference · reminder set for 5 Oct'),
+      issue: () => { this.setState({ su: 'issued' }); this.flash('Insurer callback verified and deduplicated · policy issued'); },
+      imLabel: s.im === 'sent' ? 'Payment link sent' : 'Payment pending', imBg: s.im === 'sent' ? '#EEF3FB' : '#FFF4E5', imColor: s.im === 'sent' ? '#1B1F27' : '#7A3E06',
+      payLink: () => { this.setState({ im: 'sent' }); this.flash('Insurer-approved payment link sent on WhatsApp'); },
+      lkLabel: lk[0], lkBg: lk[1], lkColor: lk[2], lkBorder: lk[3], lkText: lk[4],
+      lkUnknown: s.lk === 'unknown', lkReady: s.lk === 'ready',
+      reconcile: () => this.setState({ lk: 'ready' }),
+      resubmit: () => { this.setState({ lk: 'done' }); this.flash('Resubmitted with the original idempotency key'); },
+      shareMed: () => this.flash('Appointment details shared · reminder set for 6 Oct evening'),
+      informDecline: () => this.flash('Decline note drafted in the customer’s language for your review'),
+      fromForm: !!(this.pget('proto.submitted') || this.pget('proto.portal')),
+      fromFormText: this.pget('proto.portal') ? 'Sunita’s proposal was entered on the Insurer E portal from the proposal desk · evidence saved · waiting for the insurer.' : 'Sunita’s proposal just arrived from the consolidated form · submitted to Insurer A by API.'
+    };
+    R.scrTitle = s.lang === 'hi' ? 'प्रस्ताव' : 'Proposals';
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

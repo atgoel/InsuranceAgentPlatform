@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vernacular message draft and voice-to-CRM</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+  <header style="display: flex; align-items: center; gap: 8px; padding: 8px 8px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0">
+    <a href="Customer360.dc.html" aria-label="Back to customer" style="width: 44px; height: 44px; color: #1B1F27; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <div style="flex: 1"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776">WhatsApp · consent on file</div></div>
+  <button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header>
+  <main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px">
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Purpose
+      <select value="{{purpose}}" onChange="{{setPurpose}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; color: #1B1F27; background: #FFFFFF">
+        <option value="due">Premium due reminder · template v3</option>
+        <option value="renewal">Renewal follow-up · template v2</option>
+        <option value="birthday">Birthday greeting · template v1</option>
+      </select>
+    </label>
+    <div role="radiogroup" aria-label="Language" style="display: flex; gap: 6px; flex-wrap: wrap">
+      <sc-for list="{{langs}}" as="l" hint-placeholder-count="4">
+        <button type="button" role="radio" aria-checked="{{l.on}}" onClick="{{l.pick}}" style="min-height: 40px; padding: 0 12px; border: {{l.border}}; border-radius: 20px; background: {{l.bg}}; font: inherit; font-size: 13px; font-weight: {{l.weight}}; color: #1B1F27">{{l.label}}</button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}">
+      <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4A5262">{{draftBadge}}</span>
+        <sc-if value="{{notEditing}}" hint-placeholder-val="{{ true }}">
+          <p lang="{{langCode}}" style="margin: 0; font-size: 14px; line-height: 1.6; color: {{draftColor}}">{{draft}}</p>
+        </sc-if>
+        <sc-if value="{{editing}}" hint-placeholder-val="{{ false }}">
+          <textarea aria-label="Edit draft" rows="6" value="{{draft}}" onChange="{{setCustom}}" style="font: inherit; font-size: 14px; line-height: 1.5; padding: 8px 10px; border: 1.5px solid {{accent}}; border-radius: 8px; resize: none"></textarea>
+        </sc-if>
+        <div style="font-size: 11px; color: #5F6776; line-height: 1.4">Facts used: {{facts}}</div>
+        <div style="display: flex; gap: 8px">
+          <button type="button" onClick="{{regenerate}}" disabled="{{regional}}" style="flex: 1; min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Regenerate</button>
+          <button type="button" onClick="{{toggleEdit}}" disabled="{{regional}}" style="flex: 1; min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">{{editLabel}}</button>
+          <button type="button" onClick="{{send}}" disabled="{{regional}}" style="flex: 1.4; min-height: 44px; border: 0; border-radius: 8px; background: {{sendBg}}; font: inherit; font-size: 13px; font-weight: 600; color: {{sendColor}}">Open WhatsApp</button>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}">
+      <div style="background: #E8F4EC; border: 1px solid #B7D9C3; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; color: #1D5F3A">
+        <strong style="font-size: 14px">Opened in WhatsApp (click-to-chat)</strong>
+        <span style="font-size: 12px; line-height: 1.45">Reviewed and sent by Ravi · logged to Sunita’s activity with template and language.</span>
+        <button type="button" onClick="{{again}}" style="align-self: flex-start; min-height: 40px; padding: 0 12px; border: 1px solid #B7D9C3; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">Draft another</button>
+      </div>
+    </sc-if>
+
+    <h2 style="margin: 4px 0 0; font-size: 15px; font-weight: 600">Voice note → CRM</h2>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <button type="button" onClick="{{play}}" aria-label="Play voice note" style="width: 44px; height: 44px; flex: none; border-radius: 22px; border: 0; background: {{accent}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l13 8-13 8z"></path></svg></button>
+        <div style="flex: 1; display: flex; align-items: center; gap: 3px; height: 28px">
+          <sc-for list="{{bars}}" as="b" hint-placeholder-count="14">
+            <span style="width: 3px; height: {{b.h}}px; background: {{b.c}}; border-radius: 2px"></span>
+          </sc-for>
+        </div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5F6776">0:42 · Hinglish</span>
+      </div>
+      <div style="font-size: 12px; color: #5F6776">{{voiceStatus}}</div>
+      <sc-if value="{{transcribed}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <div style="font-size: 12px; color: #4A5262; font-style: italic">“Sunita ji se baat hui, renewal quote Friday tak chahiye, spouse ko bhi health mein add karna hai.”</div>
+          <div style="display: flex; flex-direction: column; border: 1px dashed #8A93A3; border-radius: 8px">
+            <sc-for list="{{entries}}" as="e" hint-placeholder-count="3">
+              <div style="display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border-bottom: 1px solid #E6E9EE; font-size: 12px"><span style="color: {{e.markColor}}; font-weight: 700; width: 14px">{{e.mark}}</span><span><span style="color: #5F6776">{{e.kind}} · </span>{{e.text}}</span></div>
+            </sc-for>
+          </div>
+          <sc-if value="{{notConfirmed}}" hint-placeholder-val="{{ true }}">
+            <button type="button" onClick="{{confirm}}" style="min-height: 44px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">Confirm all 3</button>
+          </sc-if>
+          <sc-if value="{{confirmed}}" hint-placeholder-val="{{ false }}">
+            <a href="Customer360.dc.html" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 13px; font-weight: 600; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">Saved · view in Customer 360</a>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { purpose: 'due', lang: 'hi', variant: 0, editing: false, custom: null, sent: false, playing: false, transcribed: false, confirmed: false };
+    this.state = Object.assign({}, this.state, { lang: this.loadLang() });
+  }
+  componentWillUnmount() { clearTimeout(this._p); }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि', scrTitle: hi ? 'सुनीता को संदेश' : 'Message Sunita',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const D = {
+      due: {
+        en: ['Hello Sunita ji, the ₹24,500 premium for your term policy [policy no.] was due on 6 Sep. The grace period ends on 6 Oct, so please pay through the insurer’s link before then: [link]. Call me with any questions. — Ravi',
+             'Hi Sunita ji, a quick reminder: your term policy [policy no.] premium of ₹24,500 is in its grace period until 6 Oct. You can pay on the insurer’s secure link: [link]. Happy to help on a call. — Ravi'],
+        hi: ['नमस्ते सुनीता जी, आपकी टर्म पॉलिसी [पॉलिसी नंबर] का ₹24,500 प्रीमियम 6 सितंबर को देय था। ग्रेस अवधि 6 अक्टूबर को समाप्त होगी, कृपया उससे पहले बीमा कंपनी के लिंक से भुगतान करें: [लिंक]। कोई सवाल हो तो मुझे कॉल करें। — रवि',
+             'सुनीता जी, याद दिलाना चाहता हूँ कि आपकी टर्म पॉलिसी [पॉलिसी नंबर] का ₹24,500 प्रीमियम ग्रेस अवधि में है, जो 6 अक्टूबर तक है। भुगतान बीमा कंपनी के सुरक्षित लिंक से करें: [लिंक]। मदद के लिए कॉल करें। — रवि'],
+        facts: 'premium and due date from policy record · approved template v3 · no promises or guarantees'
+      },
+      renewal: {
+        en: ['Hello Sunita ji, your family health policy with Insurer C renews on 9 Oct. As we discussed, I will share the renewal quote, including the option to add your spouse, by Friday. — Ravi',
+             'Hi Sunita ji, a heads-up that your Insurer C family health policy is due for renewal on 9 Oct. I will send the renewal quote with the add-spouse option by Friday. — Ravi'],
+        hi: ['नमस्ते सुनीता जी, बीमा कंपनी C के साथ आपकी फ़ैमिली हेल्थ पॉलिसी का रिन्यूअल 9 अक्टूबर को है। जैसा हमने बात की, जीवनसाथी को जोड़ने के विकल्प सहित रिन्यूअल कोटेशन मैं शुक्रवार तक भेज दूँगा। — रवि',
+             'सुनीता जी, आपकी बीमा कंपनी C की फ़ैमिली हेल्थ पॉलिसी 9 अक्टूबर को रिन्यू होनी है। जीवनसाथी को जोड़ने के विकल्प के साथ कोटेशन शुक्रवार तक भेजूँगा। — रवि'],
+        facts: 'renewal date from policy record · call note of 2 Oct · approved template v2'
+      },
+      birthday: {
+        en: ['Happy birthday, Sunita ji! Wishing you good health and a wonderful year ahead. — Ravi',
+             'Many happy returns, Sunita ji! May the year bring you and your family health and happiness. — Ravi'],
+        hi: ['जन्मदिन की हार्दिक शुभकामनाएँ, सुनीता जी! आपको उत्तम स्वास्थ्य और खुशियों भरा साल मुबारक हो। — रवि',
+             'सुनीता जी, जन्मदिन मुबारक! आपके और आपके परिवार के लिए यह साल सेहत और खुशियाँ लाए। — रवि'],
+        facts: 'date of birth from customer record · greeting template v1 · no product claims'
+      }
+    };
+    const regional = s.lang === 'r1' || s.lang === 'r2';
+    const base = regional ? '[Draft in this language appears once the pilot regional languages are chosen]' : D[s.purpose][s.lang][s.variant];
+    const draft = s.custom != null ? s.custom : base;
+    const langDefs = [['en', 'English'], ['hi', 'हिन्दी'], ['r1', '[Regional 1]'], ['r2', '[Regional 2]']];
+    const langs = langDefs.map((l) => {
+      const on = s.lang === l[0];
+      return { label: l[1], on: on, border: on ? '1.5px solid ' + accent : '1px solid #D5D9E0', bg: on ? '#EEF3FB' : '#FFFFFF', weight: on ? '600' : '400',
+        pick: () => this.setState({ lang: l[0], custom: null, editing: false, variant: 0 }) };
+    });
+    const heights = [10, 20, 14, 26, 12, 22, 8, 18, 24, 12, 16, 9, 20, 14];
+    const bars = heights.map((h) => ({ h: h, c: s.playing ? accent : '#8A93A3' }));
+    const entries = [['Activity', 'Call: wants renewal quote by Friday; add spouse to health cover'], ['Task', 'Send renewal quote · Fri 9 Oct, 10:00'], ['Opportunity', 'Health floater: add spouse (new)']]
+      .map((e) => ({ kind: e[0], text: e[1], mark: s.confirmed ? '✓' : '•', markColor: s.confirmed ? '#1D5F3A' : '#8A93A3' }));
+    const badgeLang = { en: 'ENGLISH', hi: 'HINDI', r1: 'REGIONAL 1', r2: 'REGIONAL 2' }[s.lang];
+    return Object.assign(this.langVals(), {
+      accent: accent,
+      purpose: s.purpose,
+      setPurpose: (e) => this.setState({ purpose: e.target.value, custom: null, editing: false, variant: 0 }),
+      langs: langs, langCode: s.lang === 'hi' ? 'hi' : 'en',
+      draft: draft, regional: regional,
+      draftColor: regional ? '#5F6776' : '#1B1F27',
+      draftBadge: (s.custom != null ? 'EDITED BY YOU · ' : 'AI DRAFT · ') + badgeLang + (s.variant ? ' · VARIANT 2' : '') + ' · REVIEW BEFORE SENDING',
+      facts: D[s.purpose].facts,
+      editing: s.editing, notEditing: !s.editing, editLabel: s.editing ? 'Done' : 'Edit',
+      toggleEdit: () => this.setState({ editing: !s.editing, custom: s.custom != null ? s.custom : base }),
+      setCustom: (e) => this.setState({ custom: e.target.value }),
+      regenerate: () => this.setState({ variant: s.variant ? 0 : 1, custom: null, editing: false }),
+      sendBg: regional ? '#C9CED6' : accent, sendColor: regional ? '#3B4352' : '#FFFFFF',
+      send: () => this.setState({ sent: true, editing: false }),
+      sent: s.sent, notSent: !s.sent,
+      again: () => this.setState({ sent: false, custom: null, variant: 0 }),
+      bars: bars,
+      voiceStatus: s.playing ? 'Transcribing… (Hinglish)' : (s.transcribed ? 'Transcribed · confirm the drafted entries below' : 'Tap play to transcribe the voice note'),
+      play: () => {
+        if (s.playing) return;
+        this.setState({ playing: true });
+        clearTimeout(this._p);
+        this._p = setTimeout(() => this.setState({ playing: false, transcribed: true }), 1600);
+      },
+      transcribed: s.transcribed, entries: entries,
+      confirmed: s.confirmed, notConfirmed: !s.confirmed,
+      confirm: () => this.setState({ confirmed: true })
+    });
+  }
+}
+</script>
+</body>
+</html>

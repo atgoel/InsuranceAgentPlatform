@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Needs analysis calculators</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+<header style="display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0"><a href="Customer360.dc.html" aria-label="Back" style="width: 44px; height: 44px; flex: none; color: #1B1F27; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">For Sunita Sharma · educational, assumptions shown</div></div><button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header><main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px"><div role="tablist" style="display: flex; gap: 4px; padding: 3px; background: #E6E9EE; border-radius: 9px"><sc-for list="{{calcs}}" as="tb" hint-placeholder-count="3"><button type="button" role="tab" aria-selected="{{tb.on}}" onClick="{{tb.pick}}" style="flex: 1; min-height: 40px; border: 0; border-radius: 7px; background: {{tb.bg}}; font: inherit; font-size: 12px; font-weight: {{tb.weight}}; color: #1B1F27">{{tb.label}}</button></sc-for></div>
+<sc-if value="{{isProt}}" hint-placeholder-val="{{ true }}">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Annual income (₹ lakh)<input type="number" inputmode="decimal" value="{{pIncome}}" onChange="{{setPIncome}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Current age<input type="number" value="{{pAge}}" onChange="{{setPAge}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Retire at<input type="number" value="{{pRetire}}" onChange="{{setPRetire}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Existing life cover (₹ lakh)<input type="number" value="{{pCover}}" onChange="{{setPCover}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262; grid-column: 1 / -1">Loans and liabilities (₹ lakh)<input type="number" value="{{pLiab}}" onChange="{{setPLiab}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 12px; color: #5F6776">Estimated life cover need</div>
+      <div style="font-size: 28px; font-weight: 600">{{needText}}</div>
+      <div style="height: 14px; border-radius: 7px; background: #F0C48A; overflow: hidden"><div style="width: {{coverPct}}%; height: 14px; background: #3B4352"></div></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px"><span>Existing cover {{coverText}}</span><strong style="color: #7A3E06">Gap {{gapText}}</strong></div>
+      <div style="font-size: 11px; color: #5F6776; line-height: 1.5">Assumptions v1: replaces 50% of income each year until retirement (maximum 20 years) plus liabilities. No inflation or investment returns. Educational only; the insurer quote governs.</div>
+    </div>
+    <div style="display: flex; gap: 8px"><button type="button" onClick="{{saveAdvice}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; flex: 1">Save to advice record</button><a href="QuoteBI.dc.html" style="min-height: 48px; padding: 0 14px; box-sizing: border-box; border-radius: 10px; background: {{accent}}; font-size: 14px; font-weight: 600; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; flex: 1.4">Term quote for {{gapText}}</a></div>
+  </div>
+</sc-if>
+<sc-if value="{{isRet}}" hint-placeholder-val="{{ false }}">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Monthly expenses today (₹)<input type="number" value="{{rExp}}" onChange="{{setRExp}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Years to retirement<input type="number" value="{{rYears}}" onChange="{{setRYears}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Inflation (% a year)<input type="number" value="{{rInf}}" onChange="{{setRInf}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Years in retirement<input type="number" value="{{rLife}}" onChange="{{setRLife}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 14px"><div style="font-size: 12px; color: #5F6776">Corpus needed at retirement</div><div style="font-size: 28px; font-weight: 600">{{corpusText}}</div><div style="font-size: 11px; color: #5F6776; margin-top: 6px">Expenses grown by inflation, multiplied by years in retirement. No returns assumed. Educational only.</div></div>
+    <a href="ResearchAssistant.dc.html" style="min-height: 48px; padding: 0 14px; box-sizing: border-box; border-radius: 10px; background: {{accent}}; font-size: 14px; font-weight: 600; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center">Research retirement plans</a>
+  </div>
+</sc-if>
+<sc-if value="{{isChild}}" hint-placeholder-val="{{ false }}">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262; grid-column: 1 / -1">Goal<select value="{{cGoal}}" onChange="{{setCGoal}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option>Higher education</option><option>Marriage</option></select></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Cost today (₹ lakh)<input type="number" value="{{cCost}}" onChange="{{setCCost}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Years to goal<input type="number" value="{{cYears}}" onChange="{{setCYears}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 14px"><div style="font-size: 12px; color: #5F6776">{{cGoal}} cost in {{cYears}} years</div><div style="font-size: 28px; font-weight: 600">{{childText}}</div><div style="font-size: 11px; color: #5F6776; margin-top: 6px">Education inflation assumed at 8% a year. Educational only.</div></div>
+    <a href="ResearchAssistant.dc.html" style="min-height: 48px; padding: 0 14px; box-sizing: border-box; border-radius: 10px; background: {{accent}}; font-size: 14px; font-weight: 600; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center">Research child plans</a>
+  </div>
+</sc-if>
+<sc-if value="{{isHealth}}" hint-placeholder-val="{{ false }}">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Adults<input type="number" value="{{hAdults}}" onChange="{{setHAdults}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Children<input type="number" value="{{hKids}}" onChange="{{setHKids}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">City<select value="{{hCity}}" onChange="{{setHCity}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option value="metro">Metro</option><option value="other">Non-metro</option></select></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Current sum insured (₹ lakh)<input type="number" value="{{hCur}}" onChange="{{setHCur}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 14px"><div style="font-size: 12px; color: #5F6776">Suggested family floater sum insured</div><div style="font-size: 28px; font-weight: 600">{{healthText}}</div><div style="font-size: 12px; color: #7A3E06; margin-top: 4px">{{healthGap}}</div><div style="font-size: 11px; color: #5F6776; margin-top: 6px">Illustrative sizing rule; treatment costs vary by city and hospital. Educational only.</div></div>
+    <a href="NeedsCompare.dc.html" style="min-height: 48px; padding: 0 14px; box-sizing: border-box; border-radius: 10px; background: {{accent}}; font-size: 14px; font-weight: 600; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center">Compare health plans</a>
+  </div>
+</sc-if>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; z-index: 5; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { calc: 'prot', pIncome: '12', pAge: '41', pRetire: '60', pCover: '50', pLiab: '6', rExp: '60000', rYears: '19', rInf: '6', rLife: '20', cGoal: 'Higher education', cCost: '25', cYears: '12', hAdults: '2', hKids: '1', hCity: 'metro', hCur: '5' });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const n = (v) => { const x = parseFloat(v); return isNaN(x) ? 0 : x; };
+    const L = (l) => l >= 100 ? '₹' + (l / 100).toFixed(2) + ' Cr' : '₹' + (Math.round(l * 10) / 10) + ' L';
+    const yrs = Math.max(0, Math.min(20, n(s.pRetire) - n(s.pAge)));
+    const need = n(s.pIncome) * yrs * 0.5 + n(s.pLiab);
+    const gap = Math.max(0, need - n(s.pCover));
+    const corpus = n(s.rExp) * 12 * Math.pow(1 + n(s.rInf) / 100, n(s.rYears)) * n(s.rLife) / 100000;
+    const child = n(s.cCost) * Math.pow(1.08, n(s.cYears));
+    const hs = Math.max(5, (n(s.hAdults) * 5 + n(s.hKids) * 2.5) * (s.hCity === 'metro' ? 1 : 0.7));
+    const hGap = hs - n(s.hCur);
+    const R = {
+      calcs: this.tabs([['prot', 'Protection'], ['ret', 'Retirement'], ['child', 'Child'], ['health', 'Health']], 'calc'),
+      isProt: s.calc === 'prot', isRet: s.calc === 'ret', isChild: s.calc === 'child', isHealth: s.calc === 'health',
+      pIncome: s.pIncome, setPIncome: this.set('pIncome'), pAge: s.pAge, setPAge: this.set('pAge'), pRetire: s.pRetire, setPRetire: this.set('pRetire'),
+      pCover: s.pCover, setPCover: this.set('pCover'), pLiab: s.pLiab, setPLiab: this.set('pLiab'),
+      needText: L(need), coverText: L(n(s.pCover)), gapText: L(gap), coverPct: need > 0 ? Math.min(100, Math.round(n(s.pCover) / need * 100)) : 100,
+      saveAdvice: () => this.flash('Saved to advice record · inputs, assumptions v1 and outputs stored'),
+      rExp: s.rExp, setRExp: this.set('rExp'), rYears: s.rYears, setRYears: this.set('rYears'), rInf: s.rInf, setRInf: this.set('rInf'), rLife: s.rLife, setRLife: this.set('rLife'),
+      corpusText: L(corpus),
+      cGoal: s.cGoal, setCGoal: this.set('cGoal'), cCost: s.cCost, setCCost: this.set('cCost'), cYears: s.cYears, setCYears: this.set('cYears'), childText: L(child),
+      hAdults: s.hAdults, setHAdults: this.set('hAdults'), hKids: s.hKids, setHKids: this.set('hKids'), hCity: s.hCity, setHCity: this.set('hCity'), hCur: s.hCur, setHCur: this.set('hCur'),
+      healthText: L(hs), healthGap: hGap > 0 ? 'Current cover is short by ' + L(hGap) : 'Current cover meets this rule of thumb'
+    };
+    R.scrTitle = s.lang === 'hi' ? 'ज़रूरत विश्लेषण' : 'Needs analysis';
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

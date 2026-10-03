@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My tasks on mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+<header style="display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0"><a href="Main.dc.html" aria-label="Back" style="width: 44px; height: 44px; flex: none; color: #1B1F27; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Leads, renewals, proposals and voice notes in one list</div></div><button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header><main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px"><div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px"><sc-for list="{{types}}" as="ch" hint-placeholder-count="4"><button type="button" onClick="{{ch.pick}}" aria-pressed="{{ch.on}}" style="flex: none; min-height: 36px; padding: 0 12px; border: 1px solid {{ch.border}}; border-radius: 18px; background: {{ch.bg}}; font: inherit; font-size: 12px; font-weight: {{ch.weight}}; color: #1B1F27">{{ch.label}}</button></sc-for></div>
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 12px; font-weight: 600; color: {{g.color}}">{{g.name}} · {{g.count}}</div>
+    <sc-for list="{{g.items}}" as="tk" hint-placeholder-count="2">
+      <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 10px 12px; display: flex; gap: 10px; align-items: center">
+        <input type="checkbox" aria-label="Done" checked="{{tk.done}}" onChange="{{tk.toggle}}" style="width: 20px; height: 20px">
+        <a href="{{tk.href}}" style="flex: 1; min-width: 0; text-decoration: none; color: #1B1F27"><div style="font-size: 13px; font-weight: 600; text-decoration: {{tk.deco}}">{{tk.t}}</div><div style="font-size: 11px; color: #5F6776">{{tk.rel}} · {{tk.src}}</div></a>
+        <span style="font-size: 11px; font-weight: 600; color: {{g.color}}">{{tk.due}}</span>
+      </div>
+    </sc-for>
+  </div>
+</sc-for>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; z-index: 5; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+<nav aria-label="Primary" style="display: flex; background: #FFFFFF; border-top: 1px solid #D5D9E0; padding: 4px 4px 8px">
+  <a href="Main.dc.html" aria-current="page" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; font-weight: 600; color: {{accent}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>{{navL.today}}</a>
+  <a href="LeadsPipeline.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8z"></path></svg>{{navL.leads}}</a>
+  <a href="Customer360.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path></svg>{{navL.cust}}</a>
+  <a href="DueCalendar.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>{{navL.book}}</a>
+  <a href="Income.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4.5 4.3-7 8-7s7 2.5 8 7"></path></svg>{{navL.me}}</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { ty: 'all', done: {} });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const D = [
+      ['t2', 'Collect income proof', 'Document', 'Imran Khan', 'ProposalForm.dc.html', 'Proposal cadence', 'over', '1 d late'],
+      ['t3', 'Remind: grace ends in 3 days', 'WhatsApp', 'Sunita Sharma', 'AIDraft.dc.html', 'Renewal cadence', 'today', '11:00'],
+      ['t4', 'Send term quote', 'Call', 'Priya Nair', 'LeadDetail.dc.html', 'From voice note', 'today', '19:30'],
+      ['t8', 'Birthday greeting', 'WhatsApp', 'Meena Iyer', 'MicrositeGreetings.dc.html', 'Lifecycle alert', 'today', 'All day'],
+      ['t9', 'First call · new lead', 'Call', 'Farhan Ali', 'LeadDetail.dc.html', 'Lead SLA · 1 h 12 min left', 'today', '11:30'],
+      ['t7', 'Reinvestment conversation', 'Meeting', 'Anil Joshi', 'Customer360.dc.html', 'Survival benefit 15 Oct', 'up', '13 Oct'],
+      ['t6', 'Revival follow-up', 'Call', 'Imran Khan', 'DueCalendar.dc.html', 'Lapse rule', 'up', '18 Oct']
+    ];
+    const vis = D.filter((d) => s.ty === 'all' || d[2] === s.ty);
+    const G = [['over', 'Overdue', '#8A1F1F'], ['today', 'Today', '#1B1F27'], ['up', 'Upcoming', '#5F6776']];
+    const R = {
+      types: this.chips([['all', 'All'], ['Call', 'Calls'], ['WhatsApp', 'WhatsApp'], ['Meeting', 'Meetings'], ['Document', 'Docs']], 'ty'),
+      groups: G.map((g) => { const items = vis.filter((d) => d[6] === g[0]).map((d) => { const done = !!s.done[d[0]]; return { t: d[1], rel: d[3], href: d[4], src: d[5], due: d[7], done: done, deco: done ? 'line-through' : 'none',
+        toggle: () => { this.setState({ done: Object.assign({}, s.done, { [d[0]]: !done }) }); if (!done) this.flash('Done · logged on ' + d[3]); } }; }); return { name: g[1], color: g[2], count: items.length, items: items }; })
+    };
+    R.scrTitle = s.lang === 'hi' ? 'मेरे काम' : 'My tasks';
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

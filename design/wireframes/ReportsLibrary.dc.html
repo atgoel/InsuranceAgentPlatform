@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reports library</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1150px; display: flex; flex-wrap: wrap; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+<nav aria-label="Console" style="flex: 1 1 240px; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #D5D9E0; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 12px"><div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #5F6776">LOGO</div><div><div style="font-weight: 600; font-size: 14px">[IMF tenant name]</div><div style="font-size: 11px; color: #5F6776">Business plan · Principal Officer view</div></div></div>
+<a href="LeadsPipeline.dc.html" style="margin: 0 4px 6px; min-height: 40px; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 13px; color: #5F6776; text-decoration: none">Search customers, policies, ISPs</a>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CRM<span style="font-weight: 400">8</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CRMLeads.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Leads</a>
+<a href="CRMPipeline.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Opportunities</a>
+<a href="CRMCustomers.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Customers &amp; households</a>
+<a href="CRMTasks.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tasks &amp; activities</a>
+<a href="CRMCampaigns.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Campaigns &amp; segments</a>
+<a href="CRMAssignment.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Routing rules</a>
+<a href="CRMImportDedup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Import &amp; duplicates</a>
+<a href="PortalFillSheet.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal desk</a>
+</div></details>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">NETWORK<span style="font-weight: 400">4</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ManagerConsole.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Dashboard</a>
+<a href="OnboardingHierarchy.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Onboarding &amp; hierarchy</a>
+<a href="ProductDrives.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Product drives &amp; contests</a>
+<a href="ReportsLibrary.dc.html" aria-current="page" style="padding: 9px 12px; border-radius: 8px; background: #EEF3FB; color: {{accent}}; font-weight: 600; font-size: 14px; text-decoration: none">Reports</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTENT<span style="font-weight: 400">2</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CampaignPublish.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Landing pages</a>
+<a href="ContentLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Content library</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTROL<span style="font-weight: 400">3</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ComplianceCentre.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Compliance centre</a>
+<a href="CommissionSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Commission</a>
+<a href="AIControls.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">AI controls</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">SETUP<span style="font-weight: 400">6</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="TenantSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenant &amp; catalogue</a>
+<a href="UsersRoles.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Users &amp; roles</a>
+<a href="Configuration.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Configuration</a>
+<a href="FormTemplates.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal forms</a>
+<a href="Integrations.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Integrations</a>
+<a href="WhiteLabel.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Brand &amp; white-label</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">PLATFORM OPERATOR<span style="font-weight: 400">1</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="OperatorTenants.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenants &amp; plans</a>
+</div></details>
+<a href="Start.dc.html" style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #1B1F27; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none">⌂ Prototype map</a>
+<a href="Main.dc.html" style="margin-top: 6px; padding: 10px 12px; border: 1px dashed #8A93A3; border-radius: 8px; color: #1B1F27; font-size: 13px; text-decoration: none">Open agent app</a>
+</nav>
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 1320px">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end"><div style="flex: 1 1 320px"><h1 style="margin: 0; font-size: 24px; font-weight: 600">Reports</h1><div style="margin-top: 4px; font-size: 13px; color: #4A5262">Fixed reports with CSV export. Every number counts only insurer-confirmed issuance.</div></div><select aria-label="Period" value="{{period}}" onChange="{{setPeriod}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%; width: 180px"><option value="m">This month</option><option value="q">This quarter</option><option value="fy">FY 2026–27</option></select></div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+  <section style="flex: 1 1 260px; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 4px">
+    <sc-for list="{{reps}}" as="rp" hint-placeholder-count="8">
+      <button type="button" onClick="{{rp.pick}}" style="text-align: left; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 8px; background: {{rp.bg}}; font: inherit; font-size: 13px; font-weight: {{rp.weight}}; color: #1B1F27">{{rp.n}}</button>
+    </sc-for>
+  </section>
+  <section style="flex: 3 1 600px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+    <div style="padding: 10px 12px; border-radius: 10px; background: #EEF3FB; border: 1px solid #B9CBEA; color: #1B1F27; font-size: 12px; line-height: 1.45; font-size: 13px"><strong>What stands out:</strong> {{insight}}</div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><h2 style="margin: 0; font-size: 15px; font-weight: 600">{{title}}</h2><span style="display: flex; gap: 8px"><button type="button" onClick="{{schedule}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Email weekly</button><button type="button" onClick="{{exportCsv}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">Export CSV</button></span></div>
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+        <div style="display: flex; align-items: center; gap: 12px; font-size: 13px; min-height: 36px"><span style="width: 200px">{{r.l}}</span><span style="flex: 1; height: 14px; border-radius: 4px; background: #E6E9EE"><span style="display: block; width: {{r.p}}%; height: 14px; border-radius: 4px; background: {{accent}}"></span></span><strong style="width: 90px; text-align: right">{{r.v}}</strong><span style="width: 120px; font-size: 12px; color: #5F6776">{{r.sub}}</span></div>
+      </sc-for>
+      <div style="font-size: 12px; color: #5F6776">{{foot}}</div>
+    </div>
+  </section>
+</div>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: fixed; right: 24px; bottom: 24px; z-index: 5; max-width: 380px; padding: 12px 16px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { rep: 'ret', period: 'm' });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const RP = {
+      src: ['Sales by source', 'Landing pages and microsites drive 46% of issued premium; referrals convert best at 21% lead-to-issued.', [['Agent microsites', 46, '₹8.5 L', '1,120 leads'], ['Landing pages', 31, '₹5.7 L', '1,480 leads'], ['Customer referrals', 22, '₹4.0 L', '190 leads · 21%'], ['Events and imports', 18, '₹3.3 L', '1,240 leads'], ['Walk-in and phone', 9, '₹1.6 L', '210 leads']], 'Attribution uses first touch; switch to last touch in report settings.'],
+      prod: ['Sales by product and insurer', 'Health is 52% of issued premium; Insurer C carries 61% of health. Consider a second health tie-up for resilience.', [['Health · Insurer C', 61, '₹6.1 L', '214 policies'], ['Health · Insurer F', 39, '₹3.9 L', '120 policies'], ['Term · Insurer A', 70, '₹5.6 L', '96 policies'], ['Child · Insurer A', 22, '₹1.8 L', '18 policies'], ['Motor · Insurer D', 28, '₹2.2 L', '310 policies']], 'Grouped by line; comparison scope follows active tie-ups.'],
+      sp: ['Salesperson performance', 'Kavya R. leads issued premium; Neha P. has the best 13th-month persistency at 91%.', [['Kavya R.', 100, '₹2.8 L', '88% · 13M'], ['Asha K.', 79, '₹2.2 L', '84% · 13M'], ['Neha P.', 68, '₹1.9 L', '91% · 13M'], ['Ravi K.', 61, '₹1.7 L', '86% · 13M'], ['Rahul V.', 39, '₹1.1 L', '79% · 13M']], 'Scoped to the viewer’s role and branch.'],
+      ret: ['Renewal retention', 'Retention is 85% of renewal premium due; 12 policies worth ₹2.1 L are in grace now.', [['Retained', 85, '₹42.1 L', 'of ₹49.6 L due'], ['In grace now', 4, '₹2.1 L', '12 policies'], ['Lapsed this period', 6, '₹3.0 L', '19 policies'], ['Revived', 2, '₹0.9 L', '5 policies'], ['Actioned before grace end', 81, '81%', 'target [x]%']], 'Due outcomes are as reported by insurers or imports, not a premium ledger.'],
+      fun: ['Funnel conversion', 'Biggest drop is quote to proposal (48%); quotes older than 5 days convert half as often.', [['Leads', 100, '1,240', ''], ['Contacted', 72, '890', '72%'], ['Quoted', 33, '412', '46% of contacted'], ['Proposal', 16, '198', '48% of quoted'], ['Issued', 10, '121', '61% of proposals']], 'Issued counts insurer-confirmed policies only.'],
+      comm: ['Commission · expected vs received', '₹33 L is pending or short across 126 policies; Insurer A statements are 2 weeks late.', [['Insurer A', 72, '₹52 L / ₹72 L', '28 policies short'], ['Insurer C', 91, '₹38 L / ₹42 L', '9 pending'], ['Insurer D', 96, '₹11 L / ₹11.5 L', ''], ['Insurer E', 64, '₹8 L / ₹12.5 L', '31 pending']], 'Statement matching arrives in a later release.'],
+      pers: ['Persistency cohorts', '13th-month persistency is 86%; the 25th-month drop concentrates in monthly-mode policies.', [['13th month', 86, '86%', ''], ['25th month', 78, '78%', 'monthly mode 69%'], ['37th month', 71, '71%', ''], ['49th month', 66, '66%', ''], ['61st month', 60, '60%', '']], 'By issue-month cohort, premium-weighted.'],
+      adopt: ['Adoption', '81% of active salespeople imported their book; AI drafts are accepted unedited 74% of the time.', [['Weekly active salespeople', 81, '146 / 180', ''], ['Book imported', 73, '132', 'of 180'], ['Daily-plan actions / user / day', 60, '9.2', ''], ['AI drafts accepted unedited', 74, '74%', ''], ['WhatsApp shares this week', 55, '2,310', '']], 'Time saved is estimated from task timings in the pilot.']
+    };
+    const scale = { m: 1, q: 1, fy: 1 }[s.period];
+    const cur = RP[s.rep];
+    const R = {
+      reps: Object.keys(RP).map((k) => ({ n: RP[k][0], bg: s.rep === k ? '#EEF3FB' : 'transparent', weight: s.rep === k ? '600' : '400', pick: () => this.setState({ rep: k }) })),
+      title: cur[0] + ' · ' + { m: 'this month', q: 'this quarter', fy: 'FY 2026–27' }[s.period], insight: cur[1], foot: cur[3],
+      rows: cur[2].map((r) => ({ l: r[0], p: Math.round(r[1] * scale), v: r[2], sub: r[3] })),
+      period: s.period, setPeriod: this.set('period'),
+      exportCsv: () => this.flash(cur[0] + ' exported · scoped to your role · logged'), schedule: () => this.flash('Scheduled every Monday 08:00 to your email')
+    };
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

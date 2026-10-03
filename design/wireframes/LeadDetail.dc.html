@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lead record on mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+<header style="display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0"><a href="LeadsPipeline.dc.html" aria-label="Back" style="width: 44px; height: 44px; flex: none; color: #1B1F27; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Term life · agent microsite · created today 08:15</div></div><span style="font-size: 10px; font-weight: 600; color: #FFFFFF; background: #B45309; border-radius: 4px; padding: 2px 6px">HOT</span><button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header><main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px">
+<div style="display: flex; gap: 3px"><sc-for list="{{bars}}" as="b" hint-placeholder-count="6"><span style="flex: 1; height: 6px; border-radius: 3px; background: {{b.c}}"></span></sc-for></div>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="font-size: 13px; font-weight: 600">Stage: {{stage}}</span><button type="button" onClick="{{advance}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; min-height: 36px">{{advLabel}}</button></div>
+<sc-if value="{{hasBlock}}" hint-placeholder-val="{{ false }}"><div style="padding: 12px; border-radius: 10px; background: #FFF4E5; border: 1px solid #F0C48A; color: #7A3E06; font-size: 13px; font-size: 12px">Fill need, budget and timeline below to qualify.</div></sc-if>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+  <button type="button" onClick="{{call}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Call</button>
+  <a href="AIDraft.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">WhatsApp</a>
+  <a href="AIDraft.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">Voice note</a>
+</div>
+<sc-if value="{{dup}}" hint-placeholder-val="{{ true }}"><div style="padding: 12px; border-radius: 10px; background: #FFF4E5; border: 1px solid #F0C48A; color: #7A3E06; font-size: 13px; font-size: 12px; display: flex; flex-direction: column; gap: 8px"><span><strong>Possible match:</strong> Priya N., customer since 2023 (same mobile).</span><div style="display: flex; gap: 8px"><button type="button" onClick="{{link}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF; flex: 1; min-height: 38px">Link</button><button type="button" onClick="{{notSame}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; flex: 1; min-height: 38px">Not same</button></div></div></sc-if>
+<div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px">
+  <h2 style="margin: 0; font-size: 15px; font-weight: 600">Qualify</h2>
+  <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Need<select value="{{need}}" onChange="{{setNeed}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option value="">Select</option><option>Protection for family</option><option>Tax saving</option><option>Child education</option></select></label>
+  <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Annual budget<select value="{{budget}}" onChange="{{setBudget}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option value="">Select</option><option>Under ₹15,000</option><option>₹15,000–30,000</option><option>Above ₹30,000</option></select></label>
+  <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Decision timeline<select value="{{tl}}" onChange="{{setTl}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option value="">Select</option><option>This month</option><option>1–3 months</option><option>Just exploring</option></select></label>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><h2 style="margin: 0; font-size: 15px; font-weight: 600">Next task</h2><a href="MyTasks.dc.html" style="font-size: 12px">All tasks</a></div>
+  <label style="display: flex; gap: 10px; align-items: center; font-size: 13px; min-height: 40px"><input type="checkbox" checked="{{taskDone}}" onChange="{{toggleTask}}" style="width: 18px; height: 18px"><span style="flex: 1; text-decoration: {{taskDeco}}">Send term quote for ₹70 L</span><span style="font-size: 12px; color: #5F6776">19:30</span></label>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column">
+  <h2 style="margin: 0; font-size: 15px; font-weight: 600; margin-bottom: 4px">Activity</h2>
+  <sc-for list="{{acts}}" as="a" hint-placeholder-count="3"><div style="padding: 8px 0; border-top: 1px solid #E6E9EE; font-size: 12px"><span style="font-size: 12px; color: #5F6776">{{a.when}} · {{a.kind}}</span><br>{{a.text}}</div></sc-for>
+</div>
+<div style="font-size: 12px; color: #5F6776">Consent · calls ✓ · WhatsApp ✓ · marketing SMS ✗ (notice v2)</div>
+<sc-if value="{{notConverted}}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{convert}}" style="min-height: 48px; border: 0; border-radius: 10px; background: {{convBg}}; font: inherit; font-size: 14px; font-weight: 600; color: {{convColor}}">{{convLabel}}</button></sc-if>
+<sc-if value="{{converted}}" hint-placeholder-val="{{ false }}"><div style="padding: 12px; border-radius: 10px; background: #E8F4EC; border: 1px solid #B7D9C3; color: #1D5F3A; font-size: 13px">Converted · customer and term opportunity created, attribution kept.</div><a href="Calculators.dc.html" style="min-height: 48px; padding: 0 14px; box-sizing: border-box; border-radius: 10px; background: {{accent}}; font-size: 14px; font-weight: 600; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center">Start needs analysis</a></sc-if>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; z-index: 5; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+<nav aria-label="Primary" style="display: flex; background: #FFFFFF; border-top: 1px solid #D5D9E0; padding: 4px 4px 8px">
+  <a href="Main.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>{{navL.today}}</a>
+  <a href="LeadsPipeline.dc.html" aria-current="page" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; font-weight: 600; color: {{accent}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8z"></path></svg>{{navL.leads}}</a>
+  <a href="Customer360.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path></svg>{{navL.cust}}</a>
+  <a href="DueCalendar.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>{{navL.book}}</a>
+  <a href="Income.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4.5 4.3-7 8-7s7 2.5 8 7"></path></svg>{{navL.me}}</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { stage: 'Contacted', block: false, dup: true, need: '', budget: '', tl: '', taskDone: false, converted: false });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const ST = ['New', 'Contacted', 'Qualified', 'Needs analysis', 'Quoted', 'Proposal'];
+    const i = ST.indexOf(s.stage);
+    const qual = !!(s.need && s.budget && s.tl);
+    const R = {
+      bars: ST.map((x, k) => ({ c: k <= i ? accent : '#E6E9EE' })), stage: s.stage,
+      advLabel: i < ST.length - 1 ? 'Move to ' + ST[i + 1] : 'In proposal',
+      advance: () => { const nx = ST[i + 1]; if (!nx) return; if (i + 1 >= 2 && !qual) { this.setState({ block: true }); return; } this.setState({ stage: nx, block: false }); this.flash('Stage: ' + nx); },
+      hasBlock: s.block && !qual,
+      call: () => this.flash('Calling Priya… outcome prompt after the call (demo)'),
+      dup: s.dup, link: () => { this.setState({ dup: false }); this.flash('Linked to existing customer record'); }, notSame: () => this.setState({ dup: false }),
+      need: s.need, setNeed: this.set('need'), budget: s.budget, setBudget: this.set('budget'), tl: s.tl, setTl: this.set('tl'),
+      taskDone: s.taskDone, toggleTask: this.tog('taskDone'), taskDeco: s.taskDone ? 'line-through' : 'none',
+      acts: [{ when: '08:21', kind: 'Call', text: 'Connected · wants family cover; quote this evening' }, { when: '08:15', kind: 'System', text: 'Created from microsite · routed to you' }, { when: '2 Oct', kind: 'WhatsApp', text: 'Opened your Diwali greeting' }],
+      notConverted: !s.converted, converted: s.converted,
+      convBg: i >= 2 ? accent : '#C9CED6', convColor: i >= 2 ? '#FFFFFF' : '#3B4352', convLabel: i >= 2 ? 'Convert to customer + opportunity' : 'Convert unlocks after Qualified',
+      convert: () => { if (i >= 2) { this.setState({ converted: true, stage: ST[Math.max(i, 3)] }); } }
+    };
+    R.scrTitle = s.lang === 'hi' ? 'प्रिया नायर' : 'Priya Nair';
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

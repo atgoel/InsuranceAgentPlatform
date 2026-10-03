@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Book import: AI policy reader review</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+  <header style="display: flex; align-items: center; gap: 8px; padding: 8px 8px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0">
+    <a href="Main.dc.html" aria-label="Back to Today" style="width: 44px; height: 44px; color: #1B1F27; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <div style="flex: 1"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776">{{stepLabel}}</div></div>
+    <button type="button" onClick="{{restart}}" style="min-height: 44px; padding: 0 10px; border: 0; background: none; font: inherit; font-size: 12px; color: #1F5FBF">Restart demo</button>
+  <button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header>
+  <main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; justify-content: space-between; font-size: 12px"><span>Reviewed {{reviewed}} of 200 policies</span><span style="color: #5F6776">Batch: insurer export + photos</span></div>
+      <div style="height: 6px; background: #E6E9EE; border-radius: 3px"><div style="width: {{pct}}%; height: 6px; background: {{accent}}; border-radius: 3px"></div></div>
+    </div>
+
+    <sc-if value="{{reviewing}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <div style="position: relative; height: 196px; border: 1px solid #D5D9E0; border-radius: 10px; background: repeating-linear-gradient(45deg, #E6E9EE 0 8px, #F4F5F7 8px 16px)">
+          <span style="position: absolute; left: 10px; top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4A5262; background: #FFFFFF; padding: 1px 5px; border-radius: 3px">{{p.docLabel}}</span>
+          <sc-for list="{{fields}}" as="f" hint-placeholder-count="5">
+            <div style="position: absolute; left: {{f.left}}px; top: {{f.top}}px; width: {{f.width}}px; height: 22px; box-sizing: border-box; border: {{f.border}}; border-radius: 3px; background: {{f.fill}}"></div>
+          </sc-for>
+        </div>
+        <div style="font-size: 11px; color: #5F6776">Tap a field to see where the AI read it. Nothing is saved until you confirm.</div>
+        <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden">
+          <sc-for list="{{fields}}" as="f" hint-placeholder-count="5">
+            <button type="button" onClick="{{f.focus}}" aria-pressed="{{f.focused}}" style="display: flex; align-items: center; gap: 8px; min-height: 46px; padding: 6px 12px; border: 0; border-bottom: 1px solid #E6E9EE; background: {{f.rowBg}}; font: inherit; text-align: left; color: #1B1F27">
+              <span style="width: 108px; font-size: 12px; color: #4A5262">{{f.label}}</span>
+              <span style="flex: 1; font-size: 13px; font-weight: 500">{{f.value}}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; color: {{f.confColor}}">{{f.conf}}</span>
+            </button>
+          </sc-for>
+          <sc-if value="{{needsAck}}" hint-placeholder-val="{{ true }}">
+            <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #FFF4E5; border-bottom: 1px solid #E6E9EE; font-size: 12px; color: #7A3E06"><input type="checkbox" checked="{{ack}}" onChange="{{toggleAck}}" style="width: 18px; height: 18px">I checked the low-confidence field against the document</label>
+          </sc-if>
+          <label style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-size: 12px"><input type="checkbox" checked="{{link}}" onChange="{{toggleLink}}" style="width: 18px; height: 18px"><span>{{p.matchText}}</span></label>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+      <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="width: 44px; height: 44px; border-radius: 22px; background: #E8F4EC; color: #1D5F3A; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></div>
+        <h2 style="margin: 0; font-size: 18px; font-weight: 600">Batch reviewed</h2>
+        <div style="font-size: 13px; line-height: 1.5; color: #4A5262">{{summary}}</div>
+        <div style="display: flex; flex-direction: column; border: 1px solid #E6E9EE; border-radius: 8px; font-size: 12px">
+          <div style="padding: 8px 10px; border-bottom: 1px solid #E6E9EE">Premium-due calendar updated from confirmed dates</div>
+          <div style="padding: 8px 10px; border-bottom: 1px solid #E6E9EE">Each record labelled with source and as-of date</div>
+          <div style="padding: 8px 10px">Re-import is safe: matched by insurer and policy number</div>
+        </div>
+        <a href="DueCalendar.dc.html" style="min-height: 48px; border-radius: 10px; background: {{accent}}; color: #FFFFFF; font-weight: 600; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center">See the due calendar</a>
+      </div>
+    </sc-if>
+  </main>
+  <sc-if value="{{reviewing}}" hint-placeholder-val="{{ true }}">
+    <div style="display: flex; gap: 8px; padding: 12px 16px 16px; background: #FFFFFF; border-top: 1px solid #D5D9E0">
+      <button type="button" onClick="{{skip}}" style="flex: 1; min-height: 48px; border: 1px solid #D5D9E0; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 14px; color: #1B1F27">Skip</button>
+      <button type="button" onClick="{{confirm}}" disabled="{{confirmDisabled}}" style="flex: 2; min-height: 48px; border: 0; border-radius: 10px; background: {{confirmBg}}; font: inherit; font-size: 14px; font-weight: 600; color: {{confirmColor}}">Confirm held policy</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 90px; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = this.initial();
+    this.state = Object.assign({}, this.state, { lang: this.loadLang() });
+  }
+  initial() { return { idx: 0, focus: 0, ack: false, link: true, reviewed: 47, confirmed: 0, skipped: 0, done: false, toast: '' }; }
+  componentWillUnmount() { clearTimeout(this._t); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2200);
+  }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि', scrTitle: hi ? 'अपनी बुक इम्पोर्ट करें' : 'Import your book',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const policies = [
+      { docLabel: 'POLICY SCHEDULE · PAGE 1 (PHOTO)', matchText: 'Link to existing customer Sunita Sharma (same mobile and DOB)', linkName: 'Sunita Sharma',
+        fields: [['Policy number', '[Policy no.] ••4821', 'HIGH'], ['Insurer', 'Insurer A', 'HIGH'], ['Sum assured', '₹50,00,000', 'HIGH'], ['Premium, mode', '₹24,500 · Annual', 'HIGH'], ['Start date', '06 Sep 2019', 'LOW']] },
+      { docLabel: 'RENEWAL NOTICE · PDF', matchText: 'Link to existing customer Arjun Mehta (same mobile)', linkName: 'Arjun Mehta',
+        fields: [['Policy number', '[Policy no.] ••7730', 'HIGH'], ['Insurer', 'Insurer C', 'HIGH'], ['Sum insured', '₹5,00,000', 'HIGH'], ['Premium, mode', '₹18,200 · Annual', 'LOW'], ['Renewal date', '09 Oct 2026', 'HIGH']] },
+      { docLabel: 'INSURER AGENT-PORTAL EXPORT · ROW 214', matchText: 'Create new customer Meena Iyer (no match found)', linkName: 'Meena Iyer',
+        fields: [['Policy number', '[Policy no.] ••1093', 'HIGH'], ['Insurer', 'Insurer A', 'HIGH'], ['Sum assured', '₹25,00,000', 'HIGH'], ['Premium, mode', '₹1,250 · Monthly', 'HIGH'], ['Start date', '18 Jan 2022', 'HIGH']] }
+    ];
+    const pos = [[22, 40, 210], [22, 78, 150], [190, 78, 150], [22, 116, 170], [22, 154, 120]];
+    const p = policies[Math.min(s.idx, 2)];
+    const fields = p.fields.map((f, i) => {
+      const focused = s.focus === i;
+      const low = f[2] === 'LOW';
+      return {
+        label: f[0], value: f[1], conf: f[2],
+        left: pos[i][0], top: pos[i][1], width: pos[i][2],
+        focused: focused,
+        border: focused ? '2px solid ' + accent : (low ? '2px dashed #B45309' : '1.5px solid #8A93A3'),
+        fill: focused ? 'rgba(255,255,255,0.7)' : 'transparent',
+        rowBg: focused ? '#EEF3FB' : (low ? '#FFF4E5' : '#FFFFFF'),
+        confColor: low ? '#9A4A06' : '#1D5F3A',
+        focus: () => this.setState({ focus: i })
+      };
+    });
+    const needsAck = p.fields.some((f) => f[2] === 'LOW');
+    const confirmDisabled = needsAck && !s.ack;
+    const next = (confirmed) => {
+      const nextIdx = s.idx + 1;
+      const patch = { idx: nextIdx, focus: 0, ack: false, link: true };
+      if (confirmed) { patch.reviewed = s.reviewed + 1; patch.confirmed = s.confirmed + 1; } else { patch.skipped = s.skipped + 1; }
+      if (nextIdx > 2) { patch.done = true; try { window.localStorage.setItem('proto.imported', '1'); } catch (e) {} }
+      this.setState(patch);
+      this.flash(confirmed ? 'Held policy created for ' + p.linkName : 'Skipped · left in review queue');
+    };
+    return Object.assign(this.langVals(), {
+      accent: accent, p: p, fields: fields,
+      reviewing: !s.done, done: s.done,
+      stepLabel: s.done ? 'Step 3 of 3 · Done' : 'Step 2 of 3 · Review · policy ' + (s.idx + 1) + ' of 3 in this demo',
+      reviewed: s.reviewed, pct: Math.round(s.reviewed / 200 * 100),
+      needsAck: needsAck, ack: s.ack, link: s.link,
+      toggleAck: () => this.setState({ ack: !s.ack }),
+      toggleLink: () => this.setState({ link: !s.link }),
+      confirmDisabled: confirmDisabled,
+      confirmBg: confirmDisabled ? '#C9CED6' : accent,
+      confirmColor: confirmDisabled ? '#3B4352' : '#FFFFFF',
+      confirm: () => next(true), skip: () => next(false),
+      summary: s.confirmed + ' held policies created and ' + s.skipped + ' left in the review queue. ' + s.reviewed + ' of 200 policies are now in your book.',
+      restart: () => this.setState(this.initial()),
+      toast: s.toast, hasToast: !!s.toast
+    });
+  }
+}
+</script>
+</body>
+</html>

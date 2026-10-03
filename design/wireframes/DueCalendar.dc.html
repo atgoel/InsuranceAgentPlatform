@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Premium-due and renewal calendar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+<header style="display: flex; align-items: center; gap: 8px; padding: 10px 12px 10px 16px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0"><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">₹4.6 L due this month · 38 policies tracked</div></div><a href="BookImport.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">Import</a><button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header><main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px"><sc-if value="{{hasImport}}" hint-placeholder-val="{{ false }}"><div style="padding: 12px; border-radius: 10px; background: #E8F4EC; border: 1px solid #B7D9C3; color: #1D5F3A; font-size: 13px; font-size: 12px">Policies you just imported are on this calendar · grace and renewal dates come from your confirmed records.</div></sc-if><div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px"><sc-for list="{{chips}}" as="ch" hint-placeholder-count="4"><button type="button" onClick="{{ch.pick}}" aria-pressed="{{ch.on}}" style="flex: none; min-height: 36px; padding: 0 12px; border: 1px solid {{ch.border}}; border-radius: 18px; background: {{ch.bg}}; font: inherit; font-size: 12px; font-weight: {{ch.weight}}; color: #1B1F27">{{ch.label}}</button></sc-for></div>
+<div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 6px">
+  <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; font-size: 11px; color: #5F6776"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+  <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
+    <sc-for list="{{days}}" as="dy" hint-placeholder-count="35">
+      <button type="button" onClick="{{dy.pick}}" disabled="{{dy.blank}}" aria-label="{{dy.aria}}" aria-pressed="{{dy.selected}}" style="height: 42px; padding: 0; border: {{dy.border}}; border-radius: 8px; background: {{dy.bg}}; font: inherit; font-size: 13px; font-weight: {{dy.weight}}; color: {{dy.color}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">{{dy.label}}<span style="width: 6px; height: 6px; border-radius: 3px; background: {{dy.dot}}"></span></button>
+    </sc-for>
+  </div>
+  <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: #4A5262; padding-top: 4px">
+    <span style="display: flex; align-items: center; gap: 4px"><span style="width: 8px; height: 8px; border-radius: 4px; background: #A12C2C"></span>Lapsed</span>
+    <span style="display: flex; align-items: center; gap: 4px"><span style="width: 8px; height: 8px; border-radius: 4px; background: #B45309"></span>Grace ending</span>
+    <span style="display: flex; align-items: center; gap: 4px"><span style="width: 8px; height: 8px; border-radius: 4px; background: #3B4352"></span>Due / renewal</span>
+    <span style="display: flex; align-items: center; gap: 4px"><span style="width: 8px; height: 8px; border-radius: 4px; background: #1F5FBF"></span>Lifecycle alert</span>
+  </div>
+</div>
+<h2 style="margin: 0; font-size: 15px; font-weight: 600">{{listTitle}}</h2>
+<sc-for list="{{items}}" as="it" hint-placeholder-count="2">
+  <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><a href="Customer360.dc.html" style="font-weight: 600; font-size: 14px; color: #1B1F27">{{it.n}}</a><strong style="font-size: 14px">{{it.amt}}</strong></div>
+    <div style="font-size: 12px; color: #5F6776">{{it.meta}}</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 10px; background: {{it.chipBg}}; color: {{it.chipColor}}">{{it.chip}}</span><span style="font-size: 12px; color: #5F6776">{{it.when}}</span></div>
+    <div style="display: flex; gap: 8px">
+      <button type="button" onClick="{{it.call}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; flex: 1">Call</button>
+      <a href="AIDraft.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center; flex: 1">Remind</a>
+      <sc-if value="{{it.isLapsed}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{it.revive}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF; flex: 1.3">Start revival</button></sc-if>
+      <sc-if value="{{it.notLapsed}}" hint-placeholder-val="{{ true }}"><a href="Customer360.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center; flex: 1">Open</a></sc-if>
+    </div>
+  </div>
+</sc-for>
+<sc-if value="{{noItems}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: #5F6776; text-align: center; padding: 16px">Nothing due on this day.</div></sc-if>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; z-index: 5; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+<nav aria-label="Primary" style="display: flex; background: #FFFFFF; border-top: 1px solid #D5D9E0; padding: 4px 4px 8px">
+  <a href="Main.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>{{navL.today}}</a>
+  <a href="LeadsPipeline.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8z"></path></svg>{{navL.leads}}</a>
+  <a href="Customer360.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path></svg>{{navL.cust}}</a>
+  <a href="DueCalendar.dc.html" aria-current="page" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; font-weight: 600; color: {{accent}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>{{navL.book}}</a>
+  <a href="Income.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4.5 4.3-7 8-7s7 2.5 8 7"></path></svg>{{navL.me}}</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { day: 6, filter: 'all' });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const K = {
+      lapsed: { chip: 'Lapsed · revival open', bg: '#FDECEC', color: '#8A1F1F', dot: '#A12C2C', rank: 0 },
+      grace: { chip: 'In grace', bg: '#FFF4E5', color: '#7A3E06', dot: '#B45309', rank: 1 },
+      renewal: { chip: 'Renewal due', bg: '#E6E9EE', color: '#1B1F27', dot: '#3B4352', rank: 2 },
+      due: { chip: 'Premium due', bg: '#E6E9EE', color: '#1B1F27', dot: '#3B4352', rank: 2 },
+      alert: { chip: 'Lifecycle alert', bg: '#EEF3FB', color: '#1B1F27', dot: '#1F5FBF', rank: 3 }
+    };
+    const data = [
+      { d: 6, n: 'Sunita Sharma', meta: 'Insurer A · Term life · Annual · was due 6 Sep', amt: '₹24,500', k: 'grace' },
+      { d: 6, n: 'Ramesh Gupta', meta: 'Insurer E · Endowment · Half-yearly', amt: '₹12,800', k: 'grace' },
+      { d: 9, n: 'Arjun Mehta', meta: 'Insurer C · Health floater', amt: '₹18,200', k: 'renewal' },
+      { d: 12, n: 'Kiran Desai', meta: 'Insurer D · Motor package', amt: '₹9,400', k: 'renewal' },
+      { d: 14, n: 'Meena Iyer', meta: 'Insurer A · Term · Monthly', amt: '₹1,250', k: 'due' },
+      { d: 15, n: 'Anil Joshi', meta: 'Insurer E · Money-back · survival benefit payable', amt: '₹40,000 payout', k: 'alert' },
+      { d: 18, n: 'Imran Khan', meta: 'Insurer A · Endowment · lapsed 12 Aug', amt: '₹15,600', k: 'lapsed' },
+      { d: 21, n: 'Pooja Shah', meta: 'Insurer C · Health · free-look period ends', amt: '—', k: 'alert' },
+      { d: 22, n: 'Vikram Rao', meta: 'Insurer A · ULIP · lapsed 1 Sep', amt: '₹30,000', k: 'lapsed' },
+      { d: 25, n: 'Sneha Patil', meta: 'Insurer F · Health renewal', amt: '₹14,900', k: 'renewal' },
+      { d: 28, n: 'Deepa Nair', meta: 'Insurer E · Term · Quarterly', amt: '₹8,700', k: 'grace' },
+      { d: 30, n: 'Harish Kumar', meta: 'Insurer D · Motor package', amt: '₹11,300', k: 'renewal' }
+    ];
+    const inFilter = (it) => s.filter === 'all' || it.k === s.filter || (s.filter === 'renewal' && it.k === 'due');
+    const wd = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const days = [];
+    for (let i = 0; i < 3; i++) days.push({ label: '', blank: true, selected: false, aria: 'empty', bg: 'transparent', border: '0', color: '#1B1F27', weight: '400', dot: 'transparent', pick: () => {} });
+    for (let d = 1; d <= 31; d++) {
+      const its = data.filter((x) => x.d === d && inFilter(x)).sort((a, b) => K[a.k].rank - K[b.k].rank);
+      const sel = s.filter === 'all' && s.day === d;
+      days.push({ label: String(d), blank: false, selected: sel, aria: d + ' October, ' + its.length + ' items',
+        bg: sel ? accent : '#FFFFFF', color: sel ? '#FFFFFF' : '#1B1F27', weight: d === 3 || sel ? '600' : '400',
+        border: d === 3 && !sel ? '1.5px solid ' + accent : '1px solid #E6E9EE',
+        dot: its.length ? (sel ? '#FFFFFF' : K[its[0].k].dot) : 'transparent',
+        pick: () => this.setState({ day: d, filter: 'all' }) });
+    }
+    while (days.length % 7) days.push({ label: '', blank: true, selected: false, aria: 'empty', bg: 'transparent', border: '0', color: '#1B1F27', weight: '400', dot: 'transparent', pick: () => {} });
+    let src, title;
+    if (s.filter === 'all') { src = data.filter((x) => x.d === s.day); title = wd[(3 + s.day - 1) % 7] + ' ' + s.day + ' Oct · ' + src.length + (src.length === 1 ? ' item' : ' items'); }
+    else { src = data.filter(inFilter).sort((a, b) => a.d - b.d); title = { grace: 'In grace', lapsed: 'Lapsed, revival open', renewal: 'Dues and renewals', alert: 'Lifecycle alerts' }[s.filter] + ' · ' + src.length + ' in October'; }
+    const items = src.sort((a, b) => K[a.k].rank - K[b.k].rank || a.d - b.d).map((x) => ({
+      n: x.n, meta: x.meta, amt: x.amt, chip: K[x.k].chip, chipBg: K[x.k].bg, chipColor: K[x.k].color,
+      when: x.k === 'grace' ? 'Grace ends ' + x.d + ' Oct' : (x.k === 'lapsed' ? 'Follow up ' + x.d + ' Oct' : x.d + ' Oct'),
+      isLapsed: x.k === 'lapsed', notLapsed: x.k !== 'lapsed',
+      call: () => this.flash('Calling ' + x.n + '… (demo)'),
+      revive: () => this.flash('Revival follow-up created for ' + x.n + ' · the insurer decides revival')
+    }));
+    const cnt = (k) => data.filter((x) => x.k === k || (k === 'renewal' && x.k === 'due')).length;
+    const R = {
+      chips: this.chips([['all', 'Calendar'], ['lapsed', 'Lapsed ' + cnt('lapsed')], ['grace', 'In grace ' + cnt('grace')], ['renewal', 'Dues ' + cnt('renewal')], ['alert', 'Alerts ' + cnt('alert')]], 'filter'),
+      days: days, items: items, noItems: items.length === 0, listTitle: title,
+      hasImport: !!this.pget('proto.imported')
+    };
+    R.scrTitle = s.lang === 'hi' ? 'बुक · अक्टूबर 2026' : 'Book · October 2026';
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

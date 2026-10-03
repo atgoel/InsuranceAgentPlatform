@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Integrations and retry queue</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1250px; display: flex; flex-wrap: wrap; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+<nav aria-label="Console" style="flex: 1 1 240px; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #D5D9E0; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 12px"><div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #5F6776">LOGO</div><div><div style="font-weight: 600; font-size: 14px">[IMF tenant name]</div><div style="font-size: 11px; color: #5F6776">Business plan · Principal Officer view</div></div></div>
+<a href="LeadsPipeline.dc.html" style="margin: 0 4px 6px; min-height: 40px; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 13px; color: #5F6776; text-decoration: none">Search customers, policies, ISPs</a>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CRM<span style="font-weight: 400">8</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CRMLeads.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Leads</a>
+<a href="CRMPipeline.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Opportunities</a>
+<a href="CRMCustomers.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Customers &amp; households</a>
+<a href="CRMTasks.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tasks &amp; activities</a>
+<a href="CRMCampaigns.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Campaigns &amp; segments</a>
+<a href="CRMAssignment.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Routing rules</a>
+<a href="CRMImportDedup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Import &amp; duplicates</a>
+<a href="PortalFillSheet.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal desk</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">NETWORK<span style="font-weight: 400">4</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ManagerConsole.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Dashboard</a>
+<a href="OnboardingHierarchy.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Onboarding &amp; hierarchy</a>
+<a href="ProductDrives.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Product drives &amp; contests</a>
+<a href="ReportsLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Reports</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTENT<span style="font-weight: 400">2</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CampaignPublish.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Landing pages</a>
+<a href="ContentLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Content library</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTROL<span style="font-weight: 400">3</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ComplianceCentre.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Compliance centre</a>
+<a href="CommissionSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Commission</a>
+<a href="AIControls.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">AI controls</a>
+</div></details>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">SETUP<span style="font-weight: 400">6</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="TenantSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenant &amp; catalogue</a>
+<a href="UsersRoles.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Users &amp; roles</a>
+<a href="Configuration.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Configuration</a>
+<a href="FormTemplates.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal forms</a>
+<a href="Integrations.dc.html" aria-current="page" style="padding: 9px 12px; border-radius: 8px; background: #EEF3FB; color: {{accent}}; font-weight: 600; font-size: 14px; text-decoration: none">Integrations</a>
+<a href="WhiteLabel.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Brand &amp; white-label</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">PLATFORM OPERATOR<span style="font-weight: 400">1</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="OperatorTenants.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenants &amp; plans</a>
+</div></details>
+<a href="Start.dc.html" style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #1B1F27; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none">⌂ Prototype map</a>
+<a href="Main.dc.html" style="margin-top: 6px; padding: 10px 12px; border: 1px dashed #8A93A3; border-radius: 8px; color: #1B1F27; font-size: 13px; text-decoration: none">Open agent app</a>
+</nav>
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 1320px">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end"><div style="flex: 1 1 320px"><h1 style="margin: 0; font-size: 24px; font-weight: 600">Integrations</h1><div style="margin-top: 4px; font-size: 13px; color: #4A5262">Every connector has a manual fallback. Credentials live in the secrets vault; this screen shows references only.</div></div><button type="button" onClick="{{retryAll}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">Retry all failed jobs</button></div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px"><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Connected</div><div style="font-size: 24px; font-weight: 600">5</div><div style="font-size: 11px; color: #5F6776">Of 8 configured</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Failed jobs</div><div style="font-size: 24px; font-weight: 600">{{failed}}</div><div style="font-size: 11px; color: #5F6776">Auto-retry with backoff</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Manual fallbacks today</div><div style="font-size: 24px; font-weight: 600">23</div><div style="font-size: 11px; color: #5F6776">Assisted insurer portal</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Credentials expiring</div><div style="font-size: 24px; font-weight: 600">1</div><div style="font-size: 11px; color: #5F6776">In 12 days</div></div></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px">
+  <sc-for list="{{conns}}" as="cn" hint-placeholder-count="6">
+    <section style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><strong style="font-size: 14px">{{cn.n}}</strong><span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 10px; background: {{cn.bg}}; color: {{cn.color}}">{{cn.status}}</span></div>
+      <div style="font-size: 12px; color: #5F6776">{{cn.kind}}</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px"><sc-for list="{{cn.caps}}" as="cp" hint-placeholder-count="3"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">{{cp}}</span></sc-for></div>
+      <div style="font-size: 12px; color: #4A5262">{{cn.cred}}</div>
+      <div style="font-size: 12px"><strong>Fallback:</strong> {{cn.fb}}</div>
+      <button type="button" onClick="{{cn.test}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; min-height: 36px; align-self: flex-start">Test connection</button>
+    </section>
+  </sc-for>
+</div>
+<section style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+  <h2 style="margin: 0; font-size: 15px; font-weight: 600">Error and retry queue</h2>
+<div style="overflow-x: auto"><div role="table" style="min-width: 980px; font-size: 13px"><div role="row" style="display: grid; grid-template-columns: 1.3fr 1fr 2fr 0.7fr 0.9fr 1.3fr; border-bottom: 1px solid #D5D9E0; font-size: 11px; color: #5F6776"><span role="columnheader" style="padding: 8px 6px">Job</span><span role="columnheader" style="padding: 8px 6px">Connector</span><span role="columnheader" style="padding: 8px 6px">What went wrong</span><span role="columnheader" style="padding: 8px 6px">Attempts</span><span role="columnheader" style="padding: 8px 6px">Next retry</span><span role="columnheader" style="padding: 8px 6px"></span></div><sc-for list="{{jobs}}" as="jb" hint-placeholder-count="4"><div role="row" style="display: grid; grid-template-columns: 1.3fr 1fr 2fr 0.7fr 0.9fr 1.3fr; align-items: center; border-bottom: 1px solid #E6E9EE"><span role="cell" style="padding: 10px 6px; "><strong>{{jb.job}}</strong></span><span role="cell" style="padding: 10px 6px; ">{{jb.conn}}</span><span role="cell" style="padding: 10px 6px; color: #4A5262">{{jb.err}}</span><span role="cell" style="padding: 10px 6px; ">{{jb.att}}</span><span role="cell" style="padding: 10px 6px; ">{{jb.next}}</span><span role="cell" style="padding: 10px 6px; "><sc-if value="{{jb.open}}" hint-placeholder-val="{{ true }}"><span style="display: flex; gap: 6px"><button type="button" onClick="{{jb.retry}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; min-height: 34px; font-size: 12px">Retry</button><button type="button" onClick="{{jb.manual}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; min-height: 34px; font-size: 12px">Go manual</button></span></sc-if><sc-if value="{{jb.closed}}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; color: #1D5F3A">✓ {{jb.done}}</span></sc-if></span></div></sc-for></div></div>
+  <sc-if value="{{noJobs}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: #5F6776">No failed jobs.</div></sc-if>
+</section>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: fixed; right: 24px; bottom: 24px; z-index: 5; max-width: 380px; padding: 12px 16px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":1440,"height":1250}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { done: {} });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+    const COL = { ok: ['#E8F4EC', '#1D5F3A'], warn: ['#FFF4E5', '#7A3E06'], bad: ['#FDECEC', '#8A1F1F'], neu: ['#E6E9EE', '#1B1F27'], info: ['#EEF3FB', '#1B1F27'] };
+
+    const C = [
+      ['Insurer A · quote and status API', 'Insurer integration · contract signed', ['Quote', 'Status', 'Callbacks'], 'vault://tenant/insurer-a · rotated 12 Sep', 'Assisted insurer portal', 'In UAT · gated', 'warn'],
+      ['Insurer C', 'No API available', ['Portal link', 'Manual evidence'], 'No credentials stored · customers sign in with insurer', 'This is the route', 'Assisted only', 'neu'],
+      ['WhatsApp Business (provider)', 'Messaging · number registered by tenant', ['Templates', 'Delivery receipts', 'Opt-out'], 'vault://tenant/wa-bsp · expires in 12 days', 'Click-to-chat from the agent’s phone', 'Connected', 'ok'],
+      ['SMS · DLT', 'Messaging · header registered by tenant', ['Templates', 'Delivery receipts'], 'vault://tenant/sms', 'WhatsApp or email', 'Header pending', 'warn'],
+      ['Email · tenant domain', 'Messaging', ['Send', 'Bounce handling'], 'vault://tenant/email · DKIM ✓', '—', 'Connected', 'ok'],
+      ['Billing provider', 'Subscriptions and GST invoices', ['Plans', 'Invoices', 'Payment methods'], 'vault://platform/billing', 'Manual invoice by operator', 'Connected', 'ok']
+    ];
+    const J = [
+      ['j1', 'Status check · Lakshmi R.', 'Insurer A', 'Insurer did not respond in time; will reconcile before retry', '3', '10:45'],
+      ['j2', 'Due reminder · 14 customers', 'WhatsApp', 'Provider paused the template after a quality warning', '1', 'On hold'],
+      ['j3', 'Issuance callback', 'Insurer A', 'Signature check failed; callback rejected and kept for review', '—', 'Needs review'],
+      ['j4', 'Book import · insurer export', 'Import', 'Column “Premium Mode” missing in file', '1', 'Fix file']
+    ];
+    const R = {
+      conns: C.map((c) => ({ n: c[0], kind: c[1], caps: c[2], cred: c[3], fb: c[4], status: c[5], bg: COL[c[6]][0], color: COL[c[6]][1], test: () => this.flash(c[0] + ': connection test ' + (c[6] === 'ok' ? 'passed' : 'skipped · ' + c[5].toLowerCase())) })),
+      jobs: J.map((j) => { const d = s.done[j[0]]; return { job: j[1], conn: j[2], err: j[3], att: j[4], next: j[5], open: !d, closed: !!d, done: d || '',
+        retry: () => { this.setState({ done: Object.assign({}, s.done, { [j[0]]: 'Retried with same idempotency key' }) }); },
+        manual: () => { this.setState({ done: Object.assign({}, s.done, { [j[0]]: 'Moved to manual task for operations' }) }); } }; }),
+      failed: J.filter((j) => !s.done[j[0]]).length, noJobs: J.every((j) => s.done[j[0]]),
+      retryAll: () => { const d = Object.assign({}, s.done); J.forEach((j) => { if (!d[j[0]]) d[j[0]] = 'Retried with same idempotency key'; }); this.setState({ done: d }); this.flash('All failed jobs queued for retry'); }
+    };
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Digital card, microsite and greetings</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+<header style="display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0"><a href="Income.dc.html" aria-label="Back" style="width: 44px; height: 44px; flex: none; color: #1B1F27; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Personal branding inside approved templates</div></div><button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header><main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px"><div role="tablist" style="display: flex; gap: 4px; padding: 3px; background: #E6E9EE; border-radius: 9px"><sc-for list="{{mtabs}}" as="tb" hint-placeholder-count="3"><button type="button" role="tab" aria-selected="{{tb.on}}" onClick="{{tb.pick}}" style="flex: 1; min-height: 40px; border: 0; border-radius: 7px; background: {{tb.bg}}; font: inherit; font-size: 12px; font-weight: {{tb.weight}}; color: #1B1F27">{{tb.label}}</button></sc-for></div>
+<sc-if value="{{isCard}}" hint-placeholder-val="{{ true }}">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; overflow: hidden">
+      <div style="height: 56px; background: {{accent}}"></div>
+      <div style="padding: 0 14px 14px; margin-top: -28px; display: flex; flex-direction: column; gap: 6px">
+        <div style="width: 56px; height: 56px; box-sizing: border-box; border-radius: 28px; border: 3px solid #FFFFFF; background: #E6E9EE; display: flex; align-items: center; justify-content: center; font-weight: 600">{{initials}}</div>
+        <div style="font-size: 17px; font-weight: 600">{{name}}</div>
+        <div style="font-size: 13px; color: #4A5262">{{tagline}}</div>
+        <div style="font-size: 11px; color: #5F6776">IRDAI-registered agent · Licence [number] · Insurer A (Life), Insurer C (Health)</div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{langChips}}" as="lc" hint-placeholder-count="2"><span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">{{lc}}</span></sc-for></div>
+        <div style="display: flex; gap: 8px; margin-top: 4px"><span style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center; flex: 1">Call</span><span style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center; flex: 1">WhatsApp</span><span style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center; flex: 1.3">Request callback</span></div>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 8px 8px 8px 12px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">[tenant].in/ravi-kumar</span><button type="button" onClick="{{copy}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Copy link</button></div>
+    <div style="font-size: 12px; color: #5F6776">This month: 214 views · 9 callback requests · 3 converted to leads</div>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Name on card<input value="{{name}}" onChange="{{setName}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Tagline (60 characters)<input value="{{tagline}}" onChange="{{setTagline}}" maxlength="60" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Languages I speak<div style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{langs}}" as="lg" hint-placeholder-count="3"><button type="button" onClick="{{lg.toggle}}" aria-pressed="{{lg.on}}" style="min-height: 38px; padding: 0 12px; border: 1px solid {{lg.border}}; border-radius: 19px; background: {{lg.bg}}; font: inherit; font-size: 12px; color: #1B1F27">{{lg.label}}</button></sc-for></div></div>
+    <div style="font-size: 12px; color: #5F6776">Registration details and tie-up disclosures are added automatically and cannot be removed.</div>
+  </div>
+</sc-if>
+<sc-if value="{{isGreet}}" hint-placeholder-val="{{ false }}">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+<div role="tablist" style="display: flex; gap: 4px; padding: 3px; background: #E6E9EE; border-radius: 9px"><sc-for list="{{glangs}}" as="tb" hint-placeholder-count="3"><button type="button" role="tab" aria-selected="{{tb.on}}" onClick="{{tb.pick}}" style="flex: 1; min-height: 40px; border: 0; border-radius: 7px; background: {{tb.bg}}; font: inherit; font-size: 12px; font-weight: {{tb.weight}}; color: #1B1F27">{{tb.label}}</button></sc-for></div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <sc-for list="{{tpls}}" as="tp" hint-placeholder-count="6">
+        <button type="button" onClick="{{tp.pick}}" aria-pressed="{{tp.on}}" style="display: flex; flex-direction: column; gap: 4px; padding: 6px; border: {{tp.border}}; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 11px; color: #1B1F27; text-align: left"><span style="height: 52px; border-radius: 6px; background: repeating-linear-gradient(45deg, #E6E9EE 0 8px, #F4F5F7 8px 16px); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4A5262">{{tp.tag}}</span>{{tp.label}}</button>
+      </sc-for>
+    </div>
+    <div style="border-radius: 12px; overflow: hidden; border: 1px solid #D5D9E0">
+      <div style="height: 220px; background: repeating-linear-gradient(45deg, #E6E9EE 0 8px, #F4F5F7 8px 16px); display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box"><p lang="{{gLangCode}}" style="margin: 0; padding: 12px 14px; border-radius: 8px; background: rgba(255,255,255,0.92); font-size: 18px; font-weight: 600; line-height: 1.35; text-align: center">{{greeting}}</p></div>
+      <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: {{accent}}; color: #FFFFFF"><span style="width: 32px; height: 32px; border-radius: 16px; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600">{{initials}}</span><span style="font-size: 12px; line-height: 1.3"><strong>{{name}}</strong><br>Licence [number] · [Tenant brand] · +91 [number]</span></div>
+    </div>
+    <div style="display: flex; gap: 8px"><button type="button" onClick="{{download}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; flex: 1">Download</button><button type="button" onClick="{{share}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF; flex: 1.5">Share on WhatsApp</button></div>
+  </div>
+</sc-if>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; z-index: 5; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { mtab: 'card', name: 'Ravi Kumar', tagline: 'Helping families in Andheri plan with confidence', langs: { en: true, hi: true, r1: false }, gLang: 'en', tpl: 'diwali' });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const G = {
+      diwali: ['Diwali', 'FESTIVAL', 'Wishing you and your family a bright, safe and happy Diwali', 'आपको और आपके परिवार को दीपावली की हार्दिक शुभकामनाएँ'],
+      bday: ['Birthday', 'PERSONAL', 'Happy birthday! Wishing you good health and happiness', 'जन्मदिन की हार्दिक शुभकामनाएँ! आप स्वस्थ और खुश रहें'],
+      anniv: ['Policy anniversary', 'SERVICE', 'Thank you for trusting us for another year', 'एक और साल हम पर भरोसा करने के लिए धन्यवाद'],
+      tip: ['Health tip', 'TIP', 'A 30-minute walk every day keeps your heart healthy', 'रोज़ 30 मिनट की सैर दिल को स्वस्थ रखती है'],
+      ny: ['New Year', 'FESTIVAL', 'Happy New Year! Here is to a secure year ahead', 'नववर्ष की शुभकामनाएँ! आने वाला साल सुरक्षित रहे'],
+      prod: ['[Plan] creative', 'LOCKED', '', '']
+    };
+    const tpls = Object.keys(G).map((k) => ({ label: G[k][0], tag: G[k][1], on: s.tpl === k, border: s.tpl === k ? '2px solid ' + accent : '1px solid #D5D9E0',
+      pick: () => { if (k === 'prod') { this.flash('Product creatives need insurer-approved collateral with a valid approval reference'); } else { this.setState({ tpl: k }); } } }));
+    const ld = [['en', 'English'], ['hi', 'हिन्दी'], ['r1', '[Regional 1]']];
+    const R = {
+      mtabs: this.tabs([['card', 'My card'], ['greet', 'Greetings']], 'mtab'), isCard: s.mtab === 'card', isGreet: s.mtab === 'greet',
+      name: s.name, setName: this.set('name'), tagline: s.tagline, setTagline: this.set('tagline'),
+      initials: s.name.split(' ').map((w) => w.charAt(0)).join('').slice(0, 2).toUpperCase(),
+      langChips: ld.filter((l) => s.langs[l[0]]).map((l) => l[1]),
+      langs: ld.map((l) => ({ label: l[1], on: !!s.langs[l[0]], bg: s.langs[l[0]] ? '#EEF3FB' : '#FFFFFF', border: s.langs[l[0]] ? accent : '#D5D9E0',
+        toggle: () => this.setState({ langs: Object.assign({}, s.langs, { [l[0]]: !s.langs[l[0]] }) }) })),
+      copy: () => this.flash('Link copied · opens under the tenant brand and domain'),
+      glangs: this.tabs([['en', 'English'], ['hi', 'हिन्दी']], 'gLang'), gLangCode: s.gLang,
+      tpls: tpls, greeting: G[s.tpl][s.gLang === 'hi' ? 3 : 2],
+      download: () => this.flash('Image saved with your branding'),
+      share: () => this.flash('WhatsApp share opened · logged as a greeting, not marketing')
+    };
+    R.scrTitle = s.lang === 'hi' ? 'मेरा कार्ड और शुभकामनाएँ' : 'My card & greetings';
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

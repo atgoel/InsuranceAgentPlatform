@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CRM tasks and activities</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1150px; display: flex; flex-wrap: wrap; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+<nav aria-label="Console" style="flex: 1 1 240px; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #D5D9E0; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 12px"><div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #5F6776">LOGO</div><div><div style="font-weight: 600; font-size: 14px">[IMF tenant name]</div><div style="font-size: 11px; color: #5F6776">Business plan · Principal Officer view</div></div></div>
+<a href="LeadsPipeline.dc.html" style="margin: 0 4px 6px; min-height: 40px; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 13px; color: #5F6776; text-decoration: none">Search customers, policies, ISPs</a>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CRM<span style="font-weight: 400">8</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CRMLeads.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Leads</a>
+<a href="CRMPipeline.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Opportunities</a>
+<a href="CRMCustomers.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Customers &amp; households</a>
+<a href="CRMTasks.dc.html" aria-current="page" style="padding: 9px 12px; border-radius: 8px; background: #EEF3FB; color: {{accent}}; font-weight: 600; font-size: 14px; text-decoration: none">Tasks &amp; activities</a>
+<a href="CRMCampaigns.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Campaigns &amp; segments</a>
+<a href="CRMAssignment.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Routing rules</a>
+<a href="CRMImportDedup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Import &amp; duplicates</a>
+<a href="PortalFillSheet.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal desk</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">NETWORK<span style="font-weight: 400">4</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ManagerConsole.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Dashboard</a>
+<a href="OnboardingHierarchy.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Onboarding &amp; hierarchy</a>
+<a href="ProductDrives.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Product drives &amp; contests</a>
+<a href="ReportsLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Reports</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTENT<span style="font-weight: 400">2</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CampaignPublish.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Landing pages</a>
+<a href="ContentLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Content library</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTROL<span style="font-weight: 400">3</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ComplianceCentre.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Compliance centre</a>
+<a href="CommissionSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Commission</a>
+<a href="AIControls.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">AI controls</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">SETUP<span style="font-weight: 400">6</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="TenantSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenant &amp; catalogue</a>
+<a href="UsersRoles.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Users &amp; roles</a>
+<a href="Configuration.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Configuration</a>
+<a href="FormTemplates.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal forms</a>
+<a href="Integrations.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Integrations</a>
+<a href="WhiteLabel.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Brand &amp; white-label</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">PLATFORM OPERATOR<span style="font-weight: 400">1</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="OperatorTenants.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenants &amp; plans</a>
+</div></details>
+<a href="Start.dc.html" style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #1B1F27; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none">⌂ Prototype map</a>
+<a href="Main.dc.html" style="margin-top: 6px; padding: 10px 12px; border: 1px dashed #8A93A3; border-radius: 8px; color: #1B1F27; font-size: 13px; text-decoration: none">Open agent app</a>
+</nav>
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 1320px">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end"><div style="flex: 1 1 320px"><h1 style="margin: 0; font-size: 24px; font-weight: 600">Tasks &amp; activities</h1><div style="margin-top: 4px; font-size: 13px; color: #4A5262">Every follow-up in one queue, from leads, renewals, proposals and voice notes. Auto-created tasks follow tenant cadence rules.</div></div><button type="button" onClick="{{toggleNew}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">+ Task</button></div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px"><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Overdue</div><div style="font-size: 24px; font-weight: 600">{{overdue}}</div><div style="font-size: 11px; color: #5F6776">Escalate after 24 h</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Due today</div><div style="font-size: 24px; font-weight: 600">{{today}}</div><div style="font-size: 11px; color: #5F6776">Team</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Calls logged today</div><div style="font-size: 24px; font-weight: 600">146</div><div style="font-size: 11px; color: #5F6776">Connected 58%</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Auto-created this week</div><div style="font-size: 24px; font-weight: 600">312</div><div style="font-size: 11px; color: #5F6776">Renewal and SLA cadences</div></div></div>
+<sc-if value="{{newOpen}}" hint-placeholder-val="{{ false }}">
+  <section style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; align-items: end">
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Task<input value="{{nT}}" onChange="{{setNT}}" placeholder="e.g. Call about renewal quote" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Type<select value="{{nType}}" onChange="{{setNType}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option>Call</option><option>WhatsApp</option><option>Meeting</option><option>Document</option></select></label>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Related to<input value="Sunita Sharma" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Owner<select style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option>Ravi K.</option><option>Kavya R.</option></select></label>
+    <button type="button" onClick="{{addTask}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">Add task</button>
+  </section>
+</sc-if>
+<sc-if value="{{hasNewLead}}" hint-placeholder-val="{{ false }}"><div style="padding: 10px 12px; border-radius: 10px; background: #EEF3FB; border: 1px solid #B9CBEA; color: #1B1F27; font-size: 12px; line-height: 1.45; font-size: 13px">New task from routing: <strong>first call to {{newLeadName}}</strong> · assigned to {{newLeadOwner}} · due within the 2-hour response target.</div></sc-if>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+  <section style="flex: 2 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div role="tablist" style="display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid #D5D9E0"><sc-for list="{{scopes}}" as="tb" hint-placeholder-count="4"><button type="button" role="tab" aria-selected="{{tb.on}}" onClick="{{tb.pick}}" style="min-height: 44px; padding: 0 14px; border: 0; border-bottom: 3px solid {{tb.line}}; background: none; font: inherit; font-size: 14px; font-weight: {{tb.weight}}; color: #1B1F27">{{tb.label}}</button></sc-for></div><div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px"><sc-for list="{{types}}" as="ch" hint-placeholder-count="4"><button type="button" onClick="{{ch.pick}}" aria-pressed="{{ch.on}}" style="flex: none; min-height: 36px; padding: 0 12px; border: 1px solid {{ch.border}}; border-radius: 18px; background: {{ch.bg}}; font: inherit; font-size: 12px; font-weight: {{ch.weight}}; color: #1B1F27">{{ch.label}}</button></sc-for></div>
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+      <div style="display: flex; flex-direction: column">
+        <div style="font-size: 12px; font-weight: 600; color: {{g.color}}; padding: 8px 0">{{g.name}} · {{g.count}}</div>
+        <sc-for list="{{g.items}}" as="tk" hint-placeholder-count="2">
+          <div style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 0; border-top: 1px solid #E6E9EE">
+            <input type="checkbox" aria-label="Done" checked="{{tk.done}}" onChange="{{tk.toggle}}" style="width: 18px; height: 18px">
+            <span style="flex: 1; min-width: 0"><span style="font-size: 13px; font-weight: 600; text-decoration: {{tk.deco}}">{{tk.t}}</span><br><span style="font-size: 12px; color: #5F6776"><a href="{{tk.href}}">{{tk.rel}}</a> · {{tk.owner}} · {{tk.src}}</span></span>
+            <span style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #E6E9EE; color: #1B1F27; border: 1px solid #E6E9EE">{{tk.type}}</span>
+            <span style="width: 92px; text-align: right; font-size: 12px; color: {{g.color}}">{{tk.due}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+  </section>
+  <section style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 12px">
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 600">Call outcomes · today</h2>
+      <sc-for list="{{outcomes}}" as="oc" hint-placeholder-count="4"><div style="display: flex; align-items: center; gap: 10px; font-size: 12px"><span style="width: 120px">{{oc.l}}</span><span style="flex: 1; height: 8px; border-radius: 4px; background: #E6E9EE"><span style="display: block; width: {{oc.p}}%; height: 8px; border-radius: 4px; background: {{accent}}"></span></span><span style="width: 32px; text-align: right">{{oc.n}}</span></div></sc-for>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 600">Cadence rules</h2>
+      <div>Renewal: tasks at 30, 15 and 7 days before due, then daily in grace</div>
+      <div>New lead: first call within 2 h, retry at 4 h and next morning</div>
+      <div>Proposal: document chase every 2 days until complete</div>
+      <div>Voice note: next action becomes a task after confirmation</div>
+      <a href="CRMAssignment.dc.html" style="font-size: 12px; margin-top: 4px">Edit rules</a>
+    </div>
+  </section>
+</div>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: fixed; right: 24px; bottom: 24px; z-index: 5; max-width: 380px; padding: 12px 16px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { scope: 'team', ty: 'all', done: {}, added: [], newOpen: false, nT: '', nType: 'Call' });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const D = [
+      ['t1', 'Call Neeta Kulkarni · SLA breached', 'Call', 'Neeta Kulkarni · lead', 'CRMLeadDetail.dc.html', 'Kavya R.', 'Lead SLA rule', 'over', '25 min late'],
+      ['t2', 'Collect income proof', 'Document', 'Imran Khan · proposal', 'ProposalForm.dc.html', 'Kavya R.', 'Proposal cadence', 'over', '1 d late'],
+      ['t3', 'Grace ends in 3 days · remind', 'WhatsApp', 'Sunita Sharma · term', 'Customer360.dc.html', 'Ravi K.', 'Renewal cadence', 'today', '11:00'],
+      ['t4', 'Send term quote', 'Call', 'Priya Nair · lead', 'CRMLeadDetail.dc.html', 'Ravi K.', 'Voice note', 'today', '19:30'],
+      ['t5', 'Renewal quote · add spouse', 'Meeting', 'Arjun Mehta · health', 'Customer360.dc.html', 'Kavya R.', 'Manual', 'today', '16:00'],
+      ['t6', 'Revival follow-up', 'Call', 'Imran Khan · endowment', 'DueCalendar.dc.html', 'Kavya R.', 'Lapse rule', 'up', '18 Oct'],
+      ['t7', 'Reinvestment conversation', 'Meeting', 'Anil Joshi · survival benefit', 'CRMCustomers.dc.html', 'Ravi K.', 'Lifecycle alert', 'up', '13 Oct'],
+      ['t8', 'Birthday greeting', 'WhatsApp', 'Meena Iyer', 'MicrositeGreetings.dc.html', 'Neha P.', 'Lifecycle alert', 'today', 'All day']
+    ].concat(s.added);
+    const vis = D.filter((d) => (s.scope === 'team' || d[5] === 'Ravi K.') && (s.ty === 'all' || d[2] === s.ty));
+    const G = [['over', 'Overdue', '#8A1F1F'], ['today', 'Today', '#1B1F27'], ['up', 'Upcoming', '#5F6776']];
+    const groups = G.map((g) => { const items = vis.filter((d) => d[7] === g[0]).map((d) => { const done = !!s.done[d[0]]; return { t: d[1], type: d[2], rel: d[3], href: d[4], owner: d[5], src: d[6], due: d[8], done: done, deco: done ? 'line-through' : 'none',
+      toggle: () => { this.setState({ done: Object.assign({}, s.done, { [d[0]]: !done }) }); if (!done) this.flash('Done · outcome prompt logged to ' + d[3].split(' · ')[0]); } }; }); return { name: g[1], color: g[2], count: items.length, items: items }; });
+    const left = (k) => D.filter((d) => d[7] === k && !s.done[d[0]]).length;
+    const R = {
+      scopes: this.tabs([['mine', 'My tasks · Ravi K.'], ['team', 'Team']], 'scope'),
+      types: this.chips([['all', 'All'], ['Call', 'Calls'], ['WhatsApp', 'WhatsApp'], ['Meeting', 'Meetings'], ['Document', 'Documents']], 'ty'),
+      groups: groups, overdue: left('over'), today: left('today') + 38,
+      outcomes: [['Connected', 85, 58], ['No answer', 39, 27], ['Call back later', 15, 10], ['Wrong number', 4, 3], ['Not interested', 3, 2]].map((o) => ({ l: o[0], n: o[1], p: o[2] })),
+      newOpen: s.newOpen, toggleNew: this.tog('newOpen'), nT: s.nT, setNT: this.set('nT'), nType: s.nType, setNType: this.set('nType'),
+      addTask: () => { this.setState({ added: s.added.concat([['n' + s.added.length, s.nT || 'Follow up', s.nType, 'Sunita Sharma', 'Customer360.dc.html', 'Ravi K.', 'Manual', 'today', 'today']]), newOpen: false, nT: '' }); this.flash('Task added to Ravi’s daily plan'); },
+      hasNewLead: !!this.pget('proto.newLead'), newLeadName: (this.pget('proto.newLead') || '|').split('|')[0], newLeadOwner: (this.pget('proto.newLead') || '|').split('|')[1]
+    };
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

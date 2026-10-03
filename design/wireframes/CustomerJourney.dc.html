@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Customer proposal journey</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #FFFFFF; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+<header style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #D5D9E0">
+  <div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4A5262; font-size: 9px">LOGO</div>
+  <div style="flex: 1; font-weight: 600">[Tenant brand]</div>
+  <span style="font-size: 12px; color: #5F6776">Help: Ravi · +91 [number]</span>
+</header>
+<div style="height: 4px; background: #E6E9EE"><div style="width: {{pct}}%; height: 4px; background: {{accent}}"></div></div>
+<main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px">
+<div style="font-size: 12px; color: #5F6776">{{stepLabel}}</div>
+<sc-if value="{{is1}}" hint-placeholder-val="{{ true }}">
+  <div style="display: flex; flex-direction: column; gap: 14px">
+    <h1 style="margin: 0; font-size: 22px; font-weight: 600; line-height: 1.25">Your application is ready to review</h1>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; gap: 12px; align-items: center"><div style="width: 48px; height: 48px; border-radius: 24px; background: #E6E9EE; display: flex; align-items: center; justify-content: center; font-weight: 600">RK</div><div style="font-size: 13px"><strong>Ravi Kumar</strong> · your advisor<br><span style="color: #5F6776">IRDAI-registered agent · Licence [number]</span></div></div>
+    <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Mobile number<div style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%; display: flex; align-items: center; color: #4A5262">+91 ••••• ••210</div></div>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">One-time password<input inputmode="numeric" value="{{otp}}" onChange="{{setOtp}}" placeholder="6-digit code" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%; font-family: 'IBM Plex Mono', monospace; letter-spacing: 6px"></label>
+    <div style="font-size: 11px; color: #5F6776">Demo accepts any 6 digits.</div>
+  </div>
+</sc-if>
+<sc-if value="{{is2}}" hint-placeholder-val="{{ false }}">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <h1 style="margin: 0; font-size: 22px; font-weight: 600">Check your details</h1>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; display: flex; flex-direction: column; font-size: 13px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #E6E9EE"><span style="color: #5F6776">Plan</span><span>[Term plan] · Insurer A</span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #E6E9EE"><span style="color: #5F6776">Cover</span><span>₹70 L till age 65</span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #E6E9EE"><span style="color: #5F6776">Premium</span><strong>₹17,995 / year</strong></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #E6E9EE"><span style="color: #5F6776">Life assured</span><span>Sunita Sharma</span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px"><span style="color: #5F6776">Nominee</span><span>[Nominee name] · Spouse · 100%</span></div>
+    </div>
+    <button type="button" onClick="{{askRavi}}" style="align-self: flex-start; min-height: 40px; padding: 0; border: 0; background: none; font: inherit; font-size: 13px; color: #1F5FBF">Something wrong? Ask Ravi to correct it</button>
+    <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 13px"><input type="checkbox" checked="{{correct}}" onChange="{{toggleCorrect}}" style="width: 20px; height: 20px; margin: 0">These details are correct</label>
+  </div>
+</sc-if>
+<sc-if value="{{is3}}" hint-placeholder-val="{{ false }}">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <h1 style="margin: 0; font-size: 22px; font-weight: 600">One document needed</h1>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; font-size: 13px">Ravi asked for <strong>income proof</strong>: last 3 salary slips or latest ITR.</div>
+    <button type="button" onClick="{{upload}}" style="min-height: 72px; border: 1.5px dashed {{upBorder}}; border-radius: 12px; background: {{upBg}}; font: inherit; font-size: 14px; color: #1B1F27">{{upLabel}}</button>
+    <div style="font-size: 12px; color: #5F6776">Files are encrypted. Only your advisor and Insurer A can see them.</div>
+  </div>
+</sc-if>
+<sc-if value="{{is4}}" hint-placeholder-val="{{ false }}">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <h1 style="margin: 0; font-size: 22px; font-weight: 600">Confirm your health answers</h1>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; display: flex; flex-direction: column; font-size: 13px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #E6E9EE"><span>Tobacco in last 12 months</span><strong>No</strong></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #E6E9EE"><span>Hospitalised in last 5 years</span><strong>No</strong></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #E6E9EE"><span>Regular medication</span><strong>No</strong></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px"><span>Family history before 60</span><strong>Yes · father, heart</strong></div>
+    </div>
+    <div style="padding: 12px; border-radius: 10px; background: #FFF4E5; border: 1px solid #F0C48A; color: #7A3E06; font-size: 13px; font-size: 12px">Wrong or missing answers can affect claims. If anything is incorrect, stop and tell Ravi.</div>
+    <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 13px"><input type="checkbox" checked="{{decl}}" onChange="{{toggleDecl}}" style="width: 20px; height: 20px; margin: 0">I confirm these answers are true and complete</label>
+  </div>
+</sc-if>
+<sc-if value="{{is5}}" hint-placeholder-val="{{ false }}">
+  <div style="display: flex; flex-direction: column; gap: 14px; text-align: center; align-items: center; padding-top: 20px">
+    <div style="width: 56px; height: 56px; border-radius: 28px; background: #EEF3FB; display: flex; align-items: center; justify-content: center; font-size: 22px">→</div>
+    <h1 style="margin: 0; font-size: 22px; font-weight: 600">You’re moving to Insurer A’s secure payment page</h1>
+    <div style="font-size: 14px; color: #4A5262; line-height: 1.5">You pay Insurer A directly. [Tenant brand] never collects or holds your premium.</div>
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4A5262">PAYMENT.INSURER-A.[DOMAIN] · NO PERSONAL DATA IN THE LINK</div>
+  </div>
+</sc-if>
+<sc-if value="{{is6}}" hint-placeholder-val="{{ false }}">
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <div style="width: 52px; height: 52px; border-radius: 26px; background: #E8F4EC; color: #1D5F3A; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700">✓</div>
+    <h1 style="margin: 0; font-size: 22px; font-weight: 600">Payment received by Insurer A</h1>
+    <div style="font-size: 14px; color: #4A5262; line-height: 1.5">Your policy is being issued. You’ll get the e-policy by email and WhatsApp.</div>
+    <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; display: flex; flex-direction: column; font-size: 13px">
+      <div style="padding: 10px 12px; border-bottom: 1px solid #E6E9EE"><strong>Free-look period:</strong> review the policy for [30] days after you receive it and cancel if it doesn’t suit you.</div>
+      <div style="padding: 10px 12px; border-bottom: 1px solid #E6E9EE"><strong>Service and claims:</strong> Insurer A helpline [number] · portal link in your e-policy</div>
+      <div style="padding: 10px 12px"><strong>Grievances:</strong> [Grievance officer] · [email]</div>
+    </div>
+    <button type="button" onClick="{{restart}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Restart demo</button>
+  </div>
+</sc-if>
+<div style="display: flex; gap: 8px; margin-top: 8px">
+  <sc-if value="{{canBack}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{back}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; flex: 1">Back</button></sc-if>
+  <sc-if value="{{hasNext}}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{next}}" disabled="{{nextDisabled}}" style="flex: 2; min-height: 50px; border: 0; border-radius: 10px; background: {{nextBg}}; font: inherit; font-size: 15px; font-weight: 600; color: {{nextColor}}">{{nextLabel}}</button></sc-if>
+</div>
+<div style="font-size: 10px; color: #5F6776; line-height: 1.5; border-top: 1px solid #E6E9EE; padding-top: 10px; margin-top: auto">[Tenant legal name] · IRDAI Reg. No. [number] · Insurance is the subject matter of solicitation · <span style="text-decoration: underline">Privacy notice</span></div>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; z-index: 5; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { step: 1, otp: '', correct: false, uploaded: false, decl: false });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const okStep = { 1: /^\d{6}$/.test(s.otp.trim()), 2: s.correct, 3: s.uploaded, 4: s.decl, 5: true };
+    const labels = { 1: 'Continue', 2: 'Continue', 3: 'Continue', 4: 'Confirm with OTP', 5: 'Continue to Insurer A' };
+    const ok = !!okStep[s.step];
+    const R = {
+      is1: s.step === 1, is2: s.step === 2, is3: s.step === 3, is4: s.step === 4, is5: s.step === 5, is6: s.step === 6,
+      pct: Math.round(s.step / 6 * 100), stepLabel: s.step < 6 ? 'Step ' + s.step + ' of 5 · customer view on the tenant domain' : 'Done',
+      otp: s.otp, setOtp: this.set('otp'), correct: s.correct, toggleCorrect: this.tog('correct'),
+      uploaded: s.uploaded, upload: () => this.setState({ uploaded: true }),
+      upLabel: s.uploaded ? 'salary_slips.pdf · uploaded ✓' : 'Take a photo or choose a file', upBorder: s.uploaded ? '#1D5F3A' : '#8A93A3', upBg: s.uploaded ? '#E8F4EC' : '#F4F5F7',
+      decl: s.decl, toggleDecl: this.tog('decl'),
+      canBack: s.step > 1 && s.step < 6, hasNext: s.step < 6,
+      back: () => this.setState({ step: s.step - 1 }),
+      next: () => { if (ok) this.setState({ step: s.step + 1 }); },
+      nextDisabled: !ok, nextBg: ok ? accent : '#C9CED6', nextColor: ok ? '#FFFFFF' : '#3B4352', nextLabel: labels[s.step] || '',
+      restart: () => this.setState({ step: 1, otp: '', correct: false, uploaded: false, decl: false }),
+      askRavi: () => this.flash('Ravi has been told what to correct · you’ll get a WhatsApp when it’s updated')
+    };
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

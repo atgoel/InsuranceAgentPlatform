@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Leads and pipeline</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+<header style="display: flex; align-items: center; gap: 8px; padding: 10px 12px 10px 16px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0"><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{leadCount}} open · auto-assigned by eligibility rules</div></div><a href="MyTasks.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">Tasks</a><button type="button" onClick="{{openAdd}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">+ New</button><button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header><main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px">
+<label style="display: block"><span style="position: absolute; left: -9999px">Search leads</span><input type="search" value="{{q}}" onChange="{{setQ}}" placeholder="Search name, mobile or policy no." style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+<div role="tablist" style="display: flex; gap: 4px; padding: 3px; background: #E6E9EE; border-radius: 9px"><sc-for list="{{views}}" as="tb" hint-placeholder-count="3"><button type="button" role="tab" aria-selected="{{tb.on}}" onClick="{{tb.pick}}" style="flex: 1; min-height: 40px; border: 0; border-radius: 7px; background: {{tb.bg}}; font: inherit; font-size: 12px; font-weight: {{tb.weight}}; color: #1B1F27">{{tb.label}}</button></sc-for></div><div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px"><sc-for list="{{chips}}" as="ch" hint-placeholder-count="4"><button type="button" onClick="{{ch.pick}}" aria-pressed="{{ch.on}}" style="flex: none; min-height: 36px; padding: 0 12px; border: 1px solid {{ch.border}}; border-radius: 18px; background: {{ch.bg}}; font: inherit; font-size: 12px; font-weight: {{ch.weight}}; color: #1B1F27">{{ch.label}}</button></sc-for></div>
+<sc-if value="{{showDup}}" hint-placeholder-val="{{ true }}">
+  <div style="padding: 12px; border-radius: 10px; background: #FFF4E5; border: 1px solid #F0C48A; color: #7A3E06; font-size: 13px; display: flex; flex-direction: column; gap: 8px">
+    <div><strong>Possible duplicate</strong> · Priya Nair has the same mobile as existing customer Priya N. (2023 health policy).</div>
+    <div style="display: flex; gap: 8px"><button type="button" onClick="{{merge}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF; flex: 1">Merge, keep history</button><button type="button" onClick="{{keepBoth}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; flex: 1">Keep both</button></div>
+  </div>
+</sc-if>
+<sc-if value="{{isList}}" hint-placeholder-val="{{ true }}">
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <sc-for list="{{leads}}" as="l" hint-placeholder-count="4">
+      <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><a href="LeadDetail.dc.html" style="font-weight: 600; font-size: 14px; color: #1B1F27">{{l.n}}</a><span style="font-size: 10px; font-weight: 600; color: {{l.tagColor}}; background: {{l.tagBg}}; border-radius: 4px; padding: 2px 6px">{{l.tag}}</span></div>
+        <div style="font-size: 12px; color: #5F6776">{{l.interest}} · {{l.src}} · {{l.age}}</div>
+        <div style="font-size: 12px"><span style="color: #5F6776">Next · </span>{{l.next}}</div>
+        <div style="display: flex; gap: 8px"><button type="button" onClick="{{l.call}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; flex: 1">Call</button><a href="AIDraft.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center; flex: 1">WhatsApp</a><a href="NeedsCompare.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center; flex: 1; background: {{accent}}; border-color: {{accent}}; color: #FFFFFF; font-weight: 600">Advise</a></div>
+      </div>
+    </sc-for>
+    <sc-if value="{{noLeads}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: #5F6776; padding: 20px; text-align: center">No leads in this view.</div></sc-if>
+  </div>
+</sc-if>
+<sc-if value="{{isBoard}}" hint-placeholder-val="{{ false }}">
+  <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px">
+    <sc-for list="{{cols}}" as="c" hint-placeholder-count="4">
+      <div style="flex: none; width: 200px; background: #E6E9EE; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; font-weight: 600"><span>{{c.name}}</span><span>{{c.count}}</span></div>
+        <sc-for list="{{c.items}}" as="ci" hint-placeholder-count="2">
+          <a href="LeadDetail.dc.html" style="display: block; background: #FFFFFF; border-radius: 8px; padding: 8px; text-decoration: none; color: #1B1F27"><div style="font-size: 13px; font-weight: 600">{{ci.n}}</div><div style="font-size: 11px; color: #5F6776">{{ci.interest}} · {{ci.age}}</div></a>
+        </sc-for>
+      </div>
+    </sc-for>
+  </div>
+</sc-if>
+</main>
+<sc-if value="{{addOpen}}" hint-placeholder-val="{{ false }}">
+  <div style="position: absolute; inset: 0; z-index: 4; background: rgba(27,31,39,0.45); display: flex; align-items: flex-end">
+    <div role="dialog" aria-label="New lead" style="width: 100%; box-sizing: border-box; background: #FFFFFF; border-radius: 16px 16px 0 0; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><strong style="font-size: 16px">New lead</strong><button type="button" onClick="{{closeAdd}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">Cancel</button></div>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Name<input value="{{nName}}" onChange="{{setNName}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Mobile<input type="tel" value="{{nMobile}}" onChange="{{setNMobile}}" placeholder="10 digits" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Interest<select value="{{nInterest}}" onChange="{{setNInterest}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option>Term life</option><option>Health floater</option><option>Child plan</option><option>Retirement</option><option>Motor</option></select></label>
+      <label style="display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: #4A5262"><input type="checkbox" checked="{{nConsent}}" onChange="{{toggleNConsent}}" style="width: 18px; height: 18px; margin: 0">Customer agreed to be contacted on phone and WhatsApp (notice v2)</label>
+      <sc-if value="{{dupWarn}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: #7A3E06">This mobile matches Sunita Sharma. Saving links the lead to her record.</div></sc-if>
+      <button type="button" onClick="{{saveLead}}" disabled="{{saveDisabled}}" style="min-height: 48px; border: 0; border-radius: 10px; background: {{saveBg}}; font: inherit; font-size: 14px; font-weight: 600; color: {{saveColor}}">Save lead</button>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; z-index: 5; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+<nav aria-label="Primary" style="display: flex; background: #FFFFFF; border-top: 1px solid #D5D9E0; padding: 4px 4px 8px">
+  <a href="Main.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>{{navL.today}}</a>
+  <a href="LeadsPipeline.dc.html" aria-current="page" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; font-weight: 600; color: {{accent}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8z"></path></svg>{{navL.leads}}</a>
+  <a href="Customer360.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path></svg>{{navL.cust}}</a>
+  <a href="DueCalendar.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>{{navL.book}}</a>
+  <a href="Income.dc.html" style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 11px; color: #5F6776"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4.5 4.3-7 8-7s7 2.5 8 7"></path></svg>{{navL.me}}</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { view: 'list', filter: 'all', q: '', dupOpen: true, addOpen: false, nName: '', nMobile: '', nInterest: 'Term life', nConsent: false, added: [] });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const base = [
+      { n: 'Priya Nair', interest: 'Term life', src: 'Microsite', age: '2 h ago', next: 'Send term quote · today 11:30', hot: true, stage: 'Contacted', today: true },
+      { n: 'Imran Khan', interest: 'Health floater', src: 'Referral · Sunita S.', age: '1 d ago', next: 'Collect proposal documents · 15:00', hot: true, stage: 'Proposal' },
+      { n: 'Farhan Ali', interest: 'Motor renewal', src: 'Diwali health page', age: '3 h ago', next: 'First call · SLA 2 h', hot: false, stage: 'New', today: true },
+      { n: 'Lakshmi Rao', interest: 'Child plan', src: 'WhatsApp click-to-chat', age: '4 d ago', next: 'Needs analysis meeting · Mon', hot: false, stage: 'Quoted' },
+      { n: 'Gurpreet Singh', interest: 'Retirement', src: 'Event · Pune', age: '6 d ago', next: 'Follow up on quote', hot: false, stage: 'Quoted' }
+    ];
+    const all = s.added.concat(base);
+    const q = s.q.trim().toLowerCase();
+    const match = (l) => !q || (l.n + ' ' + l.interest + ' ' + l.src).toLowerCase().indexOf(q) >= 0;
+    let list = all.filter(match);
+    if (s.filter === 'hot') list = list.filter((l) => l.hot);
+    if (s.filter === 'today') list = list.filter((l) => l.today);
+    if (s.filter === 'dup') list = [];
+    const leads = list.map((l) => Object.assign({}, l, {
+      tag: l.hot ? 'HOT' : l.stage.toUpperCase(), tagBg: l.hot ? '#B45309' : '#E6E9EE', tagColor: l.hot ? '#FFFFFF' : '#1B1F27',
+      call: () => this.flash('Calling ' + l.n + '… (demo) · outcome prompt follows')
+    }));
+    const cols = ['New', 'Contacted', 'Quoted', 'Proposal'].map((st) => { const items = all.filter(match).filter((l) => l.stage === st); return { name: st, count: items.length, items: items }; });
+    const digits = s.nMobile.replace(/\D/g, '');
+    const valid = !!s.nName.trim() && digits.length >= 10 && s.nConsent;
+    const R = {
+      views: this.tabs([['list', 'List'], ['board', 'Pipeline board']], 'view'),
+      isList: s.view === 'list', isBoard: s.view === 'board',
+      chips: this.chips([['all', 'All ' + all.length], ['hot', 'Hot ' + all.filter((l) => l.hot).length], ['today', 'New today ' + all.filter((l) => l.today).length], ['dup', 'Duplicates ' + (s.dupOpen ? 1 : 0)]], 'filter'),
+      leads: leads, noLeads: leads.length === 0, cols: cols,
+      showDup: s.dupOpen && (s.filter === 'all' || s.filter === 'dup'),
+      merge: () => { this.setState({ dupOpen: false }); this.flash('Merged · lead history kept on the customer record'); },
+      keepBoth: () => { this.setState({ dupOpen: false }); this.flash('Kept separate · a shared number does not mean the same person'); },
+      q: s.q, setQ: this.set('q'), leadCount: all.length,
+      addOpen: s.addOpen, openAdd: () => this.setState({ addOpen: true }), closeAdd: () => this.setState({ addOpen: false }),
+      nName: s.nName, setNName: this.set('nName'), nMobile: s.nMobile, setNMobile: this.set('nMobile'),
+      nInterest: s.nInterest, setNInterest: this.set('nInterest'), nConsent: s.nConsent, toggleNConsent: this.tog('nConsent'),
+      dupWarn: digits.length >= 4 && digits.slice(-4) === '3210',
+      saveDisabled: !valid, saveBg: valid ? accent : '#C9CED6', saveColor: valid ? '#FFFFFF' : '#3B4352',
+      saveLead: () => {
+        this.setState({ added: [{ n: s.nName.trim(), interest: s.nInterest, src: 'Manual entry', age: 'just now', next: 'First call · SLA 2 h', hot: false, stage: 'New', today: true }].concat(s.added),
+          addOpen: false, nName: '', nMobile: '', nConsent: false, filter: 'all', view: 'list' });
+        this.flash('Lead saved · consent v2 recorded · owner: you');
+      }
+    };
+    R.scrTitle = s.lang === 'hi' ? 'लीड' : 'Leads';
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

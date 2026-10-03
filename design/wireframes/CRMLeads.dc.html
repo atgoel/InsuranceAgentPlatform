@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CRM leads workspace</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1250px; display: flex; flex-wrap: wrap; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+<nav aria-label="Console" style="flex: 1 1 240px; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #D5D9E0; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 12px"><div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #5F6776">LOGO</div><div><div style="font-weight: 600; font-size: 14px">[IMF tenant name]</div><div style="font-size: 11px; color: #5F6776">Business plan · Principal Officer view</div></div></div>
+<a href="LeadsPipeline.dc.html" style="margin: 0 4px 6px; min-height: 40px; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 13px; color: #5F6776; text-decoration: none">Search customers, policies, ISPs</a>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CRM<span style="font-weight: 400">8</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CRMLeads.dc.html" aria-current="page" style="padding: 9px 12px; border-radius: 8px; background: #EEF3FB; color: {{accent}}; font-weight: 600; font-size: 14px; text-decoration: none">Leads</a>
+<a href="CRMPipeline.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Opportunities</a>
+<a href="CRMCustomers.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Customers &amp; households</a>
+<a href="CRMTasks.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tasks &amp; activities</a>
+<a href="CRMCampaigns.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Campaigns &amp; segments</a>
+<a href="CRMAssignment.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Routing rules</a>
+<a href="CRMImportDedup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Import &amp; duplicates</a>
+<a href="PortalFillSheet.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal desk</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">NETWORK<span style="font-weight: 400">4</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ManagerConsole.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Dashboard</a>
+<a href="OnboardingHierarchy.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Onboarding &amp; hierarchy</a>
+<a href="ProductDrives.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Product drives &amp; contests</a>
+<a href="ReportsLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Reports</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTENT<span style="font-weight: 400">2</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CampaignPublish.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Landing pages</a>
+<a href="ContentLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Content library</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTROL<span style="font-weight: 400">3</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ComplianceCentre.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Compliance centre</a>
+<a href="CommissionSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Commission</a>
+<a href="AIControls.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">AI controls</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">SETUP<span style="font-weight: 400">6</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="TenantSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenant &amp; catalogue</a>
+<a href="UsersRoles.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Users &amp; roles</a>
+<a href="Configuration.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Configuration</a>
+<a href="FormTemplates.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal forms</a>
+<a href="Integrations.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Integrations</a>
+<a href="WhiteLabel.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Brand &amp; white-label</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">PLATFORM OPERATOR<span style="font-weight: 400">1</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="OperatorTenants.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenants &amp; plans</a>
+</div></details>
+<a href="Start.dc.html" style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #1B1F27; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none">⌂ Prototype map</a>
+<a href="Main.dc.html" style="margin-top: 6px; padding: 10px 12px; border: 1px dashed #8A93A3; border-radius: 8px; color: #1B1F27; font-size: 13px; text-decoration: none">Open agent app</a>
+</nav>
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 1320px">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end"><div style="flex: 1 1 320px"><h1 style="margin: 0; font-size: 24px; font-weight: 600">Leads</h1><div style="margin-top: 4px; font-size: 13px; color: #4A5262">Every lead with source, consent, owner and response SLA. Conversion counts only on insurer-confirmed issuance.</div></div><span style="font-size: 12px; color: #5F6776; align-self: center">Ad-platform connectors arrive later (F04)</span><a href="CRMImportDedup.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">Import CSV</a><button type="button" onClick="{{toggleNew}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">+ New lead</button></div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px"><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Open leads</div><div style="font-size: 24px; font-weight: 600">{{openCount}}</div><div style="font-size: 11px; color: #5F6776">Across all branches</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Unassigned</div><div style="font-size: 24px; font-weight: 600">{{unassigned}}</div><div style="font-size: 11px; color: #5F6776">Routing fallback queue</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">First-response SLA met · 7 days</div><div style="font-size: 24px; font-weight: 600">87%</div><div style="font-size: 11px; color: #5F6776">Target 90% within 2 h</div></div><div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px"><div style="font-size: 12px; color: #5F6776">Lead → issued · 90 days</div><div style="font-size: 24px; font-weight: 600">9.4%</div><div style="font-size: 11px; color: #5F6776">Insurer-confirmed only</div></div></div>
+<sc-if value="{{newOpen}}" hint-placeholder-val="{{ false }}">
+  <section style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; align-items: end">
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Full name<input value="{{nName}}" onChange="{{setNName}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Mobile<input value="{{nMobile}}" onChange="{{setNMobile}}" placeholder="10 digits" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Product interest<select value="{{nProd}}" onChange="{{setNProd}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option>Term life</option><option>Health floater</option><option>Child plan</option><option>Retirement</option><option>Motor</option></select></label>
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">Source<select value="{{nSrc}}" onChange="{{setNSrc}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"><option>Walk-in</option><option>Referral</option><option>Phone enquiry</option><option>Event</option></select></label>
+    <label style="display: flex; gap: 8px; align-items: center; font-size: 12px; color: #4A5262; min-height: 44px"><input type="checkbox" checked="{{nConsent}}" onChange="{{toggleNConsent}}" style="width: 18px; height: 18px">Consent to contact (notice v2)</label>
+    <button type="button" onClick="{{create}}" disabled="{{createDisabled}}" style="min-height: 44px; border: 0; border-radius: 8px; background: {{createBg}}; font: inherit; font-size: 13px; font-weight: 600; color: {{createColor}}">Create and route</button>
+  </section>
+</sc-if>
+<section style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px"><sc-for list="{{views}}" as="ch" hint-placeholder-count="4"><button type="button" onClick="{{ch.pick}}" aria-pressed="{{ch.on}}" style="flex: none; min-height: 36px; padding: 0 12px; border: 1px solid {{ch.border}}; border-radius: 18px; background: {{ch.bg}}; font: inherit; font-size: 12px; font-weight: {{ch.weight}}; color: #1B1F27">{{ch.label}}</button></sc-for></div>
+  <div style="display: flex; flex-wrap: wrap; gap: 10px">
+    <input type="search" aria-label="Search leads" value="{{q}}" onChange="{{setQ}}" placeholder="Search name, mobile, campaign" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%; flex: 2 1 240px; width: auto">
+    <select aria-label="Product" value="{{fProd}}" onChange="{{setFProd}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%; flex: 1 1 150px; width: auto"><option value="all">All products</option><option>Term life</option><option>Health floater</option><option>Child plan</option><option>Retirement</option><option>Motor</option></select>
+    <select aria-label="Owner" value="{{fOwner}}" onChange="{{setFOwner}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%; flex: 1 1 150px; width: auto"><option value="all">All owners</option><option>Ravi K.</option><option>Kavya R.</option><option>Neha P.</option><option>Asha K.</option><option>Rahul V.</option><option value="none">Unassigned</option></select>
+  </div>
+  <sc-if value="{{hasSel}}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; background: #EEF3FB; border: 1px solid #B9CBEA; font-size: 13px">
+      <strong>{{selCount}} selected</strong>
+      <select aria-label="Assign to" value="{{bulkOwner}}" onChange="{{setBulkOwner}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%; width: 180px; min-height: 38px"><option>Kavya R.</option><option>Neha P.</option><option>Ravi K.</option><option>Asha K.</option></select>
+      <button type="button" onClick="{{bulkAssign}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF; min-height: 38px">Assign</button>
+      <span style="font-size: 12px; color: #5F6776">Ineligible owners are skipped by licence and product scope</span>
+      <button type="button" onClick="{{clearSel}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; min-height: 38px; margin-left: auto">Clear</button>
+    </div>
+  </sc-if>
+<div style="overflow-x: auto"><div role="table" style="min-width: 1080px; font-size: 13px"><div role="row" style="display: grid; grid-template-columns: 40px 1.5fr 1.1fr 1.6fr 1fr 0.9fr 1.2fr 0.8fr; border-bottom: 1px solid #D5D9E0; font-size: 11px; color: #5F6776"><span role="columnheader" style="padding: 8px 6px"></span><span role="columnheader" style="padding: 8px 6px">Lead</span><span role="columnheader" style="padding: 8px 6px">Product</span><span role="columnheader" style="padding: 8px 6px">Source · campaign</span><span role="columnheader" style="padding: 8px 6px">Owner</span><span role="columnheader" style="padding: 8px 6px">Stage</span><span role="columnheader" style="padding: 8px 6px">First response</span><span role="columnheader" style="padding: 8px 6px">Consent</span></div><sc-for list="{{rows}}" as="r" hint-placeholder-count="4"><div role="row" style="display: grid; grid-template-columns: 40px 1.5fr 1.1fr 1.6fr 1fr 0.9fr 1.2fr 0.8fr; align-items: center; border-bottom: 1px solid #E6E9EE"><span role="cell" style="padding: 10px 6px; "><input type="checkbox" aria-label="Select {{r.n}}" checked="{{r.sel}}" onChange="{{r.toggle}}" style="width: 18px; height: 18px"></span><span role="cell" style="padding: 10px 6px; "><a href="CRMLeadDetail.dc.html" style="font-weight: 600; color: #1B1F27">{{r.n}}</a><br><span style="font-size: 12px; color: #5F6776">{{r.mob}} · {{r.created}}</span></span><span role="cell" style="padding: 10px 6px; ">{{r.prod}}</span><span role="cell" style="padding: 10px 6px; ">{{r.src}}<br><span style="font-size: 12px; color: #5F6776">{{r.camp}}</span></span><span role="cell" style="padding: 10px 6px; "><span style="color: {{r.ownColor}}; font-weight: {{r.ownWeight}}">{{r.owner}}</span></span><span role="cell" style="padding: 10px 6px; "><span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 10px; background: {{r.stBg}}; color: {{r.stColor}}">{{r.stage}}</span></span><span role="cell" style="padding: 10px 6px; "><span style="font-size: 12px; font-weight: 600; color: {{r.slaColor}}">{{r.sla}}</span></span><span role="cell" style="padding: 10px 6px; "><span style="font-size: 12px; color: {{r.cColor}}">{{r.consent}}</span></span></div></sc-for></div></div>
+  <sc-if value="{{noRows}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: #5F6776; text-align: center; padding: 20px">No leads in this view.</div></sc-if>
+</section>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: fixed; right: 24px; bottom: 24px; z-index: 5; max-width: 380px; padding: 12px 16px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":1440,"height":1250}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { view: 'open', q: '', fProd: 'all', fOwner: 'all', sel: {}, owners: {}, bulkOwner: 'Kavya R.', newOpen: false, added: [], nName: '', nMobile: '', nProd: 'Term life', nSrc: 'Walk-in', nConsent: false });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const STG = { New: ['#EEF3FB', '#1B1F27'], Contacted: ['#E6E9EE', '#1B1F27'], Qualified: ['#E6E9EE', '#1B1F27'], Quoted: ['#FFF4E5', '#7A3E06'], Proposal: ['#FFF4E5', '#7A3E06'], Lost: ['#FDECEC', '#8A1F1F'] };
+    const base = [
+      { id: 'L1', n: 'Farhan Ali', mob: '••4471', prod: 'Motor', src: 'Landing page', camp: 'Diwali health renewal · CMP-DIW26', owner: '', stage: 'New', sla: 72, consent: 'WhatsApp ✓ · calls ✓', created: 'today 09:41', hot: false, dup: false },
+      { id: 'L2', n: 'Priya Nair', mob: '••2290', prod: 'Term life', src: 'Agent microsite', camp: '/ravi-kumar', owner: 'Ravi K.', stage: 'Contacted', sla: 'done6', consent: 'WhatsApp ✓ · calls ✓', created: 'today 08:15', hot: true, dup: true },
+      { id: 'L3', n: 'Neeta Kulkarni', mob: '••8834', prod: 'Health floater', src: 'Landing page', camp: 'Family health page · CMP-FH09', owner: '', stage: 'New', sla: -25, consent: 'WhatsApp ✓ · calls ✓', created: 'today 07:50', hot: true, dup: false },
+      { id: 'L4', n: 'Imran Khan', mob: '••1123', prod: 'Health floater', src: 'Customer referral', camp: 'Referred by Sunita S.', owner: 'Kavya R.', stage: 'Proposal', sla: 'done14', consent: 'WhatsApp ✓ · calls ✓', created: '2 Oct', hot: true, dup: false },
+      { id: 'L5', n: 'Lakshmi Rao', mob: '••5567', prod: 'Child plan', src: 'WhatsApp click-to-chat', camp: '—', owner: 'Ravi K.', stage: 'Quoted', sla: 'done22', consent: 'WhatsApp ✓', created: '29 Sep', hot: false, dup: false },
+      { id: 'L6', n: 'Gurpreet Singh', mob: '••9021', prod: 'Retirement', src: 'Event', camp: 'Pune investor meet', owner: 'Asha K.', stage: 'Qualified', sla: 'done41', consent: 'Calls ✓', created: '27 Sep', hot: false, dup: false },
+      { id: 'L7', n: 'Rohan Mehra', mob: '••3345', prod: 'Term life', src: 'Partner referral', camp: '[CA firm] tie-in', owner: '', stage: 'New', sla: 18, consent: 'Pending · do not contact', created: 'today 10:12', hot: false, dup: false },
+      { id: 'L8', n: 'Fatima Sheikh', mob: '••6678', prod: 'Health floater', src: 'Landing page', camp: 'Diwali health renewal · CMP-DIW26', owner: 'Neha P.', stage: 'Contacted', sla: 'done9', consent: 'WhatsApp ✓ · calls ✓', created: 'yesterday', hot: false, dup: false },
+      { id: 'L9', n: 'Ajay Verma', mob: '••7712', prod: 'Motor', src: 'CSV import', camp: 'Pune auto expo', owner: 'Rahul V.', stage: 'New', sla: -90, consent: 'Calls ✓', created: 'today 06:30', hot: false, dup: true },
+      { id: 'L10', n: 'Sonal Jain', mob: '••4409', prod: 'Term life', src: 'Agent microsite', camp: '/ravi-kumar', owner: 'Ravi K.', stage: 'Lost', sla: 'done12', consent: 'WhatsApp ✓', created: '20 Sep', hot: false, dup: false, lost: 'Bought elsewhere' }
+    ];
+    const all = s.added.concat(base).map((l) => Object.assign({}, l, { owner: s.owners[l.id] !== undefined ? s.owners[l.id] : l.owner }));
+    const open = all.filter((l) => l.stage !== 'Lost');
+    const q = s.q.trim().toLowerCase();
+    let list = all.filter((l) => (!q || (l.n + l.mob + l.camp + l.src).toLowerCase().indexOf(q) >= 0) && (s.fProd === 'all' || l.prod === s.fProd) && (s.fOwner === 'all' || (s.fOwner === 'none' ? !l.owner : l.owner === s.fOwner)));
+    const V = { open: (l) => l.stage !== 'Lost', unassigned: (l) => !l.owner && l.stage !== 'Lost', sla: (l) => typeof l.sla === 'number' && l.sla < 0, hot: (l) => l.hot, dup: (l) => l.dup, lost: (l) => l.stage === 'Lost' };
+    list = list.filter(V[s.view]);
+    const rows = list.map((l) => {
+      const st = STG[l.stage] || STG.New; let sla, slaColor;
+      if (typeof l.sla === 'string') { sla = 'Responded in ' + l.sla.slice(4) + ' min'; slaColor = '#5F6776'; }
+      else if (l.sla < 0) { sla = 'Breached by ' + (-l.sla) + ' min'; slaColor = '#8A1F1F'; }
+      else { sla = Math.floor(l.sla / 60) + ' h ' + (l.sla % 60) + ' min left'; slaColor = l.sla < 30 ? '#7A3E06' : '#1B1F27'; }
+      return Object.assign({}, l, { owner: l.owner || 'Unassigned', ownColor: l.owner ? '#1B1F27' : '#7A3E06', ownWeight: l.owner ? '400' : '600',
+        stage: l.stage + (l.lost ? ' · ' + l.lost : ''), stBg: st[0], stColor: st[1], sla: sla, slaColor: slaColor,
+        cColor: l.consent.indexOf('Pending') === 0 ? '#8A1F1F' : '#1D5F3A', sel: !!s.sel[l.id],
+        toggle: () => this.setState({ sel: Object.assign({}, s.sel, { [l.id]: !s.sel[l.id] }) }) });
+    });
+    const selIds = Object.keys(s.sel).filter((k) => s.sel[k]);
+    const digits = s.nMobile.replace(/\D/g, '');
+    const valid = !!s.nName.trim() && digits.length >= 10 && s.nConsent;
+    const cnt = (f) => all.filter(f).length;
+    const R = {
+      views: this.chips([['open', 'All open ' + cnt(V.open)], ['unassigned', 'Unassigned ' + cnt(V.unassigned)], ['sla', 'SLA breached ' + cnt(V.sla)], ['hot', 'Hot ' + cnt(V.hot)], ['dup', 'Possible duplicates ' + cnt(V.dup)], ['lost', 'Lost ' + cnt(V.lost)]], 'view'),
+      rows: rows, noRows: rows.length === 0, openCount: open.length + 238, unassigned: cnt(V.unassigned),
+      q: s.q, setQ: this.set('q'), fProd: s.fProd, setFProd: this.set('fProd'), fOwner: s.fOwner, setFOwner: this.set('fOwner'),
+      hasSel: selIds.length > 0, selCount: selIds.length, bulkOwner: s.bulkOwner, setBulkOwner: this.set('bulkOwner'),
+      bulkAssign: () => { const o = Object.assign({}, s.owners); selIds.forEach((id) => { o[id] = s.bulkOwner; }); this.setState({ owners: o, sel: {} }); this.flash(selIds.length + ' leads assigned to ' + s.bulkOwner + ' · owners notified · audit recorded'); },
+      clearSel: () => this.setState({ sel: {} }),
+      newOpen: s.newOpen, toggleNew: this.tog('newOpen'),
+      nName: s.nName, setNName: this.set('nName'), nMobile: s.nMobile, setNMobile: this.set('nMobile'), nProd: s.nProd, setNProd: this.set('nProd'), nSrc: s.nSrc, setNSrc: this.set('nSrc'),
+      nConsent: s.nConsent, toggleNConsent: this.tog('nConsent'),
+      createDisabled: !valid, createBg: valid ? accent : '#C9CED6', createColor: valid ? '#FFFFFF' : '#3B4352',
+      create: () => {
+        const owner = s.nProd === 'Health floater' ? 'Kavya R.' : (s.nProd === 'Motor' ? 'Rahul V.' : 'Ravi K.');
+        const lead = { id: 'N' + (s.added.length + 1), n: s.nName.trim(), mob: '••' + digits.slice(-4), prod: s.nProd, src: s.nSrc, camp: 'Manual entry', owner: owner, stage: 'New', sla: 120, consent: 'WhatsApp ✓ · calls ✓', created: 'just now', hot: false, dup: false };
+        this.pset('proto.newLead', lead.n + '|' + owner);
+        this.setState({ added: [lead].concat(s.added), newOpen: false, nName: '', nMobile: '', nConsent: false, view: 'open' });
+        this.flash('Lead created · no duplicate found · routed to ' + owner + ' by rule “' + s.nProd + ' → eligible ISP, round robin”');
+      }
+    };
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

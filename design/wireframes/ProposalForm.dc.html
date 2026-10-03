@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Consolidated proposal form</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+<header style="display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0"><a href="QuoteBI.dc.html" aria-label="Back" style="width: 44px; height: 44px; flex: none; color: #1B1F27; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{subTitle}}</div></div><button type="button" onClick="{{saveExit}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; padding: 0 10px">Save</button><button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header>
+<div style="display: flex; align-items: center; gap: 8px; padding: 6px 16px; background: #1B1F27; color: #FFFFFF; font-size: 11px">
+  <label for="prod" style="flex: 1">Demo · proposal for</label>
+  <select id="prod" value="{{prod}}" onChange="{{setProd}}" style="min-height: 34px; border: 0; border-radius: 6px; padding: 0 8px; font: inherit; font-size: 12px; background: #FFFFFF; color: #1B1F27"><option value="term">Term life · Sunita</option><option value="health">Health floater · family of 3</option></select>
+</div>
+<main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px">
+<div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><div><div style="font-size: 26px; font-weight: 600; line-height: 1">{{answered}} <span style="font-size: 14px; font-weight: 400; color: #5F6776">of {{total}} answered</span></div><div style="font-size: 12px; color: #5F6776; margin-top: 4px">{{eta}}</div></div><button type="button" onClick="{{jumpNext}}" disabled="{{allDone}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF">{{nextLabel}}</button></div>
+  <div style="height: 8px; border-radius: 4px; background: #E6E9EE; overflow: hidden; display: flex"><span style="width: {{pPre}}%; background: #8FB3E8"></span><span style="width: {{pConf}}%; background: {{accent}}"></span></div>
+  <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: #4A5262"><span><span style="display: inline-block; width: 8px; height: 8px; border-radius: 4px; background: #8FB3E8"></span> Prefilled, to confirm {{nPre}}</span><span><span style="display: inline-block; width: 8px; height: 8px; border-radius: 4px; background: {{accent}}"></span> Confirmed {{nConf}}</span><span>Left {{nLeft}}</span></div>
+  <div style="font-size: 11px; color: #5F6776; line-height: 1.5">Prefilled from: {{sources}}</div>
+</div>
+<sc-if value="{{isTerm}}" hint-placeholder-val="{{ true }}">
+  <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 8px">
+    <label for="ins" style="flex: 1; font-size: 12px; color: #4A5262">Insurer form</label>
+    <select id="ins" value="{{ins}}" onChange="{{setIns}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%; width: 190px; min-height: 38px"><option value="A">Insurer A · term form v7</option><option value="E">Insurer E · term form v3</option></select>
+  </div>
+</sc-if>
+<sc-if value="{{hasSwitchNote}}" hint-placeholder-val="{{ false }}"><div style="padding: 10px 12px; border-radius: 10px; background: #EEF3FB; border: 1px solid #B9CBEA; color: #1B1F27; font-size: 12px; line-height: 1.45">{{switchNote}}</div></sc-if>
+<sc-for list="{{rules}}" as="ru" hint-placeholder-count="2"><div style="font-size: 12px; padding: 8px 10px; border-radius: 8px; background: {{ru.bg}}; color: {{ru.color}}">{{ru.t}}</div></sc-for>
+<sc-for list="{{sections}}" as="sc" hint-placeholder-count="8">
+  <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; overflow: hidden; border-color: {{sc.border}}">
+    <button type="button" onClick="{{sc.toggle}}" aria-expanded="{{sc.open}}" style="width: 100%; display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px; border: 0; background: {{sc.headBg}}; font: inherit; text-align: left; color: #1B1F27">
+      <span style="width: 22px; height: 22px; flex: none; border-radius: 11px; background: {{sc.dot}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700">{{sc.mark}}</span>
+      <span style="flex: 1"><span style="display: block; font-size: 14px; font-weight: 600">{{sc.title}}</span><span style="display: block; font-size: 11px; color: {{sc.statusColor}}">{{sc.status}}</span></span>
+      <span style="font-size: 16px; color: #5F6776">{{sc.chev}}</span>
+    </button>
+    <sc-if value="{{sc.open}}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 4px 12px 12px; display: flex; flex-direction: column; gap: 2px">
+        <sc-if value="{{sc.isAgent}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column">
+            <sc-for list="{{sc.fields}}" as="f" hint-placeholder-count="5">
+              <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px 0; border-top: 1px solid #E6E9EE">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="font-size: 11px; color: #5F6776">{{f.label}}</span><span style="font-size: 10px; padding: 1px 6px; border-radius: 8px; background: {{f.srcBg}}; color: {{f.srcColor}}">{{f.src}}</span></div>
+                <sc-if value="{{f.hasValue}}" hint-placeholder-val="{{ true }}"><div style="font-size: 14px; font-weight: 500">{{f.value}}</div></sc-if>
+                <sc-if value="{{f.isText}}" hint-placeholder-val="{{ false }}"><input aria-label="{{f.label}}" value="{{f.input}}" onChange="{{f.set}}" placeholder="{{f.ph}}" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%; min-height: 40px"></sc-if>
+                <sc-if value="{{f.isChoice}}" hint-placeholder-val="{{ false }}"><div style="display: flex; flex-wrap: wrap; gap: 6px"><sc-for list="{{f.opts}}" as="o" hint-placeholder-count="3"><button type="button" onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="min-height: 36px; padding: 0 12px; border: 1px solid {{o.border}}; border-radius: 18px; background: {{o.bg}}; font: inherit; font-size: 12px; color: #1B1F27">{{o.l}}</button></sc-for></div></sc-if>
+                <sc-if value="{{f.isUpload}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{f.capture}}" style="min-height: 44px; padding: 0 12px; border: 1.5px dashed #8A93A3; border-radius: 8px; background: #F4F5F7; font: inherit; font-size: 13px; color: #1B1F27; min-height: 40px">Capture with camera</button></sc-if>
+              </div>
+            </sc-for>
+            <sc-if value="{{sc.canConfirm}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{sc.confirm}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF; margin-top: 8px">{{sc.confirmLabel}}</button></sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{sc.isCustomer}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 6px">
+            <div style="padding: 12px; border-radius: 10px; background: #FFF4E5; border: 1px solid #F0C48A; color: #7A3E06; font-size: 13px; font-size: 12px; line-height: 1.5">The customer answers these herself: {{sc.covers}}. You never type health or lifestyle declarations; AI never fills them.</div>
+            <sc-if value="{{custIdle}}" hint-placeholder-val="{{ true }}"><div style="display: flex; gap: 8px"><button type="button" onClick="{{sendCust}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF; flex: 1.3">Send to her phone</button><button type="button" onClick="{{handPhone}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27; flex: 1">She’s with me</button></div></sc-if>
+            <sc-if value="{{custWaiting}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: #5F6776">{{custWaitText}}</div><button type="button" onClick="{{custDoneDemo}}" style="min-height: 44px; padding: 0 12px; border: 1.5px dashed #8A93A3; border-radius: 8px; background: #F4F5F7; font: inherit; font-size: 13px; color: #1B1F27">Demo: customer completes with OTP</button></sc-if>
+            <sc-if value="{{custDone}}" hint-placeholder-val="{{ false }}"><div style="padding: 12px; border-radius: 10px; background: #E8F4EC; border: 1px solid #B7D9C3; color: #1D5F3A; font-size: 13px; font-size: 12px">{{custDoneText}}</div></sc-if>
+            <a href="CustomerJourney.dc.html" style="font-size: 12px; font-weight: 600">Preview what Sunita sees on her phone →</a>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+  </div>
+</sc-for>
+<div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+  <h2 style="margin: 0; font-size: 15px; font-weight: 600">Submit</h2>
+  <div style="display: flex; flex-direction: column; gap: 6px"><sc-for list="{{routes}}" as="rt" hint-placeholder-count="2"><button type="button" onClick="{{rt.pick}}" disabled="{{rt.off}}" style="display: flex; justify-content: space-between; align-items: center; min-height: 48px; padding: 0 12px; border: 1px solid {{rt.border}}; border-radius: 10px; background: {{rt.bg}}; font: inherit; font-size: 13px; color: {{rt.color}}; text-align: left"><span><strong>{{rt.l}}</strong><br><span style="font-size: 11px; color: #5F6776">{{rt.d}}</span></span><span>{{rt.mark}}</span></button></sc-for></div>
+  <sc-if value="{{notReady}}" hint-placeholder-val="{{ true }}"><button type="button" disabled style="min-height: 48px; border: 0; border-radius: 10px; background: #C9CED6; font: inherit; font-size: 14px; font-weight: 600; color: #3B4352">{{blockText}}</button></sc-if>
+  <sc-if value="{{readyApi}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{submitApi}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF; min-height: 48px; font-size: 14px">Submit to {{insName}} via API</button></sc-if>
+  <sc-if value="{{readyPortal}}" hint-placeholder-val="{{ false }}"><a href="PortalFillSheet.dc.html" style="min-height: 48px; padding: 0 14px; box-sizing: border-box; border-radius: 10px; background: {{accent}}; font-size: 14px; font-weight: 600; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center">Open portal fill sheet</a><div style="font-size: 12px; color: #5F6776">Answers are already in {{insName}}’s field order and codes. You enter them in the insurer’s portal under your own login.</div></sc-if>
+  <sc-if value="{{submitted}}" hint-placeholder-val="{{ false }}"><div style="padding: 12px; border-radius: 10px; background: #E8F4EC; border: 1px solid #B7D9C3; color: #1D5F3A; font-size: 13px">Submitted · operation ref OP-[ref] · declarations frozen · payload built from answers mapped to {{insName}} form fields</div><a href="IssuanceTracker.dc.html" style="min-height: 48px; padding: 0 14px; box-sizing: border-box; border-radius: 10px; background: {{accent}}; font-size: 14px; font-weight: 600; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center">Track payment and issuance</a></sc-if>
+</div>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; z-index: 5; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { prod: 'term', ins: 'A', open: 'p', conf: {}, ans: {}, cust: 'idle', custMode: 'link', route: 'api', submitted: false, switchNote: '' });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const SRC = { c360: ['Customer 360', '#EEF3FB', '#1B1F27'], pan: ['PAN scan', '#EEF3FB', '#1B1F27'], aad: ['Aadhaar scan · masked', '#EEF3FB', '#1B1F27'], needs: ['Needs analysis', '#EEF3FB', '#1B1F27'], held: ['Held policy', '#EEF3FB', '#1B1F27'], hh: ['Household', '#EEF3FB', '#1B1F27'], lead: ['Lead record', '#EEF3FB', '#1B1F27'], def: ['Default · confirm', '#E6E9EE', '#4A5262'], file: ['On file', '#E8F4EC', '#1D5F3A'], ask: ['Ask now', '#FFF4E5', '#7A3E06'], insq: ['Insurer-only', '#FFF4E5', '#7A3E06'], prev: ['Previous insurer', '#EEF3FB', '#1B1F27'] };
+    const core = {
+      p: ['Proposer and life assured', [['name', 'Full name', 'Sunita Sharma', 'c360'], ['dob', 'Date of birth', '14 Feb 1985', 'pan'], ['gender', 'Gender', 'Female', 'c360'], ['mar', 'Marital status', 'Married', 'c360'], ['pan', 'PAN', 'XXXXX1234X', 'pan'], ['aad', 'Aadhaar (masked)', 'XXXX XXXX 4410', 'aad'], ['la', 'Life assured is the proposer', 'Yes', 'def']]],
+      c: ['Contact and address', [['mob', 'Mobile', '+91 ••••• ••210', 'c360'], ['mail', 'Email', 's••@[mail]', 'c360'], ['addr', 'Address', '[Flat, building], Andheri West, Mumbai 400053', 'aad'], ['corr', 'Correspondence address', 'Same as above', 'def']]],
+      o: ['Occupation, income and tax', [['occ', 'Occupation', 'Salaried', 'needs'], ['emp', 'Employer', '[employer]', 'lead'], ['inc', 'Annual income', '₹12,00,000', 'needs'], ['tax', 'Tax resident only in India (FATCA/CRS)', 'Yes', 'def']]],
+      e: ['Existing insurance', [['ex1', 'Life cover held', 'Term · Insurer A · ₹50 L', 'held'], ['ex2', 'Health cover held', 'Health floater · Insurer C · ₹5 L', 'held'], ['pend', 'Proposals pending with other insurers', '', 'ask', 'choice', ['None', 'Yes, give details']]]],
+      n: ['Nominee', [['nom', 'Nominee', 'Rakesh Sharma', 'hh'], ['rel', 'Relationship', 'Spouse', 'hh'], ['ndob', 'Nominee date of birth', '2 Mar 1983', 'hh'], ['share', 'Share', '100%', 'def']]],
+      b: ['Payer and bank', [['payer', 'Premium payer', 'Proposer', 'def'], ['bank', 'Bank account for refunds and auto-debit', '', 'ask', 'text', 'Account number · IFSC']]],
+      d: ['Documents', [['dpan', 'PAN card', 'On file ✓', 'file'], ['daad', 'Aadhaar (masked)', 'On file ✓', 'file'], ['dinc', 'Income proof', 'Requested from customer · secure link', 'file'], ['dphoto', 'Recent photograph', '', 'ask', 'upload']]]
+    };
+    const insQ = {
+      A: ['Insurer A questions · form v7', [['eduA', 'Education qualification (Insurer A list)', '', 'insq', 'choice', ['Graduate', 'Post-graduate', 'Other']], ['pepA', 'Politically exposed person', '', 'insq', 'choice', ['No', 'Yes']], ['langA', 'Policy document language', '', 'insq', 'choice', ['English', 'हिन्दी']]]],
+      E: ['Insurer E questions · form v3', [['eduA', 'Education qualification', '', 'insq', 'choice', ['Graduate', 'Post-graduate', 'Other']], ['dutyE', 'Nature of duties (Insurer E sub-class)', '', 'insq', 'choice', ['Office / desk', 'Field / travel', 'Manual']], ['travE', 'Travel abroad over 6 months in next 2 years', '', 'insq', 'choice', ['No', 'Yes']], ['incpE', 'Income proof type (Insurer E list)', '', 'insq', 'choice', ['Salary slips', 'ITR', 'Form 16']]]],
+      C: ['Insurer C questions · form v4', [['hospC', 'Preferred network hospital city', '', 'insq', 'text', 'e.g. Mumbai'], ['sportC', 'Any member in hazardous sport or occupation', '', 'insq', 'choice', ['No', 'Yes']]]]
+    };
+    const health = {
+      m: ['Members to insure', [['m1', 'Self · Sunita, 41', '158 cm · 62 kg', 'prev'], ['m2', 'Spouse · Rakesh, 43', '172 cm · 80 kg', 'prev'], ['m3', 'Son · Aarav, 9', '134 cm · 30 kg', 'prev']]],
+      x: ['Existing cover and claims', [['cur', 'Current policy', 'Insurer C · floater ₹5 L · since 2025', 'held'], ['clm', 'Claims in last 3 years', 'None reported', 'prev'], ['port', 'Porting from another insurer', 'No', 'def']]]
+    };
+    const isTerm = s.prod === 'term';
+    const insKey = isTerm ? s.ins : 'C';
+    const insName = 'Insurer ' + insKey;
+    const order = isTerm ? [['p', core.p], ['c', core.c], ['o', core.o], ['e', core.e], ['n', core.n], ['b', core.b], ['d', core.d], ['i', insQ[insKey]], ['h', null]]
+      : [['m', health.m], ['p', core.p], ['c', core.c], ['x', health.x], ['n', core.n], ['b', core.b], ['d', [core.d[0], core.d[1].filter((f) => f[0] !== 'dinc')]], ['i', insQ.C], ['h', null]];
+    let nPre = 0, nConf = 0, nLeft = 0;
+    const secState = [];
+    const sections = order.map((o, idx) => {
+      const id = o[0];
+      if (id === 'h') {
+        const done = s.cust === 'done';
+        const qCount = isTerm ? 14 : 27;
+        if (done) nConf += qCount; else nLeft += qCount;
+        secState.push({ id: id, done: done });
+        const open = s.open === id;
+        return { id: id, title: isTerm ? 'Health and lifestyle · customer answers' : 'Health declarations · each member · customer answers', isAgent: false, isCustomer: true, open: open, fields: [], canConfirm: false, confirm: () => {}, confirmLabel: '',
+          covers: isTerm ? 'height and weight, tobacco, alcohol, 8 medical questions, family history (14 questions)' : '9 questions for each of 3 members, with “No for everyone” shortcuts she can use (27 answers)',
+          status: done ? 'Completed by customer · OTP verified' : (s.cust === 'waiting' ? 'Waiting for customer' : qCount + ' questions · customer only'),
+          statusColor: done ? '#1D5F3A' : '#7A3E06', mark: done ? '✓' : String(idx + 1), dot: done ? '#1D5F3A' : '#B45309',
+          border: open ? accent : '#D5D9E0', headBg: open ? '#F4F7FC' : '#FFFFFF', chev: open ? '−' : '+', toggle: () => this.setState({ open: open ? null : id }) };
+      }
+      const def = o[1]; const confirmed = !!s.conf[insKey + id];
+      let pre = 0, missing = 0;
+      const fields = def[1].map((f) => {
+        const key = f[0]; const hasValue = !!f[2]; const ans = s.ans[key] || '';
+        const typ = f[4] || 'text';
+        if (hasValue) { if (confirmed) nConf++; else { nPre++; pre++; } }
+        else if (ans) { nConf++; } else { nLeft++; missing++; }
+        const src = SRC[f[3]];
+        return { label: f[1], value: f[2], hasValue: hasValue, src: ans && !hasValue ? 'Answered' : src[0], srcBg: ans && !hasValue ? '#E8F4EC' : src[1], srcColor: ans && !hasValue ? '#1D5F3A' : src[2],
+          isText: !hasValue && typ === 'text', isChoice: !hasValue && typ === 'choice', isUpload: !hasValue && typ === 'upload' && !ans,
+          input: ans, ph: f[5] || 'Type the answer', set: (e) => this.setState({ ans: Object.assign({}, s.ans, { [key]: e.target.value }) }),
+          opts: (typ === 'choice' ? f[5] : []).map((l) => ({ l: l, on: ans === l, bg: ans === l ? '#EEF3FB' : '#FFFFFF', border: ans === l ? accent : '#D5D9E0', pick: () => this.setState({ ans: Object.assign({}, s.ans, { [key]: l }) }) })),
+          capture: () => this.setState({ ans: Object.assign({}, s.ans, { [key]: 'Captured ✓' }) }) };
+      });
+      const done = (confirmed || pre === 0) && missing === 0;
+      secState.push({ id: id, done: done });
+      const open = s.open === id;
+      let status = done ? (id === 'i' ? 'Answered' : 'Confirmed') : (missing ? missing + ' to answer' + (pre ? ' · ' + pre + ' to confirm' : '') : pre + ' prefilled · tap to confirm');
+      return { id: id, title: def[0], isAgent: true, isCustomer: false, open: open, fields: fields, status: status,
+        statusColor: done ? '#1D5F3A' : (missing ? '#7A3E06' : '#1F5FBF'), mark: done ? '✓' : String(idx + 1), dot: done ? '#1D5F3A' : (missing ? '#B45309' : '#8FB3E8'),
+        canConfirm: !done && pre > 0, confirmLabel: missing ? 'Confirm ' + pre + ' prefilled (answer the rest above)' : 'Confirm all ' + pre + ' with customer',
+        confirm: () => { const c = Object.assign({}, s.conf, { [insKey + id]: true }); const next = secState.find((x) => !x.done && x.id !== id); this.setState({ conf: c, open: missing ? id : (next ? next.id : null) }); },
+        border: open ? accent : '#D5D9E0', headBg: open ? '#F4F7FC' : '#FFFFFF', chev: open ? '−' : '+', toggle: () => this.setState({ open: open ? null : id }) };
+    });
+    const total = nPre + nConf + nLeft;
+    const answered = nPre + nConf;
+    const nextSec = secState.find((x) => !x.done);
+    const allDone = !nextSec;
+    const biRule = isTerm && this.pget('proto.biAck') ? [['Benefit illustration acknowledged by Sunita on the quote screen ✓ (BI v[x] attached)', '#E8F4EC', '#1D5F3A']] : [];
+    const rules0 = isTerm ? [['Cover ₹70 L at income ₹12 L is within ' + insName + ' financial limits ✓', '#E8F4EC', '#1D5F3A'], ['Age 41 and cover above ₹50 L: ' + insName + ' arranges a tele-medical after submission', '#EEF3FB', '#1B1F27']]
+      : [['Members under 45 with no disclosures: no pre-policy check-up needed (Insurer C rule)', '#E8F4EC', '#1D5F3A']];
+    const routes = (insKey === 'A' ? [['api', 'Insurer A API', 'Contracted · in UAT · falls back to portal if it fails'], ['portal', 'Assisted portal entry', 'Always available']] : [['api', insName + ' API', 'Not contracted'], ['portal', 'Assisted portal entry', 'Always available']])
+      .map((r) => { const off = r[0] === 'api' && insKey !== 'A'; const on = (off ? 'portal' : s.route) === r[0]; return { l: r[1], d: r[2], off: off, mark: on ? '●' : '○', bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0', color: off ? '#8A93A3' : '#1B1F27', pick: () => this.setState({ route: r[0] }) }; });
+    const route = insKey === 'A' ? s.route : 'portal';
+    const R = {
+      subTitle: 'Sunita Sharma · ' + (isTerm ? '[Term plan] · ' + insName : '[Health floater] · Insurer C') + ' · auto-saved',
+      prod: s.prod, setProd: (e) => this.setState({ prod: e.target.value, open: null, switchNote: '' }),
+      isTerm: isTerm, ins: s.ins,
+      setIns: (e) => { const v = e.target.value; this.setState({ ins: v, open: 'i', switchNote: v === 'E' ? 'Switched to Insurer E: 39 answers reused, 3 new insurer questions below. Re-confirm the same sections only if Insurer E words them differently.' : 'Back on Insurer A: all answers kept.' }); },
+      hasSwitchNote: !!s.switchNote && isTerm, switchNote: s.switchNote,
+      answered: answered, total: total, nPre: nPre, nConf: nConf, nLeft: nLeft,
+      pPre: total ? Math.round(nPre / total * 100) : 0, pConf: total ? Math.round(nConf / total * 100) : 0,
+      eta: allDone ? 'Ready to submit' : 'About ' + Math.max(1, Math.round((nPre * 3 + nLeft * 10) / 60)) + ' min left for you',
+      sources: isTerm ? 'Customer 360 · PAN and Aadhaar scans · needs analysis · held policies · household' : 'previous Insurer C policy · Customer 360 · household · Aadhaar scan',
+      nextLabel: allDone ? 'All done' : 'Next to finish', allDone: allDone,
+      jumpNext: () => { if (nextSec) this.setState({ open: nextSec.id }); },
+      rules: biRule.concat(rules0).map((r) => ({ t: r[0], bg: r[1], color: r[2] })),
+      sections: sections,
+      custIdle: s.cust === 'idle', custWaiting: s.cust === 'waiting', custDone: s.cust === 'done',
+      custWaitText: s.custMode === 'hand' ? 'Phone handed to Sunita · she answers in Hindi or English, then confirms with OTP' : 'Secure link sent on WhatsApp · she can answer in Hindi or English',
+      custDoneText: isTerm ? 'Completed 11:02 · 0 disclosures · BMI 24.8 · non-smoker · frozen as declaration v1' : 'Completed 11:04 · 1 disclosure (Rakesh: controlled BP, on medication) · frozen as declaration v1',
+      sendCust: () => this.setState({ cust: 'waiting', custMode: 'link' }), handPhone: () => this.setState({ cust: 'waiting', custMode: 'hand' }),
+      custDoneDemo: () => this.setState({ cust: 'done' }),
+      routes: routes, insName: insName,
+      notReady: !allDone && !s.submitted, blockText: allDone ? '' : 'Finish ' + nLeft + ' answers and ' + nPre + ' confirmations first',
+      readyApi: allDone && route === 'api' && !s.submitted, readyPortal: allDone && route === 'portal' && !s.submitted, submitted: s.submitted,
+      submitApi: () => { this.pset('proto.submitted', '1'); this.setState({ submitted: true }); this.flash('Submitted with idempotency key · mapped to Insurer A form v7 field codes'); },
+      saveExit: () => this.flash('Saved · resume here or from the customer’s link · nothing sent to the insurer yet')
+    };
+    R.scrTitle = s.lang === 'hi' ? 'प्रस्ताव' : 'Proposal';
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

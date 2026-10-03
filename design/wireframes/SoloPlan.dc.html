@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Solo plan and billing</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+Devanagari:wght@400;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', 'IBM Plex Sans Devanagari', system-ui, sans-serif; overflow: hidden">
+<header style="display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; background: #FFFFFF; border-bottom: 1px solid #D5D9E0"><a href="Income.dc.html" aria-label="Back" style="width: 44px; height: 44px; flex: none; color: #1B1F27; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 16px">{{scrTitle}}</div><div style="font-size: 11px; color: #5F6776; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Solo · paid by you, never linked to premium or commission</div></div><button type="button" onClick="{{toggleLang}}" aria-label="Switch language" style="min-height: 44px; min-width: 44px; flex: none; padding: 0 8px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27">{{langBtn}}</button></header><main style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 24px">
+<div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><strong style="font-size: 16px">{{planName}}</strong><span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 10px; background: {{planBg}}; color: {{planColor}}">{{planTag}}</span></div>
+  <sc-for list="{{meters}}" as="m" hint-placeholder-count="3">
+    <div><div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px"><span>{{m.l}}</span><span>{{m.v}}</span></div><div style="height: 8px; border-radius: 4px; background: #E6E9EE; margin-top: 4px"><div style="width: {{m.p}}%; height: 8px; border-radius: 4px; background: {{m.bar}}"></div></div></div>
+  </sc-for>
+  <sc-if value="{{nearLimit}}" hint-placeholder-val="{{ true }}"><div style="padding: 12px; border-radius: 10px; background: #FFF4E5; border: 1px solid #F0C48A; color: #7A3E06; font-size: 13px; font-size: 12px">You’ve used 76% of this month’s AI actions. Drafts still work as templates when credits run out.</div></sc-if>
+</div>
+<sc-if value="{{isFree}}" hint-placeholder-val="{{ true }}">
+  <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px; border: 2px solid {{accent}}">
+    <strong style="font-size: 16px">Solo Pro</strong>
+    <div style="font-size: 13px; line-height: 1.6">Unlimited customers · more AI credits · your own microsite link · priority WhatsApp support · monthly income report</div>
+    <div style="font-size: 18px; font-weight: 600">[₹ pilot price] <span style="font-size: 12px; font-weight: 400; color: #5F6776">/ month + GST</span></div>
+    <button type="button" onClick="{{startTrial}}" style="min-height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 13px; font-weight: 600; color: #FFFFFF; min-height: 48px; font-size: 14px">Start [14]-day free trial</button>
+    <div style="font-size: 12px; color: #5F6776">No payment method needed until the trial ends.</div>
+  </div>
+</sc-if>
+<sc-if value="{{isTrial}}" hint-placeholder-val="{{ false }}">
+  <div style="padding: 12px; border-radius: 10px; background: #E8F4EC; border: 1px solid #B7D9C3; color: #1D5F3A; font-size: 13px; display: flex; flex-direction: column; gap: 8px"><strong>Pro trial active · ends [date]</strong><span style="font-size: 12px">Add a payment method to continue after the trial. You can cancel any time.</span></div>
+  <button type="button" onClick="{{addPay}}" style="min-height: 44px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; color: #1B1F27">{{payLabel}}</button>
+</sc-if>
+<div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+  <h2 style="margin: 0; font-size: 15px; font-weight: 600">Invoices</h2>
+  <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #4A5262">GSTIN (optional, for input credit)<input value="{{gst}}" onChange="{{setGst}}" placeholder="27XXXXX1234X1Z5" style="min-height: 44px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; background: #FFFFFF; color: #1B1F27; box-sizing: border-box; width: 100%"></label>
+  <div style="font-size: 12px; color: #5F6776">{{invoiceNote}}</div>
+</div>
+<a href="Income.dc.html" style="min-height: 44px; padding: 0 12px; box-sizing: border-box; border: 1px solid #D5D9E0; border-radius: 8px; background: #FFFFFF; font-size: 13px; color: #1B1F27; text-decoration: none; display: flex; align-items: center; justify-content: center">Back to Me</a>
+</main>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}"><div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 84px; z-index: 5; padding: 12px 14px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div></sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({ toast: '', lang: this.loadLang() }, { plan: 'free', pay: false, gst: '' });
+  }
+  pget(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  pset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  loadLang() { try { return window.localStorage.getItem('ui-lang') || 'en'; } catch (e) { return 'en'; } }
+  langVals() {
+    const hi = this.state.lang === 'hi';
+    return {
+      langBtn: hi ? 'हि · EN' : 'EN · हि',
+      toggleLang: () => { const v = hi ? 'en' : 'hi'; try { window.localStorage.setItem('ui-lang', v); } catch (e) {} this.setState({ lang: v }); },
+      navL: hi ? { today: 'आज', leads: 'लीड', cust: 'ग्राहक', book: 'बुक', me: 'मैं' } : { today: 'Today', leads: 'Leads', cust: 'Customers', book: 'Book', me: 'Me' }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._p); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  tog(k) { return () => this.setState({ [k]: !this.state[k] }); }
+  tabs(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#FFFFFF' : 'transparent', weight: on ? '600' : '400',
+        line: on ? accent : 'transparent', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  chips(defs, key) {
+    const accent = this.props.accent ?? '#1F5FBF';
+    return defs.map((d) => {
+      const on = this.state[key] === d[0];
+      return { id: d[0], label: d[1], on: on, bg: on ? '#EEF3FB' : '#FFFFFF', border: on ? accent : '#D5D9E0',
+        weight: on ? '600' : '400', pick: () => this.setState({ [key]: d[0] }) };
+    });
+  }
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accent ?? '#1F5FBF';
+    const inr = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    const trial = s.plan === 'trial';
+    const R = {
+      planName: trial ? 'Solo Pro (trial)' : 'Solo Free', planTag: trial ? 'Trial' : 'Current plan', planBg: trial ? '#EEF3FB' : '#E6E9EE', planColor: '#1B1F27',
+      meters: (trial ? [['Customers', '142 · unlimited', 14], ['AI actions this month', '38 / 500', 8], ['WhatsApp click-to-chat', 'Unlimited', 100]] : [['Customers', '142 / 200', 71], ['AI actions this month', '38 / 50', 76], ['WhatsApp click-to-chat', 'Unlimited', 100]])
+        .map((m) => ({ l: m[0], v: m[1], p: m[2], bar: m[2] >= 75 && m[2] < 100 ? '#B45309' : accent })),
+      nearLimit: !trial, isFree: !trial, isTrial: trial,
+      startTrial: () => { this.setState({ plan: 'trial' }); this.flash('Pro trial started · limits lifted'); },
+      payLabel: s.pay ? 'UPI autopay set up via billing provider ✓' : 'Add payment method (UPI, card)', addPay: () => this.setState({ pay: true }),
+      gst: s.gst, setGst: this.set('gst'),
+      invoiceNote: trial ? 'Your first GST invoice is issued by the billing provider when the trial converts.' : 'No invoices on the free plan.'
+    };
+    R.scrTitle = s.lang === 'hi' ? 'प्लान और बिलिंग' : 'Plan & billing';
+    return Object.assign({ accent: accent, toast: s.toast, hasToast: !!s.toast }, this.langVals(), R);
+  }
+}
+</script>
+</body>
+</html>

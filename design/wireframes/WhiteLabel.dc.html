@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>White-label tenant settings</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Mukta:wght@400;600&amp;family=Noto+Sans:wght@400;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F5FBF}a:hover{color:#163F7F}
+</style>
+</helmet>
+<div style="position: relative; min-height: 1250px; display: flex; flex-wrap: wrap; background: #F4F5F7; color: #1B1F27; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+  <nav aria-label="Console" style="flex: 1 1 240px; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #D5D9E0; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 12px"><div style="width: 32px; height: 32px; border: 1.5px dashed #8A93A3; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #5F6776">LOGO</div><div><div style="font-weight: 600; font-size: 14px">[IMF tenant name]</div><div style="font-size: 11px; color: #5F6776">Business plan · Principal Officer view</div></div></div>
+<a href="LeadsPipeline.dc.html" style="margin: 0 4px 6px; min-height: 40px; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 8px; font-size: 13px; color: #5F6776; text-decoration: none">Search customers, policies, ISPs</a>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CRM<span style="font-weight: 400">8</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CRMLeads.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Leads</a>
+<a href="CRMPipeline.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Opportunities</a>
+<a href="CRMCustomers.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Customers &amp; households</a>
+<a href="CRMTasks.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tasks &amp; activities</a>
+<a href="CRMCampaigns.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Campaigns &amp; segments</a>
+<a href="CRMAssignment.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Routing rules</a>
+<a href="CRMImportDedup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Import &amp; duplicates</a>
+<a href="PortalFillSheet.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal desk</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">NETWORK<span style="font-weight: 400">4</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ManagerConsole.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Dashboard</a>
+<a href="OnboardingHierarchy.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Onboarding &amp; hierarchy</a>
+<a href="ProductDrives.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Product drives &amp; contests</a>
+<a href="ReportsLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Reports</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTENT<span style="font-weight: 400">2</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="CampaignPublish.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Landing pages</a>
+<a href="ContentLibrary.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Content library</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">CONTROL<span style="font-weight: 400">3</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="ComplianceCentre.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Compliance centre</a>
+<a href="CommissionSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Commission</a>
+<a href="AIControls.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">AI controls</a>
+</div></details>
+<details open style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">SETUP<span style="font-weight: 400">6</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="TenantSetup.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenant &amp; catalogue</a>
+<a href="UsersRoles.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Users &amp; roles</a>
+<a href="Configuration.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Configuration</a>
+<a href="FormTemplates.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Proposal forms</a>
+<a href="Integrations.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Integrations</a>
+<a href="WhiteLabel.dc.html" aria-current="page" style="padding: 9px 12px; border-radius: 8px; background: #EEF3FB; color: {{accent}}; font-weight: 600; font-size: 14px; text-decoration: none">Brand &amp; white-label</a>
+</div></details>
+<details style="margin-top: 6px"><summary style="list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 32px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #5F6776">PLATFORM OPERATOR<span style="font-weight: 400">1</span></summary><div style="display: flex; flex-direction: column; gap: 2px">
+<a href="OperatorTenants.dc.html" style="padding: 9px 12px; border-radius: 8px; color: #1B1F27; font-size: 14px; text-decoration: none">Tenants &amp; plans</a>
+</div></details>
+<a href="Start.dc.html" style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #1B1F27; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none">⌂ Prototype map</a>
+<a href="Main.dc.html" style="margin-top: 6px; padding: 10px 12px; border: 1px dashed #8A93A3; border-radius: 8px; color: #1B1F27; font-size: 13px; text-decoration: none">Open agent app</a>
+</nav>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 20px; max-width: 1240px">
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+      <h1 style="margin: 0; flex: 1 1 260px; font-size: 24px; font-weight: 600">White-label settings</h1>
+      <span style="font-size: 12px; padding: 4px 10px; border-radius: 12px; border: 1px solid #D5D9E0; color: #4A5262">White-label plan · pooled tenancy</span>
+      <button type="button" onClick="{{save}}" style="min-height: 44px; padding: 0 18px; border: 0; border-radius: 8px; background: {{accent}}; font: inherit; font-size: 14px; font-weight: 600; color: #FFFFFF">{{saveLabel}}</button>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+      <section id="brand" style="flex: 2 1 420px; min-width: 0; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+        <h2 style="margin: 0; font-size: 15px; font-weight: 600">Brand kit</h2>
+        <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px">Brand name<input value="{{brandName}}" onChange="{{setBrand}}" style="min-height: 42px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px"></label>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span style="font-size: 12px">Quick presets</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{presets}}" as="pr" hint-placeholder-count="3">
+              <button type="button" onClick="{{pr.pick}}" style="display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; border: 1px solid #D5D9E0; border-radius: 20px; background: #FFFFFF; font: inherit; font-size: 12px; color: #1B1F27"><span style="width: 14px; height: 14px; border-radius: 7px; background: {{pr.p}}"></span><span style="width: 14px; height: 14px; border-radius: 7px; background: {{pr.s}}"></span>{{pr.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+          <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px">Primary<span style="display: flex; gap: 6px; align-items: center"><input type="color" value="{{primary}}" onChange="{{setPrimaryPicker}}" aria-label="Pick primary colour" style="width: 40px; height: 36px; padding: 0; border: 1px solid #D5D9E0; border-radius: 6px; background: #FFFFFF"><input value="{{primaryText}}" onChange="{{setPrimary}}" aria-label="Primary hex" style="min-width: 0; flex: 1; min-height: 36px; border: 1px solid #D5D9E0; border-radius: 6px; padding: 0 6px; font-family: 'IBM Plex Mono', monospace; font-size: 12px"></span></label>
+          <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px">Secondary<span style="display: flex; gap: 6px; align-items: center"><input type="color" value="{{secondary}}" onChange="{{setSecondaryPicker}}" aria-label="Pick secondary colour" style="width: 40px; height: 36px; padding: 0; border: 1px solid #D5D9E0; border-radius: 6px; background: #FFFFFF"><input value="{{secondaryText}}" onChange="{{setSecondary}}" aria-label="Secondary hex" style="min-width: 0; flex: 1; min-height: 36px; border: 1px solid #D5D9E0; border-radius: 6px; padding: 0 6px; font-family: 'IBM Plex Mono', monospace; font-size: 12px"></span></label>
+        </div>
+        <sc-if value="{{contrastWarn}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: #9A4A06; font-weight: 600">Primary is too light for white button text. Choose a darker shade to keep 4.5:1 contrast.</div></sc-if>
+        <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px">
+          <legend style="font-size: 12px; margin-bottom: 6px">Typeface (approved, Indic-ready set)</legend>
+          <sc-for list="{{faces}}" as="fc" hint-placeholder-count="3">
+            <label style="display: flex; gap: 8px; align-items: center; font-size: 14px; min-height: 36px; font-family: {{fc.stack}}"><input type="radio" name="tf" checked="{{fc.on}}" onChange="{{fc.pick}}"> {{fc.label}} · नमस्ते</label>
+          </sc-for>
+        </fieldset>
+        <label style="display: flex; gap: 10px; align-items: center; font-size: 13px"><input type="checkbox" checked="{{hidePowered}}" onChange="{{togglePowered}}" style="width: 18px; height: 18px"> Hide “Powered by [Platform]” badge</label>
+        <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px">Custom domain<input value="{{domain}}" onChange="{{setDomain}}" style="min-height: 42px; border: 1px solid #D5D9E0; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px"></label>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px">
+          <span style="padding: 4px 10px; border-radius: 12px; background: #E8F4EC; color: #1D5F3A">DNS verified</span>
+          <span style="padding: 4px 10px; border-radius: 12px; background: #E8F4EC; color: #1D5F3A">Managed TLS active</span>
+          <span style="padding: 4px 10px; border-radius: 12px; background: #E8F4EC; color: #1D5F3A">Branded PWA live</span>
+          <span style="padding: 4px 10px; border-radius: 12px; background: #E6E9EE; color: #4A5262">Store app wrapper · later</span>
+        </div>
+      </section>
+      <section aria-label="Live preview" style="flex: 1 1 300px; background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 12px; align-items: center">
+        <h2 style="margin: 0; align-self: flex-start; font-size: 15px; font-weight: 600">Live preview · agent app</h2>
+        <div style="width: 240px; height: 460px; border: 8px solid #1B1F27; border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; background: #F4F5F7; font-family: {{faceStack}}">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 12px; background: {{primarySafe}}; color: #FFFFFF">
+            <span style="width: 24px; height: 24px; border-radius: 6px; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600">{{initial}}</span>
+            <span style="font-weight: 600; font-size: 14px">{{brandName}}</span>
+          </div>
+          <div style="flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 8px; color: #1B1F27">
+            <div style="font-size: 11px; color: #5F6776">Saturday, 3 October</div>
+            <div style="font-size: 16px; font-weight: 600">Good morning, Ravi</div>
+            <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 8px; padding: 8px; font-size: 11px"><strong>Sunita Sharma</strong> · ₹24,500<br><span style="color: #9A4A06">Grace ends in 3 days</span></div>
+            <div style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 8px; padding: 8px; font-size: 11px"><strong>Arjun Mehta</strong> · ₹18,200<br><span style="color: #5F6776">Renews 9 Oct</span></div>
+            <div style="padding: 9px; border-radius: 8px; background: {{primarySafe}}; color: #FFFFFF; text-align: center; font-size: 12px; font-weight: 600">Renewal quote</div>
+            <span style="align-self: flex-start; padding: 3px 8px; border-radius: 10px; background: {{secondarySafe}}; color: #FFFFFF; font-size: 10px; font-weight: 600">Diwali campaign</span>
+          </div>
+          <div style="padding: 8px; text-align: center; font-size: 10px; color: #5F6776; border-top: 1px solid #D5D9E0">{{domain}}</div>
+          <sc-if value="{{showPowered}}" hint-placeholder-val="{{ true }}"><div style="padding: 0 0 8px; text-align: center; font-size: 9px; color: #5F6776">Powered by [Platform]</div></sc-if>
+        </div>
+      </section>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px">
+      <section id="senders" style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-size: 15px; font-weight: 600">Sender identities</h2>
+        <div style="font-size: 12px; color: #4A5262">Registered by the client legal entity. The platform stores references and enforces approved templates.</div>
+        <div style="display: flex; flex-direction: column; border: 1px solid #E6E9EE; border-radius: 8px">
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #E6E9EE; font-size: 13px"><span>Email · mail.[clientdomain].in</span><span style="color: #1D5F3A; font-weight: 600">Verified</span></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; align-items: center; padding: 6px 12px; border-bottom: 1px solid #E6E9EE; font-size: 13px"><span>SMS DLT header · [HEADER]</span><sc-if value="{{dltPending}}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{markDlt}}" style="min-height: 34px; padding: 0 10px; border: 1px solid #F0C48A; border-radius: 6px; background: #FFF4E5; font: inherit; font-size: 12px; font-weight: 600; color: #7A3E06">Pending · mark registered</button></sc-if><sc-if value="{{dltDone}}" hint-placeholder-val="{{ false }}"><span style="color: #1D5F3A; font-weight: 600">Registered by client</span></sc-if></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; padding: 10px 12px; font-size: 13px"><span>WhatsApp Business · +91 [number]</span><span style="color: #1D5F3A; font-weight: 600">6 templates approved</span></div>
+        </div>
+      </section>
+      <section id="legal" style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-size: 15px; font-weight: 600">Legal and disclosures</h2>
+        <div style="display: flex; flex-direction: column; border: 1px solid #E6E9EE; border-radius: 8px">
+          <div style="display: flex; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #E6E9EE; font-size: 13px"><span>Privacy notice</span><span style="color: #4A5262">v1.2</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #E6E9EE; font-size: 13px"><span>Terms of use</span><span style="color: #4A5262">v1.0</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #E6E9EE; font-size: 13px"><span>Grievance officer contact</span><span style="color: #4A5262">Set</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #E6E9EE; font-size: 13px"><span>IRDAI registration no. and validity</span><span style="color: #4A5262">Set</span></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; font-size: 13px"><span>Data processing agreement</span><sc-if value="{{dpaPending}}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{signDpa}}" style="min-height: 34px; padding: 0 10px; border: 1px solid #F0C48A; border-radius: 6px; background: #FFF4E5; font: inherit; font-size: 12px; font-weight: 600; color: #7A3E06">Awaiting · mark signed</button></sc-if><sc-if value="{{dpaDone}}" hint-placeholder-val="{{ false }}"><span style="color: #1D5F3A; font-weight: 600">Signed</span></sc-if></div>
+        </div>
+      </section>
+    </div>
+    <section id="usage" style="background: #FFFFFF; border: 1px solid #D5D9E0; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 600">Usage this month</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px">
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>AI credits</span><span>6,200 / 10,000</span></div><div style="height: 8px; background: #E6E9EE; border-radius: 4px"><div style="width: 62%; height: 8px; background: {{accent}}; border-radius: 4px"></div></div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>WhatsApp / SMS credits</span><span>18,400 / 25,000</span></div><div style="height: 8px; background: #E6E9EE; border-radius: 4px"><div style="width: 74%; height: 8px; background: {{accent}}; border-radius: 4px"></div></div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Active seats</span><span>182 / 200</span></div><div style="height: 8px; background: #E6E9EE; border-radius: 4px"><div style="width: 91%; height: 8px; background: #B45309; border-radius: 4px"></div></div></div>
+      </div>
+      <div style="font-size: 12px; color: #4A5262">Alert at 90% of any limit · overage metered per plan</div>
+    </section>
+  </main>
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="position: fixed; right: 24px; bottom: 24px; max-width: 360px; padding: 12px 16px; border-radius: 10px; background: #1B1F27; color: #FFFFFF; font-size: 13px">{{toast}}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F5FBF","options":["#1F5FBF","#0F766E","#6D28D9","#B45309"]},"$preview":{"width":1440,"height":1250}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { brandName: '[Client brand]', primary: '#0B4F8A', secondary: '#C2410C', face: 0, hidePowered: false, domain: 'insure.[clientdomain].in', dlt: false, dpa: false, saved: false, toast: '' };
+  }
+  componentWillUnmount() { clearTimeout(this._t); }
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+  renderVals() {
+    const s = this.state;
+    const isHex = (v) => /^#[0-9a-fA-F]{6}$/.test(v);
+    const lum = (hex) => {
+      const c = [1, 3, 5].map((i) => parseInt(hex.substr(i, 2), 16) / 255).map((v) => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+      return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    };
+    const primarySafe = isHex(s.primary) ? s.primary : '#0B4F8A';
+    const secondarySafe = isHex(s.secondary) ? s.secondary : '#C2410C';
+    const contrast = 1.05 / (lum(primarySafe) + 0.05);
+    const faceDefs = [['IBM Plex Sans', "'IBM Plex Sans', system-ui, sans-serif"], ['Noto Sans', "'Noto Sans', system-ui, sans-serif"], ['Mukta', "'Mukta', system-ui, sans-serif"]];
+    const presetDefs = [['Navy · saffron', '#0B4F8A', '#C2410C'], ['Teal · amber', '#0F5E5A', '#B45309'], ['Plum · gold', '#5B2A6E', '#A16207']];
+    const dirty = () => ({ saved: false });
+    return {
+      accent: this.props.accent ?? '#1F5FBF',
+      brandName: s.brandName, initial: (s.brandName.replace(/[^A-Za-z]/g, '').charAt(0) || 'B').toUpperCase(),
+      setBrand: (e) => this.setState(Object.assign({ brandName: e.target.value }, dirty())),
+      presets: presetDefs.map((p) => ({ label: p[0], p: p[1], s: p[2], pick: () => this.setState(Object.assign({ primary: p[1], secondary: p[2] }, dirty())) })),
+      primary: primarySafe, primaryText: s.primary, secondary: secondarySafe, secondaryText: s.secondary,
+      setPrimary: (e) => this.setState(Object.assign({ primary: e.target.value }, dirty())),
+      setSecondary: (e) => this.setState(Object.assign({ secondary: e.target.value }, dirty())),
+      setPrimaryPicker: (e) => this.setState(Object.assign({ primary: e.target.value }, dirty())),
+      setSecondaryPicker: (e) => this.setState(Object.assign({ secondary: e.target.value }, dirty())),
+      primarySafe: primarySafe, secondarySafe: secondarySafe,
+      contrastWarn: contrast < 4.5,
+      faces: faceDefs.map((f, i) => ({ label: f[0], stack: f[1], on: s.face === i, pick: () => this.setState(Object.assign({ face: i }, dirty())) })),
+      faceStack: faceDefs[s.face][1],
+      hidePowered: s.hidePowered, showPowered: !s.hidePowered,
+      togglePowered: () => this.setState(Object.assign({ hidePowered: !s.hidePowered }, dirty())),
+      domain: s.domain, setDomain: (e) => this.setState(Object.assign({ domain: e.target.value }, dirty())),
+      dltPending: !s.dlt, dltDone: s.dlt, markDlt: () => { this.setState({ dlt: true }); this.flash('SMS header reference stored · templates can now be enforced'); },
+      dpaPending: !s.dpa, dpaDone: s.dpa, signDpa: () => { this.setState({ dpa: true }); this.flash('DPA recorded · distributor as data fiduciary, platform as processor'); },
+      saveLabel: s.saved ? 'Saved ✓' : 'Save changes',
+      save: () => { this.setState({ saved: true }); this.flash('Saved · ' + s.brandName + ' brand applied to app, portal, PDFs and share cards'); },
+      toast: s.toast, hasToast: !!s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>
