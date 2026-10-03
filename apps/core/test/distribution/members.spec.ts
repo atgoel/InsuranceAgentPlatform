@@ -387,44 +387,46 @@ describe('Members endpoints (AC-M02-02, 04, 05, 06, 07, 12, 13)', () => {
   });
 
   describe('GET /members (list)', () => {
-    it('lists members with scope filtering (UNIT_SUBTREE for BRANCH_MANAGER)', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['TENANT_ADMIN'],
-        orgUnitId: 'ou_root',
-      });
+    it('AC-M02-10 scopes the list: a branch manager sees only their branch subtree, admins see all, salespeople are refused', async () => {
+      const admin = tokenFor({ tenantId: 'ten_acme', roles: ['TENANT_ADMIN'] });
+      const send = (path: string, body: object) =>
+        testApp.http.post(path).set('Idempotency-Key', newIdempotencyKey()).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${admin}`).send(body);
+      const branch = async (name: string) => {
+        const res = await send('/api/v1/org-units', { parentId: 'ou_root', kind: 'BRANCH', name });
+        expect(res.status).toBe(201);
+        return res.body.id as string;
+      };
+      const pune = await branch('Pune');
+      const nagpur = await branch('Nagpur');
+      const team = await send('/api/v1/org-units', { parentId: pune, kind: 'TEAM', name: 'Pune Team 1' });
+      expect(team.status).toBe(201);
+      const invite = async (displayName: string, phone: string, orgUnitId: string) => {
+        const res = await send('/api/v1/members', { displayName, phone, roles: ['OPS'], orgUnitId });
+        expect(res.status).toBe(201);
+        return res.body.id as string;
+      };
+      const inPune = await invite('Pune Ops', '+919876506001', pune);
+      const inTeam = await invite('Team Ops', '+919876506002', team.body.id);
+      const inNagpur = await invite('Nagpur Ops', '+919876506003', nagpur);
+      const list = (token: string, query = '') =>
+        testApp.http.get(`/api/v1/members?limit=100${query}`).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${token}`);
 
-      const response = await testApp.http
-        .get('/api/v1/members?limit=10')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`);
+      const manager = tokenFor({ tenantId: 'ten_acme', roles: ['BRANCH_MANAGER'], memberId: 'mem_mgr', orgUnitId: pune });
+      const scoped = await list(manager);
+      expect(scoped.status).toBe(200);
+      expect(scoped.body.items.map((m: { id: string }) => m.id).sort()).toEqual([inPune, inTeam].sort());
+      expect((await testApp.http.get(`/api/v1/members/${inNagpur}`).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${manager}`)).status).toBe(404);
 
-      expect(response.status).toBe(200);
-      expect(response.body.items).toBeDefined();
-      expect(Array.isArray(response.body.items)).toBe(true);
-      response.body.items.forEach((m: Record<string, unknown>) => {
-        expect(m.id).toBeDefined();
-        expect(m.phone).toBeUndefined();
-        expect(m.email).toBeUndefined();
-      });
-    });
+      const all = await list(admin);
+      expect(all.body.items.map((m: { id: string }) => m.id).sort()).toEqual([inPune, inTeam, inNagpur].sort());
+      for (const m of all.body.items) {
+        expect(m).not.toHaveProperty('phone');
+        expect(JSON.stringify(m)).not.toMatch(/987650600\d/);
+      }
 
-    it('filters by status', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['TENANT_ADMIN'],
-      });
-
-      const response = await testApp.http
-        .get('/api/v1/members?status=invited&limit=10')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.body.items)).toBe(true);
-      response.body.items.forEach((m: Record<string, unknown>) => {
-        expect(m.status).toBe('invited');
-      });
+      expect((await list(admin, '&status=invited')).body.items).toHaveLength(3);
+      expect((await list(admin, '&status=active')).body.items).toHaveLength(0);
+      expect((await list(tokenFor({ tenantId: 'ten_acme', roles: ['SALESPERSON'], memberId: 'mem_s' }))).status).toBe(403);
     });
 
     it('filters by role', async () => {

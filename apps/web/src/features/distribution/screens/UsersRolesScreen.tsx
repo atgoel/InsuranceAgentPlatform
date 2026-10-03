@@ -36,24 +36,18 @@ export function UsersRolesScreen() {
   const [saving, setSaving] = useState(false);
   const [inviting, setInviting] = useState(false);
 
-  // Load data on mount
-  useEffect(() => {
-    membersHook.loadMembers({ limit: 1000 }).catch(() => {
-      // Error handled in hook state
-    });
-    rolesHook.loadRoles().catch(() => {
-      // Error handled in hook state
-    });
-  }, [membersHook, rolesHook]);
+  // Depend on the hooks' stable callbacks, not the hook objects (new every render → refetch loop).
+  const { loadMembers } = membersHook;
+  const { loadRoles, loadRolePreview } = rolesHook;
 
-  // Load role preview when editing
   useEffect(() => {
-    if (editingRole) {
-      rolesHook.loadRolePreview(editingRole.role).catch(() => {
-        // Preview is optional
-      });
-    }
-  }, [editingRole, rolesHook]);
+    loadMembers({ limit: 100 }).catch(() => undefined); // errors surface through hook state
+    loadRoles().catch(() => undefined);
+  }, [loadMembers, loadRoles]);
+
+  useEffect(() => {
+    if (editingRole) loadRolePreview(editingRole.role).catch(() => undefined); // preview is optional
+  }, [editingRole, loadRolePreview]);
 
   const filteredMembers = membersHook.members.filter((m) => {
     if (statusFilters.length > 0 && !statusFilters.includes(m.status)) return false;

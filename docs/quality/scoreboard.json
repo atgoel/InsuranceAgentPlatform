@@ -1,13 +1,49 @@
 {
   "M01": {
     "name": "Tenant & Entitlements",
-    "total": 72.3,
-    "coverage": 28.8,
-    "lint": 4.5,
-    "types": 0,
+    "total": 88.4,
+    "coverage": 28.9,
+    "lint": 10.5,
+    "types": 10,
     "trace": 15,
     "review": 24,
-    "covAvg": 74,
+    "covAvg": 74.4,
+    "allPass": true,
+    "date": "2026-10-03"
+  },
+  "M00": {
+    "name": "Kernel, observability & web shell",
+    "total": 87,
+    "coverage": 31.5,
+    "lint": 13.5,
+    "types": 10,
+    "trace": 15,
+    "review": 17,
+    "covAvg": 80.9,
+    "allPass": true,
+    "date": "2026-10-03"
+  },
+  "M02": {
+    "name": "Distribution Network",
+    "total": 87.8,
+    "coverage": 24.8,
+    "lint": 14,
+    "types": 10,
+    "trace": 15,
+    "review": 24,
+    "covAvg": 63.9,
+    "allPass": true,
+    "date": "2026-10-03"
+  },
+  "M03": {
+    "name": "Party & Consent",
+    "total": 94.2,
+    "coverage": 33,
+    "lint": 15,
+    "types": 10,
+    "trace": 15,
+    "review": 21.3,
+    "covAvg": 84.8,
     "allPass": true,
     "date": "2026-10-03"
   }

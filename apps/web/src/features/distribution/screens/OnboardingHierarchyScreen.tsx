@@ -43,7 +43,7 @@ export function OnboardingHierarchyScreen() {
     const calculateStats = async () => {
       try {
         const distributionApi = createDistributionApi(api);
-        const response = await distributionApi.listMembers({ limit: 1000 });
+        const response = await distributionApi.listMembers({ limit: 100 });
         const counts: StageStats = { invited: 0, onboarding: 0, active: 0, suspended: 0 };
         response.items.forEach((member) => {
           counts[member.status as keyof StageStats]++;
