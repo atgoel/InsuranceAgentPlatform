@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ValidationError } from '../../../kernel/errors/domain-errors';
 import { Principal } from '../../../kernel/tenancy/principal';
-import { Lead, lineOfBusiness } from '../domain/lead';
+import { Lead, ProductLine, lineOfBusiness } from '../domain/lead';
 import { CRM_EVENTS } from '../domain/events';
 import { LeadRoutingFacts, RoutingRule } from '../domain/routing/routing-rule';
 import { RoutingCandidate, RoutingDecision, RoutingEngine } from '../domain/routing/routing-engine';
@@ -11,6 +11,8 @@ import {
   SellerDirectory, Transaction,
 } from './ports';
 import { CrmContext } from './crm-context';
+import { POS_CATALOGUE_READER, PosCatalogueReader } from '../../catalogue/application/ports';
+import { Product } from '../../catalogue/domain/catalogue';
 import { istDayStart } from './crm-scope';
 
 const MAX_RULES = 50;
@@ -41,10 +43,10 @@ export class RoutingService {
     private readonly ctx: CrmContext,
   ) {}
 
-  factsFor(lead: Lead): LeadRoutingFacts {
+  async factsFor(lead: Lead): Promise<LeadRoutingFacts> {
     const p = lead.props;
     return {
-      productInterest: p.productInterest, line: lineOfBusiness(p.productInterest), posEligibleProduct: this.pos.isPosEligible(p.productInterest),
+      productInterest: p.productInterest, line: lineOfBusiness(p.productInterest), posEligibleProduct: await this.pos.isPosEligible(p.productInterest),
       source: p.attribution.source, pincode: p.pincode, campaignId: p.attribution.campaignId, language: p.language,
       micrositeMemberId: p.attribution.micrositeMemberId,
     };
@@ -55,10 +57,11 @@ export class RoutingService {
     const at = this.ctx.clock.now();
     if (opts.solo) return this.soloDecision(tx, at);
     const rules = await this.rules.list(tx);
+    const facts = await this.factsFor(lead);
     const decision = await this.engine.route({
       rules,
-      facts: this.factsFor(lead),
-      candidatesFor: async (rule) => (await this.candidates(tx, rule, this.factsFor(lead), at)).filter((c) => c.memberId !== opts.exclude),
+      facts,
+      candidatesFor: async (rule) => (await this.candidates(tx, rule, facts, at)).filter((c) => c.memberId !== opts.exclude),
       cursorFor: (ruleId) => this.rules.cursor(tx, ruleId),
     });
     if (decision.ruleId && decision.memberId) await this.rules.setCursor(tx, decision.ruleId, decision.memberId);
@@ -89,7 +92,7 @@ export class RoutingService {
   simulate(principal: Principal, facts: Omit<LeadRoutingFacts, 'line' | 'posEligibleProduct'>): Promise<RoutingDecision & { memberName?: string }> {
     return this.ctx.uow.run(principal.tenantId, async (tx) => {
       const at = this.ctx.clock.now();
-      const full: LeadRoutingFacts = { ...facts, line: lineOfBusiness(facts.productInterest), posEligibleProduct: this.pos.isPosEligible(facts.productInterest) };
+      const full: LeadRoutingFacts = { ...facts, line: lineOfBusiness(facts.productInterest), posEligibleProduct: await this.pos.isPosEligible(facts.productInterest) };
       const names = new Map<string, string>();
       const decision = await this.engine.route({
         rules: await this.rules.list(tx),
@@ -145,11 +148,22 @@ function assertValidRules(rules: RoutingRule[]): void {
   if (new Set(rules.map((r) => r.id)).size !== rules.length) throw new ValidationError('duplicate_rule_id', 'Rule ids must be unique');
 }
 
-/** Default POS eligibility until M05: simple, IRDAI POS-type lines (term, health indemnity, motor). */
-export class DefaultPosEligibility {
-  private static readonly POS_LINES = new Set(['TERM_LIFE', 'HEALTH', 'HEALTH_FLOATER', 'MOTOR']);
+/** CRM product interest → M05 catalogue categories. */
+const CATEGORIES: Record<ProductLine, ReadonlyArray<Product['category']>> = {
+  TERM_LIFE: ['TERM'], SAVINGS_LIFE: ['SAVINGS', 'ULIP'], CHILD: ['CHILD'], RETIREMENT: ['PENSION'],
+  HEALTH: ['HEALTH_INDIVIDUAL', 'STANDARD_HEALTH'], HEALTH_FLOATER: ['HEALTH_FLOATER'], MOTOR: ['MOTOR'], OTHER: [],
+};
 
-  isPosEligible(product: string): boolean {
-    return DefaultPosEligibility.POS_LINES.has(product);
+/** POSPs may take a lead when the catalogue has an active POS-eligible version in the interest's categories (M05 flags). */
+@Injectable()
+export class CataloguePosEligibility implements PosEligibilityPolicy {
+  constructor(
+    @Inject(POS_CATALOGUE_READER) private readonly catalogue: PosCatalogueReader,
+    private readonly ctx: CrmContext,
+  ) {}
+
+  async isPosEligible(product: ProductLine): Promise<boolean> {
+    const eligible = await this.catalogue.posEligibleCategories(this.ctx.clock.now().toISOString().slice(0, 10));
+    return CATEGORIES[product].some((c) => eligible.has(c));
   }
 }

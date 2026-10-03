@@ -258,8 +258,10 @@ import { MetricsRegistry } from '../../src/kernel/observability/metrics';
           await outbox.add(tx, event);
         });
 
-        // Fetch unpublished events
-        const unpublished = await outbox.fetchUnpublished(10);
+        // Other suites share this database and leave unpublished rows, so look the event up by id rather than via the first page.
+        const stored = await migrationPool.query<{ type: string; published_at: Date | null }>('select type, published_at from outbox_event where id = $1', [event.id]);
+        expect(stored.rows).toEqual([{ type: 'test.event.created', published_at: null }]);
+        const unpublished = await outbox.fetchUnpublished(100_000);
         expect(unpublished.some((e) => e.id === event.id)).toBe(true);
       });
     });

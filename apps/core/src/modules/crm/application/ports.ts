@@ -118,8 +118,9 @@ export interface CrmPort {
 }
 
 /** Whether a product may be sold by a POSP. M05's catalogue replaces the default with the product flag. */
+/** Whether a POSP may handle leads for this product interest (backed by M05 version flags). */
 export interface PosEligibilityPolicy {
-  isPosEligible(product: ProductLine): boolean;
+  isPosEligible(product: ProductLine): Promise<boolean>;
 }
 
 export const POS_ELIGIBILITY = Symbol('PosEligibilityPolicy');

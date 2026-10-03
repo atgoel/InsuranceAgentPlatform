@@ -32,6 +32,12 @@ export interface ComparisonScopeFacade {
   assertInScope(tx: Transaction, principal: Principal, versionId: string, date: string): Promise<void>;
 }
 
+/** Published for M04 routing: product categories that have at least one active, effective POS-eligible version. */
+export interface PosCatalogueReader {
+  posEligibleCategories(date: string): Promise<ReadonlySet<Product['category']>>;
+}
+
+export const POS_CATALOGUE_READER = Symbol('PosCatalogueReader');
 export const CATALOGUE_REPOSITORY = Symbol('CatalogueRepository');
 export const SCOPE_INPUTS_PROVIDER = Symbol('ScopeInputsProvider');
 export const COMPARISON_SCOPE_FACADE = Symbol('ComparisonScopeFacade');

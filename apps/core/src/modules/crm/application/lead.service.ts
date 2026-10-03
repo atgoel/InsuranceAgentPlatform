@@ -129,7 +129,7 @@ export class LeadService {
   private async assignOne(tx: Transaction, lead: Lead, memberId: string, principal: Principal): Promise<string | undefined> {
     if (['CONVERTED', 'LOST'].includes(lead.props.stage)) return 'Lead is closed';
     const product = lead.props.productInterest;
-    const eligible = await this.d.sellers.eligibleSellers(tx, { line: lineOfBusiness(product), posEligibleProduct: this.d.pos.isPosEligible(product), at: this.ctx.clock.now() });
+    const eligible = await this.d.sellers.eligibleSellers(tx, { line: lineOfBusiness(product), posEligibleProduct: await this.d.pos.isPosEligible(product), at: this.ctx.clock.now() });
     const seller = eligible.find((s) => s.memberId === memberId);
     if (!seller) return 'Ineligible: licence or product scope';
     await this.assignment.assign(tx, lead, await this.d.ports.forTenant(tx.tenantId), { memberId, orgUnitId: seller.orgUnitId, by: actor(principal) });

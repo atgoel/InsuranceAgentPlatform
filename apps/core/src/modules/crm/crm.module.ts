@@ -6,6 +6,7 @@ import { RolePermissionMatrix } from '../../kernel/tenancy/permissions';
 import { TenancyModule } from '../tenancy/tenancy.module';
 import { DistributionModule } from '../distribution/distribution.module';
 import { PartyModule } from '../party/party.module';
+import { CatalogueModule } from '../catalogue/catalogue.module';
 import { StageRuleSet } from './domain/stage-rules';
 import { DefaultCadencePolicy } from './domain/cadence';
 import {
@@ -15,7 +16,7 @@ import {
 } from './application/ports';
 import { CrmContext } from './application/crm-context';
 import { DefaultCrmPortFactory } from './application/crm-port';
-import { DefaultPosEligibility, RoutingService } from './application/routing.service';
+import { CataloguePosEligibility, RoutingService } from './application/routing.service';
 import { LeadAssignment } from './application/lead-assignment';
 import { LeadCaptureService } from './application/lead-capture.service';
 import { LeadViews } from './application/lead-views';
@@ -61,7 +62,7 @@ const adapters: Provider[] = [
 const policies: Provider[] = [
   { provide: STAGE_RULES, useFactory: () => StageRuleSet.defaults() },
   { provide: CADENCE_POLICY, useClass: DefaultCadencePolicy },
-  { provide: POS_ELIGIBILITY, useClass: DefaultPosEligibility },
+  { provide: POS_ELIGIBILITY, useClass: CataloguePosEligibility },
   { provide: CRM_PORT_FACTORY, useClass: DefaultCrmPortFactory },
   {
     provide: MY_WORK_CONTRIBUTORS,
@@ -80,7 +81,7 @@ const services: Provider[] = [
  * (solo-lite tables, or the same tables projected to Twenty in M04b).
  */
 @Module({
-  imports: [TenancyModule, DistributionModule, PartyModule],
+  imports: [TenancyModule, DistributionModule, PartyModule, CatalogueModule],
   controllers: [LeadsController, PublicLeadsController, OpportunitiesController, TasksController, RoutingController, MyWorkController, LeadImportsController],
   providers: [...adapters, ...policies, ...services],
   exports: [SlaSweepJob, TaskService],
