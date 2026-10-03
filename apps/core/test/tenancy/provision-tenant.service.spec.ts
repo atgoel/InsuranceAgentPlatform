@@ -1,21 +1,21 @@
-import { FixedClock } from '../../../kernel/domain/clock';
-import { SequentialIdGenerator } from '../../../kernel/domain/id-generator';
-import { InMemoryUnitOfWork } from '../../../kernel/persistence/in-memory-unit-of-work';
-import { InMemoryOutbox } from '../../../kernel/outbox/outbox';
-import { InMemoryAuditLog } from '../../../kernel/audit/audit-log';
-import { Redactor } from '../../../kernel/observability/redactor';
-import { Logger } from '../../../kernel/observability/logger';
-import { MemoryLogSink } from '../../../kernel/observability/log-sink';
-import { ErrorDeduplicator } from '../../../kernel/observability/error-deduplicator';
-import { LogOverrideStore } from '../../../kernel/observability/log-overrides';
-import { ConflictError } from '../../../kernel/errors/domain-errors';
-import { InMemoryProvisioningStateRepository, InMemoryTenantDirectory, InMemoryTenantSettingsRepository } from '../infrastructure/in-memory-tenancy.repositories';
-import { StubContentProvisioner, StubIdentityProvisioner } from '../infrastructure/stub-provisioners';
-import { ContentScopeStep, CrmWorkspaceStep, IdentityAdminStep, IdentityOrganisationStep, ProvisioningSaga, SmokeCheckStep } from './provisioning-saga';
-import { ProvisionTenantInput, ProvisionTenantService } from './provision-tenant.service';
-import { TenancyRecorder } from './tenancy-recorder';
-import { CrmProvisioner } from './ports';
-import { CrmMode } from '../domain/tenant';
+import { FixedClock } from '../../src/kernel/domain/clock';
+import { SequentialIdGenerator } from '../../src/kernel/domain/id-generator';
+import { InMemoryUnitOfWork } from '../../src/kernel/persistence/in-memory-unit-of-work';
+import { InMemoryOutbox } from '../../src/kernel/outbox/outbox';
+import { InMemoryAuditLog } from '../../src/kernel/audit/audit-log';
+import { Redactor } from '../../src/kernel/observability/redactor';
+import { Logger } from '../../src/kernel/observability/logger';
+import { MemoryLogSink } from '../../src/kernel/observability/log-sink';
+import { ErrorDeduplicator } from '../../src/kernel/observability/error-deduplicator';
+import { LogOverrideStore } from '../../src/kernel/observability/log-overrides';
+import { ConflictError } from '../../src/kernel/errors/domain-errors';
+import { InMemoryProvisioningStateRepository, InMemoryTenantDirectory, InMemoryTenantSettingsRepository } from '../../src/modules/tenancy/infrastructure/in-memory-tenancy.repositories';
+import { StubContentProvisioner, StubIdentityProvisioner } from '../../src/modules/tenancy/infrastructure/stub-provisioners';
+import { ContentScopeStep, CrmWorkspaceStep, IdentityAdminStep, IdentityOrganisationStep, ProvisioningSaga, SmokeCheckStep } from '../../src/modules/tenancy/application/provisioning-saga';
+import { ProvisionTenantInput, ProvisionTenantService } from '../../src/modules/tenancy/application/provision-tenant.service';
+import { TenancyRecorder } from '../../src/modules/tenancy/application/tenancy-recorder';
+import { CrmProvisioner } from '../../src/modules/tenancy/application/ports';
+import { CrmMode } from '../../src/modules/tenancy/domain/tenant';
 
 /** CRM provisioner that fails until told to recover — simulates Twenty being down during provisioning. */
 class FlakyCrm implements CrmProvisioner {
