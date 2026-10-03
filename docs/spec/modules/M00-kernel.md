@@ -123,7 +123,7 @@ export interface DomainEvent<T = Record<string, unknown>> {
 export class DomainEventFactory {
   constructor(clock: Clock, ids: IdGenerator)
   create<T>(input: { type: string; source: string; subject: string; tenantId: string; data: T; dataVersion?: number }): DomainEvent<T>
-  // invalid type → ValidationError('invalid_event_type'); traceId copied from RequestContext.current()
+  // invalid type → ValidationError('invalid_event_type'); traceId copied from RequestContext.current(); returned event is Object.freeze'd (data shallow-frozen)
 }
 ```
 
@@ -150,13 +150,13 @@ export abstract class DomainError extends Error {
 export class ValidationError extends DomainError          // 400; constructor(code: string, message: string, readonly errors: FieldError[] = [])
 export class UnauthenticatedError extends DomainError     // 401; constructor(code = 'unauthenticated', message = 'Authentication required')
 export class ForbiddenError extends DomainError           // 403; constructor(code = 'forbidden', message = 'Not allowed')
-export class NotFoundError extends DomainError            // 404; constructor(entity: string, id?: string) → code `${entity}_not_found`, message `${Entity} not found`
+export class NotFoundError extends DomainError            // 404; constructor(entity: string, id?: string) → code `${snake(entity)}_not_found` (`'AuditEvent'` → `audit_event_not_found`), details.id when given, message `${Entity} not found`
 export class ConflictError extends DomainError            // 409
 export class PreconditionFailedError extends DomainError  // 412; code 'version_mismatch'
 export class BusinessRuleError extends DomainError        // 422
 export class RateLimitedError extends DomainError         // 429; details.retryAfterSeconds
 export class DependencyUnavailableError extends DomainError // 503; constructor(dependency: string) code 'dependency_unavailable', details.dependency
-export class UnknownOutcomeError extends DomainError      // 202; constructor(operationRef: string) code 'outcome_unknown'
+export class UnknownOutcomeError extends DomainError      // 202; constructor(operationRef: string) code 'outcome_unknown', details.operationRef
 ```
 
 ### 3.2 Problem Details — Builder + Chain of Responsibility
