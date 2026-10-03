@@ -64,7 +64,7 @@ describe('AC-M04-25 LeadsWorkspaceScreen', () => {
         if (path === '/api/v1/leads') {
           return Promise.resolve({ items: mockLeads, nextCursor: undefined } as any);
         }
-        return Promise.reject(new ApiError('Not found', 404));
+        return Promise.reject(new ApiError(404, 'not_found', 'Not found'));
       }),
       post: vi.fn(() => Promise.resolve({})),
       put: vi.fn(() => Promise.resolve({})),
@@ -153,14 +153,14 @@ describe('AC-M04-25 LeadsWorkspaceScreen', () => {
   });
 
   it('AC-M04-25 displays empty state when no leads', async () => {
-    mockApiClient.get = vi.fn((path) => {
+    (mockApiClient.get as any) = vi.fn((path: string) => {
       if (path === '/api/v1/leads/stats') {
-        return Promise.resolve(mockStats);
+        return Promise.resolve(mockStats as any);
       }
       if (path === '/api/v1/leads') {
-        return Promise.resolve({ items: [], nextCursor: undefined });
+        return Promise.resolve({ items: [], nextCursor: undefined } as any);
       }
-      return Promise.reject(new ApiError('Not found', 404));
+      return Promise.reject(new ApiError(404, 'not_found', 'Not found'));
     });
 
     render(
@@ -172,12 +172,12 @@ describe('AC-M04-25 LeadsWorkspaceScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/no leads/i) || screen.getByText(/empty/i)).toBeInTheDocument();
+      expect(screen.getByText('No leads in this view')).toBeInTheDocument();
     });
   });
 
   it('AC-M04-25 handles API errors gracefully', async () => {
-    mockApiClient.get = vi.fn(() => Promise.reject(new ApiError('Server error', 500)));
+    (mockApiClient.get as any) = vi.fn(() => Promise.reject(new ApiError(500, 'server_error', 'Server error')));
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -188,12 +188,12 @@ describe('AC-M04-25 LeadsWorkspaceScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/something went wrong/i) || screen.getByText(/error/i)).toBeInTheDocument();
+      expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     });
   });
 
   it('AC-M04-25 shows permission denied for 403 errors', async () => {
-    mockApiClient.get = vi.fn(() => Promise.reject(new ApiError('Forbidden', 403)));
+    (mockApiClient.get as any) = vi.fn(() => Promise.reject(new ApiError(403, 'forbidden', 'Forbidden')));
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -204,7 +204,7 @@ describe('AC-M04-25 LeadsWorkspaceScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/denied/i) || screen.getByText(/not authorized/i)).toBeInTheDocument();
+      expect(screen.getByText('Access Denied')).toBeInTheDocument();
     });
   });
 

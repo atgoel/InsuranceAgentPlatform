@@ -59,7 +59,7 @@ export function ConvertSheet({ lead, onConvert }: ConvertSheetProps) {
             type="radio"
             value="EXISTING"
             checked={partyChoice === 'EXISTING'}
-            onChange={(e) => setPartyChoice('EXISTING')}
+            onChange={() => setPartyChoice('EXISTING')}
           />
           {t('crm.lead.link_existing_party')}
         </label>

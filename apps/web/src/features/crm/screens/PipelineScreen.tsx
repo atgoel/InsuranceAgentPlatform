@@ -41,7 +41,7 @@ export function PipelineScreen() {
   const handleMoveOpportunity = useCallback(
     async (opportunityId: string, toStage: any) => {
       try {
-        const updated = await crmApi.moveOpportunityStage(opportunityId, toStage);
+        await crmApi.moveOpportunityStage(opportunityId, toStage);
         // Reload board
         const result = await crmApi.getOpportunitiesBoard();
         setBoardData(result);
@@ -82,7 +82,7 @@ export function PipelineScreen() {
   }
 
   if (!boardData) {
-    return <ErrorState error={new ApiError('No data', 404)} onRetry={() => window.location.reload()} />;
+    return <ErrorState error={new ApiError(404, 'no_data', 'No data')} onRetry={() => window.location.reload()} />;
   }
 
   return (

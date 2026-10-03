@@ -237,7 +237,7 @@ describe('AC-M04-28 TasksScreen', () => {
   });
 
   it('AC-M04-28 handles API errors gracefully', async () => {
-    mockApiClient.get = vi.fn(() => Promise.reject(new ApiError('Server error', 500)));
+    mockApiClient.get = vi.fn(() => Promise.reject(new ApiError(500, 'error', 'Server error')));
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -248,12 +248,12 @@ describe('AC-M04-28 TasksScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/error/i) || screen.getByText(/went wrong/i)).toBeInTheDocument();
+      expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     });
   });
 
   it('AC-M04-28 handles permission denied', async () => {
-    mockApiClient.get = vi.fn(() => Promise.reject(new ApiError('Forbidden', 403)));
+    mockApiClient.get = vi.fn(() => Promise.reject(new ApiError(403, 'error', 'Forbidden')));
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -264,7 +264,7 @@ describe('AC-M04-28 TasksScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/denied/i) || screen.getByText(/not authorized/i)).toBeInTheDocument();
+      expect(screen.getByText('Access Denied')).toBeInTheDocument();
     });
   });
 

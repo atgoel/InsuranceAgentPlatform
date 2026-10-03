@@ -115,8 +115,10 @@ describe('AC-M04-26 LeadRecordScreen', () => {
     const contactedBtn = screen.getAllByRole('button').find((btn) => btn.textContent?.includes('CONTACTED'));
     if (contactedBtn) {
       await user.click(contactedBtn);
-      // Should show blocked message - just check if clicked
-      expect(true).toBe(true);
+      // Should show blocked message
+      await waitFor(() => {
+        expect(screen.getByText(/Log a connected call/)).toBeInTheDocument();
+      });
     }
   });
 
@@ -208,7 +210,7 @@ describe('AC-M04-26 LeadRecordScreen', () => {
   });
 
   it('AC-M04-26 handles 404 when lead not found', async () => {
-    (mockApiClient.get as any) = vi.fn(() => Promise.reject(new ApiError('Not found', 404)));
+    (mockApiClient.get as any) = vi.fn(() => Promise.reject(new ApiError(404, 'not_found', 'Not found')));
 
     render(
       <BrowserRouter>
@@ -221,12 +223,12 @@ describe('AC-M04-26 LeadRecordScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/not found/i) || screen.getByText(/error/i)).toBeInTheDocument();
+      expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     });
   });
 
   it('AC-M04-26 handles permission denied errors', async () => {
-    (mockApiClient.get as any) = vi.fn(() => Promise.reject(new ApiError('Forbidden', 403)));
+    (mockApiClient.get as any) = vi.fn(() => Promise.reject(new ApiError(403, 'forbidden', 'Forbidden')));
 
     render(
       <BrowserRouter>
@@ -239,7 +241,7 @@ describe('AC-M04-26 LeadRecordScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/denied/i) || screen.getByText(/not authorized/i)).toBeInTheDocument();
+      expect(screen.getByText('Access Denied')).toBeInTheDocument();
     });
   });
 

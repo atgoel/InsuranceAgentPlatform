@@ -77,7 +77,7 @@ export function LeadRecordScreen() {
   );
 
   const handleActivityLogged = useCallback(
-    async (_activityId: string) => {
+    async (activityId: string) => {
       if (!id || !lead) return;
       try {
         const updated = await crmApi.getLead(id);
@@ -122,7 +122,7 @@ export function LeadRecordScreen() {
   }
 
   if (!lead) {
-    return <ErrorState error={new ApiError('Not found', 404)} onRetry={() => window.history.back()} />;
+    return <ErrorState error={new ApiError(404, 'not_found', 'Not found')} onRetry={() => window.history.back()} />;
   }
 
   return (
