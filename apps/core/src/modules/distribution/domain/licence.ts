@@ -1,3 +1,6 @@
+import { ValidationError } from '../../../kernel/errors/domain-errors';
+import { IdGenerator } from '../../../kernel/domain';
+
 export type LicenceKind = 'POSP_LIFE' | 'POSP_GENERAL' | 'ISP' | 'INDIVIDUAL_AGENT' | 'OTHER';
 
 export interface Licence {
@@ -8,6 +11,30 @@ export interface Licence {
   validFrom: string;
   validTo: string;
   verifiedAt?: string;
+}
+
+export function createLicence(input: {
+  memberId: string;
+  kind: LicenceKind;
+  number: string;
+  validFrom: string;
+  validTo: string;
+  id?: string;
+  verifiedAt?: string;
+}): Licence {
+  if (input.validFrom > input.validTo) {
+    throw new ValidationError('licence_dates_invalid', 'validFrom must be before validTo');
+  }
+
+  return {
+    id: input.id || 'lic_' + Math.random().toString(36).substr(2, 9),
+    memberId: input.memberId,
+    kind: input.kind,
+    number: input.number,
+    validFrom: input.validFrom,
+    validTo: input.validTo,
+    verifiedAt: input.verifiedAt,
+  };
 }
 
 export const EXPIRY_THRESHOLDS_DAYS = [60, 30, 7] as const;
@@ -30,10 +57,14 @@ export function dueThreshold(licence: Licence, today: Date, alreadyAlerted: numb
     return undefined;
   }
 
-  for (const threshold of EXPIRY_THRESHOLDS_DAYS) {
-    if (days <= threshold && !alreadyAlerted.includes(threshold)) {
-      return threshold;
-    }
+  if (days >= 60 && !alreadyAlerted.includes(60)) {
+    return 60;
+  }
+  if (days >= 30 && days < 60 && !alreadyAlerted.includes(30)) {
+    return 30;
+  }
+  if (days >= 7 && days < 30 && !alreadyAlerted.includes(7)) {
+    return 7;
   }
 
   return undefined;

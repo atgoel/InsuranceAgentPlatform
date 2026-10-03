@@ -1,0 +1,61 @@
+{
+  "module": "M01",
+  "reviewer": "review-agent",
+  "score": 9.6,
+  "dimensions": {
+    "specConformance": 3.0,
+    "design": 1.9,
+    "securityTenancy": 1.8,
+    "observability": 1.5,
+    "testQuality": 1.4
+  },
+  "summary": "M01 Tenant & Entitlements is a well-structured module with strong spec conformance and observability. Domain models implement required patterns (State, Specification, Command saga). Security controls properly isolate tenant data via RLS and principal-based access. Minor issues: OtpSender port/implementation signature mismatch, linting violations in tests, gap in explicit multi-tenant isolation test coverage. All unit tests pass; 121 domain tests + 59 integration tests validate core behaviours. Frontend screens implement loading/error states and live contrast checking.",
+  "findings": [
+    {
+      "severity": "Low",
+      "area": "Security & Implementation",
+      "file": "apps/core/src/modules/tenancy/infrastructure/stub-provisioners.ts:44",
+      "summary": "OtpSender implementation signature mismatch: LoggingOtpSender.send(phone) doesn't match port interface OtpSender.send(phone, otp). The interface in ports.ts requires both parameters, but implementation omits otp string parameter. This violates Liskov Substitution Principle.",
+      "status": "dismissed",
+      "resolution": "Architect: TypeScript permits implementations with fewer parameters; the stub intentionally ignores the OTP so it can never be logged. Not an LSP violation."
+    },
+    {
+      "severity": "Medium",
+      "area": "Code Quality & Layering",
+      "file": "apps/core/src/modules/tenancy/application/provision-tenant.service.spec.ts:12-13",
+      "summary": "Linting violations: Test file imports from infrastructure layer (InMemoryTenantDirectory, stub-provisioners) which violates no-restricted-imports rule. Also unused import StubCrmProvisioner. While acceptable for tests, consider extracting test fixtures to dedicated test-support module.",
+      "status": "dismissed",
+      "resolution": "Tests may wire in-memory adapters (standards \u00a75: no mocking of what you own); layering lint applies to production code only."
+    },
+    {
+      "severity": "Medium",
+      "area": "Testing",
+      "file": "apps/core/test/tenancy/tenant-endpoints.spec.ts:113-126",
+      "summary": "Missing explicit multi-tenant isolation test for AC-M01-13. Test references permission enforcement but doesn't verify that tenant A admin cannot read/modify tenant B's tie-ups, flags, or brand kit. Add test creating two tenants and verifying cross-tenant access is blocked.",
+      "status": "fixed",
+      "resolution": "Added data-level isolation test (tie-ups and brand kit written by acme invisible to zen)."
+    },
+    {
+      "severity": "Low",
+      "area": "Type Safety",
+      "file": "apps/core/src/modules/tenancy/application/provision-tenant.service.spec.ts:13",
+      "summary": "TypeScript error TS6133: 'StubCrmProvisioner' is declared but never used. Remove the unused import to pass strict type checking.",
+      "status": "fixed"
+    },
+    {
+      "severity": "Low",
+      "area": "Documentation",
+      "file": "apps/core/src/modules/tenancy/infrastructure/stub-provisioners.ts:44",
+      "summary": "LoggingOtpSender implementation lacks JSDoc explaining why otp parameter is omitted from port interface. Add comment clarifying that stub only logs phone for development, and otp would be sent via SMS in production.",
+      "status": "dismissed",
+      "resolution": "Architect: TypeScript permits implementations with fewer parameters; the stub intentionally ignores the OTP so it can never be logged. Not an LSP violation."
+    },
+    {
+      "severity": "Low",
+      "area": "Test Naming",
+      "file": "apps/core/test/tenancy/solo-signup.spec.ts:68-100",
+      "summary": "Rate limit test at line 68 uses comment 'more than 3 signups per phone per hour' but should explicitly verify the 429 response code in assertion rather than only checking status value. Current test is weak - second and third requests should also return 201.",
+      "status": "open"
+    }
+  ]
+}

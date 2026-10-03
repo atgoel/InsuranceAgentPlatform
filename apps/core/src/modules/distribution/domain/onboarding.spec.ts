@@ -1,5 +1,5 @@
 import { ValidationError } from '../../../kernel/errors/domain-errors';
-import { OnboardingChecklist } from './onboarding';
+import { OnboardingChecklist, templateFor } from './onboarding';
 
 const now = new Date('2026-01-01T00:00:00Z');
 
@@ -228,41 +228,3 @@ describe('AC-M02-03 OnboardingChecklist', () => {
   });
 });
 
-// Helper stubs
-function templateFor(_type: string): Record<string, unknown> {
-  throw new Error('templateFor not implemented');
-}
-
-class OnboardingChecklist {
-  static for(_type: string): OnboardingChecklist {
-    throw new Error('OnboardingChecklist.for not implemented');
-  }
-
-  static restore(_items: Record<string, unknown>[]): OnboardingChecklist {
-    throw new Error('OnboardingChecklist.restore not implemented');
-  }
-
-  items(): Record<string, unknown>[] {
-    throw new Error('items not implemented');
-  }
-
-  isComplete(): boolean {
-    throw new Error('isComplete not implemented');
-  }
-
-  missing(): Record<string, unknown>[] {
-    throw new Error('missing not implemented');
-  }
-
-  recordEvidence(_key: string, _input: Record<string, unknown>, _now: Date): void {
-    throw new Error('recordEvidence not implemented');
-  }
-
-  logTraining(_hours: number, _evidenceRef: string, _now: Date): void {
-    throw new Error('logTraining not implemented');
-  }
-
-  markInsurerCodeMapped(_now: Date): void {
-    throw new Error('markInsurerCodeMapped not implemented');
-  }
-}

@@ -10,7 +10,7 @@ import { ErrorDeduplicator } from '../../../kernel/observability/error-deduplica
 import { LogOverrideStore } from '../../../kernel/observability/log-overrides';
 import { ConflictError } from '../../../kernel/errors/domain-errors';
 import { InMemoryProvisioningStateRepository, InMemoryTenantDirectory, InMemoryTenantSettingsRepository } from '../infrastructure/in-memory-tenancy.repositories';
-import { StubContentProvisioner, StubCrmProvisioner, StubIdentityProvisioner } from '../infrastructure/stub-provisioners';
+import { StubContentProvisioner, StubIdentityProvisioner } from '../infrastructure/stub-provisioners';
 import { ContentScopeStep, CrmWorkspaceStep, IdentityAdminStep, IdentityOrganisationStep, ProvisioningSaga, SmokeCheckStep } from './provisioning-saga';
 import { ProvisionTenantInput, ProvisionTenantService } from './provision-tenant.service';
 import { TenancyRecorder } from './tenancy-recorder';

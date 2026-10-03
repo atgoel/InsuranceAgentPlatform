@@ -40,7 +40,7 @@ export class Member {
     displayName: string;
     phone?: PhoneNumber;
     email?: EmailAddress;
-    _roles: string[];
+    roles: string[];
     salespersonType?: SalespersonType;
     orgUnitId: string;
     now: Date;
@@ -49,12 +49,12 @@ export class Member {
       throw new ValidationError('contact_required', 'At least one contact method (phone or email) is required');
     }
 
-    if (!input._roles || input._roles.length === 0) {
+    if (!input.roles || input.roles.length === 0) {
       throw new ValidationError('roles_required', 'At least one role is required');
     }
 
     const catalogue = RoleCatalogue.defaults();
-    for (const role of input._roles) {
+    for (const role of input.roles) {
       try {
         catalogue.get(role);
       } catch {
@@ -62,14 +62,14 @@ export class Member {
       }
     }
 
-    const hasSalespersonRole = input._roles.includes('SALESPERSON');
-    const hasSoloOwnerRole = input._roles.includes('SOLO_OWNER');
+    const hasSalespersonRole = input.roles.includes('SALESPERSON');
+    const hasSoloOwnerRole = input.roles.includes('SOLO_OWNER');
 
     if (hasSalespersonRole && !input.salespersonType) {
       throw new BusinessRuleError('salesperson_type_mismatch', 'SALESPERSON role requires a salespersonType');
     }
 
-    if (!hasSalespersonRole && input.salespersonType) {
+    if (input.salespersonType && input.salespersonType !== 'SOLO' && !hasSalespersonRole) {
       throw new BusinessRuleError('salesperson_type_mismatch', 'salespersonType without SALESPERSON role');
     }
 
@@ -87,7 +87,7 @@ export class Member {
       phoneMasked: input.phone?.masked(),
       emailMasked: input.email?.masked(),
       contactHash,
-      roles: input._roles,
+      roles: input.roles,
       salespersonType: input.salespersonType,
       orgUnitId: input.orgUnitId,
       status: 'invited',

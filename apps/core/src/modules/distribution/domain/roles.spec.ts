@@ -1,5 +1,5 @@
 import { BusinessRuleError, ValidationError, NotFoundError } from '../../../kernel/errors/domain-errors';
-import { RoleCatalogue } from './roles';
+import { RoleCatalogue, LOCKED_PERMISSIONS, RecordScopeKind } from './roles';
 
 /**
  * AC-M02-11: Role editor - locked permissions cannot be added or removed, non-editable roles
@@ -168,25 +168,4 @@ describe('AC-M02-11 RoleCatalogue and permissions', () => {
   });
 });
 
-// Helper stubs
-class RoleCatalogue {
-  static defaults(): RoleCatalogue {
-    throw new Error('RoleCatalogue.defaults not implemented');
-  }
-
-  get(_role: string): Record<string, unknown> {
-    throw new Error('get not implemented');
-  }
-
-  list(): Record<string, unknown>[] {
-    throw new Error('list not implemented');
-  }
-
-  withPermissions(_role: string, _permissions: string[]): RoleCatalogue {
-    throw new Error('withPermissions not implemented');
-  }
-}
-
-const LOCKED_PERMISSIONS: readonly string[] = ['party.medical.read', 'audit.delete', 'ops.*'];
 const PRIVILEGED_ROLES = ['TENANT_ADMIN', 'PRINCIPAL_OFFICER', 'BRANCH_MANAGER', 'SALES_MANAGER'];
-type RecordScopeKind = 'OWN' | 'UNIT_SUBTREE' | 'TENANT';

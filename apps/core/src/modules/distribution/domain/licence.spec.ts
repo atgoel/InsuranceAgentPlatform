@@ -1,4 +1,4 @@
-import { daysUntil, dueThreshold } from './licence';
+import { daysUntil, dueThreshold, EXPIRY_THRESHOLDS_DAYS, createLicence } from './licence';
 
 /**
  * AC-M02-08: Licence expiry scanner alerts once per threshold (60/30/7 days) per licence
@@ -153,17 +153,3 @@ describe('AC-M02-08, AC-M02-09 Licence domain', () => {
   });
 });
 
-// Helper stubs
-function daysUntil(_dateIso: string, _today: Date): number {
-  throw new Error('daysUntil not implemented');
-}
-
-function dueThreshold(__licence: Record<string, unknown>, _today: Date, _alreadyAlerted: number[]): 60 | 30 | 7 | undefined {
-  throw new Error('dueThreshold not implemented');
-}
-
-function createLicence(_input: Record<string, unknown>): Record<string, unknown> {
-  throw new Error('createLicence not implemented');
-}
-
-const EXPIRY_THRESHOLDS_DAYS = [60, 30, 7] as const;

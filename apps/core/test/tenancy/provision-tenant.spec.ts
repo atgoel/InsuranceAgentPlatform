@@ -431,6 +431,30 @@ describe('tenant provisioning and management (AC-M01-07, 08, 09, 12, 13, 14)', (
       expect(response.status).toBe(200);
     });
 
+    it('AC-M01-13 settings written by tenant A are invisible to tenant B (data isolation)', async () => {
+      const acme = tokenFor({ tenantId: 'ten_acme', roles: ['TENANT_ADMIN'] });
+      const zen = tokenFor({ tenantId: 'ten_zen', roles: ['TENANT_ADMIN'] });
+      const write = await testApp.http
+        .put('/api/v1/tenant/tie-ups')
+        .set('Host', 'acme.iap.test')
+        .set('Authorization', `Bearer ${acme}`)
+        .send({ tieUps: [{ insurerId: 'ins_isolation_probe', line: 'HEALTH', effectiveFrom: '2026-01-01' }] });
+      expect(write.status).toBe(200);
+      await testApp.http
+        .put('/api/v1/tenant/brand-kit')
+        .set('Host', 'acme.iap.test')
+        .set('Authorization', `Bearer ${acme}`)
+        .send({ brandName: 'Acme Probe', primary: '#0B3D91', secondary: '#163F7F', typeface: 'Mukta', poweredByVisible: true })
+        .expect(200);
+
+      const zenTieUps = await testApp.http.get('/api/v1/tenant/tie-ups').set('Host', 'zen.iap.test').set('Authorization', `Bearer ${zen}`);
+      const zenBrand = await testApp.http.get('/api/v1/tenant/brand-kit').set('Host', 'zen.iap.test').set('Authorization', `Bearer ${zen}`);
+
+      expect(zenTieUps.status).toBe(200);
+      expect(JSON.stringify(zenTieUps.body)).not.toContain('ins_isolation_probe');
+      expect(zenBrand.body.brandName).not.toBe('Acme Probe');
+    });
+
     it('token mismatch logs security event', async () => {
       testApp.logs.clear();
 

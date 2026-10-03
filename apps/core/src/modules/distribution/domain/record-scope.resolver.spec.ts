@@ -203,7 +203,3 @@ function createResolver(): Record<string, unknown> {
 function mockTx(): Record<string, unknown> {
   return {};
 }
-
-function inScope(__scope: Record<string, unknown>, _record: Record<string, unknown>): boolean {
-  throw new Error('inScope not implemented');
-}
