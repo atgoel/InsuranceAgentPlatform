@@ -34,11 +34,15 @@ class MetricCounter implements Counter {
 
   private labelsToKey(labels?: Labels): string {
     if (!labels || Object.keys(labels).length === 0) return '';
-    return JSON.stringify(labels);
+    const sorted = Object.keys(labels).sort();
+    return JSON.stringify(Object.fromEntries(sorted.map(k => [k, labels[k]])));
   }
 
-  serialize(): Array<[string, number]> {
-    return Array.from(this.values.entries());
+  serialize(): Array<[Labels | undefined, number]> {
+    return Array.from(this.values.entries()).map(([key, value]) => [
+      key ? JSON.parse(key) : undefined,
+      value
+    ]);
   }
 }
 
@@ -69,11 +73,15 @@ class MetricGauge implements Gauge {
 
   private labelsToKey(labels?: Labels): string {
     if (!labels || Object.keys(labels).length === 0) return '';
-    return JSON.stringify(labels);
+    const sorted = Object.keys(labels).sort();
+    return JSON.stringify(Object.fromEntries(sorted.map(k => [k, labels[k]])));
   }
 
-  serialize(): Array<[string, number]> {
-    return Array.from(this.values.entries());
+  serialize(): Array<[Labels | undefined, number]> {
+    return Array.from(this.values.entries()).map(([key, value]) => [
+      key ? JSON.parse(key) : undefined,
+      value
+    ]);
   }
 }
 
@@ -104,12 +112,32 @@ class MetricHistogram implements Histogram {
 
   private labelsToKey(labels?: Labels): string {
     if (!labels || Object.keys(labels).length === 0) return '';
-    return JSON.stringify(labels);
+    const sorted = Object.keys(labels).sort();
+    return JSON.stringify(Object.fromEntries(sorted.map(k => [k, labels[k]])));
   }
 
-  serialize(): Array<[string, number[]]> {
-    return Array.from(this.observations.entries());
+  serialize(): Array<[Labels | undefined, number[]]> {
+    return Array.from(this.observations.entries()).map(([key, value]) => [
+      key ? JSON.parse(key) : undefined,
+      value
+    ]);
   }
+
+  getBuckets(): number[] {
+    return this.buckets;
+  }
+}
+
+function formatLabels(labels?: Labels): string {
+  if (!labels || Object.keys(labels).length === 0) return '';
+  const sorted = Object.keys(labels).sort();
+  const pairs = sorted.map(k => `${k}="${labels[k]}"`).join(',');
+  return `{${pairs}}`;
+}
+
+function mergeLabels(baseLabels?: Labels, additional?: Labels): Labels {
+  if (!baseLabels && !additional) return {};
+  return { ...baseLabels, ...additional };
 }
 
 export class MetricsRegistry {
@@ -118,37 +146,45 @@ export class MetricsRegistry {
   private histograms: Map<string, MetricHistogram> = new Map();
   private metrics: Map<string, { help: string; type: string; labelNames?: string[] }> = new Map();
   private maxSeriesPerMetric: number;
+  private cardinalityRejected: Map<string, number> = new Map();
 
   constructor(opts?: { maxSeriesPerMetric?: number }) {
     this.maxSeriesPerMetric = opts?.maxSeriesPerMetric ?? 1000;
   }
 
   counter(name: string, help: string, labelNames?: string[]): Counter {
-    if (!this.counters.has(name)) {
-      this.metrics.set(name, { help, type: 'counter', labelNames });
-      this.counters.set(name, new MetricCounter());
+    if (this.counters.has(name)) {
+      return this.counters.get(name)!;
     }
+    if (this.metrics.has(name) && this.metrics.get(name)!.type !== 'counter') {
+      throw new Error(`Metric ${name} already exists with different type`);
+    }
+    this.metrics.set(name, { help, type: 'counter', labelNames });
+    this.counters.set(name, new MetricCounter());
     return this.counters.get(name)!;
   }
 
   gauge(name: string, help: string, labelNames?: string[]): Gauge {
-    if (!this.gauges.has(name)) {
-      this.metrics.set(name, { help, type: 'gauge', labelNames });
-      this.gauges.set(name, new MetricGauge());
+    if (this.gauges.has(name)) {
+      return this.gauges.get(name)!;
     }
+    if (this.metrics.has(name) && this.metrics.get(name)!.type !== 'gauge') {
+      throw new Error(`Metric ${name} already exists with different type`);
+    }
+    this.metrics.set(name, { help, type: 'gauge', labelNames });
+    this.gauges.set(name, new MetricGauge());
     return this.gauges.get(name)!;
   }
 
-  histogram(
-    name: string,
-    help: string,
-    labelNames?: string[],
-    buckets?: number[]
-  ): Histogram {
-    if (!this.histograms.has(name)) {
-      this.metrics.set(name, { help, type: 'histogram', labelNames });
-      this.histograms.set(name, new MetricHistogram(buckets));
+  histogram(name: string, help: string, labelNames?: string[], buckets?: number[]): Histogram {
+    if (this.histograms.has(name)) {
+      return this.histograms.get(name)!;
     }
+    if (this.metrics.has(name) && this.metrics.get(name)!.type !== 'histogram') {
+      throw new Error(`Metric ${name} already exists with different type`);
+    }
+    this.metrics.set(name, { help, type: 'histogram', labelNames });
+    this.histograms.set(name, new MetricHistogram(buckets));
     return this.histograms.get(name)!;
   }
 
@@ -156,55 +192,70 @@ export class MetricsRegistry {
     const lines: string[] = [];
 
     for (const [name, counter] of this.counters) {
-      this.renderMetricLines(lines, name, 'counter', counter.serialize());
+      const meta = this.metrics.get(name)!;
+      lines.push(`# HELP ${name} ${meta.help}`);
+      lines.push(`# TYPE ${name} counter`);
+      for (const [labels, value] of counter.serialize()) {
+        const labelStr = formatLabels(labels);
+        lines.push(`${name}${labelStr} ${value}`);
+      }
     }
 
     for (const [name, gauge] of this.gauges) {
-      this.renderMetricLines(lines, name, 'gauge', gauge.serialize());
+      const meta = this.metrics.get(name)!;
+      lines.push(`# HELP ${name} ${meta.help}`);
+      lines.push(`# TYPE ${name} gauge`);
+      for (const [labels, value] of gauge.serialize()) {
+        const labelStr = formatLabels(labels);
+        lines.push(`${name}${labelStr} ${value}`);
+      }
     }
 
     for (const [name, hist] of this.histograms) {
       const meta = this.metrics.get(name)!;
       lines.push(`# HELP ${name} ${meta.help}`);
       lines.push(`# TYPE ${name} histogram`);
-      for (const [labels, values] of hist.serialize() as Array<[string, number[]]>) {
-        const baseLabelStr = labels ? labels.slice(0, -1) : '';
-        const count = values.length;
-        const sum = values.reduce((a, b) => a + b, 0);
-        this.renderHistogramLines(lines, name, baseLabelStr, { count, sum });
+      for (const [labels, values] of hist.serialize()) {
+        this.renderHistogramMetrics(lines, name, labels, values, hist.getBuckets());
+      }
+    }
+
+    // Add cardinality rejection metrics
+    if (this.cardinalityRejected.size > 0) {
+      lines.push(`# HELP metrics_cardinality_rejected_total Cardinality rejections`);
+      lines.push(`# TYPE metrics_cardinality_rejected_total counter`);
+      for (const [metric, count] of this.cardinalityRejected) {
+        lines.push(`metrics_cardinality_rejected_total{metric="${metric}"} ${count}`);
       }
     }
 
     return lines.join('\n');
   }
 
-  private renderMetricLines(
+  private renderHistogramMetrics(
     lines: string[],
     name: string,
-    type: string,
-    serialized: Array<[string, number]>
+    labels: Labels | undefined,
+    values: number[],
+    buckets: number[]
   ): void {
-    const meta = this.metrics.get(name)!;
-    lines.push(`# HELP ${name} ${meta.help}`);
-    lines.push(`# TYPE ${name} ${type}`);
-    for (const [labels, value] of serialized) {
-      const labelStr = labels ? `{${labels}}` : '';
-      lines.push(`${name}${labelStr} ${value}`);
-    }
-  }
+    const sorted = values.sort((a, b) => a - b);
 
-  private renderHistogramLines(
-    lines: string[],
-    name: string,
-    baseLabelStr: string,
-    counts: { count: number; sum: number }
-  ): void {
-    if (baseLabelStr) {
-      lines.push(`${name}_count${baseLabelStr}} ${counts.count}`);
-      lines.push(`${name}_sum${baseLabelStr}} ${counts.sum}`);
-    } else {
-      lines.push(`${name}_count ${counts.count}`);
-      lines.push(`${name}_sum ${counts.sum}`);
+    for (const bucket of buckets) {
+      const count = sorted.filter(v => v <= bucket).length;
+      const mergedLabels = mergeLabels(labels, { le: bucket.toString() });
+      const labelStr = formatLabels(mergedLabels);
+      lines.push(`${name}_bucket${labelStr} ${count}`);
     }
+
+    const infCount = sorted.length;
+    const mergedLabels = mergeLabels(labels, { le: '+Inf' });
+    const labelStr = formatLabels(mergedLabels);
+    lines.push(`${name}_bucket${labelStr} ${infCount}`);
+
+    const sum = sorted.reduce((a, b) => a + b, 0);
+    const sumLabelStr = formatLabels(labels);
+    lines.push(`${name}_sum${sumLabelStr} ${sum}`);
+    lines.push(`${name}_count${sumLabelStr} ${sorted.length}`);
   }
 }
