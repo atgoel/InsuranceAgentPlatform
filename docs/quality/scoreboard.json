@@ -1,0 +1,14 @@
+{
+  "M01": {
+    "name": "Tenant & Entitlements",
+    "total": 72.3,
+    "coverage": 28.8,
+    "lint": 4.5,
+    "types": 0,
+    "trace": 15,
+    "review": 24,
+    "covAvg": 74,
+    "allPass": true,
+    "date": "2026-10-03"
+  }
+}

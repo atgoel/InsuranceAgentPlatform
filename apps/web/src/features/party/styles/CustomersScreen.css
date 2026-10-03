@@ -1,0 +1,172 @@
+.customers-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem;
+  max-width: 100%;
+}
+
+.screen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.screen-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.shared-number-note {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.875rem;
+  color: var(--caption);
+}
+
+.search-and-filters {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.search-box {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: var(--ground);
+  color: var(--ink);
+}
+
+.search-box:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: white;
+}
+
+.search-box::placeholder {
+  color: var(--caption);
+}
+
+.household-panel {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  width: 360px;
+  background: white;
+  border-left: 1px solid var(--line);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  animation: slideInRight 0.2s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--ground);
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.panel-content {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.panel-section {
+  margin-bottom: 1.5rem;
+}
+
+.panel-section label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--secondary);
+  margin-bottom: 0.5rem;
+}
+
+.panel-section p,
+.panel-section ul {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+
+.panel-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.panel-section li {
+  padding: 0.5rem 0;
+}
+
+.panel-actions {
+  padding: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.panel-actions button {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .household-panel {
+    width: 100%;
+    position: fixed;
+    inset: 0;
+  }
+
+  .search-and-filters {
+    flex-direction: column;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+}

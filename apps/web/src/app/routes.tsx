@@ -42,7 +42,21 @@ export const routes: RouteObject[] = [
   {
     path: 'crm',
     element: <div>CRM Shell</div>, // Placeholder
-    children: [{ path: '*', element: <EmptyState title="Coming in a later module" /> }],
+    children: [
+      {
+        path: 'customers',
+        lazy: () => import('../features/party/screens/CustomersScreen').then(m => ({ Component: m.CustomersScreen })),
+      },
+      {
+        path: 'customers/:id',
+        lazy: () => import('../features/party/screens/CustomerRecordScreen').then(m => ({ Component: m.CustomerRecordScreen })),
+      },
+      {
+        path: 'import/duplicates',
+        lazy: () => import('../features/party/screens/DuplicateQueueScreen').then(m => ({ Component: m.DuplicateQueueScreen })),
+      },
+      { path: '*', element: <EmptyState title="Coming in a later module" /> },
+    ],
   },
   // Console routes
   {
