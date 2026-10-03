@@ -14,6 +14,7 @@ import { setupSellerWithRouting } from './fixtures';
 describe('AC-M04-17/20 Scope, isolation and lead import', () => {
   let testApp: TestApp;
   let sellerToken: string;
+  let sellerId: string;
   const adminToken = () => tokenFor({ tenantId: 'ten_acme', roles: ['TENANT_ADMIN'], memberId: 'admin' });
   const post = (path: string, body?: object, token = sellerToken) =>
     testApp.http.post(path).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${token}`).set('Idempotency-Key', newIdempotencyKey()).send(body);
@@ -30,7 +31,7 @@ describe('AC-M04-17/20 Scope, isolation and lead import', () => {
   async function createLead(mobile: string): Promise<string> {
     const res = await post('/api/v1/leads', basicLead(mobile));
     expect(res.status).toBe(201);
-    expect(res.body.ownerMemberId).toBeDefined();
+    expect(res.body.ownerMemberId).toBe(sellerId);
     return res.body.leadId;
   }
 
@@ -38,6 +39,7 @@ describe('AC-M04-17/20 Scope, isolation and lead import', () => {
     testApp = await createTestApp({ imports: [CrmModule, DistributionModule] });
     const seller = await setupSellerWithRouting(testApp, 'member_scope');
     sellerToken = seller.token;
+    sellerId = seller.memberId;
   });
 
   afterEach(async () => {
@@ -95,7 +97,7 @@ describe('AC-M04-17/20 Scope, isolation and lead import', () => {
         rows: [{ fullName: 'Import Lead', mobile: '+919876543275', productInterest: 'TERM_LIFE' }],
       });
     expect(commitRes.status).toBe(201);
-    expect(commitRes.body.batchId).toBeDefined();
+    expect(commitRes.body.batchId).toMatch(/^imp_/);
   });
 
   it('AC-M04-20 re-post same checksum is idempotent', async () => {

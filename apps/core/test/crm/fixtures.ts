@@ -7,6 +7,8 @@ import { activateSeller } from '../distribution/fixtures';
  * Create an active seller with routing configured so that they receive all leads.
  * Returns the memberId and token so tests can create leads assigned to this seller.
  */
+let sellerCounter = 0;
+
 export async function setupSellerWithRouting(
   app: TestApp,
   sellerId: string,
@@ -15,8 +17,9 @@ export async function setupSellerWithRouting(
 ): Promise<{ memberId: string; token: string }> {
   const adminToken = tokenFor({ tenantId, roles: ['TENANT_ADMIN'], memberId: 'admin' });
 
-  // Generate a unique 10-digit phone starting with 9
-  const uniquePhone = `+919${String(Math.random()).slice(2, 11)}`;
+  // Deterministic unique mobile per call (valid Indian mobile: 10 digits starting 9)
+  sellerCounter += 1;
+  const uniquePhone = `+91970000${String(sellerCounter).padStart(4, '0')}`;
 
   // Create the seller member
   const createRes = await app.http

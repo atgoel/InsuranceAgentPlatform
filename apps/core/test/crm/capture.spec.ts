@@ -58,7 +58,7 @@ describe('AC-M04-11 Lead capture (staff and public)', () => {
         consent: { granted: false, noticeVersion: 'v2', channels: ['EMAIL'], purposes: ['MARKETING'] },
       });
       expect(res.status).toBe(201);
-      expect(res.body.leadId).toBeDefined();
+      expect(res.body.leadId).toMatch(/^lead_/);
     });
 
     it('AC-M04-11 requires at least one contact channel (mobile or email)', async () => {
@@ -185,9 +185,9 @@ describe('AC-M04-11 Lead capture (staff and public)', () => {
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${tenant_admin()}`);
       expect(consentsRes.status).toBe(200);
-      expect(consentsRes.body.history).toBeDefined();
-      // Should have consent records in history for each (purpose, channel) combination
-      expect(consentsRes.body.history.length).toBeGreaterThan(0);
+      // One ledger record per purpose × channel (2 × 2), all granted with the notice version
+      const pairs = consentsRes.body.history.map((r: { purpose: string; channel: string; granted: boolean; source: string }) => `${r.purpose}:${r.channel}:${r.granted}:${r.source}`).sort();
+      expect(pairs).toEqual(['MARKETING:SMS:true:ASSISTED', 'MARKETING:WHATSAPP:true:ASSISTED', 'SERVICE:SMS:true:ASSISTED', 'SERVICE:WHATSAPP:true:ASSISTED']);
     });
   });
 });

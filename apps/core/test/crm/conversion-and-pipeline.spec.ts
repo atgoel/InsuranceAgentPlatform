@@ -12,11 +12,11 @@ import { setupSellerWithRouting } from './fixtures';
 describe('AC-M04-14/15 Conversion and pipeline', () => {
   let testApp: TestApp;
   let sellerToken: string;
+  let sellerId: string;
   const post = (path: string, body?: object, token = sellerToken) =>
     testApp.http.post(path).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${token}`).set('Idempotency-Key', newIdempotencyKey()).send(body);
   const put = (path: string, body?: object, token = sellerToken) =>
     testApp.http.put(path).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${token}`).send(body);
-  const get = (path: string, token = sellerToken) => testApp.http.get(path).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${token}`);
 
   const basicLead = (mobile: string) => ({
     fullName: 'Conversion Test',
@@ -29,7 +29,7 @@ describe('AC-M04-14/15 Conversion and pipeline', () => {
   async function createAndQualifyLead(mobile: string): Promise<string> {
     const capRes = await post('/api/v1/leads', basicLead(mobile));
     expect(capRes.status).toBe(201);
-    expect(capRes.body.ownerMemberId).toBeDefined();
+    expect(capRes.body.ownerMemberId).toBe(sellerId);
     const leadId = capRes.body.leadId;
 
     const actRes = await post(`/api/v1/leads/${leadId}/activities`, {
@@ -59,6 +59,7 @@ describe('AC-M04-14/15 Conversion and pipeline', () => {
     testApp = await createTestApp({ imports: [CrmModule, DistributionModule] });
     const seller = await setupSellerWithRouting(testApp, 'member_conv_pipeline');
     sellerToken = seller.token;
+    sellerId = seller.memberId;
   });
 
   afterEach(async () => {
@@ -88,7 +89,7 @@ describe('AC-M04-14/15 Conversion and pipeline', () => {
       startStage: 'DISCOVERY',
     });
     expect(convRes.status).toBe(201);
-    expect(convRes.body.opportunityId).toBeDefined();
+    expect(convRes.body.opportunityId).toMatch(/^opp_/);
   });
 
   it('AC-M04-15 adjacent move works', async () => {

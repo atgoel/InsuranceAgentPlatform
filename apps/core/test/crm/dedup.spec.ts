@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { CrmModule } from '../../src/modules/crm/crm.module';
 import { DistributionModule } from '../../src/modules/distribution/distribution.module';
 import { createTestApp, TestApp } from '../support/test-app';
-import { tokenFor } from '../support/tokens';
 import { newIdempotencyKey } from '../support/idempotency';
 import { setupSellerWithRouting } from './fixtures';
 
@@ -13,7 +12,7 @@ import { setupSellerWithRouting } from './fixtures';
 describe('AC-M04-12 Lead deduplication', () => {
   let testApp: TestApp;
   let sellerToken: string;
-  const adminToken = () => tokenFor({ tenantId: 'ten_acme', roles: ['TENANT_ADMIN'], memberId: 'admin' });
+  let sellerId: string;
   const post = (path: string, body?: object, token = sellerToken) =>
     testApp.http.post(path).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${token}`).set('Idempotency-Key', newIdempotencyKey()).send(body);
   const get = (path: string, token = sellerToken) => testApp.http.get(path).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${token}`);
@@ -30,6 +29,7 @@ describe('AC-M04-12 Lead deduplication', () => {
     testApp = await createTestApp({ imports: [CrmModule, DistributionModule] });
     const seller = await setupSellerWithRouting(testApp, 'member_dedup_seller');
     sellerToken = seller.token;
+    sellerId = seller.memberId;
   });
 
   afterEach(async () => {
@@ -42,7 +42,7 @@ describe('AC-M04-12 Lead deduplication', () => {
     // First capture
     const first = await post('/api/v1/leads', captureInput(mobile));
     expect(first.status).toBe(201);
-    expect(first.body.ownerMemberId).toBeDefined(); // routed to active seller
+    expect(first.body.ownerMemberId).toBe(sellerId);
     const firstLeadId = first.body.leadId;
     expect(first.body.deduplicated).toBe(false);
 
@@ -59,7 +59,7 @@ describe('AC-M04-12 Lead deduplication', () => {
     // First capture
     const first = await post('/api/v1/leads', captureInput(mobile));
     expect(first.status).toBe(201);
-    expect(first.body.ownerMemberId).toBeDefined();
+    expect(first.body.ownerMemberId).toBe(sellerId);
     const leadId = first.body.leadId;
 
     // Second capture (dedup)
@@ -81,7 +81,7 @@ describe('AC-M04-12 Lead deduplication', () => {
     // First capture
     const first = await post('/api/v1/leads', captureInput(mobile));
     expect(first.status).toBe(201);
-    expect(first.body.ownerMemberId).toBeDefined();
+    expect(first.body.ownerMemberId).toBe(sellerId);
     const firstLeadId = first.body.leadId;
 
     // Second capture (dedup)
@@ -106,7 +106,7 @@ describe('AC-M04-12 Lead deduplication', () => {
     // First capture
     const first = await post('/api/v1/leads', captureInput(mobile));
     expect(first.status).toBe(201);
-    expect(first.body.ownerMemberId).toBeDefined();
+    expect(first.body.ownerMemberId).toBe(sellerId);
     const firstLeadId = first.body.leadId;
 
     // Advance clock 31 days
@@ -115,7 +115,7 @@ describe('AC-M04-12 Lead deduplication', () => {
     // Second capture (outside 30-day window)
     const second = await post('/api/v1/leads', captureInput(mobile));
     expect(second.status).toBe(201); // new lead
-    expect(second.body.ownerMemberId).toBeDefined();
+    expect(second.body.ownerMemberId).toBe(sellerId);
     expect(second.body.deduplicated).toBe(false);
     expect(second.body.leadId).not.toBe(firstLeadId);
   });
@@ -126,7 +126,7 @@ describe('AC-M04-12 Lead deduplication', () => {
     // First capture
     const first = await post('/api/v1/leads', captureInput(mobile));
     expect(first.status).toBe(201);
-    expect(first.body.ownerMemberId).toBeDefined();
+    expect(first.body.ownerMemberId).toBe(sellerId);
     const leadId = first.body.leadId;
 
     // Second capture should deduplicate

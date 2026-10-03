@@ -4,16 +4,12 @@ import { DistributionModule } from '../../src/modules/distribution/distribution.
 import { createTestApp, TestApp } from '../support/test-app';
 import { newIdempotencyKey } from '../support/idempotency';
 import { setupSellerWithRouting } from './fixtures';
+import { tokenFor } from '../support/tokens';
 
-/**
- * AC-M04-09 tasks: GET /tasks?mine=true groups (OVERDUE/TODAY/UPCOMING) and counts;
- * PATCH with If-Match completes a task; stale If-Match → 412.
- *
- * AC-M04-10 my-work: GET /my-work lists items; token without memberId → 403.
- */
 describe('AC-M04-09/10 Tasks and my-work', () => {
   let testApp: TestApp;
   let sellerToken: string;
+  let sellerId: string;
   const post = (path: string, body?: object, token = sellerToken) =>
     testApp.http.post(path).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${token}`).set('Idempotency-Key', newIdempotencyKey()).send(body);
   const patch = (path: string, body?: object, token = sellerToken, ifMatch?: string) => {
@@ -34,7 +30,7 @@ describe('AC-M04-09/10 Tasks and my-work', () => {
   async function createLead(mobile: string): Promise<string> {
     const res = await post('/api/v1/leads', basicLead(mobile));
     expect(res.status).toBe(201);
-    expect(res.body.ownerMemberId).toBeDefined();
+    expect(res.body.ownerMemberId).toBe(sellerId);
     return res.body.leadId;
   }
 
@@ -42,6 +38,7 @@ describe('AC-M04-09/10 Tasks and my-work', () => {
     testApp = await createTestApp({ imports: [CrmModule, DistributionModule] });
     const seller = await setupSellerWithRouting(testApp, 'member_tasks');
     sellerToken = seller.token;
+    sellerId = seller.memberId;
   });
 
   afterEach(async () => {
@@ -70,7 +67,7 @@ describe('AC-M04-09/10 Tasks and my-work', () => {
     });
   });
 
-  it('AC-M04-09 PATCH /tasks/{id} completes task', async () => {
+  it('AC-M04-09 PATCH /tasks/{id} with If-Match completes task', async () => {
     const leadId = await createLead('+919876543261');
     const taskRes = await post('/api/v1/tasks', {
       subjectType: 'LEAD',
@@ -81,9 +78,9 @@ describe('AC-M04-09/10 Tasks and my-work', () => {
     });
     expect(taskRes.status).toBe(201);
     const taskId = taskRes.body.id;
+    expect(taskRes.body.etag).toBe(`"v${taskRes.body.version}"`);
 
-    // PATCH to complete the task
-    const completeRes = await patch(`/api/v1/tasks/${taskId}`, { status: 'DONE' });
+    const completeRes = await patch(`/api/v1/tasks/${taskId}`, { status: 'DONE', outcome: 'Spoke to customer' }, sellerToken, taskRes.body.etag);
     expect(completeRes.status).toBe(200);
     expect(completeRes.body.status).toBe('DONE');
   });
@@ -103,11 +100,29 @@ describe('AC-M04-09/10 Tasks and my-work', () => {
     expect(staleRes.status).toBe(412);
   });
 
-  it('AC-M04-10 GET /my-work lists items', async () => {
-    await createLead('+919876543264');
-    const myWorkRes = await get('/api/v1/my-work');
-    expect(myWorkRes.status).toBe(200);
-    expect(myWorkRes.body.items).toBeInstanceOf(Array);
-    expect(myWorkRes.body.counts).toBeDefined();
+  it('AC-M04-10 my-work lists the first-call task and an SLA-at-risk item for the owner, highest priority first', async () => {
+    const leadId = await createLead('+919876543264');
+    const res = await get('/api/v1/my-work');
+    expect(res.status).toBe(200);
+    // SLA (30 min) is due within the 30-minute risk window → SLA_AT_RISK (priority 0); first call due today → TASK (priority 1)
+    expect(res.body.items.map((i: { kind: string; subject: { id: string } }) => [i.kind, i.subject.id])).toEqual([
+      ['SLA_AT_RISK', leadId],
+      ['TASK', leadId],
+    ]);
+    expect(res.body.items[1].title).toBe('First call to new lead');
+    expect(res.body.counts).toEqual({ overdue: 0, today: 1, hotLeads: 0 });
+  });
+
+  it('AC-M04-10 my-work needs a member identity', async () => {
+    const res = await get('/api/v1/my-work', tokenFor({ tenantId: 'ten_acme', roles: ['TENANT_ADMIN'] }));
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe('member_required');
+  });
+
+  it('AC-M04-17 a lead from ten_acme is invisible from ten_zen', async () => {
+    const leadId = await createLead('+919876543265');
+    const zenAdmin = tokenFor({ tenantId: 'ten_zen', roles: ['TENANT_ADMIN'] });
+    const res = await testApp.http.get(`/api/v1/leads/${leadId}`).set('Host', 'zen.iap.test').set('Authorization', `Bearer ${zenAdmin}`);
+    expect(res.status).toBe(404);
   });
 });
