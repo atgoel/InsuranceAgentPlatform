@@ -2,12 +2,12 @@ import { ForbiddenError } from '../../../kernel/errors/domain-errors';
 import { Transaction } from '../../../kernel/persistence/unit-of-work';
 import { Principal } from '../../../kernel/tenancy/principal';
 import { RecordScope, RecordScopeKind } from '../domain/roles';
-import { OrgUnitRepository, ROOT_ORG_UNIT_ID, RoleRepository } from './ports';
+import { OrgUnitRepository, ROOT_ORG_UNIT_ID, RecordScopeProvider, RoleRepository } from './ports';
 
 const WIDTH: Record<RecordScopeKind, number> = { OWN: 0, UNIT_SUBTREE: 1, TENANT: 2 };
 
 /** Which records a principal may see: widest scope across their roles wins (M02 §3.5). */
-export class RecordScopeResolver {
+export class RecordScopeResolver implements RecordScopeProvider {
   constructor(
     private readonly roles: RoleRepository,
     private readonly units: OrgUnitRepository,

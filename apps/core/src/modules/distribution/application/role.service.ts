@@ -18,7 +18,30 @@ const PERMISSION_DESCRIPTIONS: Record<string, string> = {
   'distribution.transfer.write': 'Transfer a leaving salesperson’s book',
 };
 
-/** Role permission editor (W10) with versioning and locked permissions (AC-M02-11). */
+
+@Injectable()
+export class RoleCatalogueCache {
+  private readonly cache = new Map<string, { catalogue: RoleCatalogue; expiresAt: number }>();
+
+  constructor(
+    @Inject(ROLE_REPOSITORY) private readonly roles: RoleRepository,
+    private readonly ctx: DistributionContext,
+  ) {}
+
+  async get(tenantId: string, uow: UnitOfWork = this.ctx.uow): Promise<RoleCatalogue> {
+    const now = this.ctx.clock.now().getTime();
+    const hit = this.cache.get(tenantId);
+    if (hit && now < hit.expiresAt) return hit.catalogue;
+    const catalogue = await uow.run(tenantId, (tx) => this.roles.catalogue(tx));
+    this.cache.set(tenantId, { catalogue, expiresAt: now + 60_000 });
+    return catalogue;
+  }
+
+  invalidate(tenantId: string): void {
+    this.cache.delete(tenantId);
+  }
+}
+
 @Injectable()
 export class RoleService {
   constructor(
@@ -49,31 +72,6 @@ export class RoleService {
     });
   }
 }
-
-/** Per-tenant role catalogue cache (60 s), invalidated on role edits. */
-@Injectable()
-export class RoleCatalogueCache {
-  private readonly cache = new Map<string, { catalogue: RoleCatalogue; expiresAt: number }>();
-
-  constructor(
-    @Inject(ROLE_REPOSITORY) private readonly roles: RoleRepository,
-    private readonly ctx: DistributionContext,
-  ) {}
-
-  async get(tenantId: string, uow: UnitOfWork = this.ctx.uow): Promise<RoleCatalogue> {
-    const now = this.ctx.clock.now().getTime();
-    const hit = this.cache.get(tenantId);
-    if (hit && now < hit.expiresAt) return hit.catalogue;
-    const catalogue = await uow.run(tenantId, (tx) => this.roles.catalogue(tx));
-    this.cache.set(tenantId, { catalogue, expiresAt: now + 60_000 });
-    return catalogue;
-  }
-
-  invalidate(tenantId: string): void {
-    this.cache.delete(tenantId);
-  }
-}
-
 /**
  * Data-driven permissions: for roles in the tenant's catalogue, the catalogue (possibly edited) decides;
  * other roles fall back to the module-registered static matrix. Operators keep ops.* from the matrix.

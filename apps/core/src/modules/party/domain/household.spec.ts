@@ -119,7 +119,7 @@ describe('AC-M03-12 Household', () => {
       const members = household.members;
 
       expect(() => {
-        (members as any).push({ partyId: 'party_2', relation: 'SPOUSE' });
+        (members as unknown as unknown[]).push({ partyId: 'party_2', relation: 'SPOUSE' });
       }).toThrow();
     });
   });

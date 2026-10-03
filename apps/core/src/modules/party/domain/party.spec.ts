@@ -193,7 +193,7 @@ describe('AC-M03-01 Party aggregate', () => {
       expect(party.props.contactPoints[0].valueHash).toBeDefined();
       expect(party.props.contactPoints[0].masked).toBeDefined();
       // Plaintext should never be stored
-      expect((party.props.contactPoints[0] as any).value).toBeUndefined();
+      expect((party.props.contactPoints[0] as unknown as Record<string, unknown>).value).toBeUndefined();
     });
   });
 

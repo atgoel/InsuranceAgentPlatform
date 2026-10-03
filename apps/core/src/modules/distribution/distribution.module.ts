@@ -27,13 +27,13 @@ import { DistributionQueriesController, MembersController } from './api/members.
 import { RolesController } from './api/roles.controller';
 
 const repositories: Provider[] = [
-  { provide: ORG_UNIT_REPOSITORY, useValue: new InMemoryOrgUnitRepository() },
-  { provide: MEMBER_REPOSITORY, useValue: new InMemoryMemberRepository() },
-  { provide: CHECKLIST_REPOSITORY, useValue: new InMemoryChecklistRepository() },
-  { provide: LICENCE_REPOSITORY, useValue: new InMemoryLicenceRepository() },
-  { provide: INSURER_CODE_REPOSITORY, useValue: new InMemoryInsurerCodeRepository() },
-  { provide: LEAVE_REPOSITORY, useValue: new InMemoryLeaveRepository() },
-  { provide: ROLE_REPOSITORY, useValue: new InMemoryRoleRepository() },
+  { provide: ORG_UNIT_REPOSITORY, useClass: InMemoryOrgUnitRepository },
+  { provide: MEMBER_REPOSITORY, useClass: InMemoryMemberRepository },
+  { provide: CHECKLIST_REPOSITORY, useClass: InMemoryChecklistRepository },
+  { provide: LICENCE_REPOSITORY, useClass: InMemoryLicenceRepository },
+  { provide: INSURER_CODE_REPOSITORY, useClass: InMemoryInsurerCodeRepository },
+  { provide: LEAVE_REPOSITORY, useClass: InMemoryLeaveRepository },
+  { provide: ROLE_REPOSITORY, useClass: InMemoryRoleRepository },
   { provide: IDENTITY_ADMIN, useFactory: (l: Logger) => new StubIdentityAdmin(l.child({ module: 'distribution' })), inject: [LOGGER] },
 ];
 

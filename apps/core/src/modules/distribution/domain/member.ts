@@ -161,6 +161,12 @@ export class Member {
     this._props.orgUnitId = orgUnitId;
   }
 
+  /** Routing attributes (F05): skills and spoken languages, de-duplicated. */
+  setRoutingProfile(input: { skills?: string[]; languages?: string[] }): void {
+    if (input.skills) this._props.skills = [...new Set(input.skills)];
+    if (input.languages) this._props.languages = [...new Set(input.languages.map((l) => l.toLowerCase()))];
+  }
+
   setCapacity(capacityPerDay: number): void {
     this._props.capacityPerDay = capacityPerDay;
   }

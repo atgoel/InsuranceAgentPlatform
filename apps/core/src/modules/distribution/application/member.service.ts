@@ -27,6 +27,8 @@ export interface MemberPatch {
   roles?: string[];
   orgUnitId?: string;
   capacityPerDay?: number;
+  skills?: string[];
+  languages?: string[];
 }
 
 /** Tenant memberships: invite, update, (de)activate, exit (F02, F32, F92, F97; HLD K7 leavers). */
@@ -80,9 +82,21 @@ export class MemberService {
       if (patch.orgUnitId) (await this.units.tree(tx)).get(patch.orgUnitId);
       if (patch.orgUnitId) member.moveTo(patch.orgUnitId);
       if (patch.capacityPerDay !== undefined) member.setCapacity(patch.capacityPerDay);
+      if (patch.skills || patch.languages) member.setRoutingProfile(patch);
       if (patch.roles) await this.changeRoles(tenantId, member, patch.roles);
       await this.members.save(tx, member);
       await this.record(tx, member, 'distribution.member.updated', { fields: Object.keys(patch) });
+      return member;
+    });
+  }
+
+  /** First sign-in of an invited member (identity webhook / first login): invited → onboarding (sellers) or active. */
+  acceptInvite(tenantId: string, id: string, userRef: string): Promise<Member> {
+    return this.ctx.uow.run(tenantId, async (tx) => {
+      const member = await this.require(tx, id);
+      member.acceptInvite(userRef, this.ctx.clock.now());
+      await this.members.save(tx, member);
+      await this.record(tx, member, 'distribution.member.invite_accepted', { status: member.props.status });
       return member;
     });
   }

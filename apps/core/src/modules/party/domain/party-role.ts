@@ -8,3 +8,7 @@ export interface PartyRoleLink {
   readonly label?: string;
   readonly createdAt: string;
 }
+
+export function roleLinkKey(l: Pick<PartyRoleLink, 'role' | 'subjectType' | 'subjectId'>): string {
+  return `${l.role}|${l.subjectType}|${l.subjectId}`;
+}

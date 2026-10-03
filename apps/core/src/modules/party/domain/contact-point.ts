@@ -1,4 +1,4 @@
-import { ValidationError } from '../../../kernel/errors/domain-errors';
+import { EmailAddress, PhoneNumber } from '../../../kernel/domain';
 
 export type Channel = 'MOBILE' | 'EMAIL';
 
@@ -41,28 +41,13 @@ export class ContactPointFactory {
     return this.normalizeEmail(value);
   }
 
+  /** Same normalisation as members (kernel value objects), so hashes line up across modules. */
   private normalizePhone(phone: string): string {
-    const cleaned = phone.replace(/\s+/g, '');
-    const match = cleaned.match(/^\+?\d+$/);
-    if (!match) {
-      throw new ValidationError('invalid_phone', 'Invalid phone number format');
-    }
-    if (!cleaned.startsWith('+')) {
-      throw new ValidationError('invalid_phone', 'Phone number must include country code');
-    }
-    if (cleaned.length < 10 || cleaned.length > 15) {
-      throw new ValidationError('invalid_phone', 'Phone number length must be between 10 and 15 digits');
-    }
-    return cleaned;
+    return PhoneNumber.parse(phone).e164;
   }
 
   private normalizeEmail(email: string): string {
-    const trimmed = email.trim();
-    const match = trimmed.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-    if (!match) {
-      throw new ValidationError('invalid_email', 'Invalid email address');
-    }
-    return trimmed.toLowerCase();
+    return EmailAddress.parse(email).value;
   }
 
   private maskValue(channel: Channel, value: string): string {

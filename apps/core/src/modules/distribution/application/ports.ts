@@ -3,7 +3,8 @@ import { OrgTree, OrgUnit } from '../domain/org-unit';
 import { Member, MemberStatus, SalespersonType } from '../domain/member';
 import { OnboardingChecklist } from '../domain/onboarding';
 import { Licence } from '../domain/licence';
-import { RoleCatalogue, RoleDefinition } from '../domain/roles';
+import { RecordScope, RoleCatalogue, RoleDefinition } from '../domain/roles';
+import { Principal } from '../../../kernel/tenancy/principal';
 import { SellingScope } from '../domain/selling-scope';
 
 export const ORG_UNIT_REPOSITORY = Symbol('OrgUnitRepository');
@@ -106,4 +107,11 @@ export interface SellerCriteria {
 export interface SellerDirectory {
   eligibleSellers(tx: Transaction, criteria: SellerCriteria): Promise<EligibleSeller[]>;
   sellingScope(tx: Transaction, memberId: string, at: Date): Promise<SellingScope | undefined>;
+}
+
+export type { RecordScope };
+
+/** Published for M03+: which records a principal may see (implemented by RecordScopeResolver). */
+export interface RecordScopeProvider {
+  resolve(tx: Transaction, principal: Principal): Promise<RecordScope>;
 }

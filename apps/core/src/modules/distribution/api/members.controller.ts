@@ -140,6 +140,7 @@ export class MembersController {
 export class DistributionQueriesController {
   constructor(
     private readonly licences: LicenceService,
+    private readonly members: MemberService,
     @Inject(SELLER_DIRECTORY) private readonly sellers: SellerDirectory,
     private readonly ctx: DistributionContext,
   ) {}
@@ -148,6 +149,15 @@ export class DistributionQueriesController {
   @RequirePermission('distribution.licence.read')
   expiring(@CurrentPrincipal() p: Principal, @Query('withinDays') withinDays?: string) {
     return this.licences.expiring(p.tenantId, Math.min(365, Math.max(1, Number(withinDays ?? 60) || 60)));
+  }
+
+  /** The invited member's first sign-in: member id from the verified token, user ref = token subject. */
+  @Post('me/invitation-acceptance')
+  @HttpCode(200)
+  async acceptInvitation(@CurrentPrincipal() p: Principal) {
+    if (!p.memberId) throw new ForbiddenError('member_required', 'This action needs a member identity');
+    const m = await this.members.acceptInvite(p.tenantId, p.memberId, p.userRef);
+    return { id: m.props.id, status: m.props.status };
   }
 
   @Get('me/selling-scope')

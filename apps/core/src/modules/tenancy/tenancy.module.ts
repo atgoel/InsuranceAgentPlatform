@@ -64,10 +64,10 @@ function tenancyOptions(config: KernelConfig): TenancyOptions {
 
 const adapters: Provider[] = [
   { provide: TENANCY_OPTIONS, useFactory: tenancyOptions, inject: [KERNEL_OPTIONS] },
-  { provide: TENANT_DIRECTORY, useValue: new InMemoryTenantDirectory() },
-  { provide: TENANT_SETTINGS_REPOSITORY, useValue: new InMemoryTenantSettingsRepository() },
-  { provide: PROVISIONING_STATE_REPOSITORY, useValue: new InMemoryProvisioningStateRepository() },
-  { provide: SIGNUP_REPOSITORY, useValue: new InMemorySignupRepository() },
+  { provide: TENANT_DIRECTORY, useClass: InMemoryTenantDirectory },
+  { provide: TENANT_SETTINGS_REPOSITORY, useClass: InMemoryTenantSettingsRepository },
+  { provide: PROVISIONING_STATE_REPOSITORY, useClass: InMemoryProvisioningStateRepository },
+  { provide: SIGNUP_REPOSITORY, useClass: InMemorySignupRepository },
   { provide: PLAN_CATALOGUE, useValue: PlanCatalogue.default() },
   { provide: TIE_UP_LIMIT_POLICY, useValue: TieUpLimitPolicy.default() },
   { provide: IDENTITY_PROVISIONER, useFactory: (l: Logger) => new StubIdentityProvisioner(l.child({ module: 'tenancy' })), inject: [LOGGER] },

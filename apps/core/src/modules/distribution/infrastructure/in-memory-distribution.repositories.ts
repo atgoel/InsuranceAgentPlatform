@@ -1,4 +1,5 @@
 import { Transaction } from '../../../kernel/persistence/unit-of-work';
+import { TenantBuckets } from '../../../kernel/persistence/tenant-buckets';
 import { ConflictError, PreconditionFailedError } from '../../../kernel/errors/domain-errors';
 import { decodeCursor, encodeCursor } from '../../../kernel/http/pagination';
 import { OrgTree, OrgUnit } from '../domain/org-unit';
@@ -10,20 +11,6 @@ import {
   ChecklistRepository, InsurerCodeRepository, LeaveRepository, LicenceRepository, MemberFilter, MemberRepository,
   OrgUnitRepository, ROOT_ORG_UNIT_ID, RoleRepository,
 } from '../application/ports';
-
-/** Per-tenant buckets: every in-memory adapter is keyed by tx.tenantId, mirroring RLS. */
-class TenantBuckets<T> {
-  private readonly buckets = new Map<string, T>();
-  constructor(private readonly init: () => T) {}
-  of(tx: Transaction): T {
-    let bucket = this.buckets.get(tx.tenantId);
-    if (!bucket) {
-      bucket = this.init();
-      this.buckets.set(tx.tenantId, bucket);
-    }
-    return bucket;
-  }
-}
 
 const ROOT: OrgUnit = { id: ROOT_ORG_UNIT_ID, kind: 'HEAD_OFFICE', name: 'Head office', territoryCodes: [] };
 

@@ -23,6 +23,14 @@ export class Household {
     return new Household(input.id, input.name, members);
   }
 
+  static restore(input: { id: string; name: string; members: readonly HouseholdMember[] }): Household {
+    return new Household(input.id, input.name, input.members.map((m) => ({ ...m })));
+  }
+
+  get headPartyId(): string {
+    return this.members_.find((m) => m.relation === 'SELF')?.partyId ?? '';
+  }
+
   add(partyId: string, relation: Relation): void {
     if (this.members_.some((m) => m.partyId === partyId)) {
       throw new ConflictError('already_in_household', 'Party is already a member of this household');

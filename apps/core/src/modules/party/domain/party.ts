@@ -226,6 +226,9 @@ export class Party {
   }
 
   restoreFromMerge(now: Date): void {
+    if (this._props.status !== 'MERGED') {
+      throw new BusinessRuleError('party_not_merged', 'Only a merged party can be restored');
+    }
     this._props.status = 'ACTIVE';
     this._props.mergedIntoId = undefined;
     this._props.updatedAt = now.toISOString();
@@ -245,6 +248,15 @@ export class Party {
 
   primary(channel: string): ContactPoint | undefined {
     return this._props.contactPoints.find((c) => c.channel === channel && c.isPrimary);
+  }
+
+  /** Called by repositories after a successful optimistic save. */
+  markSaved(): void {
+    this._props.version += 1;
+  }
+
+  touch(now: Date): void {
+    this._props.updatedAt = now.toISOString();
   }
 
   get props(): Readonly<PartyProps> {

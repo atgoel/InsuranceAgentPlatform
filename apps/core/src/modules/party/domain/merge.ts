@@ -1,4 +1,5 @@
 import { Party } from './party';
+import { Relation } from './household';
 import { ContactPoint } from './contact-point';
 import { BusinessRuleError } from '../../../kernel/errors/domain-errors';
 
@@ -14,7 +15,8 @@ export interface MergeRecord {
   readonly survivorId: string;
   readonly mergedId: string;
   readonly choices: readonly SurvivorChoice[];
-  readonly movedLinks: { roleLinks: number; consents: number; household?: string };
+  /** What moved to the survivor, so a reversal can move exactly that back (roleLinkKeys = role|subjectType|subjectId). */
+  readonly movedLinks: { roleLinks: number; consents: number; household?: string; householdRelation?: Relation; roleLinkKeys?: string[] };
   readonly mergedAt: string;
   readonly mergedBy: string;
   readonly reversibleUntil: string;
@@ -59,41 +61,8 @@ export class MergePlan {
   apply(now: Date): { survivor: Party; merged: Party } {
     const survivor = this.survivorParty === 'A' ? this.a : this.b;
     const mergedParty = this.survivorParty === 'A' ? this.b : this.a;
-
-    const fromSurvival = (field: MergeField): Party => (this.choices_.get(field) === 'A' ? this.a : this.b);
-
-    const newDisplayName = fromSurvival('displayName').props.displayName;
-    survivor.rename(newDisplayName, now);
-
-    const newLanguage = fromSurvival('preferredLanguage').props.preferredLanguage;
-    if (newLanguage) {
-      survivor.setSensitiveField('preferredLanguage', newLanguage);
-    }
-
-    const newChannel = fromSurvival('preferredChannel').props.preferredChannel;
-    if (newChannel) {
-      survivor.setSensitiveField('preferredChannel', newChannel);
-    }
-
-    const newOwner = fromSurvival('ownerMemberId').props.ownerMemberId;
-    const newOrgUnit = fromSurvival('ownerMemberId').props.orgUnitId;
-    if (newOwner && newOrgUnit) {
-      survivor.assignOwner(newOwner, newOrgUnit);
-    }
-
-    const dobEncValue = fromSurvival('dateOfBirth').props.dateOfBirthEnc;
-    const dobYear = fromSurvival('dateOfBirth').props.dobYear;
-    if (dobEncValue !== undefined || dobYear !== undefined) {
-      survivor.setSensitive({ dateOfBirthEnc: dobEncValue, dobYear });
-    }
-
-    const panEncValue = fromSurvival('pan').props.panEnc;
-    const panHash = fromSurvival('pan').props.panHash;
-    const panLast4 = fromSurvival('pan').props.panLast4;
-    if (panEncValue || panHash || panLast4) {
-      survivor.setSensitive({ panEnc: panEncValue, panHash, panLast4 });
-    }
-
+    this.applyProfile(survivor, now);
+    this.applySensitive(survivor);
     const unionedContactPoints = this.unionContactPoints(
       Array.from(survivor.props.contactPoints),
       Array.from(mergedParty.props.contactPoints)
@@ -109,6 +78,27 @@ export class MergePlan {
     mergedParty.markMerged(survivor.props.id, now);
 
     return { survivor, merged: mergedParty };
+  }
+
+  private from(field: MergeField): Party {
+    return this.choices_.get(field) === 'A' ? this.a : this.b;
+  }
+
+  private applyProfile(survivor: Party, now: Date): void {
+    survivor.rename(this.from('displayName').props.displayName, now);
+    const language = this.from('preferredLanguage').props.preferredLanguage;
+    if (language) survivor.setSensitiveField('preferredLanguage', language);
+    const channel = this.from('preferredChannel').props.preferredChannel;
+    if (channel) survivor.setSensitiveField('preferredChannel', channel);
+    const owner = this.from('ownerMemberId').props;
+    if (owner.ownerMemberId && owner.orgUnitId) survivor.assignOwner(owner.ownerMemberId, owner.orgUnitId);
+  }
+
+  private applySensitive(survivor: Party): void {
+    const dob = this.from('dateOfBirth').props;
+    if (dob.dateOfBirthEnc !== undefined || dob.dobYear !== undefined) survivor.setSensitive({ dateOfBirthEnc: dob.dateOfBirthEnc, dobYear: dob.dobYear });
+    const pan = this.from('pan').props;
+    if (pan.panEnc || pan.panHash || pan.panLast4) survivor.setSensitive({ panEnc: pan.panEnc, panHash: pan.panHash, panLast4: pan.panLast4 });
   }
 
   private unionContactPoints(survivorCps: ContactPoint[], mergedCps: ContactPoint[]): readonly ContactPoint[] {

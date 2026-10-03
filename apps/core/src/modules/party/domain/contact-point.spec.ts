@@ -147,7 +147,7 @@ describe('AC-M03-01 ContactPointFactory', () => {
 
     it('returns different hashes for different values', async () => {
       const hash1 = await factory.hashFor('ten_acme', 'MOBILE', '+919876543210');
-      const hash2 = await factory.hashFor('ten_acme', 'MOBILE', '+911234567890');
+      const hash2 = await factory.hashFor('ten_acme', 'MOBILE', '+917012345678');
 
       expect(hash1).not.toBe(hash2);
     });

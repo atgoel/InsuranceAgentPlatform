@@ -26,7 +26,8 @@ export class RolePermissionMatrix implements PermissionPolicy {
     if (role === 'platform.operator') {
       return; // platform.operator always has ops.*
     }
-    this.roleMatrix.set(role, permissions);
+    // Additive: several modules contribute rows for the same role (M01 tenant.*, M03 party.*, ...).
+    this.roleMatrix.set(role, [...new Set([...(this.roleMatrix.get(role) ?? []), ...permissions])]);
   }
 
   permissionsFor(roles: readonly string[]): ReadonlySet<string> {

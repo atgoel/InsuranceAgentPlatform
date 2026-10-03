@@ -366,7 +366,7 @@ describe('AC-M03-03 ConsentLedger', () => {
 
       const history = ledger.history();
       expect(() => {
-        (history as any).push({ id: 'test' });
+        (history as unknown as unknown[]).push({ id: 'test' });
       }).toThrow();
     });
   });

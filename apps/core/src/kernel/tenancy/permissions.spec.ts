@@ -2,6 +2,13 @@ import { RolePermissionMatrix, hasPermission } from './permissions';
 
 describe('permissions (AC-M00-19)', () => {
   describe('RolePermissionMatrix', () => {
+    it('accumulates grants from several modules for the same role', () => {
+      const matrix = new RolePermissionMatrix();
+      matrix.grant('SALESPERSON', ['tenant.read']);
+      matrix.grant('SALESPERSON', ['party.read', 'tenant.read']);
+      expect([...matrix.permissionsFor(['SALESPERSON'])].sort()).toEqual(['me.read', 'party.read', 'telemetry.write', 'tenant.read']);
+    });
+
     it('grants permissions for a role', () => {
       const matrix = new RolePermissionMatrix();
       matrix.grant('crm.agent', ['crm.lead.read', 'crm.lead.write']);

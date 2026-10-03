@@ -30,7 +30,8 @@ export const ListMembersQuery = z.object({
 });
 
 export const PatchMemberSchema = z
-  .object({ roles: z.array(z.string()).min(1).max(10).optional(), orgUnitId: z.string().optional(), capacityPerDay: z.number().int().min(0).max(500).optional() })
+  .object({ roles: z.array(z.string()).min(1).max(10).optional(), orgUnitId: z.string().optional(), capacityPerDay: z.number().int().min(0).max(500).optional(),
+    skills: z.array(z.string().min(1).max(40)).max(20).optional(), languages: z.array(z.string().min(2).max(10)).max(10).optional() })
   .strict();
 export const MemberTransitionSchema = z.object({ to: z.enum(['active', 'suspended']), reason: z.string().trim().min(3).max(200) }).strict();
 export const ExitMemberSchema = z.object({ transferToMemberId: z.string().optional(), reason: z.string().trim().min(3).max(200) }).strict();
