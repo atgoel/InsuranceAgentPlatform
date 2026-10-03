@@ -44,6 +44,22 @@ export const routes: RouteObject[] = [
     element: <div>CRM Shell</div>, // Placeholder
     children: [
       {
+        path: 'leads',
+        lazy: () => import('../features/crm/screens/LeadsWorkspaceScreen').then(m => ({ Component: m.LeadsWorkspaceScreen })),
+      },
+      {
+        path: 'leads/:id',
+        lazy: () => import('../features/crm/screens/LeadRecordScreen').then(m => ({ Component: m.LeadRecordScreen })),
+      },
+      {
+        path: 'pipeline',
+        lazy: () => import('../features/crm/screens/PipelineScreen').then(m => ({ Component: m.PipelineScreen })),
+      },
+      {
+        path: 'tasks',
+        lazy: () => import('../features/crm/screens/TasksScreen').then(m => ({ Component: m.TasksScreen })),
+      },
+      {
         path: 'customers',
         lazy: () => import('../features/party/screens/CustomersScreen').then(m => ({ Component: m.CustomersScreen })),
       },
