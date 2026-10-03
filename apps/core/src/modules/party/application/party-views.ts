@@ -17,6 +17,6 @@ export function partySummary(p: Party): PartySummary {
   const x = p.props;
   return {
     id: x.id, displayName: x.displayName, primaryMobileMasked: p.primary('MOBILE')?.masked, primaryEmailMasked: p.primary('EMAIL')?.masked,
-    preferredLanguage: x.preferredLanguage, preferredChannel: x.preferredChannel, status: x.status, ownerMemberId: x.ownerMemberId,
+    preferredLanguage: x.preferredLanguage, preferredChannel: x.preferredChannel, status: x.status, ownerMemberId: x.ownerMemberId, orgUnitId: x.orgUnitId,
   };
 }

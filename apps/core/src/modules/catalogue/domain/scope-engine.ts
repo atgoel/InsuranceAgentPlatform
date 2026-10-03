@@ -24,6 +24,7 @@ export interface ScopedVersion {
 export type ScopeExclusion = 'not_effective' | 'channel_not_permitted' | 'insurer_not_tied' | 'not_pos_eligible' | 'line_not_licensed' | 'insurer_inactive' | 'filtered_out';
 
 export interface ScopeResult {
+  entityType: DistributorChannel;
   versions: ScopedVersion[];
   insurerIds: string[];
   excluded: Array<{ versionId: string; reason: ScopeExclusion }>;
@@ -181,6 +182,7 @@ export class ComparisonScopeEngine {
     const disclosure = disclosureFor(input, insurerNames);
 
     return {
+      entityType: input.entityType,
       versions: included,
       insurerIds,
       excluded,

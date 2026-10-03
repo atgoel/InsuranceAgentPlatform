@@ -35,6 +35,7 @@ export function testConfig(overrides?: Partial<KernelConfig>): KernelConfig {
     persistence: 'memory',
     tokenSecret: 'test-secret-32-chars-minimum!!!1',
     actorPepper: 'test-pepper',
+    shareTokenSecret: 'test-share-secret-32-chars-min!!1',
     debugTokenSecret: 'test-debug-secret-32-chars!!!1',
     devAuth: true,
     trustProxy: false,

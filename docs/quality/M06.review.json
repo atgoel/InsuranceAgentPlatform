@@ -1,0 +1,122 @@
+{
+  "module": "M06",
+  "reviewer": "Claude Sonnet 5.5",
+  "reviewDate": "2026-10-03",
+  "score": 8.5,
+  "dimensions": {
+    "specConformance": 2.5,
+    "design": 1.75,
+    "securityTenancy": 1.75,
+    "observability": 1.5,
+    "testQuality": 1
+  },
+  "summary": "M06 delivers the five calculators, the advice record (draft to finalised, scope snapshot, immutable afterwards, enforced again by a restrictive RLS update policy), the quote workspace with LA-6 scope checks, BI evidence and the signed share link. Routes, permissions, status and error codes match the LLD; record scope follows opportunity or party and fails closed to 404; share tokens use HMAC-SHA256 with timing-safe compare, host-tenant binding and a security log without the token; money is integer paise end to end (bigint with a safe-integer guard) and dates are IST. Gaps: the stale-quote job (expireStale) exists but is never scheduled, BI-required categories PENSION and CHILD have no test, and the web gate runner reports FAIL even though the vitest run of the same paths passes.",
+  "verification": {
+    "core": "PASS  core typecheck   no type errors (6s) | PASS  core lint        clean (8s) | PASS  core tests       Tests:       122 passed, 122 total (9s)   (scoped to src/modules/advice + test/advice; orchestrator reports full suite 1676)",
+    "web": "PASS  web typecheck    no type errors (4s) | PASS  web lint         ✖ 16 problems (0 errors, 16 warnings) (7s) | FAIL  web tests            at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) |  | Node.js v24.21.0 (1s)   (gate runner crash when scoped to a feature path; direct `npx vitest run src/features/advice` gave Test Files 3 passed (3), Tests 32 passed (32); orchestrator reports full web suite 609)",
+    "int": "PASS  pg integration   Tests:       28 passed, 28 total (2s)"
+  },
+  "acTraceability": {
+    "AC-M06-01": "test/advice/calculators.spec.ts: 'AC-M06-01 protection gap returns HLV, recommended cover and gap rounded up to ₹1 lakh' (exact paise 129/159/104 lakh) and 'protection gap is zero when existing cover already suffices'; plus domain/calculators/calculators.spec.ts AC-M06-01 cases. Would fail if the rounding or real-rate formula changed.",
+    "AC-M06-02": "test/advice/calculators.spec.ts: 'retirement, child goal, health sum insured and floater return their reference results' (exact paise values) and 'invalid inputs return 400 with a field error per bad field'; domain/calculators/calculators.spec.ts covers tier bases, loadings, floater recommendations, bounds.",
+    "AC-M06-03": "calculators.spec.ts: 'AC-M06-03 runs saved against a party are listed for that party only, newest first, with the assumptions version' and 'every calculator output carries the assumptions version'. Listing is service-level only (no HTTP list route, matching the LLD API table).",
+    "AC-M06-04": "test/advice/advice-record.spec.ts: out-of-scope recommendation 403 and not recorded; choice_reason_required; finalise incomplete 422 with missing; 'after finalisation every mutation is 422 advice_finalised and the record is unchanged'; If-Match 400/412; plus domain/advice-record.spec.ts. Strong.",
+    "AC-M06-05": "test/advice/quotes.spec.ts: product outside scope 403 product_out_of_scope; premium_components_mismatch 400; duplicate_option 409; 11th option 422 too_many_options; validity it.each (more than 60 days, past; exactly 60 accepted). Domain quote.spec.ts duplicates the rules.",
+    "AC-M06-06": "test/advice/selection.spec.ts: term and health select without BI; quote_expired 422 and last valid day still selectable; it.each savings and ULIP need bi_acknowledgement_required until attached AND acknowledged; BI on one option does not unlock another; second selection 422; quote.option.selected payload and quote_selection_seconds observed. PENSION and CHILD (also BI-required by biRequired) are not tested.",
+    "AC-M06-07": "selection.spec.ts: attach stores ref, insurer version, uploader; malformed document ref 400 and strict schema rejects premium or illustration fields; acknowledge once (422 on second); ASSISTED without evidence 400; advice.bi.acknowledged emitted and audited.",
+    "AC-M06-08": "test/advice/share.spec.ts: valid link shows the exact key set, no ids or contact data, Cache-Control no-store; tampered signature, payload swap, expired (and just before expiry works), other-tenant host and malformed token each 404 with the security log reason and no token in the log; unknown or suspended host refused.",
+    "AC-M06-09": "share.spec.ts: relay delivers quote.request.shared and the opportunity moves DISCOVERY to QUOTE_SHARED (not before delivery); quote.option.created makes the catalogue edit fail with product_version_locked while an unquoted version still edits.",
+    "AC-M06-10": "advice-record.spec.ts, quotes.spec.ts and calculators.spec.ts each have a 404 test for another salesperson, another tenant and a missing id across every route, plus role checks (compliance read-only, calculators need advice.calculate); repositories.contract.ts adds repository-level tenant isolation. Public share route is covered by AC-M06-08 host binding.",
+    "AC-M06-11": "test/advice/pg-advice.repositories.int.spec.ts: migration tables exist; finalised advice update changes 0 rows and the repository throws; draft to finalised in one update works; CHECK total = base + riders + tax; unique incl. null refs; bigint above 2^31 round-trips; RLS with another tenant sees no rows. Postgres boot step in pg-boot.int.spec.ts also exercises M06.",
+    "AC-M06-12": "web/src/features/advice/screens/CalculatorsScreen.test.tsx: rupees converted to paise, workings and assumptions version shown, field errors, a tab per calculator, Save to customer re-runs with partyId from the URL.",
+    "AC-M06-13": "web/src/features/advice/screens/QuoteWorkspaceScreen.test.tsx: disclosure banner, in-scope picker, live total mismatch disables submit, comparison grid, share copy, BI-required select blocked, selection, 422 messages, BI attach and assisted acknowledgement.",
+    "AC-M06-14": "web/src/features/advice/screens/AdviceRecordScreen.test.tsx: 422 advice_incomplete lists missing items from the response, read-only after finalisation and when loaded finalised, reason required, If-Match version on notes."
+  },
+  "findings": [
+    {
+      "severity": "medium",
+      "area": "spec gap (job not wired)",
+      "file": "apps/core/src/modules/advice/application/quote.service.ts:134",
+      "summary": "`expireStale(tenantId: string, today: string, limit = 200): Promise<{ expired: number }> {` implements the §5 stale-quote job but nothing calls it (grep for expireStale finds no scheduler, module hook or test of the service method outside the domain/repository contract), so quotes never move to EXPIRED in a running system.",
+      "status": "open"
+    },
+    {
+      "severity": "medium",
+      "area": "test coverage (AC-M06-06)",
+      "file": "apps/core/src/modules/advice/application/quote-views.ts:27",
+      "summary": "`return !!detail && detail.line === 'LIFE' && detail.category !== 'TERM';` makes PENSION and CHILD (a deliberate decision) BI-required, but the selection tests only cover SAVINGS and ULIP (selection.spec.ts it.each) plus TERM and HEALTH as negatives. A change that exempted PENSION or CHILD would not fail any test.",
+      "status": "open"
+    },
+    {
+      "severity": "medium",
+      "area": "gate / verification",
+      "file": "scripts/gate.mjs",
+      "summary": "`node scripts/gate.mjs web apps/web/src/features/advice` reported `FAIL web tests at async asyncRunEntryPointWithESMLoader ... Node.js v24.21.0` while `npx vitest run src/features/advice` passes 32 tests; the path-scoped web gate crashes before running tests, so the scoped gate cannot be used as evidence for this module (orchestrator full-suite result 609 is the evidence).",
+      "status": "open"
+    },
+    {
+      "severity": "low",
+      "area": "tenancy / record scope",
+      "file": "apps/core/src/modules/advice/application/quote.service.ts:42",
+      "summary": "`if (!(await this.parties.summary(tx, partyId))) throw new NotFoundError('party', partyId);` insured parties are checked for existence in the tenant only, not against the caller's record scope; a salesperson can link (and see the 404 vs success difference for) a party they do not own. RLS keeps it inside the tenant and no data is returned.",
+      "status": "open"
+    },
+    {
+      "severity": "low",
+      "area": "security",
+      "file": "apps/core/src/kernel/config.ts:120",
+      "summary": "`return nodeEnv === 'production' ? '' : `${env.AUTH_HS256_SECRET || ''}:share`;` outside production the share secret is derived from the auth secret; production is guarded (>= 32 chars required), but a staging deployment with NODE_ENV=development would share key material between the two uses. Document or require SHARE_TOKEN_SECRET everywhere except tests.",
+      "status": "open"
+    },
+    {
+      "severity": "low",
+      "area": "security",
+      "file": "apps/core/src/modules/advice/application/share.service.ts:188",
+      "summary": "`const quote = await this.quotes.get(tx, verdict.payload.quoteRequestId); if (!quote) throw new NotFoundError('quote_share');` a valid link keeps resolving for SELECTED, EXPIRED or WITHDRAWN quotes (test 'the link follows the quote' asserts SELECTED shows). Acceptable by design but there is no revocation short of expiry; the public route has no module-specific rate limit.",
+      "status": "open"
+    },
+    {
+      "severity": "low",
+      "area": "spec conformance",
+      "file": "apps/core/src/modules/advice/domain/calculators/protection-gap.ts:37",
+      "summary": "`const humanLifeValuePaise = roundUpToLakh(surplus * annuity);` the LLD rounds only the gap up to ₹1,00,000; the implementation also rounds HLV and recommended cover. Tests pin the resulting values (129/159/104 lakh), so it is consistent but differs from the formula text.",
+      "status": "open"
+    },
+    {
+      "severity": "info",
+      "area": "design decision (judged: accept)",
+      "file": "apps/core/src/modules/advice/domain/advice-record.ts:348",
+      "summary": "`throw new ForbiddenError('product_out_of_scope', ...)` Recommend out-of-scope uses 403 although §3.2 says BusinessRuleError. The API table (§6) and AC-M06-05 say 403 and M05 assertInScope also throws ForbiddenError, so 403 is the consistent choice. Update the §3.2 text to match.",
+      "status": "dismissed"
+    },
+    {
+      "severity": "info",
+      "area": "design decision (judged: accept)",
+      "file": "apps/core/src/modules/advice/application/quote-views.ts:27",
+      "summary": "BI required for every LIFE category except TERM (including CHILD, PENSION) is the safe reading of the IRDAI rule and is stricter than the LLD list (savings/ULIP/pension); it fails safe. The LLD should name CHILD explicitly, and the missing tests above should be added.",
+      "status": "dismissed"
+    },
+    {
+      "severity": "info",
+      "area": "design decision (judged: accept)",
+      "file": "apps/core/src/modules/advice/domain/calculators/floater.ts",
+      "summary": "Floater amounts are derived from the health sum-insured formula (LLD gives no floater amount formula); tests pin 10L floater / 30L individual total for the reference case. Acceptable as an educational guide; record the derivation in assumptions docs.",
+      "status": "dismissed"
+    },
+    {
+      "severity": "info",
+      "area": "tenancy / cross-module",
+      "file": "apps/core/src/modules/advice/application/advice-scope.ts:337",
+      "summary": "`!inScope({ ownerMemberId: summary.ownerMemberId, orgUnitId: summary.orgUnitId }, ...)` lead-captured parties have no owner, so under OWN scope an advice record or calculator save by party (without an opportunity) is a 404 for the capturing salesperson; it fails closed (no leak) and is an M03/M04 ownership gap, not an M06 defect.",
+      "status": "dismissed"
+    },
+    {
+      "severity": "info",
+      "area": "design",
+      "file": "apps/core/src/modules/advice/application/bi.service.ts:302",
+      "summary": "`bi.acknowledge({ method: input.method, ...` CUSTOMER_LINK acknowledgement is recorded by an authenticated staff member; there is no customer-facing acknowledgement endpoint (the public share route is read-only per LLD), so the method is attestation, not proof from the customer.",
+      "status": "open"
+    }
+  ],
+  "architectNotes": "Reviewer ran the three scoped gates (core, web, int) and opened every cited test. Share-token verification, tenant and scope handling, event payloads (ids, enums, paise totals only), metric labels (calculator and source enums) and the no-store header were checked against the code and found consistent with the LLD."
+}

@@ -6,7 +6,7 @@ import { ProductLine } from '../domain/lead';
 import { Opportunity, OpportunityStage } from '../domain/opportunity';
 import { LostReason } from '../domain/lead';
 import { CRM_EVENTS } from '../domain/events';
-import { CRM_PORT_FACTORY, OPPORTUNITY_REPOSITORY, OpportunityRepository, RECORD_SCOPE_PROVIDER, RecordScopeProvider, Transaction } from './ports';
+import { CRM_PORT_FACTORY, OPPORTUNITY_REPOSITORY, OpportunityLookup, OpportunityRepository, OpportunitySnapshot, RECORD_SCOPE_PROVIDER, RecordScopeProvider, Transaction } from './ports';
 import { DefaultCrmPortFactory } from './crm-port';
 import { CrmContext } from './crm-context';
 import { inScope } from './crm-scope';
@@ -22,7 +22,7 @@ export interface PolicyIssuedEvent {
 
 /** Pipeline (CRM03): board, adjacent moves, loss; ISSUED only via the insurer-confirmation event (AC-M04-05/15). */
 @Injectable()
-export class OpportunityService {
+export class OpportunityService implements OpportunityLookup {
   constructor(
     @Inject(OPPORTUNITY_REPOSITORY) private readonly opportunities: OpportunityRepository,
     @Inject(RECORD_SCOPE_PROVIDER) private readonly scopes: RecordScopeProvider,
@@ -85,6 +85,26 @@ export class OpportunityService {
       }
       return opportunityView(opp, now);
     });
+  }
+
+  /** Subscriber for quote.request.shared (M06): a DISCOVERY opportunity moves to QUOTE_SHARED; later stages stay. */
+  async onQuoteShared(event: DomainEvent<{ opportunityId?: string }>): Promise<void> {
+    const id = event.data.opportunityId;
+    if (!id) return;
+    await this.ctx.uow.run(event.tenantId, async (tx) => {
+      const opp = await this.opportunities.get(tx, id);
+      if (!opp || opp.props.stage !== 'DISCOVERY') return;
+      opp.move('QUOTE_SHARED', this.ctx.clock.now());
+      await (await this.ports.forTenant(tx.tenantId)).saveOpportunity(tx, opp);
+    });
+  }
+
+  /** OpportunityLookup (M06): the opportunity when it is inside the caller's record scope. */
+  async inScope(tx: Transaction, principal: Principal, id: string): Promise<OpportunitySnapshot | undefined> {
+    const opp = await this.opportunities.get(tx, id);
+    if (!opp || !inScope(opp.props, await this.scopes.resolve(tx, principal))) return undefined;
+    const p = opp.props;
+    return { id: p.id, partyId: p.partyId, ownerMemberId: p.ownerMemberId, orgUnitId: p.orgUnitId, productInterest: p.productInterest, stage: p.stage };
   }
 
   private async requireInScope(tx: Transaction, principal: Principal, id: string): Promise<Opportunity> {

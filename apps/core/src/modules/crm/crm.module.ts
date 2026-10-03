@@ -13,7 +13,7 @@ import { StageRuleSet } from './domain/stage-rules';
 import { DefaultCadencePolicy } from './domain/cadence';
 import {
   ACTIVITY_REPOSITORY, ActivityRepository, CADENCE_POLICY, CRM_PORT_FACTORY, LEAD_IMPORT_REPOSITORY, LEAD_REPOSITORY, LeadImportRepository, LeadRepository, MY_WORK_CONTRIBUTORS,
-  OPPORTUNITY_REPOSITORY, OpportunityRepository, PARTY_FACADE, POS_ELIGIBILITY, PUBLIC_LEAD_GUARD, PartyFacade, PublicLeadGuard, ROUTING_RULE_REPOSITORY, RoutingRuleRepository, STAGE_RULES, TASK_REPOSITORY,
+  OPPORTUNITY_LOOKUP, OPPORTUNITY_REPOSITORY, OpportunityRepository, PARTY_FACADE, POS_ELIGIBILITY, PUBLIC_LEAD_GUARD, PartyFacade, PublicLeadGuard, ROUTING_RULE_REPOSITORY, RoutingRuleRepository, STAGE_RULES, TASK_REPOSITORY,
   TaskRepository,
 } from './application/ports';
 import { CrmContext } from './application/crm-context';
@@ -102,7 +102,7 @@ const policies: Provider[] = [
 
 const services: Provider[] = [
   CrmContext, RoutingService, LeadAssignment, LeadCaptureService, LeadViews, LeadDeps, LeadService, ActivityService, TaskService,
-  ConversionService, OpportunityService, MyWorkService, LeadImportService, CrmSubscribers, SlaSweepJob, CrmSyncWorker, SyncRecordSource, TwentyWebhookService, TwentyOwnerChange,
+  ConversionService, OpportunityService, { provide: OPPORTUNITY_LOOKUP, useExisting: OpportunityService }, MyWorkService, LeadImportService, CrmSubscribers, SlaSweepJob, CrmSyncWorker, SyncRecordSource, TwentyWebhookService, TwentyOwnerChange,
 ];
 
 /**
@@ -113,7 +113,7 @@ const services: Provider[] = [
   imports: [TenancyModule, DistributionModule, PartyModule, CatalogueModule],
   controllers: [LeadsController, PublicLeadsController, OpportunitiesController, TasksController, RoutingController, MyWorkController, LeadImportsController, TwentyWebhookController],
   providers: [...adapters, ...policies, ...services],
-  exports: [SlaSweepJob, TaskService],
+  exports: [SlaSweepJob, TaskService, OPPORTUNITY_LOOKUP],
 })
 export class CrmModule implements OnModuleInit {
   constructor(
@@ -131,6 +131,7 @@ export class CrmModule implements OnModuleInit {
     on('party.party.merged', (e) => this.subscribers.onPartyMerged(e as DomainEvent<{ survivorId: string; mergedId: string }>));
     // Rethrows on failure so the outbox relay retries the sync (dead-letter after 3 attempts).
     on(SYNC_REQUESTED, (e) => this.syncWorker.handle(e as DomainEvent<{ object: SyncObject; id: string }>));
+    on('quote.request.shared', (e) => this.subscribers.onQuoteShared(e as DomainEvent<{ opportunityId?: string }>));
     on('proposal.policy.issued', (e) => this.subscribers.onPolicyIssued(e as DomainEvent<{ proposalId: string; opportunityId?: string; policySaleId: string }>));
   }
 }

@@ -12,8 +12,11 @@ export interface ProblemDetails {
   code: string;
   traceId?: string;
   errors?: FieldError[];
+  details?: Record<string, unknown>;
   [key: string]: unknown;
 }
+
+const STANDARD_MEMBERS = new Set(['type', 'title', 'status', 'detail', 'instance', 'code', 'traceId', 'errors', 'details']);
 
 export class ApiError extends Error {
   status: number;
@@ -22,6 +25,7 @@ export class ApiError extends Error {
   detail?: string;
   traceId?: string;
   errors?: FieldError[];
+  details?: Record<string, unknown>;
 
   constructor(
     status: number,
@@ -39,13 +43,19 @@ export class ApiError extends Error {
   }
 
   static fromProblem(status: number, body: Partial<ProblemDetails>): ApiError {
-    return new ApiError(
+    const error = new ApiError(
       body.status ?? status,
       body.code ?? 'unknown_error',
       body.title ?? 'An error occurred',
       body.detail,
       body.traceId,
     );
+    error.errors = body.errors;
+    // The API spreads error details as top-level problem members (e.g. `missing`, `reason`); keep them together here.
+    const extensions = Object.fromEntries(Object.entries(body).filter(([key]) => !STANDARD_MEMBERS.has(key)));
+    const merged = { ...extensions, ...(body.details ?? {}) };
+    error.details = Object.keys(merged).length ? merged : undefined;
+    return error;
   }
 
   static network(cause: Error): ApiError {

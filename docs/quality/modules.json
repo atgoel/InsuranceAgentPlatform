@@ -111,6 +111,24 @@
       "webTests": [
         "src/features/catalogue"
       ]
+    },
+    {
+      "id": "M06",
+      "name": "Advice & Quote",
+      "spec": "docs/spec/modules/M06-advice-quote.md",
+      "core": [
+        "src/modules/advice"
+      ],
+      "coreTests": [
+        "src/modules/advice",
+        "test/advice"
+      ],
+      "web": [
+        "src/features/advice"
+      ],
+      "webTests": [
+        "src/features/advice"
+      ]
     }
   ]
 }

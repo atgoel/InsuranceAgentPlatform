@@ -8,7 +8,8 @@ import { DomainEvent } from '../../kernel/domain/domain-event';
 import { RolePermissionMatrix } from '../../kernel/tenancy/permissions';
 import { TenancyModule } from '../tenancy/tenancy.module';
 import { DistributionModule } from '../distribution/distribution.module';
-import { CATALOGUE_REPOSITORY, COMPARISON_SCOPE_FACADE, POS_CATALOGUE_READER, SCOPE_INPUTS_PROVIDER } from './application/ports';
+import { CATALOGUE_QUERY, CATALOGUE_REPOSITORY, COMPARISON_SCOPE_FACADE, POS_CATALOGUE_READER, SCOPE_INPUTS_PROVIDER } from './application/ports';
+import { VersionDetailsReader } from './application/version-details.reader';
 import { DefaultPosCatalogueReader } from './application/pos-catalogue.reader';
 import { CatalogueContext } from './application/catalogue-context';
 import { DefaultScopeInputsProvider } from './application/scope-inputs.provider';
@@ -38,6 +39,7 @@ const providers: Provider[] = [
   ComparisonScopeService,
   { provide: COMPARISON_SCOPE_FACADE, useExisting: ComparisonScopeService },
   { provide: POS_CATALOGUE_READER, useClass: DefaultPosCatalogueReader },
+  { provide: CATALOGUE_QUERY, useClass: VersionDetailsReader },
   CatalogueContext, CatalogueQueryService, CatalogueAdminService, ProductVersionLocker,
 ];
 
@@ -46,7 +48,7 @@ const providers: Provider[] = [
   imports: [TenancyModule, DistributionModule],
   controllers: [CatalogueController, OperatorCatalogueController],
   providers,
-  exports: [COMPARISON_SCOPE_FACADE, POS_CATALOGUE_READER],
+  exports: [COMPARISON_SCOPE_FACADE, POS_CATALOGUE_READER, CATALOGUE_QUERY],
 })
 export class CatalogueModule implements OnModuleInit, OnApplicationBootstrap {
   constructor(

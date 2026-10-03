@@ -70,5 +70,17 @@
     "covAvg": 93.4,
     "allPass": true,
     "date": "2026-10-03"
+  },
+  "M06": {
+    "name": "Advice & Quote",
+    "total": 95.2,
+    "coverage": 34,
+    "lint": 15,
+    "types": 10,
+    "trace": 15,
+    "review": 21.3,
+    "covAvg": 87.4,
+    "allPass": true,
+    "date": "2026-10-03"
   }
 }

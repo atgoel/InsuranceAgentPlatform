@@ -55,6 +55,8 @@ export interface KernelConfig {
   platformDatabaseUrl?: string;
   tokenSecret: string;
   actorPepper: string;
+  /** HMAC key for public quote-share links (M06 §3.5). */
+  shareTokenSecret: string;
   debugTokenSecret: string;
   devAuth: boolean;
   trustProxy: boolean;
@@ -69,6 +71,7 @@ const configSchema = z.object({
   databaseUrl: z.string().optional(),
   tokenSecret: z.string(),
   actorPepper: z.string(),
+  shareTokenSecret: z.string(),
   debugTokenSecret: z.string(),
   devAuth: z.boolean(),
   trustProxy: z.boolean(),
@@ -90,6 +93,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): KernelConfig {
     platformDatabaseUrl: env.PLATFORM_DATABASE_URL ?? env.DATABASE_URL,
     tokenSecret: env.AUTH_HS256_SECRET || '',
     actorPepper: env.ACTOR_PEPPER || '',
+    shareTokenSecret: shareTokenSecret(env, nodeEnv),
     debugTokenSecret: env.DEBUG_TOKEN_SECRET || '',
     devAuth: env.DEV_AUTH === '1' && nodeEnv !== 'production',
     trustProxy: env.TRUST_PROXY === '1',
@@ -111,13 +115,27 @@ function parseJson<T>(raw: string | undefined, name: string): T {
   }
 }
 
+/** Production needs strong secrets; elsewhere the share secret falls back to one derived from the token secret. */
+function shareTokenSecret(env: NodeJS.ProcessEnv, nodeEnv: string): string {
+  if (env.SHARE_TOKEN_SECRET) return env.SHARE_TOKEN_SECRET;
+  return nodeEnv === 'production' ? '' : `${env.AUTH_HS256_SECRET || ''}:share`;
+}
+
+function productionSecretErrors(nodeEnv: string, c: KernelConfig): string[] {
+  if (nodeEnv !== 'production') return [];
+  const errors: string[] = [];
+  if (c.tokenSecret.length < 32) errors.push('AUTH_HS256_SECRET must be at least 32 characters in production');
+  if (c.shareTokenSecret.length < 32) errors.push('SHARE_TOKEN_SECRET must be at least 32 characters in production');
+  return errors;
+}
+
 function validationErrors(nodeEnv: string, c: KernelConfig): string[] {
   const errors: string[] = [];
   if (!['development', 'test', 'production'].includes(nodeEnv)) errors.push(`Invalid NODE_ENV: ${nodeEnv}`);
   if (!c.tokenSecret) errors.push('AUTH_HS256_SECRET is required');
   if (!c.actorPepper) errors.push('ACTOR_PEPPER is required');
   if (!c.debugTokenSecret) errors.push('DEBUG_TOKEN_SECRET is required');
-  if (nodeEnv === 'production' && c.tokenSecret.length < 32) errors.push('AUTH_HS256_SECRET must be at least 32 characters in production');
+  errors.push(...productionSecretErrors(nodeEnv, c));
   if (c.persistence === 'pg' && !c.databaseUrl) errors.push('DATABASE_URL is required when PERSISTENCE is pg');
   return errors;
 }

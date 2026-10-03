@@ -2,7 +2,8 @@ import { Transaction } from '../../../kernel/persistence/unit-of-work';
 import { Lead, LeadSource, LeadStage, ProductLine } from '../domain/lead';
 import { Activity } from '../domain/activity';
 import { Task, TaskKind, TaskStatus } from '../domain/task';
-import { Opportunity } from '../domain/opportunity';
+import { Opportunity, OpportunityStage } from '../domain/opportunity';
+import { Principal } from '../../../kernel/tenancy/principal';
 import { RoutingRule } from '../domain/routing/routing-rule';
 import { RecordScope } from '../../distribution/application/ports';
 
@@ -123,6 +124,21 @@ export interface PosEligibilityPolicy {
   isPosEligible(product: ProductLine): Promise<boolean>;
 }
 
+/** Published for M06: an opportunity as seen by a caller, or undefined when missing or outside the caller's record scope. */
+export interface OpportunitySnapshot {
+  id: string;
+  partyId: string;
+  ownerMemberId: string;
+  orgUnitId?: string;
+  productInterest: ProductLine;
+  stage: OpportunityStage;
+}
+
+export interface OpportunityLookup {
+  inScope(tx: Transaction, principal: Principal, opportunityId: string): Promise<OpportunitySnapshot | undefined>;
+}
+
+export const OPPORTUNITY_LOOKUP = Symbol('OpportunityLookup');
 export const POS_ELIGIBILITY = Symbol('PosEligibilityPolicy');
 export const LEAD_REPOSITORY = Symbol('LeadRepository');
 export const ACTIVITY_REPOSITORY = Symbol('ActivityRepository');

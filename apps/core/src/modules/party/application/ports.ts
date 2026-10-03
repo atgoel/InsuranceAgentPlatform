@@ -126,6 +126,7 @@ export interface PartySummary {
   readonly preferredChannel?: string;
   readonly status: PartyStatus;
   readonly ownerMemberId?: string;
+  readonly orgUnitId?: string;
 }
 
 export interface DuplicateCandidateView {

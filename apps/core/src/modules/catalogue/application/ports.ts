@@ -37,6 +37,22 @@ export interface PosCatalogueReader {
   posEligibleCategories(date: string): Promise<ReadonlySet<Product['category']>>;
 }
 
+/** Published for M06: product names and category per version (no scope check — callers check scope first). */
+export interface VersionDetail {
+  versionId: string;
+  productId: string;
+  productName: string;
+  insurerId: string;
+  insurerName: string;
+  line: LineOfBusiness;
+  category: Product['category'];
+}
+
+export interface CatalogueQueryFacade {
+  versionDetails(versionIds: readonly string[]): Promise<VersionDetail[]>;
+}
+
+export const CATALOGUE_QUERY = Symbol('CatalogueQueryFacade');
 export const POS_CATALOGUE_READER = Symbol('PosCatalogueReader');
 export const CATALOGUE_REPOSITORY = Symbol('CatalogueRepository');
 export const SCOPE_INPUTS_PROVIDER = Symbol('ScopeInputsProvider');

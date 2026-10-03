@@ -8,10 +8,12 @@ import { DistributionModule } from '../../src/modules/distribution/distribution.
 import { PartyModule } from '../../src/modules/party/party.module';
 import { CrmModule } from '../../src/modules/crm/crm.module';
 import { CatalogueModule } from '../../src/modules/catalogue/catalogue.module';
+import { AdviceModule } from '../../src/modules/advice/advice.module';
+import { istDate, addDays } from '../../src/kernel/domain/ist';
 import { FakeTwentyClient } from '../../src/modules/crm/infrastructure/twenty/fake-twenty.client';
 import { seedCatalogueIfEmpty } from '../../src/modules/catalogue/infrastructure/seed-catalogue.pg';
 import { createTestApp, TestApp } from '../support/test-app';
-import { tokenFor } from '../support/tokens';
+import { operatorToken, tokenFor } from '../support/tokens';
 import { newIdempotencyKey } from '../support/idempotency';
 import { setupSellerWithRouting } from '../crm/fixtures';
 
@@ -29,7 +31,7 @@ run('AC-M00-23 application boot and lead journey on Postgres', () => {
   const admin = tokenFor({ tenantId, roles: ['TENANT_ADMIN'], memberId: 'admin' });
   const boot = () =>
     createTestApp({
-      imports: [TenancyModule, DistributionModule, PartyModule, CrmModule, CatalogueModule],
+      imports: [TenancyModule, DistributionModule, PartyModule, CrmModule, CatalogueModule, AdviceModule],
       config: {
         persistence: 'pg',
         databaseUrl: process.env.DATABASE_URL,
@@ -103,6 +105,34 @@ run('AC-M00-23 application boot and lead journey on Postgres', () => {
     expect(twenty.find('lead', state.leadId as string)?.fields).toMatchObject({ core_id: state.leadId, stage: 'CONVERTED', product_interest: 'TERM_LIFE' });
     expect(twenty.find('opportunity', state.opportunityId as string)?.fields).toMatchObject({ premium_band: '15-30k', stage: 'DISCOVERY' });
     expect((await req('get', `/api/v1/leads/${state.leadId}`)).body.syncState).toBe('synced');
+  });
+
+  it('AC-M06-11 a quote is opened, an option added and shared on Postgres; the relayed events move the opportunity and lock the product version (M06)', async () => {
+    const opportunityId = state.opportunityId as string;
+    const opened = await req('post', '/api/v1/quotes', { opportunityId, insuredPartyIds: [state.partyId], requirements: { sumAssured: '1cr' } });
+    expect(opened.status).toBe(201);
+    const quoteId = opened.body.id as string;
+    const validUntil = addDays(istDate(t.clock.now()), 30);
+    const added = await req('post', `/api/v1/quotes/${quoteId}/options`, {
+      versionId: 'pv_hdfc_term_v1', source: 'MANUAL_PORTAL', insurerQuoteRef: `QREF-${suffix}`, sumAssuredPaise: 1_000_000_000, policyTermYears: 30,
+      premium: { basePaise: 1_000_000, ridersPaise: 100_000, taxPaise: 198_000, totalPaise: 1_298_000, frequency: 'ANNUAL' },
+      coverage: [], exclusions: [], waitingPeriods: [], assumptions: {}, validUntil,
+    });
+    expect(added.status).toBe(201);
+    expect(added.body.options).toHaveLength(1);
+    expect((await req('post', `/api/v1/quotes/${quoteId}/shares`)).status).toBe(200);
+
+    await t.app.get<OutboxRelay>(OUTBOX_RELAY).relayOnce(1000);
+
+    const quote = await req('get', `/api/v1/quotes/${quoteId}`);
+    expect(quote.body).toMatchObject({ id: quoteId, status: 'SHARED' });
+    expect(quote.body.options[0]).toMatchObject({ versionId: 'pv_hdfc_term_v1', validUntil, premium: { totalPaise: 1_298_000 } });
+    const board = await req('get', '/api/v1/opportunities');
+    const items = (board.body.columns as Array<{ items: Array<{ id: string; stage: string }> }>).flatMap((c) => c.items);
+    expect(items.find((i) => i.id === opportunityId)?.stage).toBe('QUOTE_SHARED');
+    const edit = await t.http.put('/api/v1/ops/catalogue/versions/pv_hdfc_term_v1').set('Authorization', `Bearer ${operatorToken()}`).send({ posEligible: true });
+    expect(edit.status).toBe(422);
+    expect(edit.body.code).toBe('product_version_locked');
   });
 
   it('AC-M00-23 after a restart everything is read back from Postgres', async () => {

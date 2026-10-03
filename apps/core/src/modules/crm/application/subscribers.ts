@@ -73,6 +73,11 @@ export class CrmSubscribers {
   onPolicyIssued(event: DomainEvent<PolicyIssuedEvent>): Promise<boolean> {
     return this.inbox.processOnce(CONSUMER, event.id, () => this.opportunityService.onPolicyIssued(event));
   }
+
+  /** quote.request.shared (M06) → a DISCOVERY opportunity moves to QUOTE_SHARED (AC-M06-09). */
+  onQuoteShared(event: DomainEvent<{ opportunityId?: string }>): Promise<boolean> {
+    return this.inbox.processOnce(CONSUMER, event.id, () => this.opportunityService.onQuoteShared(event));
+  }
 }
 
 /** SLA sweep job: breached first responses are announced; NOTIFY_THEN_REASSIGN rules re-route after their delay. */

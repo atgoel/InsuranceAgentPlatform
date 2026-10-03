@@ -39,6 +39,7 @@ describe('config', () => {
         AUTH_HS256_SECRET: 'test-secret-32-chars-minimum!!!1',
         ACTOR_PEPPER: 'test-pepper',
         DEBUG_TOKEN_SECRET: 'test-debug-secret-32-chars!!!1',
+        SHARE_TOKEN_SECRET: 'test-share-secret-32-chars-min!!1',
         DEV_AUTH: '1',
       };
 
@@ -111,6 +112,31 @@ describe('config', () => {
       expect(() => loadConfig(env)).toThrow();
     });
 
+    it('AC-M06-08 production requires SHARE_TOKEN_SECRET of at least 32 characters', () => {
+      const env: NodeJS.ProcessEnv = {
+        NODE_ENV: 'production',
+        AUTH_HS256_SECRET: 'test-secret-32-chars-minimum!!!1',
+        ACTOR_PEPPER: 'test-pepper',
+        DEBUG_TOKEN_SECRET: 'test-debug-secret-32-chars!!!1',
+      };
+
+      expect(() => loadConfig(env)).toThrow('SHARE_TOKEN_SECRET must be at least 32 characters in production');
+      expect(() => loadConfig({ ...env, SHARE_TOKEN_SECRET: 'too-short' })).toThrow('SHARE_TOKEN_SECRET must be at least 32 characters in production');
+      expect(loadConfig({ ...env, SHARE_TOKEN_SECRET: 'test-share-secret-32-chars-min!!1' }).shareTokenSecret).toBe('test-share-secret-32-chars-min!!1');
+    });
+
+    it('AC-M06-08 outside production the share secret falls back to one derived from the token secret unless set', () => {
+      const env: NodeJS.ProcessEnv = {
+        NODE_ENV: 'development',
+        AUTH_HS256_SECRET: 'dev-secret',
+        ACTOR_PEPPER: 'test-pepper',
+        DEBUG_TOKEN_SECRET: 'test-debug-secret-32-chars!!!1',
+      };
+
+      expect(loadConfig(env).shareTokenSecret).toBe('dev-secret:share');
+      expect(loadConfig({ ...env, SHARE_TOKEN_SECRET: 'explicit' }).shareTokenSecret).toBe('explicit');
+    });
+
     it('allows short secrets in development', () => {
       const env: NodeJS.ProcessEnv = {
         NODE_ENV: 'development',
@@ -146,10 +172,11 @@ describe('config', () => {
         AUTH_HS256_SECRET: 'test-secret-32-chars-minimum!!!1',
         ACTOR_PEPPER: 'test-pepper',
         DEBUG_TOKEN_SECRET: 'test-debug-secret-32-chars!!!1',
+        SHARE_TOKEN_SECRET: 'test-share-secret-32-chars-min!!1',
         PERSISTENCE: 'pg',
       };
 
-      expect(() => loadConfig(env)).toThrow();
+      expect(() => loadConfig(env)).toThrow('DATABASE_URL is required when PERSISTENCE is pg');
     });
 
     it('parses LOG_SAMPLE_RATES as JSON', () => {

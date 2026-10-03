@@ -44,6 +44,10 @@ export const routes: RouteObject[] = [
         lazy: () => import('../features/catalogue/screens/ResearchLibraryScreen').then(m => ({ Component: m.ResearchLibraryScreen })),
       },
       {
+        path: 'calculators',
+        lazy: () => import('../features/advice/screens/CalculatorsScreen').then(m => ({ Component: m.CalculatorsScreen })),
+      },
+      {
         path: 'compare',
         lazy: () => import('../features/catalogue/screens/CompareScreen').then(m => ({ Component: m.CompareScreen })),
       },
@@ -88,6 +92,14 @@ export const routes: RouteObject[] = [
       {
         path: 'customers/:id',
         lazy: () => import('../features/party/screens/CustomerRecordScreen').then(m => ({ Component: m.CustomerRecordScreen })),
+      },
+      {
+        path: 'opportunities/:id/quote',
+        lazy: () => import('../features/advice/screens/QuoteWorkspaceScreen').then(m => ({ Component: m.QuoteWorkspaceScreen })),
+      },
+      {
+        path: 'advice/:id',
+        lazy: () => import('../features/advice/screens/AdviceRecordScreen').then(m => ({ Component: m.AdviceRecordScreen })),
       },
       {
         path: 'routing',
