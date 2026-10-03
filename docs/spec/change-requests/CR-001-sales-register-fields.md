@@ -38,13 +38,13 @@ Example: `1 | JULY | STAR HEALTH | HEALTH | NITISH VATS | 99532xxxxx | 02-07-202
 | 23 | Term | `policy_term_years` | ⚠️ **Partial**: short-term motor/travel needs `policy_term_months` |
 | 24 | Proposer DOB | Party `dob_enc` (P3, encrypted) + `dob_year` | ✅ |
 | 25 | Remarks | — on held policy (activities exist) | ⚠️ **Gap**: a `remarks` note on the policy (SensitiveContentGuard applies) |
-| 26 | Reference | Platform leads: `attribution.referrerPartyId`; imported: — | ⚠️ **Gap**: `referred_by` (party link or free-text name) on held policy / sale |
+| 26 | Reference (the person who referred the client, e.g. "SAURABH") | Platform leads: `attribution.referrerPartyId`; imported: — | ⚠️ **Gap**: `referred_by_name` (free text as written) + `referred_by_party_id` / `referred_by_member_id` when it resolves to a known party or team member. It is **not** the seller: the seller stays `seller_member_id` |
 | 27 | SOURCE (IN HOUSE) | Lead `attribution.source` (platform); imported: — | ⚠️ **Gap**: `business_source` on held policy / sale (IN_HOUSE, REFERRAL, POSP, WALK_IN, …), mapped to M04 LeadSource where possible |
 | 28 | Commission | M10 `commission_entry` (EXPECTED/RECEIVED) | ✅ |
 | 29 | % | M10 `rate_pct` on the entry | ✅ |
 | 30 | Remarks (commission) | M10 entry `reason` | ✅ |
 | 31 | Invoice No. | — | ❌ **Gap**: the intermediary's GST invoice to the insurer for commission (`invoice_no`, `invoice_date`) on received commission |
-| — | (sample value "SAURABH") | Seller → `seller_member_id`, or the referrer | ✅ once mapped in the import profile |
+| — | (sample value "SAURABH") | **Confirmed by the customer (2026-10-03): the referrer** → `referred_by_name` | ✅ once mapped in the import profile (see §5 decision D1) |
 
 **Summary:** 14 fields are fully covered and 2 are import-only or derived. 15 are partial or missing: 9 belong in the core model (dates, category, business type, premium breakdown, channel, source/reference, invoice) and 6 are line-specific risk details or tenant-specific columns.
 
@@ -85,7 +85,13 @@ A saved M07 mapping profile **"Office sales register"** using these headers as s
 ## 4. Correctness issue found while mapping (fix now, independent of this CR)
 Insurer commission is paid on premium **excluding GST**. The M10 LLD said `expectedCommission(premiumPaise, ratePct)` without specifying the base. It is corrected to use `premium_net_paise` (premium without GST); see the M10 spec update. Health/motor quotes in M06 already separate base and tax.
 
-## 5. Impact and plan
+## 5. Decisions
+
+- **D1 (2026-10-03, customer):** "SAURABH" in the sample is the person who referred the client. The register's *Reference* column maps to `referred_by_name`; the import tries to resolve it to an existing party or team member (exact normalised-name match within the tenant, shown for confirmation, never auto-merged) and otherwise keeps the free text. Referrer attribution feeds MIS ("business by referrer") and, if the tenant later pays referral fees, M10 — no payout logic is in scope.
+- **D2 (import safety, from the same sample):** in the sample row the name appears one column right of *Reference* (under *Commission*), with *IN HOUSE* under *SOURCE*. The "Office sales register" import profile therefore maps columns by header with a preview-and-confirm step, and a non-numeric value in a money column (Commission, premiums, SI/IDV) is a row-level error shown in the preview — never read as zero or silently shifted.
+- **AC-CR001-06:** importing a register row whose *Reference* is "SAURABH" stores `referred_by_name = 'SAURABH'`, leaves `seller_member_id` unchanged, and links `referred_by_member_id` only after the importer confirms a suggested match; a row with text in *Commission* is rejected with `invalid_amount` naming the column.
+
+## 6. Impact and plan
 | Step | Change | Module |
 |---|---|---|
 | 1 | Kernel: `CustomFieldRegistry` (definitions, validation, PII class rules), `SchemaRegistry` for typed jsonb payloads | M00 (extension) |
