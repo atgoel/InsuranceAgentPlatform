@@ -1,0 +1,13 @@
+.catalogue-table {
+  padding: 1rem;
+}
+
+.table-header {
+  margin-bottom: 1.5rem;
+}
+
+.table-subtitle {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  margin: 0.5rem 0 0 0;
+}

@@ -26,6 +26,14 @@ export const routes: RouteObject[] = [
       { path: 'customers', element: <EmptyState title="Coming in a later module" /> },
       { path: 'book', element: <EmptyState title="Coming in a later module" /> },
       {
+        path: 'research',
+        lazy: () => import('../features/catalogue/screens/ResearchLibraryScreen').then(m => ({ Component: m.ResearchLibraryScreen })),
+      },
+      {
+        path: 'compare',
+        lazy: () => import('../features/catalogue/screens/CompareScreen').then(m => ({ Component: m.CompareScreen })),
+      },
+      {
         path: 'me',
         element: <div>Me Shell</div>,
         children: [

@@ -7,6 +7,14 @@ import { TenantSetupScreen } from './TenantSetupScreen';
 import { ApiClient } from '../../../lib/api/api-client';
 import { TenantProfile, TieUpsResponse } from '../api';
 
+/** Answers by path, so the embedded catalogue table (M05) can request in any order. */
+const byPath = (profile: unknown, tieUps: unknown) => (path: string) => {
+  if (path === '/api/v1/tenant') return Promise.resolve(profile);
+  if (path === '/api/v1/tenant/tie-ups') return Promise.resolve(tieUps);
+  if (path === '/api/v1/catalogue/products') return Promise.resolve({ items: [] });
+  return Promise.reject(new Error(`unexpected GET ${path}`));
+};
+
 describe('AC-M01-16 TenantSetupScreen', () => {
   const mockProfile: TenantProfile = {
     id: 'tenant-1',
@@ -60,9 +68,7 @@ describe('AC-M01-16 TenantSetupScreen', () => {
   });
 
   it('AC-M01-16 loads and displays tenant profile with entity and tie-ups', async () => {
-    (mockApiClient.get as Mock)
-      .mockResolvedValueOnce(mockProfile)
-      .mockResolvedValueOnce(mockTieUps);
+    (mockApiClient.get as Mock).mockImplementation(byPath(mockProfile, mockTieUps));
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -79,9 +85,7 @@ describe('AC-M01-16 TenantSetupScreen', () => {
   });
 
   it('AC-M01-16 displays registration status as valid chip', async () => {
-    (mockApiClient.get as Mock)
-      .mockResolvedValueOnce(mockProfile)
-      .mockResolvedValueOnce(mockTieUps);
+    (mockApiClient.get as Mock).mockImplementation(byPath(mockProfile, mockTieUps));
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -95,9 +99,7 @@ describe('AC-M01-16 TenantSetupScreen', () => {
   });
 
   it('AC-M01-16 displays comparison scope for IMF as tied insurers', async () => {
-    (mockApiClient.get as Mock)
-      .mockResolvedValueOnce(mockProfile)
-      .mockResolvedValueOnce(mockTieUps);
+    (mockApiClient.get as Mock).mockImplementation(byPath(mockProfile, mockTieUps));
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -111,9 +113,7 @@ describe('AC-M01-16 TenantSetupScreen', () => {
   });
 
   it('AC-M01-16 displays tie-ups per line with used/max counters', async () => {
-    (mockApiClient.get as Mock)
-      .mockResolvedValueOnce(mockProfile)
-      .mockResolvedValueOnce(mockTieUps);
+    (mockApiClient.get as Mock).mockImplementation(byPath(mockProfile, mockTieUps));
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -145,9 +145,7 @@ describe('AC-M01-16 TenantSetupScreen', () => {
       ],
     };
 
-    (mockApiClient.get as Mock)
-      .mockResolvedValueOnce(overLimitProfile)
-      .mockResolvedValueOnce(overLimitTieUps);
+    (mockApiClient.get as Mock).mockImplementation(byPath(overLimitProfile, overLimitTieUps));
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -161,9 +159,7 @@ describe('AC-M01-16 TenantSetupScreen', () => {
   });
 
   it('AC-M01-16 shows referral rewards disabled with legal text', async () => {
-    (mockApiClient.get as Mock)
-      .mockResolvedValueOnce(mockProfile)
-      .mockResolvedValueOnce(mockTieUps);
+    (mockApiClient.get as Mock).mockImplementation(byPath(mockProfile, mockTieUps));
 
     render(
       <ApiProvider client={mockApiClient}>

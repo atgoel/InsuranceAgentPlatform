@@ -61,4 +61,49 @@ export const messagesHi = {
   'tenancy.plan.usage_warning': 'आपने इस महीने के {percent}% उपयोग कर लिए हैं',
   'tenancy.plan.trial_cta_title': 'प्रो में अपग्रेड करें',
   'tenancy.plan.start_trial': '14 दिन की निःशुल्क परीक्षण शुरू करें',
+
+  // Catalogue (M05)
+  'catalogue.line.all': 'सभी',
+  'catalogue.line.life': 'जीवन',
+  'catalogue.line.health': 'स्वास्थ्य',
+  'catalogue.line.general': 'सामान्य',
+  'catalogue.line.filter': 'व्यवसाय की पंक्ति',
+
+  // Catalogue Table (W07)
+  'catalogue.table.title': 'उत्पाद कैटलॉग',
+  'catalogue.table.subtitle': 'केवल सक्रिय टाई-अप के उत्पाद ही बेचे जा सकते हैं',
+  'catalogue.column.product': 'उत्पाद',
+  'catalogue.column.insurer': 'बीमाकर्ता',
+  'catalogue.column.line': 'लाइन',
+  'catalogue.column.uin': 'यूआईएन',
+  'catalogue.column.isp': 'आईएसपी ✓',
+  'catalogue.column.posp': 'पीओएसपी ✓/–',
+  'catalogue.column.wording': 'शब्दांकन',
+  'catalogue.column.status': 'स्थिति',
+  'catalogue.status.in_scope': 'स्कोप में',
+  'catalogue.status.not_tied': 'टाई नहीं किया गया',
+  'catalogue.status.withdrawn': 'वापस लिया गया',
+  'catalogue.status.not_in_scope': 'स्कोप में नहीं',
+
+  // Research Library (M07)
+  'catalogue.research.title': 'रिसर्च लाइब्रेरी',
+  'catalogue.research.subtitle': 'आपके संबद्ध बीमाकर्ताओं के लिए अनुमोदित सामग्री',
+  'catalogue.research.tab_library': 'लाइब्रेरी',
+  'catalogue.research.tab_assistant': 'सहायक',
+  'catalogue.research.search_placeholder': 'उत्पादें, बीमाकर्ताओं को खोजें...',
+  'catalogue.research.no_items': 'कोई अनुसंधान आइटम नहीं मिला',
+  'catalogue.research.posp_eligible': 'पीओएसपी योग्य',
+  'catalogue.research.source': 'स्रोत',
+  'catalogue.research.compare_button': 'तुलना करें',
+  'catalogue.research.stale_banner': 'बीमाकर्ता ने शब्दांकन अपडेट किया - केवल शब्दांकन से उद्धृत करें।',
+  'catalogue.research.coming_later': 'बाद में आ रहा है',
+
+  // Compare (M08)
+  'catalogue.compare.title': 'योजनाओं की तुलना करें',
+  'catalogue.compare.disclosure_caption': 'साझा तुलनाओं पर दिखाई देता है',
+  'catalogue.compare.no_plans': 'तुलना के लिए कोई योजना उपलब्ध नहीं है',
+  'catalogue.compare.key_facts': 'मुख्य तथ्य',
+  'catalogue.compare.select': 'प्लान चुनें',
+  'catalogue.compare.selected': 'चुना गया',
+  'catalogue.compare.quotes_coming': 'उद्धरण बाद में आ रहे हैं',
 } as const;

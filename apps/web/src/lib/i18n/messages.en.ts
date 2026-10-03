@@ -316,4 +316,49 @@ export const messagesEn = {
   'crm.task.owner': 'Owner (optional)',
   'crm.task.owner_placeholder': 'Leave blank for current user',
   'crm.tasks.create': 'Create task',
+
+  // Catalogue (M05)
+  'catalogue.line.all': 'All',
+  'catalogue.line.life': 'Life',
+  'catalogue.line.health': 'Health',
+  'catalogue.line.general': 'General',
+  'catalogue.line.filter': 'Line of Business',
+
+  // Catalogue Table (W07)
+  'catalogue.table.title': 'Product catalogue',
+  'catalogue.table.subtitle': 'Only products of active tie-ups are saleable',
+  'catalogue.column.product': 'Product',
+  'catalogue.column.insurer': 'Insurer',
+  'catalogue.column.line': 'Line',
+  'catalogue.column.uin': 'UIN',
+  'catalogue.column.isp': 'ISP ✓',
+  'catalogue.column.posp': 'POSP ✓/–',
+  'catalogue.column.wording': 'Wording',
+  'catalogue.column.status': 'Status',
+  'catalogue.status.in_scope': 'In scope',
+  'catalogue.status.not_tied': 'Not tied',
+  'catalogue.status.withdrawn': 'Withdrawn',
+  'catalogue.status.not_in_scope': 'Not in scope',
+
+  // Research Library (M07)
+  'catalogue.research.title': 'Research library',
+  'catalogue.research.subtitle': 'Approved content for your tied insurers only',
+  'catalogue.research.tab_library': 'Library',
+  'catalogue.research.tab_assistant': 'Assistant',
+  'catalogue.research.search_placeholder': 'Search products, insurers...',
+  'catalogue.research.no_items': 'No research items found',
+  'catalogue.research.posp_eligible': 'POSP eligible',
+  'catalogue.research.source': 'Source',
+  'catalogue.research.compare_button': 'Compare',
+  'catalogue.research.stale_banner': 'Insurer updated the wording — quote from the wording only.',
+  'catalogue.research.coming_later': 'Coming in a later module',
+
+  // Compare (M08)
+  'catalogue.compare.title': 'Compare Plans',
+  'catalogue.compare.disclosure_caption': 'Appears on shared comparisons',
+  'catalogue.compare.no_plans': 'No plans available for comparison',
+  'catalogue.compare.key_facts': 'Key Facts',
+  'catalogue.compare.select': 'Select plan',
+  'catalogue.compare.selected': 'Selected',
+  'catalogue.compare.quotes_coming': 'Quotes arrive in a later module',
 } as const;

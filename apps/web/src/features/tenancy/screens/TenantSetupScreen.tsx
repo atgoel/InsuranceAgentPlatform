@@ -4,6 +4,7 @@ import { Button, Card, StatusChip, LoadingSkeleton, ErrorState, PermissionDenied
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
 import { createTenancyApi, TieUp, TenantProfile, TieUpsResponse, LineOfBusiness } from '../api';
+import { CatalogueTable } from '../../catalogue/components/CatalogueTable';
 import '../styles/TenantSetupScreen.css';
 
 interface TieUpsLine {
@@ -321,6 +322,10 @@ export function TenantSetupScreen() {
           />
         </Card>
       </div>
+
+      <Card title={t('catalogue.table.title')}>
+        <CatalogueTable />
+      </Card>
     </div>
   );
 }
