@@ -97,6 +97,7 @@ export const PERMISSION_REGISTRY: ReadonlySet<string> = new Set([
   'crm.routing.read',
   'crm.routing.write',
   'crm.import',
+  'catalogue.read',
   'party.medical.read',
   'audit.delete',
   'ops.*',
