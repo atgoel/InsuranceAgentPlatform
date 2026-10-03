@@ -63,9 +63,9 @@ export function TasksScreen() {
   );
 
   const handleTaskCompleted = useCallback(
-    async (taskId: string, _version: number, outcome?: string) => {
+    async (taskId: string, version: number, outcome?: string) => {
       try {
-        await crmApi.updateTask(taskId, { status: 'DONE', outcome });
+        await crmApi.updateTask(taskId, version, { status: 'DONE', outcome });
         // Reload tasks
         const result = await crmApi.listTasks({ mine: taskTab === 'my' });
         setGroups(result.groups);

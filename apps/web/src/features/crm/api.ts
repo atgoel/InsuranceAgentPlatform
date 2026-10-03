@@ -356,8 +356,10 @@ export function createCrmApi(apiClient: ApiClient) {
       );
     },
 
+    /** Optimistic concurrency: the task's version is sent as If-Match "v<version>" (412 when stale). */
     async updateTask(
       id: string,
+      version: number,
       input: {
         status?: 'DONE' | 'CANCELLED';
         outcome?: string;
@@ -365,7 +367,7 @@ export function createCrmApi(apiClient: ApiClient) {
         ownerMemberId?: string;
       }
     ): Promise<TaskView> {
-      return apiClient.patch(`/api/v1/tasks/${id}`, input);
+      return apiClient.patch(`/api/v1/tasks/${id}`, input, { ifMatch: `"v${version}"` });
     },
   };
 }
