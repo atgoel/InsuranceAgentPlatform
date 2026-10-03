@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 import { DomainEvent } from '../domain/domain-event';
 import { Transaction, isPgTransaction } from '../persistence/unit-of-work';
-import { Outbox, OutboxSource } from './outbox';
+import { MAX_DELIVERY_ATTEMPTS, Outbox, OutboxSource } from './outbox';
 
 interface OutboxRow {
   id: string; tenant_id: string; type: string; source: string; subject: string;
@@ -26,8 +26,8 @@ export class PgOutbox implements Outbox, OutboxSource {
 
   async fetchUnpublished(limit: number): Promise<DomainEvent[]> {
     const { rows } = await this.relayPool.query<OutboxRow>(
-      'select * from outbox_event where published_at is null order by occurred_at, id limit $1',
-      [limit],
+      'select * from outbox_event where published_at is null and attempts < $2 order by occurred_at, id limit $1',
+      [limit, MAX_DELIVERY_ATTEMPTS],
     );
     return rows.map(toEvent);
   }
@@ -46,7 +46,7 @@ export class PgOutbox implements Outbox, OutboxSource {
   }
 
   async countPending(): Promise<number> {
-    const { rows } = await this.relayPool.query<{ n: string }>('select count(*) as n from outbox_event where published_at is null');
+    const { rows } = await this.relayPool.query<{ n: string }>('select count(*) as n from outbox_event where published_at is null and attempts < $1', [MAX_DELIVERY_ATTEMPTS]);
     return Number(rows[0]?.n ?? 0);
   }
 }

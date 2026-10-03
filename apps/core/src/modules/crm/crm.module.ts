@@ -28,6 +28,16 @@ import { OpportunityService } from './application/opportunity.service';
 import { MyWorkService, defaultContributors } from './application/my-work.service';
 import { LeadImportService } from './application/lead-import.service';
 import { CrmSubscribers, SlaSweepJob } from './application/subscribers';
+import { CrmSyncWorker } from './application/crm-sync.worker';
+import { SyncRecordSource } from './application/sync-record.source';
+import { TwentyOwnerChange } from './application/twenty-owner-change';
+import { TwentyWebhookService } from './application/twenty-webhook.service';
+import { SYNC_REQUESTED } from './application/crm-port';
+import { CRM_SYNC_STATE_REPOSITORY, SyncObject, TWENTY_CLIENT, TWENTY_WORKSPACE_DIRECTORY } from './application/twenty-sync.ports';
+import { InMemoryCrmSyncStateRepository } from './infrastructure/twenty/in-memory-sync-state.repository';
+import { DerivedTwentyWorkspaceDirectory } from './infrastructure/twenty/derived-workspace.directory';
+import { FakeTwentyClient } from './infrastructure/twenty/fake-twenty.client';
+import { TwentyWebhookController } from './api/twenty-webhook.controller';
 import {
   InMemoryActivityRepository, InMemoryLeadImportRepository, InMemoryLeadRepository, InMemoryOpportunityRepository, InMemoryPublicLeadGuard,
   InMemoryRoutingRuleRepository, InMemoryTaskRepository,
@@ -57,6 +67,11 @@ const adapters: Provider[] = [
   { provide: ROUTING_RULE_REPOSITORY, useClass: InMemoryRoutingRuleRepository },
   { provide: LEAD_IMPORT_REPOSITORY, useClass: InMemoryLeadImportRepository },
   { provide: PUBLIC_LEAD_GUARD, useClass: InMemoryPublicLeadGuard },
+  { provide: CRM_SYNC_STATE_REPOSITORY, useClass: InMemoryCrmSyncStateRepository },
+  { provide: TWENTY_WORKSPACE_DIRECTORY, useClass: DerivedTwentyWorkspaceDirectory },
+  // The HTTP client (infrastructure/twenty/http-twenty.client.ts) is wired once Twenty hosting and the secret manager exist.
+  FakeTwentyClient,
+  { provide: TWENTY_CLIENT, useExisting: FakeTwentyClient },
 ];
 
 const policies: Provider[] = [
@@ -73,7 +88,7 @@ const policies: Provider[] = [
 
 const services: Provider[] = [
   CrmContext, RoutingService, LeadAssignment, LeadCaptureService, LeadViews, LeadDeps, LeadService, ActivityService, TaskService,
-  ConversionService, OpportunityService, MyWorkService, LeadImportService, CrmSubscribers, SlaSweepJob,
+  ConversionService, OpportunityService, MyWorkService, LeadImportService, CrmSubscribers, SlaSweepJob, CrmSyncWorker, SyncRecordSource, TwentyWebhookService, TwentyOwnerChange,
 ];
 
 /**
@@ -82,7 +97,7 @@ const services: Provider[] = [
  */
 @Module({
   imports: [TenancyModule, DistributionModule, PartyModule, CatalogueModule],
-  controllers: [LeadsController, PublicLeadsController, OpportunitiesController, TasksController, RoutingController, MyWorkController, LeadImportsController],
+  controllers: [LeadsController, PublicLeadsController, OpportunitiesController, TasksController, RoutingController, MyWorkController, LeadImportsController, TwentyWebhookController],
   providers: [...adapters, ...policies, ...services],
   exports: [SlaSweepJob, TaskService],
 })
@@ -91,6 +106,7 @@ export class CrmModule implements OnModuleInit {
     @Inject(PERMISSION_POLICY) private readonly permissions: RolePermissionMatrix,
     @Inject(EVENT_BUS) private readonly bus: EventBus,
     private readonly subscribers: CrmSubscribers,
+    private readonly syncWorker: CrmSyncWorker,
   ) {}
 
   onModuleInit(): void {
@@ -99,6 +115,8 @@ export class CrmModule implements OnModuleInit {
       this.bus.subscribe(type, async (e) => void (await handler(e as DomainEvent<T>)), `crm:${type}`);
     on('distribution.member.exited', (e) => this.subscribers.onMemberExited(e as DomainEvent<{ memberId?: string; transferToMemberId?: string | null }>));
     on('party.party.merged', (e) => this.subscribers.onPartyMerged(e as DomainEvent<{ survivorId: string; mergedId: string }>));
+    // Rethrows on failure so the outbox relay retries the sync (dead-letter after 3 attempts).
+    on(SYNC_REQUESTED, (e) => this.syncWorker.handle(e as DomainEvent<{ object: SyncObject; id: string }>));
     on('proposal.policy.issued', (e) => this.subscribers.onPolicyIssued(e as DomainEvent<{ proposalId: string; opportunityId?: string; policySaleId: string }>));
   }
 }

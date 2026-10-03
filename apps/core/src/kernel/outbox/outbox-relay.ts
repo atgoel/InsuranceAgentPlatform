@@ -2,7 +2,7 @@ import { DomainEvent } from '../domain/domain-event';
 import { Logger } from '../observability/logger';
 import { MetricsRegistry } from '../observability/metrics';
 import { EventBus } from './event-bus';
-import { OutboxSource } from './outbox';
+import { MAX_DELIVERY_ATTEMPTS, OutboxSource } from './outbox';
 
 export interface OutboxRelayDeps {
   source: OutboxSource;
@@ -23,7 +23,7 @@ export class OutboxRelay {
   private readonly maxAttempts: number;
 
   constructor(private readonly deps: OutboxRelayDeps) {
-    this.maxAttempts = deps.maxAttempts ?? 3;
+    this.maxAttempts = deps.maxAttempts ?? MAX_DELIVERY_ATTEMPTS;
   }
 
   async relayOnce(limit = 100): Promise<RelayResult> {

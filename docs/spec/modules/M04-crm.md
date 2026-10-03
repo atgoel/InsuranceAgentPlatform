@@ -334,6 +334,15 @@ Inbound: `POST /api/v1/webhooks/twenty/{workspaceId}` (`@Public`): HMAC-SHA256 o
 
 Degraded mode: when the Twenty circuit is open, writes still succeed (`syncState: 'pending'`) and the list/detail APIs show `syncState`.
 
+Implementation decisions (M04b build, 2026-10-03):
+- **Signature covers the timestamp:** `x-twenty-signature` = hex HMAC-SHA256 of `"<x-twenty-timestamp>.<raw body>"` (not the body alone), so a captured request cannot be replayed with a fresh timestamp. Unknown workspace and bad signature both answer 401 `invalid_signature`; stale → 401 `stale_webhook`; malformed payload with a valid signature → 400 `invalid_webhook`. Response `{ outcome: applied | unchanged | stale | ineligible_owner | unknown_record | change_request | duplicate }`.
+- **Sync bookkeeping is separate from the aggregate** (`CrmSyncStateRepository`, the sync_state/external_ref columns updated without a version bump), so a background sync never invalidates a user's `If-Match`. Lead list and detail read `syncState` from it.
+- **Workspace mismatch** is asserted by `CrmSyncWorker` for every client (not only `HttpTwentyClient`), so it is testable with the fake.
+- **Owner changes from Twenty** apply only if the new owner is still eligible for the product (M02 eligibility); otherwise `ineligible_owner` and Core keeps its owner. Freshness compares the event's `updatedAt` with the lead's `updatedAt` / opportunity's `stageEnteredAt` / task's `createdAt`.
+- **Person** sync is enqueued the first time a lead for the party is saved; a Core-owned edit in Twenty emits `crm.change_request.created` with field names only and re-projects the person.
+- **Retry policy** is the kernel outbox's: 3 attempts then dead-letter (no separate circuit breaker at launch). The kernel now schedules the outbox relay (`OutboxRelayScheduler`, 1 s, off in tests) and excludes dead-lettered events from fetches.
+- **Dev/test wiring:** `DerivedTwentyWorkspaceDirectory` (workspace `ws_<tenantId>` as created by the M01 stub provisioner; per-workspace webhook secret derived by domain-separated HMAC) and `FakeTwentyClient`. Production needs the provisioned workspace record and a secret-manager lookup before `HttpTwentyClient` is wired.
+
 ## 8. DDL — `apps/core/migrations/040_crm.sql`
 ```sql
 create table if not exists crm_lead (

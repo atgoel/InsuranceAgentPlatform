@@ -7,6 +7,9 @@ import {
   TENANT_DIRECTORY, TenantDirectory, Transaction,
 } from './ports';
 import { CrmContext } from './crm-context';
+import { CRM_SYNC_STATE_REPOSITORY, CrmSyncStateRepository, SyncObject } from './twenty-sync.ports';
+
+export const SYNC_REQUESTED = 'crm.sync.requested';
 
 /** Solo-CRM-lite: Core tables are the system of record (HLD §10). */
 export class SoloCrmLiteAdapter implements CrmPort {
@@ -37,10 +40,12 @@ export class TwentyProjectingCrmAdapter implements CrmPort {
   constructor(
     private readonly inner: CrmPort,
     private readonly ctx: CrmContext,
+    private readonly sync: CrmSyncStateRepository,
   ) {}
 
   async saveLead(tx: Transaction, lead: Lead): Promise<void> {
     await this.inner.saveLead(tx, lead);
+    if (!(await this.sync.get(tx, 'person', lead.props.partyId))) await this.requestSync(tx, 'person', lead.props.partyId);
     await this.requestSync(tx, 'lead', lead.props.id);
   }
 
@@ -54,12 +59,19 @@ export class TwentyProjectingCrmAdapter implements CrmPort {
     await this.requestSync(tx, 'opportunity', opportunity.props.id);
   }
 
-  private requestSync(tx: Transaction, object: string, id: string): Promise<void> {
-    return this.ctx.recorder.record(tx, {
-      event: { type: 'crm.sync.requested', subject: id, data: { object, id } },
-      audit: { action: 'crm.sync.requested', entityType: object, entityId: id },
-    });
+  private requestSync(tx: Transaction, object: SyncObject, id: string): Promise<void> {
+    return enqueueSync(this.ctx, this.sync, tx, object, id);
   }
+}
+
+/** Marks a record pending (keeping its Twenty id) and enqueues its sync in the caller's transaction. */
+export async function enqueueSync(ctx: CrmContext, sync: CrmSyncStateRepository, tx: Transaction, object: SyncObject, id: string): Promise<void> {
+  const previous = await sync.get(tx, object, id);
+  await sync.set(tx, object, id, { externalRef: previous?.externalRef, state: 'pending', attempts: 0, updatedAt: ctx.clock.now().toISOString() });
+  await ctx.recorder.record(tx, {
+    event: { type: SYNC_REQUESTED, subject: id, data: { object, id } },
+    audit: { action: SYNC_REQUESTED, entityType: object, entityId: id },
+  });
 }
 
 /** Factory: picks the adapter from the tenant's crmMode (M01). */
@@ -73,10 +85,11 @@ export class DefaultCrmPortFactory implements CrmPortFactory {
     @Inject(TASK_REPOSITORY) tasks: TaskRepository,
     @Inject(OPPORTUNITY_REPOSITORY) opportunities: OpportunityRepository,
     @Inject(TENANT_DIRECTORY) private readonly tenants: TenantDirectory,
+    @Inject(CRM_SYNC_STATE_REPOSITORY) sync: CrmSyncStateRepository,
     ctx: CrmContext,
   ) {
     this.solo = new SoloCrmLiteAdapter(leads, tasks, opportunities);
-    this.projecting = new TwentyProjectingCrmAdapter(this.solo, ctx);
+    this.projecting = new TwentyProjectingCrmAdapter(this.solo, ctx, sync);
   }
 
   async forTenant(tenantId: string): Promise<CrmPort> {

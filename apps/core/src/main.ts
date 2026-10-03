@@ -5,6 +5,7 @@ import { LOGGER } from './kernel/tokens';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
+    rawBody: true, // webhook signatures are computed over the exact bytes received
   });
 
   const logger = app.get(LOGGER);

@@ -7,6 +7,9 @@ export interface Outbox {
 }
 
 /** Read side used by the relay. */
+/** After this many failed deliveries an event is dead-lettered: kept for inspection, never fetched again. */
+export const MAX_DELIVERY_ATTEMPTS = 3;
+
 export interface OutboxSource {
   fetchUnpublished(limit: number): Promise<DomainEvent[]>;
   markPublished(ids: string[]): Promise<void>;
@@ -35,7 +38,7 @@ export class InMemoryOutbox implements Outbox, OutboxSource {
   }
 
   async fetchUnpublished(limit: number): Promise<DomainEvent[]> {
-    return this.pending().slice(0, limit);
+    return this.deliverable().slice(0, limit);
   }
 
   async markPublished(ids: string[]): Promise<void> {
@@ -54,7 +57,7 @@ export class InMemoryOutbox implements Outbox, OutboxSource {
   }
 
   async countPending(): Promise<number> {
-    return this.pending().length;
+    return this.deliverable().length;
   }
 
   published(): DomainEvent[] {
@@ -63,6 +66,14 @@ export class InMemoryOutbox implements Outbox, OutboxSource {
 
   pending(): DomainEvent[] {
     return [...this.entries.values()].filter((e) => !e.published).map((e) => e.event);
+  }
+
+  deadLettered(): DomainEvent[] {
+    return [...this.entries.values()].filter((e) => !e.published && e.attempts >= MAX_DELIVERY_ATTEMPTS).map((e) => e.event);
+  }
+
+  private deliverable(): DomainEvent[] {
+    return [...this.entries.values()].filter((e) => !e.published && e.attempts < MAX_DELIVERY_ATTEMPTS).map((e) => e.event);
   }
 }
 

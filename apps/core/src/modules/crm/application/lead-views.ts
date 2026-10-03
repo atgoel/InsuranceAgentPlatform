@@ -4,6 +4,7 @@ import { StageRuleSet } from '../domain/stage-rules';
 import { Activity } from '../domain/activity';
 import { ACTIVITY_REPOSITORY, ActivityRepository, PARTY_FACADE, PartyFacade, SELLER_DIRECTORY, STAGE_RULES, SellerDirectory, TASK_REPOSITORY, TaskRepository, Transaction } from './ports';
 import { CrmContext } from './crm-context';
+import { CRM_SYNC_STATE_REPOSITORY, CrmSyncStateRepository } from './twenty-sync.ports';
 
 const MARKETING_CHANNELS = ['CALL', 'WHATSAPP', 'SMS'] as const;
 
@@ -16,6 +17,7 @@ export class LeadViews {
     @Inject(ACTIVITY_REPOSITORY) private readonly activities: ActivityRepository,
     @Inject(TASK_REPOSITORY) private readonly tasks: TaskRepository,
     @Inject(STAGE_RULES) private readonly stageRules: StageRuleSet,
+    @Inject(CRM_SYNC_STATE_REPOSITORY) private readonly sync: CrmSyncStateRepository,
     private readonly ctx: CrmContext,
   ) {}
 
@@ -42,7 +44,7 @@ export class LeadViews {
       stageRules: this.stageRuleStatus(p, activities, consentRecorded),
       possibleMatches, consentSummary, activities,
       openTasks: openTasks.map((t) => t.props),
-      convertedOpportunityId: p.convertedOpportunityId, syncState: p.syncState, version: p.version,
+      convertedOpportunityId: p.convertedOpportunityId, version: p.version,
     };
   }
 
@@ -64,7 +66,8 @@ export class LeadViews {
   private async listItem(tx: Transaction, lead: Lead, ownerNames: Record<string, string>) {
     const p = lead.props;
     const now = this.ctx.clock.now();
-    const [party, ...marketing] = await Promise.all([
+    const [sync, party, ...marketing] = await Promise.all([
+      this.sync.get(tx, 'lead', p.id),
       this.parties.summary(tx, p.partyId),
       ...MARKETING_CHANNELS.map((c) => this.parties.contactability(tx, p.partyId, c, 'MARKETING', now)),
     ]);
@@ -74,6 +77,7 @@ export class LeadViews {
       ownerMemberId: p.ownerMemberId, ownerName: p.ownerMemberId ? ownerNames[p.ownerMemberId] : undefined,
       stage: p.stage, temperature: p.temperature, slaState: lead.slaState(now), slaDueAt: p.slaDueAt,
       consent: marketing.some((d) => d.allowed) ? ('granted' as const) : ('not_given' as const), createdAt: p.createdAt,
+      syncState: sync?.state ?? p.syncState,
     };
   }
 }

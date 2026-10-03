@@ -32,3 +32,5 @@ export const APP_POOL = Symbol('AppPool');
 /** Guards resolve permissions through this tenant-aware delegator (DelegatingPermissionPolicy). */
 export const TENANT_PERMISSION_POLICY = Symbol('TenantPermissionPolicy');
 export const MFA_POLICY = Symbol('MfaPolicy');
+/** Moves committed outbox events to EventBus subscribers (scheduled outside tests; tests call relayOnce()). */
+export const OUTBOX_RELAY = Symbol('OutboxRelay');

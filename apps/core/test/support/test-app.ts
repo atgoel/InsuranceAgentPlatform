@@ -78,7 +78,7 @@ export async function createTestApp(opts?: {
     .useValue(metricsRegistry)
     .compile();
 
-  const app = moduleFixture.createNestApplication();
+  const app = moduleFixture.createNestApplication({ rawBody: true });
   await app.init();
 
   return {

@@ -37,6 +37,10 @@ import { PgOutbox } from './outbox/pg-outbox';
 import { InProcessEventBus } from './outbox/event-bus';
 import { InMemoryInbox } from './outbox/inbox';
 import { PgInbox } from './outbox/pg-inbox';
+import { OutboxRelay } from './outbox/outbox-relay';
+import { OutboxRelayScheduler } from './outbox/outbox-relay.scheduler';
+import { EventBus } from './outbox/event-bus';
+import { OutboxSource } from './outbox/outbox';
 import { InMemoryAuditLog } from './audit/audit-log';
 import { PgAuditLog } from './audit/pg-audit-log';
 import { InMemoryIdempotencyStore } from './idempotency/idempotency-store';
@@ -110,7 +114,7 @@ const EXPORTED = [
   T.KERNEL_OPTIONS, T.CLOCK, T.ID_GENERATOR, T.LOG_SINK, T.METRICS, T.REDACTOR, T.TRACER, T.ERROR_DEDUPLICATOR,
   T.LOG_OVERRIDES, T.LOGGER, T.DEBUG_TOKENS, T.FLUSH_POLICY, T.HEAD_SAMPLER, T.TOKEN_VERIFIER, T.TENANT_RESOLVER,
   T.PERMISSION_POLICY, T.TENANT_PERMISSION_POLICY, T.MFA_POLICY, T.EVENT_BUS, T.APP_POOL, T.PLATFORM_POOL, T.UNIT_OF_WORK, T.OUTBOX, T.INBOX, T.AUDIT_LOG,
-  T.IDEMPOTENCY_STORE, IdempotencyInterceptor,
+  T.IDEMPOTENCY_STORE, T.OUTBOX_RELAY, IdempotencyInterceptor,
 ];
 
 /**
@@ -127,6 +131,12 @@ export class KernelModule implements NestModule {
       providers: [
         ...coreProviders(config),
         ...(config.persistence === 'pg' ? pgPersistence(config) : memoryPersistence()),
+        {
+          provide: T.OUTBOX_RELAY,
+          useFactory: (source: OutboxSource, bus: EventBus, logger: Logger, metrics: MetricsRegistry) => new OutboxRelay({ source, bus, logger, metrics }),
+          inject: [T.OUTBOX, T.EVENT_BUS, T.LOGGER, T.METRICS],
+        },
+        OutboxRelayScheduler,
         { provide: APP_FILTER, useClass: ProblemDetailsFilter },
         { provide: APP_GUARD, useClass: AuthGuard },
         { provide: APP_GUARD, useClass: PermissionGuard },

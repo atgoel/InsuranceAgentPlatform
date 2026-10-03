@@ -264,6 +264,17 @@ import { MetricsRegistry } from '../../src/kernel/observability/metrics';
         const unpublished = await outbox.fetchUnpublished(100_000);
         expect(unpublished.some((e) => e.id === event.id)).toBe(true);
       });
+
+      it('AC-M00-21 a dead-lettered event (3 failed attempts) is no longer fetched', async () => {
+        const tenantId = 'ten_dead_' + Date.now();
+        const event = eventFactory.create({ type: 'test.event.dead', source: 'test', subject: 'dead_001', tenantId, data: {} });
+        await unitOfWork.run(tenantId, (tx) => outbox.add(tx, event));
+        for (let i = 0; i < 3; i += 1) await outbox.markFailed(event.id, 'boom');
+        const unpublished = await outbox.fetchUnpublished(100_000);
+        expect(unpublished.some((e) => e.id === event.id)).toBe(false);
+        const stored = await migrationPool.query<{ attempts: number; published_at: Date | null }>('select attempts, published_at from outbox_event where id = $1', [event.id]);
+        expect(stored.rows).toEqual([{ attempts: 3, published_at: null }]);
+      });
     });
 
     describe('PgIdempotencyStore', () => {
