@@ -1,5 +1,8 @@
-import { Inject, Module, OnModuleInit, Provider } from '@nestjs/common';
-import { EVENT_BUS, PERMISSION_POLICY } from '../../kernel/tokens';
+import { Inject, Module, OnApplicationBootstrap, OnModuleInit, Optional, Provider } from '@nestjs/common';
+import { Pool } from 'pg';
+import { APP_POOL, EVENT_BUS, KERNEL_OPTIONS, LOGGER, PERMISSION_POLICY, PLATFORM_POOL } from '../../kernel/tokens';
+import { KernelConfig } from '../../kernel/config';
+import { Logger } from '../../kernel/observability/logger';
 import { EventBus } from '../../kernel/outbox/event-bus';
 import { DomainEvent } from '../../kernel/domain/domain-event';
 import { RolePermissionMatrix } from '../../kernel/tenancy/permissions';
@@ -14,6 +17,8 @@ import { CatalogueQueryService } from './application/catalogue-query.service';
 import { CatalogueAdminService } from './application/catalogue-admin.service';
 import { ProductVersionLocker } from './application/product-version-locker';
 import { InMemoryCatalogueRepository } from './infrastructure/in-memory-catalogue.repository';
+import { PgCatalogueRepository } from './infrastructure/pg-catalogue.repository';
+import { seedCatalogueIfEmpty } from './infrastructure/seed-catalogue.pg';
 import { CatalogueController } from './api/catalogue.controller';
 import { OperatorCatalogueController } from './api/operator-catalogue.controller';
 
@@ -23,7 +28,12 @@ export const CATALOGUE_ROLES = [
 ];
 
 const providers: Provider[] = [
-  { provide: CATALOGUE_REPOSITORY, useClass: InMemoryCatalogueRepository },
+  {
+    provide: CATALOGUE_REPOSITORY,
+    useFactory: (config: KernelConfig, app?: Pool, owner?: Pool) =>
+      config.persistence === 'pg' && app && owner ? new PgCatalogueRepository(app, owner) : new InMemoryCatalogueRepository(),
+    inject: [KERNEL_OPTIONS, APP_POOL, PLATFORM_POOL],
+  },
   { provide: SCOPE_INPUTS_PROVIDER, useClass: DefaultScopeInputsProvider },
   ComparisonScopeService,
   { provide: COMPARISON_SCOPE_FACADE, useExisting: ComparisonScopeService },
@@ -38,12 +48,21 @@ const providers: Provider[] = [
   providers,
   exports: [COMPARISON_SCOPE_FACADE, POS_CATALOGUE_READER],
 })
-export class CatalogueModule implements OnModuleInit {
+export class CatalogueModule implements OnModuleInit, OnApplicationBootstrap {
   constructor(
     @Inject(PERMISSION_POLICY) private readonly permissions: RolePermissionMatrix,
     @Inject(EVENT_BUS) private readonly bus: EventBus,
     private readonly locker: ProductVersionLocker,
+    @Inject(KERNEL_OPTIONS) private readonly config: KernelConfig,
+    @Inject(LOGGER) private readonly logger: Logger,
+    @Optional() @Inject(PLATFORM_POOL) private readonly owner?: Pool,
   ) {}
+
+  /** Development only: an empty Postgres catalogue gets the seed catalogue so the screens have data. */
+  async onApplicationBootstrap(): Promise<void> {
+    if (this.config.persistence !== 'pg' || this.config.env !== 'development' || !this.owner) return;
+    if (await seedCatalogueIfEmpty(this.owner)) this.logger.info('catalogue.seeded', 'Seeded the development catalogue');
+  }
 
   onModuleInit(): void {
     for (const role of CATALOGUE_ROLES) this.permissions.grant(role, ['catalogue.read']);
