@@ -53,6 +53,7 @@ export function DuplicateQueueScreen() {
   }, [partyApi]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadQueue();
   }, [loadQueue]);
 
