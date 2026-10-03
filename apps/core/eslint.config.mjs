@@ -40,6 +40,11 @@ export default tseslint.config(
     },
   },
   {
+    // NestJS constructor injection: wiring classes may take up to 8 injected collaborators (standards §3).
+    files: ['src/**/*.service.ts', 'src/**/*.controller.ts', 'src/**/*.module.ts', 'src/**/*.guard.ts', 'src/**/*.middleware.ts', 'src/**/*.interceptor.ts', 'src/**/*.filter.ts', 'src/**/application/**/*.ts'],
+    rules: { 'max-params': ['error', 8] },
+  },
+  {
     files: ['**/*.spec.ts', 'test/**/*.ts'],
     rules: { 'max-lines-per-function': 'off', 'sonarjs/no-duplicate-string': 'off', '@typescript-eslint/no-non-null-assertion': 'off' },
   },

@@ -1,136 +1,88 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { IdGenerator } from '../../../kernel/domain/id-generator';
+import { Inject, Injectable } from '@nestjs/common';
+import { CLOCK, ID_GENERATOR, UNIT_OF_WORK } from '../../../kernel/tokens';
 import { Clock } from '../../../kernel/domain/clock';
-import { ConflictError } from '../../../kernel/errors/domain-errors';
+import { IdGenerator } from '../../../kernel/domain/id-generator';
 import { UnitOfWork } from '../../../kernel/persistence/unit-of-work';
-import { Outbox } from '../../../kernel/outbox/outbox';
-import { AuditLog } from '../../../kernel/audit/audit-log';
-import { Tenant, TenantKind, PlanCode, TenantStatus } from '../domain/tenant';
+import { ConflictError, NotFoundError } from '../../../kernel/errors/domain-errors';
+import { PlanCode, Tenant, TenantKind, TenantStatus } from '../domain/tenant';
 import { DistributorEntity, EntityType } from '../domain/distributor-entity';
 import { FeatureFlagSet } from '../domain/feature-flags';
 import { BrandKit } from '../domain/brand-kit';
-import { TENANT_DIRECTORY, TenantDirectory, PLAN_CATALOGUE, TenancyOptions, TENANCY_OPTIONS, PROVISIONING_STATE_REPOSITORY, ProvisioningStateRepository } from './ports';
-import { PlanCatalogue } from '../domain/plan';
-import { Logger } from '../../../kernel/observability/logger';
-import { ProvisioningSaga } from './provisioning-saga.ts';
+import { PROVISIONING_SAGA, TENANCY_OPTIONS, TENANT_DIRECTORY, TENANT_SETTINGS_REPOSITORY, TenancyOptions, TenantDirectory, TenantSettingsRepository } from './ports';
+import { AdminContact, ProvisioningSaga } from './provisioning-saga';
+import { TenancyRecorder } from './tenancy-recorder';
 
 export interface ProvisionTenantInput {
   slug: string;
   displayName: string;
   kind: TenantKind;
   planCode: PlanCode;
-  entity: {
-    entityType: EntityType;
-    legalName: string;
-    registrationNo: string;
-    registrationValidTo: string;
-    principalOfficerName?: string;
-  };
-  admin: {
-    name: string;
-    phone?: string;
-    email?: string;
-  };
+  entity: { entityType: EntityType; legalName: string; registrationNo: string; registrationValidTo: string; principalOfficerName?: string };
+  admin: AdminContact;
 }
 
+export interface ProvisionResult {
+  tenantId: string;
+  status: TenantStatus;
+  host: string;
+  failedStep?: string;
+}
+
+/** Operator-assisted provisioning (F01, F44) and the entry point for solo self-signup (F94). */
 @Injectable()
 export class ProvisionTenantService {
   constructor(
-    private idGenerator: IdGenerator,
-    private clock: Clock,
-    private uow: UnitOfWork,
-    private outbox: Outbox,
-    private auditLog: AuditLog,
-    @Inject(TENANT_DIRECTORY) private directory: TenantDirectory,
-    @Inject(PLAN_CATALOGUE) private planCatalogue: PlanCatalogue,
-    @Inject(TENANCY_OPTIONS) private options: TenancyOptions,
-    @Inject(PROVISIONING_STATE_REPOSITORY) private stateRepo: ProvisioningStateRepository,
-    private saga: ProvisioningSaga,
-    private logger: Logger
+    @Inject(TENANT_DIRECTORY) private readonly directory: TenantDirectory,
+    @Inject(TENANT_SETTINGS_REPOSITORY) private readonly settings: TenantSettingsRepository,
+    @Inject(PROVISIONING_SAGA) private readonly saga: ProvisioningSaga,
+    @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWork,
+    @Inject(CLOCK) private readonly clock: Clock,
+    @Inject(ID_GENERATOR) private readonly ids: IdGenerator,
+    @Inject(TENANCY_OPTIONS) private readonly options: TenancyOptions,
+    private readonly recorder: TenancyRecorder,
   ) {}
 
-  async provision(input: ProvisionTenantInput): Promise<{ tenantId: string; status: TenantStatus; host: string; failedStep?: string }> {
-    // Check slug uniqueness
-    const existing = await this.directory.findBySlug(input.slug);
-    if (existing) {
-      throw new ConflictError('slug_taken', `Slug ${input.slug} is already taken`);
-    }
-
-    // Validate inputs
-    const plan = this.planCatalogue.get(input.planCode);
-    const entity = DistributorEntity.create({
-      tenantKind: input.kind,
-      entityType: input.entity.entityType,
-      legalName: input.entity.legalName,
-      registrationNo: input.entity.registrationNo,
-      registrationValidTo: input.entity.registrationValidTo,
-      principalOfficerName: input.entity.principalOfficerName,
-    });
-
-    // Create tenant
-    const tenantId = this.idGenerator.generate('ten_');
-    const tenant = Tenant.create({
-      id: tenantId,
-      slug: input.slug,
-      displayName: input.displayName,
-      kind: input.kind,
-      planCode: input.planCode,
-      now: this.clock.now(),
-    });
-
-    // Save tenant and host
+  async provision(input: ProvisionTenantInput): Promise<ProvisionResult> {
+    if (await this.directory.findBySlug(input.slug)) throw new ConflictError('slug_taken', 'This tenant slug is already in use');
+    const now = this.clock.now();
+    // Validate everything before any write.
+    const tenant = Tenant.create({ id: this.ids.next('ten'), slug: input.slug, displayName: input.displayName, kind: input.kind, planCode: input.planCode, now });
+    const entity = DistributorEntity.create({ tenantKind: input.kind, ...input.entity });
     const host = `${input.slug}.${this.options.platformDomain}`;
+
     await this.directory.save(tenant);
-    await this.directory.addHost({
-      tenantId: tenantId,
-      host,
-      kind: 'platform_subdomain',
-      verifiedAt: new Date().toISOString(),
+    await this.directory.addHost({ tenantId: tenant.props.id, host, kind: 'platform_subdomain', verifiedAt: now.toISOString() });
+    await this.uow.run(tenant.props.id, async (tx) => {
+      await this.settings.saveEntity(tx, entity);
+      await this.settings.saveFlags(tx, FeatureFlagSet.defaults());
+      await this.settings.saveBrandKit(tx, BrandKit.platformDefault());
+      await this.recorder.record(tx, {
+        event: { type: 'tenant.tenant.provisioning_started', subject: tenant.props.id, data: { kind: input.kind, planCode: input.planCode, entityType: input.entity.entityType } },
+        audit: { action: 'tenant.provision', entityType: 'tenant', entityId: tenant.props.id, after: tenant.props },
+      });
     });
-
-    // Initialize settings in uow
-    await this.uow.run(tenantId, async (tx) => {
-      // Save entity, flags, brand kit
-      const settings = (this.uow as any).TENANT_SETTINGS_REPOSITORY;
-      // This would be injected in real implementation
-
-      // Emit event
-      this.outbox.add('tenant.tenant.provisioning_started', {});
-      this.auditLog.append('tenant.provision', {});
-    });
-
-    // Run provisioning saga
-    const sagaResult = await this.saga.run({
-      tenant,
-      admin: input.admin,
-    });
-
-    if (sagaResult.ok) {
-      // Activate tenant
-      tenant.activate();
-      await this.directory.save(tenant);
-      this.outbox.add('tenant.tenant.provisioned', {});
-      return { tenantId, status: 'active', host };
-    } else {
-      return { tenantId, status: 'provisioning', host, failedStep: sagaResult.failedStep };
-    }
+    return this.runSaga(tenant, input.admin, host);
   }
 
-  async resume(tenantId: string): Promise<{ status: TenantStatus; failedStep?: string }> {
+  async resume(tenantId: string): Promise<ProvisionResult> {
     const tenant = await this.directory.findById(tenantId);
-    if (!tenant) {
-      throw new Error('Tenant not found');
-    }
+    if (!tenant) throw new NotFoundError('Tenant', tenantId);
+    const [host] = await this.directory.listHosts(tenantId);
+    if (tenant.props.status !== 'provisioning') return { tenantId, status: tenant.props.status, host: host?.host ?? '' };
+    return this.runSaga(tenant, { name: tenant.props.displayName }, host?.host ?? '');
+  }
 
-    const admin = { name: 'unknown' }; // Would need to look up from somewhere
-    const sagaResult = await this.saga.run({ tenant, admin });
-
-    if (sagaResult.ok) {
-      tenant.activate();
-      await this.directory.save(tenant);
-      return { status: 'active' };
-    } else {
-      return { status: 'provisioning', failedStep: sagaResult.failedStep };
-    }
+  private async runSaga(tenant: Tenant, admin: AdminContact, host: string): Promise<ProvisionResult> {
+    const outcome = await this.saga.run({ tenant, admin, host });
+    if (!outcome.ok) return { tenantId: tenant.props.id, status: tenant.props.status, host, failedStep: outcome.failedStep };
+    tenant.activate();
+    await this.directory.save(tenant);
+    await this.uow.run(tenant.props.id, (tx) =>
+      this.recorder.record(tx, {
+        event: { type: 'tenant.tenant.provisioned', subject: tenant.props.id, data: { kind: tenant.props.kind, planCode: tenant.props.planCode, crmMode: tenant.props.crmMode } },
+        audit: { action: 'tenant.activate', entityType: 'tenant', entityId: tenant.props.id },
+      }),
+    );
+    return { tenantId: tenant.props.id, status: tenant.props.status, host };
   }
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiProvider } from '../../../lib/api';
@@ -49,7 +49,7 @@ describe('AC-M01-18 OperatorTenantsScreen', () => {
       ],
     };
 
-    (mockApiClient.get as any)
+    (mockApiClient.get as Mock)
       .mockResolvedValueOnce(mockTenants)
       .mockResolvedValueOnce(mockPlans);
 
@@ -67,7 +67,7 @@ describe('AC-M01-18 OperatorTenantsScreen', () => {
 
   it('AC-M01-18 opens provision sheet with form', async () => {
     const user = userEvent.setup();
-    (mockApiClient.get as any).mockResolvedValue({ items: [] });
+    (mockApiClient.get as Mock).mockResolvedValue({ items: [] });
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -80,7 +80,7 @@ describe('AC-M01-18 OperatorTenantsScreen', () => {
     const provisionBtn = await screen.findByRole('button', { name: /provision/i });
     await user.click(provisionBtn);
 
-    expect(screen.getByText(/provision tenant/i)).toBeInTheDocument();
+    expect(screen.getByText(/Provision New Tenant/i)).toBeInTheDocument();
   });
 
   it('AC-M01-18 handles 403 permission denied', async () => {

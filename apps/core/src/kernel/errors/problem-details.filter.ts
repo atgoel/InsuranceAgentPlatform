@@ -1,57 +1,45 @@
-import { ExceptionFilter, Catch, ArgumentsHost } from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, Inject } from '@nestjs/common';
 import { Response } from 'express';
-import { DomainError } from './domain-errors';
+import { LOGGER } from '../tokens';
+import { Logger } from '../observability/logger';
 import { RequestContext } from '../observability/request-context';
+import { newTraceId } from '../observability/trace-context';
+import { DependencyUnavailableError, RateLimitedError } from './domain-errors';
+import { ProblemDetails, toProblem } from './problem-details';
 
-interface ErrorBody {
-  type: string;
-  title: string;
-  status: number;
-  code: string;
-  detail: string;
-  traceId: string;
-  [key: string]: unknown;
-  errors?: unknown;
-}
+const DEFAULT_RETRY_AFTER_SECONDS = 30;
 
 /**
- * AC-M00-06 (errors): ProblemDetailsFilter
- * Global exception filter that maps errors to RFC 9457 Problem Details responses.
+ * Global RFC 9457 error boundary (M00 §3.3). Every error becomes Problem Details with the trace id.
+ * 5xx: logged at error level (deduplicated) and the request context is marked so the debug buffer is flushed.
+ * 4xx: debug only — buffered, written just when the request is otherwise interesting.
  */
 @Catch()
 export class ProblemDetailsFilter implements ExceptionFilter {
-  catch(exception: unknown, host: ArgumentsHost) {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
+  constructor(@Inject(LOGGER) private readonly logger: Logger) {}
 
-    const context = RequestContext.current();
-    const traceId = context?.traceId ?? 'unknown';
-
-    let status = 500;
-    const body: ErrorBody = {
-      type: 'https://errors.iap.example/internal_error',
-      title: 'Internal Server Error',
-      status: 500,
-      code: 'internal_error',
-      detail: 'An unexpected error occurred',
-      traceId,
-    };
-
-    if (exception instanceof DomainError) {
-      status = exception.httpStatus;
-      body.type = `https://errors.iap.example/${exception.code}`;
-      body.title = 'Error';
-      body.status = status;
-      body.code = exception.code;
-      body.detail = exception.message;
-      body.traceId = traceId;
-      Object.assign(body, exception.details);
-
-      if (typeof exception === 'object' && exception !== null && 'errors' in exception) {
-        body.errors = (exception as { errors?: unknown }).errors;
-      }
-    }
-
-    response.status(status).json(body);
+  catch(exception: unknown, host: ArgumentsHost): void {
+    const response = host.switchToHttp().getResponse<Response>();
+    const ctx = RequestContext.current();
+    const problem = toProblem(exception, ctx?.traceId ?? newTraceId());
+    this.log(exception, problem);
+    const retryAfter = retryAfterSeconds(exception);
+    if (retryAfter !== undefined) response.setHeader('Retry-After', String(retryAfter));
+    response.status(problem.status).type('application/problem+json').json(problem);
   }
+
+  private log(exception: unknown, problem: ProblemDetails): void {
+    if (problem.status >= 500) {
+      RequestContext.patch({ hasError: true });
+      this.logger.error('http.unhandled_error', 'Unhandled error', exception, { code: problem.code, status: problem.status });
+    } else {
+      this.logger.debug('http.client_error', 'Request rejected', { code: problem.code, status: problem.status });
+    }
+  }
+}
+
+function retryAfterSeconds(exception: unknown): number | undefined {
+  if (!(exception instanceof RateLimitedError || exception instanceof DependencyUnavailableError)) return undefined;
+  const value = exception.details?.retryAfterSeconds;
+  return typeof value === 'number' && value > 0 ? value : DEFAULT_RETRY_AFTER_SECONDS;
 }

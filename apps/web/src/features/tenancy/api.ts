@@ -1,4 +1,4 @@
-import { ApiClient, RequestOptions } from '../../lib/api/api-client';
+import { ApiClient } from '../../lib/api/api-client';
 
 // Types from spec §3
 export type TenantKind = 'ORGANISATION' | 'SOLO';

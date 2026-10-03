@@ -63,7 +63,7 @@ describe('AC-M00-08 Redactor', () => {
       const r = new Redactor({ maxArray: 5 });
       const arr = Array.from({ length: 20 }, (_, i) => i);
       const redacted = r.redact({ items: arr });
-      expect((redacted as Record<string, unknown>).items.length).toBeLessThanOrEqual(5);
+      expect(((redacted as Record<string, unknown>).items as unknown[]).length).toBeLessThanOrEqual(5);
     });
   });
 
@@ -81,7 +81,7 @@ describe('AC-M00-08 Redactor', () => {
     it('redacts Error objects', () => {
       const r = new Redactor();
       const err = new Error('Something went wrong with secret_key_123');
-      const redacted = r.redact(err) as Record<string, unknown>;
+      const redacted = r.redact(err) as unknown as Record<string, unknown>;
       expect(redacted.type).toBe('Error');
       expect(redacted.message).toBeDefined();
     });
@@ -94,6 +94,16 @@ describe('AC-M00-08 Redactor', () => {
       const redacted = r.redact(original);
       expect(redacted).not.toBe(original);
       expect(original.key).toBe('value');
+    });
+  });
+
+  describe('AC-M00-08 secrets inside free text', () => {
+    it.each([
+      ['connect failed password=hunter2 host=db', 'connect failed password=[REDACTED] host=db'],
+      ['Authorization: Bearer abc.def.ghi', 'Authorization: [REDACTED]'],
+      ['api_key=XYZ123; retry', 'api_key=[REDACTED]; retry'],
+    ])('scrubs %s', (input, expected) => {
+      expect((new Redactor().redact({ note: input }) as Record<string, unknown>).note).toBe(expected);
     });
   });
 });

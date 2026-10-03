@@ -298,7 +298,7 @@ function createMockLicenceRepo() {
 
 function createMockLogger(_logs: Record<string, unknown>) {
   return {
-    info: (event: string, msg: string, ctx?: Record<string, unknown>) => {
+    info: (event: string, msg: string, _ctx?: Record<string, unknown>) => {
       logs.events.push({ event, msg });
     },
   };

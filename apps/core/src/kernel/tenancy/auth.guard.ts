@@ -12,7 +12,8 @@ import { TenantResolver } from './tenant-resolver';
 import { RequestContext } from '../observability/request-context';
 import { Logger } from '../observability/logger';
 import { pseudonymiseActor } from './actor-pseudonym';
-import { LOGGER } from '../tokens';
+import { KERNEL_OPTIONS, LOGGER } from '../tokens';
+import { KernelConfig } from '../config';
 
 /**
  * AC-M00-18, 19 (tenancy): AuthGuard
@@ -30,6 +31,7 @@ export class AuthGuard implements CanActivate {
     @Inject(TOKEN_VERIFIER) private readonly tokenVerifier: TokenVerifier,
     @Inject(TENANT_RESOLVER) private readonly tenantResolver: TenantResolver,
     @Inject(LOGGER) private readonly logger: Logger,
+    @Inject(KERNEL_OPTIONS) private readonly config: KernelConfig,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -90,7 +92,7 @@ export class AuthGuard implements CanActivate {
     req.principal = principal;
     RequestContext.patch({
       tenantId: principal.tenantId,
-      actor: pseudonymiseActor(principal.userRef, process.env.ACTOR_PEPPER || ''),
+      actor: pseudonymiseActor(principal.userRef, this.config.actorPepper),
     });
     return true;
   }
@@ -121,7 +123,7 @@ export class AuthGuard implements CanActivate {
     req.principal = principal;
     RequestContext.patch({
       tenantId: principal.tenantId,
-      actor: pseudonymiseActor(principal.userRef, process.env.ACTOR_PEPPER || ''),
+      actor: pseudonymiseActor(principal.userRef, this.config.actorPepper),
     });
 
     return true;

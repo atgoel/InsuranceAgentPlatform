@@ -106,12 +106,17 @@ CREATE TABLE IF NOT EXISTS usage_counter (
   PRIMARY KEY (tenant_id, metric, period)
 );
 
--- RLS on tenant-scoped tables
-ALTER TABLE distributor_entity ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tie_up ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tenant_feature_flag ENABLE ROW LEVEL SECURITY;
-ALTER TABLE brand_kit ENABLE ROW LEVEL SECURITY;
-ALTER TABLE usage_counter ENABLE ROW LEVEL SECURITY;
+-- RLS on tenant-scoped tables (helper from 000_kernel: ENABLE + FORCE + tenant_isolation policy)
+select iap_enable_tenant_rls('distributor_entity');
+select iap_enable_tenant_rls('tie_up');
+select iap_enable_tenant_rls('tenant_feature_flag');
+select iap_enable_tenant_rls('brand_kit');
+select iap_enable_tenant_rls('usage_counter');
+
+-- Least privilege: the directory is platform data written by the operator service (owner role);
+-- the app role can read it for host resolution but never create or alter tenants.
+grant select on tenant, tenant_host, tie_up_limit to iap_app;
+grant select, insert, update, delete on distributor_entity, tie_up, tenant_feature_flag, brand_kit, usage_counter to iap_app;
 
 -- Seed tie_up_limit data
 INSERT INTO tie_up_limit (entity_type, line, max_insurers) VALUES

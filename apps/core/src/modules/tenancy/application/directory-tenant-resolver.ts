@@ -1,52 +1,55 @@
-import { Injectable, Inject } from '@nestjs/common';
 import { TenantResolver } from '../../../kernel/tenancy/tenant-resolver';
+import { ResolvedTenant } from '../../../kernel/config';
 import { Clock } from '../../../kernel/domain/clock';
-import { TENANT_DIRECTORY, TenantDirectory } from './ports';
+import { MetricsRegistry } from '../../../kernel/observability/metrics';
+import { TenantDirectory } from './ports';
 
-interface ResolvedTenant {
-  tenantId: string;
-  status: 'active' | 'suspended' | 'provisioning' | 'offboarded';
-}
-
-@Injectable()
+/** Resolves the tenant from the verified host only (HLD "tenant from trust"; G1/K3). */
 export class DirectoryTenantResolver implements TenantResolver {
-  constructor(@Inject(TENANT_DIRECTORY) private directory: TenantDirectory) {}
+  constructor(private readonly directory: TenantDirectory) {}
 
   async resolveByHost(host: string): Promise<ResolvedTenant | undefined> {
-    const result = await this.directory.findByHost(host);
-    if (!result) return undefined;
-
-    return {
-      tenantId: result.tenant.props.id,
-      status: result.tenant.props.status,
-    };
+    const found = await this.directory.findByHost(normaliseHost(host));
+    if (!found?.host.verifiedAt) return undefined; // an unverified custom domain never resolves
+    return { tenantId: found.tenant.props.id, status: found.tenant.props.status };
   }
 }
 
-@Injectable()
+/** Decorator: TTL cache in front of the directory; invalidated on status changes so suspension bites immediately. */
 export class CachingTenantResolver implements TenantResolver {
-  private cache = new Map<string, { tenant: ResolvedTenant | undefined; expiresAt: number }>();
+  private readonly cache = new Map<string, { value: ResolvedTenant | undefined; expiresAt: number }>();
 
-  constructor(private inner: DirectoryTenantResolver, private clock: Clock, private ttlMs: number) {}
+  constructor(
+    private readonly inner: TenantResolver,
+    private readonly clock: Clock,
+    private readonly ttlMs: number,
+    private readonly metrics?: MetricsRegistry,
+  ) {}
 
   async resolveByHost(host: string): Promise<ResolvedTenant | undefined> {
-    const cached = this.cache.get(host);
-    if (cached && this.clock.now().getTime() < cached.expiresAt) {
-      return cached.tenant;
+    const key = normaliseHost(host);
+    const now = this.clock.now().getTime();
+    const cached = this.cache.get(key);
+    if (cached && now < cached.expiresAt) {
+      this.count('hit');
+      return cached.value;
     }
-
-    const tenant = await this.inner.resolveByHost(host);
-    const expiresAt = this.clock.now().getTime() + this.ttlMs;
-    this.cache.set(host, { tenant, expiresAt });
-
-    return tenant;
+    this.count('miss');
+    const value = await this.inner.resolveByHost(key);
+    this.cache.set(key, { value, expiresAt: now + this.ttlMs });
+    return value;
   }
 
   invalidate(host?: string): void {
-    if (host) {
-      this.cache.delete(host);
-    } else {
-      this.cache.clear();
-    }
+    if (host) this.cache.delete(normaliseHost(host));
+    else this.cache.clear();
   }
+
+  private count(result: 'hit' | 'miss'): void {
+    this.metrics?.counter('tenancy_resolver_cache_total', 'Tenant resolver cache lookups', ['result']).inc({ result });
+  }
+}
+
+export function normaliseHost(host: string): string {
+  return host.trim().toLowerCase().replace(/:\d+$/, '');
 }

@@ -10,6 +10,7 @@ const AADHAAR = /(?<![\d+])(?!91[6-9]\d{9}(?!\d))[2-9]\d{3}[\s-]?\d{4}[\s-]?\d{4
 const PHONE = /(?<![\d+])(?:\+91[\s-]?|91[\s-]?|0)?([6-9]\d{4})[\s-]?(\d{5})(?!\d)/g;
 const EMAIL = /([A-Za-z0-9])[A-Za-z0-9._%+-]*(@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g;
 const PAN = /\b[A-Z]{5}[0-9]{4}[A-Z]\b/g;
+const SECRET_ASSIGNMENT = /\b(password|passwd|pwd|secret|token|api[_-]?key|authorization|otp)(\s*[=:]\s*)(?:Bearer\s+)?[^\s,;&]+/gi;
 
 export const phoneScrubber: StringScrubber = {
   name: 'phone',
@@ -24,6 +25,12 @@ export const emailScrubber: StringScrubber = {
 export const panScrubber: StringScrubber = {
   name: 'pan',
   scrub: (value: string): string => value.replace(PAN, '[PAN]'),
+};
+
+/** Secrets embedded in free text, e.g. error messages: `password=x`, `token: y`, `Authorization: Bearer z`. */
+export const secretAssignmentScrubber: StringScrubber = {
+  name: 'secret_assignment',
+  scrub: (value: string): string => value.replace(SECRET_ASSIGNMENT, (_m, key: string, sep: string) => `${key}${sep}[REDACTED]`),
 };
 
 export const aadhaarScrubber: StringScrubber = {
@@ -53,7 +60,7 @@ export class Redactor {
     maxDepth?: number;
   }) {
     const merged = {
-      scrubbers: [aadhaarScrubber, phoneScrubber, emailScrubber, panScrubber],
+      scrubbers: [secretAssignmentScrubber, aadhaarScrubber, phoneScrubber, emailScrubber, panScrubber],
       denyKeys: /^(password|otp|token|authorization|secret|pan|aadhaar|dob|dateOfBirth|health.*|medical.*|nominee.*|bankAccount|ifsc|address.*|declaration.*)$/i,
       maxString: 256,
       maxArray: 20,
@@ -102,6 +109,11 @@ export class Redactor {
       }
     }
     return result;
+  }
+
+  /** Applies the scrubbers without truncation — for long diagnostic text such as stack traces. */
+  scrub(value: string): string {
+    return this.scrubbers.reduce((text, scrubber) => scrubber.scrub(text), value);
   }
 
   private redactString(value: string): string {

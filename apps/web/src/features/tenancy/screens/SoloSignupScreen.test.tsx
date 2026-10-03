@@ -88,7 +88,7 @@ describe('AC-M01-19 SoloSignupScreen', () => {
     const verifyBtn = screen.getByRole('button', { name: /verify/i });
     await user.click(verifyBtn);
 
-    expect(await screen.findByText(/otp_invalid/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Invalid OTP/i)).toBeInTheDocument();
   });
 
   it('AC-M01-19 shows otp_locked message', async () => {
@@ -121,7 +121,7 @@ describe('AC-M01-19 SoloSignupScreen', () => {
     const verifyBtn = screen.getByRole('button', { name: /verify/i });
     await user.click(verifyBtn);
 
-    expect(await screen.findByText(/otp_locked/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Too many incorrect attempts/i)).toBeInTheDocument();
   });
 
   it('AC-M01-19 shows otp_expired message', async () => {
@@ -154,7 +154,7 @@ describe('AC-M01-19 SoloSignupScreen', () => {
     const verifyBtn = screen.getByRole('button', { name: /verify/i });
     await user.click(verifyBtn);
 
-    expect(await screen.findByText(/otp_expired/i)).toBeInTheDocument();
+    expect(await screen.findByText(/OTP has expired/i)).toBeInTheDocument();
   });
 
   it('AC-M01-19 shows success step with next actions', async () => {
@@ -183,7 +183,7 @@ describe('AC-M01-19 SoloSignupScreen', () => {
     const checkbox = screen.getByRole('checkbox');
     await user.click(checkbox);
 
-    let continueBtn = screen.getByRole('button', { name: /continue/i });
+    const continueBtn = screen.getByRole('button', { name: /continue/i });
     await user.click(continueBtn);
 
     const otpInput = await screen.findByPlaceholderText('000000');
@@ -193,7 +193,7 @@ describe('AC-M01-19 SoloSignupScreen', () => {
     await user.click(verifyBtn);
 
     // Check for success step
-    expect(await screen.findByText(/import book/i)).toBeInTheDocument();
-    expect(screen.getByText(/skip/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Import my book/i)).toBeInTheDocument();
+    expect(screen.getByText(/Skip/i)).toBeInTheDocument();
   });
 });

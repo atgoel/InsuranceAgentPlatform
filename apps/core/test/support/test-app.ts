@@ -1,3 +1,4 @@
+import { ModuleMetadata } from '@nestjs/common';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
@@ -54,9 +55,9 @@ export function testConfig(overrides?: Partial<KernelConfig>): KernelConfig {
  * Overrides LOG_SINK and CLOCK tokens automatically.
  */
 export async function createTestApp(opts?: {
-  imports?: unknown[];
-  controllers?: unknown[];
-  providers?: unknown[];
+  imports?: ModuleMetadata['imports'];
+  controllers?: ModuleMetadata['controllers'];
+  providers?: ModuleMetadata['providers'];
   config?: Partial<KernelConfig>;
 }): Promise<TestApp> {
   const config = testConfig(opts?.config);
@@ -65,9 +66,9 @@ export async function createTestApp(opts?: {
   const metricsRegistry = new MetricsRegistry();
 
   const moduleFixture: TestingModule = await Test.createTestingModule({
-    imports: [KernelModule.forRoot(config), ...(opts?.imports ? (opts.imports as unknown as Array<unknown>) : [])],
-    controllers: opts?.controllers ? (opts.controllers as unknown as Array<unknown>) : [],
-    providers: opts?.providers ? (opts.providers as unknown as Array<unknown>) : [],
+    imports: [KernelModule.forRoot(config), ...(opts?.imports ?? [])],
+    controllers: opts?.controllers ?? [],
+    providers: opts?.providers ?? [],
   })
     .overrideProvider(LOG_SINK)
     .useValue(memoryLogSink)

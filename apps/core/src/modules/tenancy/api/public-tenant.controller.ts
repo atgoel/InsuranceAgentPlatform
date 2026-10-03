@@ -1,50 +1,48 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, Inject, Param, Post } from '@nestjs/common';
+import { z } from 'zod';
+import { Public } from '../../../kernel/tenancy/decorators';
+import { Idempotent } from '../../../kernel/idempotency/idempotency.interceptor';
+import { ZodValidationPipe } from '../../../kernel/http/zod-validation.pipe';
+import { NotFoundError } from '../../../kernel/errors/domain-errors';
+import { TENANT_RESOLVER } from '../../../kernel/tokens';
+import { TenantResolver } from '../../../kernel/tenancy/tenant-resolver';
+import { BrandKitService } from '../application/brand-kit.service';
+import { TenantQueryService } from '../application/tenant-query.service';
+import { SoloSignupService } from '../application/solo-signup.service';
+import { StartSignupSchema, VerifySignupSchema } from './schemas';
 
-interface SignupStartBody {
-  phone: string;
-  displayName: string;
-  licence: { insurerName: string; line: string; licenceNo: string };
-  consent: { noticeVersion: string; accepted: boolean };
-}
+const LANGUAGES = ['en', 'hi'];
 
-interface SignupVerifyBody {
-  otp: string;
-}
-
-interface TenantConfigResponse {
-  displayName: string;
-  brand: { brandName: string; primary: string; secondary: string; typeface: string };
-  languages: string[];
-}
-
+/** Unauthenticated endpoints: login-screen branding by host, and solo self-signup (F94). */
 @Controller('api/v1/public')
+@Public()
 export class PublicTenantController {
+  constructor(
+    @Inject(TENANT_RESOLVER) private readonly resolver: TenantResolver,
+    private readonly brand: BrandKitService,
+    private readonly queries: TenantQueryService,
+    private readonly signups: SoloSignupService,
+  ) {}
+
   @Get('tenant-config')
-  async getTenantConfig(): Promise<TenantConfigResponse> {
-    return {
-      displayName: 'Test',
-      brand: {
-        brandName: 'Test Brand',
-        primary: '#1F5FBF',
-        secondary: '#163F7F',
-        typeface: 'IBM Plex Sans',
-      },
-      languages: ['en', 'hi'],
-    };
+  async tenantConfig(@Headers('host') host: string | undefined) {
+    const resolved = host ? await this.resolver.resolveByHost(host) : undefined;
+    if (!resolved || resolved.status !== 'active') throw new NotFoundError('Tenant');
+    const [summary, kit] = await Promise.all([this.queries.summary(resolved.tenantId), this.brand.get(resolved.tenantId)]);
+    const brand = { brandName: kit.brandName, primary: kit.primary, secondary: kit.secondary, typeface: kit.typeface, logoRef: kit.logoRef, poweredByVisible: kit.poweredByVisible };
+    return { displayName: summary.displayName, brand, languages: LANGUAGES };
   }
 
   @Post('solo-signups')
-  async startSignup(@Body() _body: SignupStartBody): Promise<{ signupId: string; expiresAt: string }> {
-    return { signupId: 'sig_test', expiresAt: new Date().toISOString() };
+  @Idempotent()
+  start(@Body(new ZodValidationPipe(StartSignupSchema)) body: z.infer<typeof StartSignupSchema>) {
+    return this.signups.start({ phone: body.phone, displayName: body.displayName, licence: body.licence, consentNoticeVersion: body.consent.noticeVersion });
   }
 
-  @Post('solo-signups/:_id/verifications')
-  async verifySignup(@Body() _body: SignupVerifyBody): Promise<{ tenantId: string; host: string; status: string; licenceStatus: string }> {
-    return {
-      tenantId: 'ten_test',
-      host: 'test.iap.test',
-      status: 'active',
-      licenceStatus: 'pending_verification',
-    };
+  @Post('solo-signups/:id/verifications')
+  @HttpCode(200)
+  @Idempotent()
+  verify(@Param('id') id: string, @Body(new ZodValidationPipe(VerifySignupSchema)) body: z.infer<typeof VerifySignupSchema>) {
+    return this.signups.verify(id, body.otp);
   }
 }

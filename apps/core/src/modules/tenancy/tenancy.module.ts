@@ -1,161 +1,133 @@
-import { Module, OnModuleInit, Inject } from '@nestjs/common';
-import { TENANT_RESOLVER, KERNEL_OPTIONS, PERMISSION_POLICY } from '../../kernel/config';
+import { Inject, Module, OnModuleInit, Provider } from '@nestjs/common';
+import { CLOCK, KERNEL_OPTIONS, LOGGER, METRICS, PERMISSION_POLICY, TENANT_RESOLVER, UNIT_OF_WORK } from '../../kernel/tokens';
 import { KernelConfig } from '../../kernel/config';
-import { RolePermissionMatrix } from '../../kernel/authz/role-permission-matrix';
 import { Clock } from '../../kernel/domain/clock';
-import { IdGenerator } from '../../kernel/domain/id-generator';
-import { UnitOfWork } from '../../kernel/persistence/unit-of-work';
-import { Outbox } from '../../kernel/outbox/outbox';
-import { AuditLog } from '../../kernel/audit/audit-log';
 import { Logger } from '../../kernel/observability/logger';
-
-import { Tenant } from './domain/tenant';
-import { DirectoryTenantResolver, CachingTenantResolver } from './application/directory-tenant-resolver';
-import { InMemoryTenantDirectory, InMemoryTenantSettingsRepository, InMemoryProvisioningStateRepository, InMemorySignupRepository } from './infrastructure/in-memory-tenancy.repositories';
-import { StubIdentityProvisioner, StubCrmProvisioner, StubContentProvisioner, LoggingOtpSender, FixedOtpGenerator } from './infrastructure/stub-provisioners';
-import { seedPlanCatalogue, seedTieUpLimitPolicy } from './infrastructure/seed';
+import { MetricsRegistry } from '../../kernel/observability/metrics';
+import { UnitOfWork } from '../../kernel/persistence/unit-of-work';
+import { RolePermissionMatrix } from '../../kernel/tenancy/permissions';
+import { DelegatingTenantResolver } from '../../kernel/tenancy/tenant-resolver';
+import {
+  CONTENT_PROVISIONER, CRM_PROVISIONER, ContentProvisioner, CrmProvisioner, ENTITLEMENT_CHECKER, IDENTITY_PROVISIONER, IdentityProvisioner,
+  OTP_GENERATOR, OTP_SENDER, PLAN_CATALOGUE, PROVISIONING_SAGA, PROVISIONING_STATE_REPOSITORY, ProvisioningStateRepository, SIGNUP_REPOSITORY,
+  TENANCY_OPTIONS, TENANT_DIRECTORY, TENANT_SETTINGS_REPOSITORY, TIE_UP_LIMIT_POLICY, TIE_UP_READER, TenancyOptions, TenantDirectory, TenantSettingsRepository,
+} from './application/ports';
+import { PlanCatalogue } from './domain/plan';
+import { TieUpLimitPolicy } from './domain/tie-up';
+import {
+  ContentScopeStep, CrmWorkspaceStep, IdentityAdminStep, IdentityOrganisationStep, ProvisioningSaga, SmokeCheckStep,
+} from './application/provisioning-saga';
+import { CachingTenantResolver, DirectoryTenantResolver } from './application/directory-tenant-resolver';
+import { TenancyRecorder } from './application/tenancy-recorder';
+import { ProvisionTenantService } from './application/provision-tenant.service';
+import { TenantQueryService } from './application/tenant-query.service';
+import { TieUpService } from './application/tie-up.service';
+import { FeatureFlagService } from './application/feature-flag.service';
+import { BrandKitService } from './application/brand-kit.service';
+import { UsageService } from './application/usage.service';
+import { OperatorTenantService, TENANT_RESOLVER_CACHE } from './application/operator-tenant.service';
+import { SoloSignupService } from './application/solo-signup.service';
+import { TrialService } from './application/trial.service';
+import {
+  InMemoryProvisioningStateRepository, InMemorySignupRepository, InMemoryTenantDirectory, InMemoryTenantSettingsRepository,
+} from './infrastructure/in-memory-tenancy.repositories';
+import {
+  FixedOtpGenerator, LoggingOtpSender, RandomOtpGenerator, StubContentProvisioner, StubCrmProvisioner, StubIdentityProvisioner,
+} from './infrastructure/stub-provisioners';
+import { seedStaticTenants } from './infrastructure/static-tenant-seeder';
 import { OperatorTenantsController } from './api/operator-tenants.controller';
 import { TenantController } from './api/tenant.controller';
 import { PublicTenantController } from './api/public-tenant.controller';
-import {
-  TENANT_DIRECTORY,
-  TENANT_SETTINGS_REPOSITORY,
-  PROVISIONING_STATE_REPOSITORY,
-  SIGNUP_REPOSITORY,
-  IDENTITY_PROVISIONER,
-  CRM_PROVISIONER,
-  CONTENT_PROVISIONER,
-  OTP_SENDER,
-  OTP_GENERATOR,
-  PLAN_CATALOGUE,
-  TIE_UP_LIMIT_POLICY,
-  ENTITLEMENT_CHECKER,
-  TENANCY_OPTIONS,
-} from './application/ports';
 
+/** Role → permission rows this module contributes to the policy (M01 §6.4). */
+export const TENANCY_PERMISSIONS: Record<string, string[]> = {
+  TENANT_ADMIN: ['tenant.read', 'tenant.tie_up.write', 'tenant.flag.write', 'tenant.brand.write', 'tenant.plan.write'],
+  PRINCIPAL_OFFICER: ['tenant.read', 'tenant.tie_up.write', 'tenant.flag.write'],
+  SOLO_OWNER: ['tenant.read', 'tenant.brand.write', 'tenant.plan.write'],
+  BRANCH_MANAGER: ['tenant.read'],
+  SALES_MANAGER: ['tenant.read'],
+  SALESPERSON: ['tenant.read'],
+  OPS: ['tenant.read'],
+  FINANCE: ['tenant.read'],
+  COMPLIANCE: ['tenant.read'],
+  CMS_AUTHOR: ['tenant.read'],
+  CMS_PUBLISHER: ['tenant.read'],
+};
+
+function tenancyOptions(config: KernelConfig): TenancyOptions {
+  return {
+    platformDomain: process.env.PLATFORM_DOMAIN ?? (config.env === 'production' ? 'iap.example' : 'iap.test'),
+    otpPepper: process.env.OTP_PEPPER ?? config.actorPepper,
+    cacheTtlMs: 60_000,
+  };
+}
+
+const adapters: Provider[] = [
+  { provide: TENANCY_OPTIONS, useFactory: tenancyOptions, inject: [KERNEL_OPTIONS] },
+  { provide: TENANT_DIRECTORY, useValue: new InMemoryTenantDirectory() },
+  { provide: TENANT_SETTINGS_REPOSITORY, useValue: new InMemoryTenantSettingsRepository() },
+  { provide: PROVISIONING_STATE_REPOSITORY, useValue: new InMemoryProvisioningStateRepository() },
+  { provide: SIGNUP_REPOSITORY, useValue: new InMemorySignupRepository() },
+  { provide: PLAN_CATALOGUE, useValue: PlanCatalogue.default() },
+  { provide: TIE_UP_LIMIT_POLICY, useValue: TieUpLimitPolicy.default() },
+  { provide: IDENTITY_PROVISIONER, useFactory: (l: Logger) => new StubIdentityProvisioner(l.child({ module: 'tenancy' })), inject: [LOGGER] },
+  { provide: CRM_PROVISIONER, useFactory: (l: Logger) => new StubCrmProvisioner(l.child({ module: 'tenancy' })), inject: [LOGGER] },
+  { provide: CONTENT_PROVISIONER, useFactory: (l: Logger) => new StubContentProvisioner(l.child({ module: 'tenancy' })), inject: [LOGGER] },
+  { provide: OTP_SENDER, useFactory: (l: Logger) => new LoggingOtpSender(l.child({ module: 'tenancy' })), inject: [LOGGER] },
+  { provide: OTP_GENERATOR, useFactory: (c: KernelConfig) => (c.env === 'production' ? new RandomOtpGenerator() : new FixedOtpGenerator()), inject: [KERNEL_OPTIONS] },
+];
+
+const saga: Provider = {
+  provide: PROVISIONING_SAGA,
+  useFactory: (identity: IdentityProvisioner, crm: CrmProvisioner, content: ContentProvisioner, directory: TenantDirectory, state: ProvisioningStateRepository, logger: Logger) =>
+    new ProvisioningSaga(
+      [new IdentityOrganisationStep(identity), new IdentityAdminStep(identity), new CrmWorkspaceStep(crm), new ContentScopeStep(content), new SmokeCheckStep(directory)],
+      state,
+      logger.child({ module: 'tenancy' }),
+    ),
+  inject: [IDENTITY_PROVISIONER, CRM_PROVISIONER, CONTENT_PROVISIONER, TENANT_DIRECTORY, PROVISIONING_STATE_REPOSITORY, LOGGER],
+};
+
+const resolverCache: Provider = {
+  provide: TENANT_RESOLVER_CACHE,
+  useFactory: (directory: TenantDirectory, clock: Clock, options: TenancyOptions, metrics: MetricsRegistry) =>
+    new CachingTenantResolver(new DirectoryTenantResolver(directory), clock, options.cacheTtlMs, metrics),
+  inject: [TENANT_DIRECTORY, CLOCK, TENANCY_OPTIONS, METRICS],
+};
+
+const services: Provider[] = [
+  TenancyRecorder, ProvisionTenantService, TenantQueryService, TieUpService, FeatureFlagService, BrandKitService,
+  UsageService, OperatorTenantService, SoloSignupService, TrialService,
+  { provide: ENTITLEMENT_CHECKER, useExisting: UsageService },
+  { provide: TIE_UP_READER, useExisting: TieUpService },
+];
+
+/**
+ * M01 Tenant & Entitlements. Owns the tenant directory and swaps it into the kernel's tenant resolution,
+ * so "tenant from trust" (verified host) is backed by the directory rather than static config.
+ */
 @Module({
   controllers: [OperatorTenantsController, TenantController, PublicTenantController],
-  providers: [
-    // Export key symbols
-    {
-      provide: 'TENANCY_EXPORTS',
-      useValue: {
-        TENANT_DIRECTORY,
-        TENANT_SETTINGS_REPOSITORY,
-        PLAN_CATALOGUE,
-        ENTITLEMENT_CHECKER,
-      },
-    },
-    // Repositories
-    {
-      provide: TENANT_DIRECTORY,
-      useClass: InMemoryTenantDirectory,
-    },
-    {
-      provide: TENANT_SETTINGS_REPOSITORY,
-      useClass: InMemoryTenantSettingsRepository,
-    },
-    {
-      provide: PROVISIONING_STATE_REPOSITORY,
-      useClass: InMemoryProvisioningStateRepository,
-    },
-    {
-      provide: SIGNUP_REPOSITORY,
-      useClass: InMemorySignupRepository,
-    },
-    // Provisioners
-    {
-      provide: IDENTITY_PROVISIONER,
-      useClass: StubIdentityProvisioner,
-    },
-    {
-      provide: CRM_PROVISIONER,
-      useClass: StubCrmProvisioner,
-    },
-    {
-      provide: CONTENT_PROVISIONER,
-      useClass: StubContentProvisioner,
-    },
-    // OTP
-    {
-      provide: OTP_SENDER,
-      useClass: LoggingOtpSender,
-    },
-    {
-      provide: OTP_GENERATOR,
-      useClass: FixedOtpGenerator,
-    },
-    // Catalog and policies
-    {
-      provide: PLAN_CATALOGUE,
-      useFactory: seedPlanCatalogue,
-    },
-    {
-      provide: TIE_UP_LIMIT_POLICY,
-      useFactory: seedTieUpLimitPolicy,
-    },
-    // Options
-    {
-      provide: TENANCY_OPTIONS,
-      useFactory: (kernelOptions: KernelConfig) => ({
-        platformDomain: process.env.PLATFORM_DOMAIN || 'iap.test',
-        otpPepper: process.env.OTP_PEPPER || 'dev-pepper',
-        cacheTtlMs: 60000,
-      }),
-      inject: [KERNEL_OPTIONS],
-    },
-    // Tenant resolver
-    DirectoryTenantResolver,
-    {
-      provide: CachingTenantResolver,
-      useFactory: (inner: DirectoryTenantResolver, clock: Clock) => new CachingTenantResolver(inner, clock, 60000),
-      inject: [DirectoryTenantResolver, Clock],
-    },
-    {
-      provide: TENANT_RESOLVER,
-      useFactory: (resolver: CachingTenantResolver) => resolver,
-      inject: [CachingTenantResolver],
-    },
-  ],
+  providers: [...adapters, saga, resolverCache, ...services],
+  exports: [ENTITLEMENT_CHECKER, TIE_UP_READER, TENANT_DIRECTORY, TENANT_SETTINGS_REPOSITORY, PLAN_CATALOGUE, TENANT_RESOLVER_CACHE],
 })
 export class TenancyModule implements OnModuleInit {
   constructor(
-    @Inject(PERMISSION_POLICY) private permissionPolicy: RolePermissionMatrix,
-    @Inject(TENANT_DIRECTORY) private directory: any
+    @Inject(TENANT_RESOLVER) private readonly kernelResolver: DelegatingTenantResolver,
+    @Inject(TENANT_RESOLVER_CACHE) private readonly directoryResolver: CachingTenantResolver,
+    @Inject(PERMISSION_POLICY) private readonly permissions: RolePermissionMatrix,
+    @Inject(KERNEL_OPTIONS) private readonly config: KernelConfig,
+    @Inject(TENANT_DIRECTORY) private readonly directory: TenantDirectory,
+    @Inject(TENANT_SETTINGS_REPOSITORY) private readonly settings: TenantSettingsRepository,
+    @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWork,
+    @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
   async onModuleInit(): Promise<void> {
-    // Register role → permission rows
-    // TENANT_ADMIN → tenant.read, tenant.tie_up.write, tenant.flag.write, tenant.brand.write, tenant.plan.write
-    this.permissionPolicy.grant('TENANT_ADMIN', [
-      'tenant.read',
-      'tenant.tie_up.write',
-      'tenant.flag.write',
-      'tenant.brand.write',
-      'tenant.plan.write',
-    ]);
-
-    // PRINCIPAL_OFFICER → tenant.read, tenant.tie_up.write, tenant.flag.write
-    this.permissionPolicy.grant('PRINCIPAL_OFFICER', [
-      'tenant.read',
-      'tenant.tie_up.write',
-      'tenant.flag.write',
-    ]);
-
-    // SOLO_OWNER → tenant.read, tenant.brand.write, tenant.plan.write
-    this.permissionPolicy.grant('SOLO_OWNER', [
-      'tenant.read',
-      'tenant.brand.write',
-      'tenant.plan.write',
-    ]);
-
-    // All other customer-realm roles → tenant.read
-    const otherRoles = ['USER', 'AGENT', 'BROKER'];
-    for (const role of otherRoles) {
-      this.permissionPolicy.grant(role, ['tenant.read']);
+    for (const [role, perms] of Object.entries(TENANCY_PERMISSIONS)) this.permissions.grant(role, perms);
+    if (this.config.env !== 'production') {
+      await seedStaticTenants(this.config.staticTenants, { directory: this.directory, settings: this.settings, uow: this.uow, clock: this.clock });
     }
-
-    // Seed the in-memory directory from staticTenants if in memory mode
-    // This keeps existing kernel tests working
+    this.kernelResolver.delegateTo(this.directoryResolver);
   }
 }

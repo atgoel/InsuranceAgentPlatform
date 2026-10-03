@@ -44,12 +44,12 @@ describe('AC-M00-09 DebugBuffer', () => {
 
   it('defaults to 200 max entries', () => {
     const buf = new DebugBuffer();
-    expect((buf as Record<string, unknown>).maxEntries).toBe(200);
+    expect((buf as unknown as Record<string, unknown>).maxEntries).toBe(200);
   });
 
   it('defaults to 65536 max bytes', () => {
     const buf = new DebugBuffer();
-    expect((buf as Record<string, unknown>).maxBytes).toBe(65536);
+    expect((buf as unknown as Record<string, unknown>).maxBytes).toBe(65536);
   });
 
   it('evicts oldest when full', () => {

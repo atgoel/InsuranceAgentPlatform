@@ -1,0 +1,89 @@
+{
+  "module": "M00",
+  "reviewer": "review-agent",
+  "score": 6.8,
+  "dimensions": {
+    "specConformance": 1.5,
+    "design": 1.3,
+    "securityTenancy": 2.0,
+    "observability": 0.7,
+    "testQuality": 1.3
+  },
+  "summary": "Backend passes all 513 tests with sound tenancy isolation, timing-safe crypto, and RLS enforcement. ProblemDetailsFilter omits ZodError/HttpException mapping and error logging; AuthGuard reads config from env instead of DI. Frontend has duplicate ApiError class and rate-limit logic flaw in telemetry.",
+  "findings": [
+    {
+      "severity": "Critical",
+      "area": "specConformance",
+      "file": "apps/core/src/kernel/errors/problem-details.filter.ts:23",
+      "summary": "Filter does not use toProblem() to map ZodErrors, HttpExceptions, or unknown errors; only handles DomainError per AC-M00-06.",
+      "status": "fixed",
+      "resolution": "Filter rewritten on toProblem() mapper chain; 5xx logged + hasError set; Retry-After; regression tests in test/kernel/problem-filter.spec.ts"
+    },
+    {
+      "severity": "Critical",
+      "area": "observability",
+      "file": "apps/core/src/kernel/errors/problem-details.filter.ts:23",
+      "summary": "Filter does not log 5xx errors ('http.unhandled_error') or set RequestContext.hasError; spec \u00a73.2 requires this.",
+      "status": "fixed",
+      "resolution": "Filter rewritten on toProblem() mapper chain; 5xx logged + hasError set; Retry-After; regression tests in test/kernel/problem-filter.spec.ts"
+    },
+    {
+      "severity": "Critical",
+      "area": "specConformance",
+      "file": "apps/core/src/kernel/errors/problem-details.filter.ts:23",
+      "summary": "Filter does not set Retry-After header for RateLimitedError or DependencyUnavailableError per spec \u00a73.2.",
+      "status": "fixed",
+      "resolution": "Filter rewritten on toProblem() mapper chain; 5xx logged + hasError set; Retry-After; regression tests in test/kernel/problem-filter.spec.ts"
+    },
+    {
+      "severity": "High",
+      "area": "design",
+      "file": "apps/core/src/kernel/tenancy/auth.guard.ts:93",
+      "summary": "Line 93 and 124: AuthGuard reads ACTOR_PEPPER directly from process.env instead of injecting KernelConfig.actorPepper; violates DI and skips config validation.",
+      "status": "fixed",
+      "resolution": "AuthGuard injects KERNEL_OPTIONS.actorPepper"
+    },
+    {
+      "severity": "High",
+      "area": "design",
+      "file": "apps/web/src/design-system/states/ErrorState.tsx:4",
+      "summary": "ErrorState defines ApiError class locally instead of importing from lib/api/api-error.ts; creates duplicate with maintenance risk.",
+      "status": "open"
+    },
+    {
+      "severity": "Medium",
+      "area": "design",
+      "file": "apps/core/src/kernel/config.ts:82",
+      "summary": "Function loadConfig is 68 lines; exceeds lint target of 60, violates clean code rule in 01-standards \u00a73.",
+      "status": "open"
+    },
+    {
+      "severity": "Medium",
+      "area": "observability",
+      "file": "apps/web/src/lib/telemetry/client-telemetry.ts:139",
+      "summary": "Rate limit window resets based on lastFlushTime, not per minute; max-per-minute cap is checked per batch, not rolling window per spec \u00a77.",
+      "status": "open"
+    },
+    {
+      "severity": "Medium",
+      "area": "design",
+      "file": "apps/web/src/features/tenancy/screens/TenantSetupScreen.tsx:27",
+      "summary": "Frontend code uses 'as any' type assertions in non-test files; violates 01-standards \u00a73 'No any' rule.",
+      "status": "open"
+    },
+    {
+      "severity": "Low",
+      "area": "testQuality",
+      "file": "apps/web/src/features/tenancy/screens/TenantSetupScreen.test.tsx:1",
+      "summary": "Frontend tests use 'as any' for mock assertions; should use proper typing or type guards.",
+      "status": "open"
+    }
+  ],
+  "history": [
+    {
+      "round": 1,
+      "score": 6.8,
+      "note": "initial independent review"
+    }
+  ]
+}

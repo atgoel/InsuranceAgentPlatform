@@ -6,13 +6,192 @@ import {
   Card,
   Stepper,
   ConsentCheckbox,
-  LoadingSkeleton,
   ErrorState,
 } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
 import { createTenancyApi, LineOfBusiness } from '../api';
 import '../styles/SoloSignupScreen.css';
+
+interface Step0Props {
+  phone: string;
+  displayName: string;
+  insurerName: string;
+  line: LineOfBusiness;
+  licenceNo: string;
+  consentAccepted: boolean;
+  loading: boolean;
+  otpError?: string;
+  onPhoneChange: (phone: string) => void;
+  onDisplayNameChange: (name: string) => void;
+  onInsurerNameChange: (name: string) => void;
+  onLineChange: (line: LineOfBusiness) => void;
+  onLicenceNoChange: (no: string) => void;
+  onConsentChange: (accepted: boolean) => void;
+  onContinue: () => void;
+  t: ReturnType<typeof useT>['t'];
+}
+
+function Step0Form(props: Step0Props) {
+  return (
+    <Card title={props.t('tenancy.signup.details_title')}>
+      <div className="form-section">
+        <label>
+          <span>{props.t('tenancy.signup.phone')}</span>
+          <input
+            type="tel"
+            value={props.phone}
+            onChange={e => props.onPhoneChange(e.target.value)}
+            placeholder="+91 XXXXX XXXXX"
+          />
+        </label>
+
+        <label>
+          <span>{props.t('tenancy.signup.name')}</span>
+          <input
+            type="text"
+            value={props.displayName}
+            onChange={e => props.onDisplayNameChange(e.target.value)}
+          />
+        </label>
+
+        <label>
+          <span>{props.t('tenancy.signup.insurer_name')}</span>
+          <input
+            type="text"
+            value={props.insurerName}
+            onChange={e => props.onInsurerNameChange(e.target.value)}
+          />
+        </label>
+
+        <label>
+          <span>{props.t('tenancy.signup.line')}</span>
+          <select
+            value={props.line}
+            onChange={e => props.onLineChange(e.target.value as LineOfBusiness)}
+          >
+            <option value="LIFE">{props.t('tenancy.signup.line_life')}</option>
+            <option value="HEALTH">{props.t('tenancy.signup.line_health')}</option>
+            <option value="GENERAL">{props.t('tenancy.signup.line_general')}</option>
+          </select>
+        </label>
+
+        <label>
+          <span>{props.t('tenancy.signup.licence_no')}</span>
+          <input
+            type="text"
+            value={props.licenceNo}
+            onChange={e => props.onLicenceNoChange(e.target.value)}
+          />
+        </label>
+
+        <ConsentCheckbox
+          purpose="signup"
+          noticeVersion="1.0"
+          checked={props.consentAccepted}
+          onChange={props.onConsentChange}
+          label={props.t('tenancy.signup.consent_label')}
+        />
+
+        {props.otpError && (
+          <div className="error-message">{props.otpError}</div>
+        )}
+
+        <Button
+          onClick={props.onContinue}
+          loading={props.loading}
+          disabled={!props.consentAccepted}
+          size="lg"
+        >
+          {props.t('tenancy.signup.continue')}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+interface Step1Props {
+  otp: string;
+  phone: string;
+  loading: boolean;
+  otpError?: string;
+  onOtpChange: (otp: string) => void;
+  onVerify: () => void;
+  onCancel: () => void;
+  t: ReturnType<typeof useT>['t'];
+}
+
+function Step1Form(props: Step1Props) {
+  return (
+    <Card title={props.t('tenancy.signup.otp_title')}>
+      <div className="form-section">
+        <p>{props.t('tenancy.signup.otp_description', { phone: props.phone })}</p>
+
+        <label>
+          <span>{props.t('tenancy.signup.otp_code')}</span>
+          <input
+            type="text"
+            value={props.otp}
+            onChange={e => props.onOtpChange(e.target.value.slice(0, 6))}
+            placeholder="000000"
+            maxLength={6}
+          />
+        </label>
+
+        {props.otpError && (
+          <div className="error-message">{props.otpError}</div>
+        )}
+
+        <Button
+          onClick={props.onVerify}
+          loading={props.loading}
+          size="lg"
+        >
+          {props.t('tenancy.signup.verify')}
+        </Button>
+
+        <Button
+          variant="ghost"
+          onClick={props.onCancel}
+        >
+          {props.t('common.cancel')}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+interface Step2Props {
+  t: ReturnType<typeof useT>['t'];
+  onImportBook: () => void;
+  onSkip: () => void;
+}
+
+function Step2Success(props: Step2Props) {
+  return (
+    <Card title={props.t('tenancy.signup.success_title')}>
+      <div className="success-section">
+        <div className="success-icon">✓</div>
+        <p>{props.t('tenancy.signup.success_message')}</p>
+
+        <div className="next-steps">
+          <Button
+            onClick={props.onImportBook}
+            size="lg"
+          >
+            {props.t('tenancy.signup.import_book')}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={props.onSkip}
+          >
+            {props.t('tenancy.signup.skip_today')}
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
 
 export function SoloSignupScreen() {
   const api = useApi();
@@ -35,13 +214,8 @@ export function SoloSignupScreen() {
 
   // Step 1 data
   const [signupId, setSignupId] = useState('');
-  const [expiresAt, setExpiresAt] = useState('');
   const [otp, setOtp] = useState('');
   const [otpAttempts, setOtpAttempts] = useState(0);
-
-  // Step 2 data
-  const [tenantId, setTenantId] = useState('');
-  const [host, setHost] = useState('');
 
   const handleStartSignup = async () => {
     if (!consentAccepted) {
@@ -61,7 +235,6 @@ export function SoloSignupScreen() {
       });
 
       setSignupId(result.signupId);
-      setExpiresAt(result.expiresAt);
       setStep(1);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -69,6 +242,22 @@ export function SoloSignupScreen() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOtpError = (err: ApiError) => {
+    if (err.code === 'otp_invalid') {
+      const newAttempts = otpAttempts + 1;
+      setOtpAttempts(newAttempts);
+      setOtpError(
+        t('tenancy.signup.otp_invalid', { attempts: newAttempts })
+      );
+    } else if (err.code === 'otp_locked') {
+      setOtpError(t('tenancy.signup.otp_locked'));
+    } else if (err.code === 'otp_expired') {
+      setOtpError(t('tenancy.signup.otp_expired'));
+    } else {
+      setError(err);
     }
   };
 
@@ -82,35 +271,21 @@ export function SoloSignupScreen() {
     setOtpError(undefined);
 
     try {
-      const result = await tenancyApi.verifySoloSignup(signupId, { otp });
-      setTenantId(result.tenantId);
-      setHost(result.host);
+      await tenancyApi.verifySoloSignup(signupId, { otp });
       setStep(2);
     } catch (err) {
       if (err instanceof ApiError) {
-        if (err.code === 'otp_invalid') {
-          const newAttempts = otpAttempts + 1;
-          setOtpAttempts(newAttempts);
-          setOtpError(
-            t('tenancy.signup.otp_invalid', { attempts: newAttempts })
-          );
-        } else if (err.code === 'otp_locked') {
-          setOtpError(t('tenancy.signup.otp_locked'));
-        } else if (err.code === 'otp_expired') {
-          setOtpError(t('tenancy.signup.otp_expired'));
-        } else {
-          setError(err);
-        }
+        handleOtpError(err);
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const steps = [
-    { id: 'details', label: t('tenancy.signup.step_details'), state: step >= 0 ? (step === 0 ? 'current' : 'done') : 'todo' as const },
-    { id: 'otp', label: t('tenancy.signup.step_otp'), state: step >= 1 ? (step === 1 ? 'current' : 'done') : 'todo' as const },
-    { id: 'success', label: t('tenancy.signup.step_success'), state: step === 2 ? 'current' : (step > 2 ? 'done' : 'todo') as const },
+  const steps: Array<{ id: string; label: string; state: 'done' | 'current' | 'todo' }> = [
+    { id: 'details', label: t('tenancy.signup.step_details'), state: step === 0 ? 'current' : step > 0 ? 'done' : 'todo' },
+    { id: 'otp', label: t('tenancy.signup.step_otp'), state: step === 1 ? 'current' : step > 1 ? 'done' : 'todo' },
+    { id: 'success', label: t('tenancy.signup.step_success'), state: step === 2 ? 'current' : step > 2 ? 'done' : 'todo' },
   ];
 
   if (error && step !== 0) {
@@ -123,141 +298,45 @@ export function SoloSignupScreen() {
         <Stepper steps={steps} />
 
         {step === 0 && (
-          <Card title={t('tenancy.signup.details_title')}>
-            <div className="form-section">
-              <label>
-                <span>{t('tenancy.signup.phone')}</span>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  placeholder="+91 XXXXX XXXXX"
-                />
-              </label>
-
-              <label>
-                <span>{t('tenancy.signup.name')}</span>
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={e => setDisplayName(e.target.value)}
-                />
-              </label>
-
-              <label>
-                <span>{t('tenancy.signup.insurer_name')}</span>
-                <input
-                  type="text"
-                  value={insurerName}
-                  onChange={e => setInsurerName(e.target.value)}
-                />
-              </label>
-
-              <label>
-                <span>{t('tenancy.signup.line')}</span>
-                <select
-                  value={line}
-                  onChange={e => setLine(e.target.value as LineOfBusiness)}
-                >
-                  <option value="LIFE">{t('tenancy.signup.line_life')}</option>
-                  <option value="HEALTH">{t('tenancy.signup.line_health')}</option>
-                  <option value="GENERAL">{t('tenancy.signup.line_general')}</option>
-                </select>
-              </label>
-
-              <label>
-                <span>{t('tenancy.signup.licence_no')}</span>
-                <input
-                  type="text"
-                  value={licenceNo}
-                  onChange={e => setLicenceNo(e.target.value)}
-                />
-              </label>
-
-              <ConsentCheckbox
-                purpose="signup"
-                noticeVersion="1.0"
-                checked={consentAccepted}
-                onChange={setConsentAccepted}
-                label={t('tenancy.signup.consent_label')}
-              />
-
-              {otpError && (
-                <div className="error-message">{otpError}</div>
-              )}
-
-              <Button
-                onClick={handleStartSignup}
-                loading={loading}
-                disabled={!consentAccepted}
-                size="lg"
-              >
-                {t('tenancy.signup.continue')}
-              </Button>
-            </div>
-          </Card>
+          <Step0Form
+            phone={phone}
+            displayName={displayName}
+            insurerName={insurerName}
+            line={line}
+            licenceNo={licenceNo}
+            consentAccepted={consentAccepted}
+            loading={loading}
+            otpError={otpError}
+            onPhoneChange={setPhone}
+            onDisplayNameChange={setDisplayName}
+            onInsurerNameChange={setInsurerName}
+            onLineChange={setLine}
+            onLicenceNoChange={setLicenceNo}
+            onConsentChange={setConsentAccepted}
+            onContinue={handleStartSignup}
+            t={t}
+          />
         )}
 
         {step === 1 && (
-          <Card title={t('tenancy.signup.otp_title')}>
-            <div className="form-section">
-              <p>{t('tenancy.signup.otp_description', { phone })}</p>
-
-              <label>
-                <span>{t('tenancy.signup.otp_code')}</span>
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={e => setOtp(e.target.value.slice(0, 6))}
-                  placeholder="000000"
-                  maxLength={6}
-                />
-              </label>
-
-              {otpError && (
-                <div className="error-message">{otpError}</div>
-              )}
-
-              <Button
-                onClick={handleVerifyOtp}
-                loading={loading}
-                size="lg"
-              >
-                {t('tenancy.signup.verify')}
-              </Button>
-
-              <Button
-                variant="ghost"
-                onClick={() => setStep(0)}
-              >
-                {t('common.cancel')}
-              </Button>
-            </div>
-          </Card>
+          <Step1Form
+            otp={otp}
+            phone={phone}
+            loading={loading}
+            otpError={otpError}
+            onOtpChange={setOtp}
+            onVerify={handleVerifyOtp}
+            onCancel={() => setStep(0)}
+            t={t}
+          />
         )}
 
         {step === 2 && (
-          <Card title={t('tenancy.signup.success_title')}>
-            <div className="success-section">
-              <div className="success-icon">✓</div>
-              <p>{t('tenancy.signup.success_message')}</p>
-
-              <div className="next-steps">
-                <Button
-                  onClick={() => navigate('/m/book/import')}
-                  size="lg"
-                >
-                  {t('tenancy.signup.import_book')}
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => navigate('/m/today')}
-                >
-                  {t('tenancy.signup.skip_today')}
-                </Button>
-              </div>
-            </div>
-          </Card>
+          <Step2Success
+            t={t}
+            onImportBook={() => navigate('/m/book/import')}
+            onSkip={() => navigate('/m/today')}
+          />
         )}
       </div>
     </div>

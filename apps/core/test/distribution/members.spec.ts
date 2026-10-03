@@ -205,6 +205,7 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
       });
 
       // Get from acme works
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const _acmeResponse = await testApp.http
         .get('/api/v1/members/mem_acme_001')
         .set('Host', 'acme.iap.test')

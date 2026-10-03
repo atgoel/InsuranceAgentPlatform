@@ -12,7 +12,7 @@ import {
 } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
-import { createTenancyApi, TenantSummary, ProvisionTenantInput, PlanCode } from '../api';
+import { createTenancyApi, TenantSummary, ProvisionTenantInput, PlanCode, Plan, EntityType } from '../api';
 import '../styles/OperatorTenantsScreen.css';
 
 export function OperatorTenantsScreen() {
@@ -21,7 +21,7 @@ export function OperatorTenantsScreen() {
   const { t } = useT();
 
   const [tenants, setTenants] = useState<TenantSummary[]>([]);
-  const [plans, setPlans] = useState<any[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | undefined>();
   const [provisionSheet, setProvisionSheet] = useState(false);
@@ -68,7 +68,7 @@ export function OperatorTenantsScreen() {
   const handleProvision = async () => {
     setProvisioning(true);
     try {
-      const result = await tenancyApi.provisionTenant(formData);
+      await tenancyApi.provisionTenant(formData);
       const updated = await tenancyApi.listTenants({ limit: 50 });
       setTenants(updated.items);
       setProvisionSheet(false);
@@ -181,7 +181,7 @@ export function OperatorTenantsScreen() {
               onChange={e =>
                 setFormData({
                   ...formData,
-                  entity: { ...formData.entity, entityType: e.target.value as any },
+                  entity: { ...formData.entity, entityType: e.target.value as EntityType },
                 })
               }
             >

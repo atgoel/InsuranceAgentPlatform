@@ -69,7 +69,7 @@ export class BrandKit {
     }
 
     // Validate typeface is approved
-    if (!APPROVED_TYPEFACES.includes(props.typeface as any)) {
+    if (!APPROVED_TYPEFACES.includes(props.typeface)) {
       throw new ValidationError(
         'typeface_not_approved',
         `Typeface must be one of: ${APPROVED_TYPEFACES.join(', ')}`

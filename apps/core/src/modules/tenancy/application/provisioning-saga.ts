@@ -1,95 +1,90 @@
-import { Injectable, Inject } from '@nestjs/common';
 import { Logger } from '../../../kernel/observability/logger';
 import { Tenant } from '../domain/tenant';
-import { IDENTITY_PROVISIONER, CRM_PROVISIONER, CONTENT_PROVISIONER, IdentityProvisioner, CrmProvisioner, ContentProvisioner, TENANT_DIRECTORY, PROVISIONING_STATE_REPOSITORY, ProvisioningStateRepository, TenantDirectory } from './ports';
+import { ContentProvisioner, CrmProvisioner, IdentityProvisioner, ProvisioningStateRepository, TenantDirectory } from './ports';
 
+export interface AdminContact {
+  name: string;
+  phone?: string;
+  email?: string;
+}
+
+export interface ProvisioningContext {
+  tenant: Tenant;
+  admin: AdminContact;
+  host: string;
+}
+
+/** Command: one idempotent, resumable provisioning step (HLD §10 provisioning saga). */
 export interface ProvisioningStep {
   readonly name: string;
-  execute(ctx: { tenant: Tenant; admin: { name: string; phone?: string; email?: string } }): Promise<void>;
+  execute(ctx: ProvisioningContext): Promise<void>;
 }
 
-@Injectable()
 export class IdentityOrganisationStep implements ProvisioningStep {
   readonly name = 'identity.organisation';
-
-  constructor(@Inject(IDENTITY_PROVISIONER) private provisioner: IdentityProvisioner) {}
-
-  async execute(ctx: { tenant: Tenant }): Promise<void> {
-    await this.provisioner.ensureOrganisation(ctx.tenant.props.id, ctx.tenant.props.slug);
+  constructor(private readonly identity: IdentityProvisioner) {}
+  execute(ctx: ProvisioningContext): Promise<void> {
+    return this.identity.ensureOrganisation(ctx.tenant.props.id, ctx.tenant.props.slug);
   }
 }
 
-@Injectable()
 export class IdentityAdminStep implements ProvisioningStep {
   readonly name = 'identity.admin';
-
-  constructor(@Inject(IDENTITY_PROVISIONER) private provisioner: IdentityProvisioner) {}
-
-  async execute(ctx: { tenant: Tenant; admin: { name: string; phone?: string; email?: string } }): Promise<void> {
-    await this.provisioner.ensureAdmin(ctx.tenant.props.id, ctx.admin);
+  constructor(private readonly identity: IdentityProvisioner) {}
+  async execute(ctx: ProvisioningContext): Promise<void> {
+    await this.identity.ensureAdmin(ctx.tenant.props.id, ctx.admin);
   }
 }
 
-@Injectable()
 export class CrmWorkspaceStep implements ProvisioningStep {
   readonly name = 'crm.workspace';
-
-  constructor(@Inject(CRM_PROVISIONER) private provisioner: CrmProvisioner) {}
-
-  async execute(ctx: { tenant: Tenant }): Promise<void> {
-    await this.provisioner.ensureWorkspace(ctx.tenant.props.id, ctx.tenant.props.crmMode);
+  constructor(private readonly crm: CrmProvisioner) {}
+  async execute(ctx: ProvisioningContext): Promise<void> {
+    await this.crm.ensureWorkspace(ctx.tenant.props.id, ctx.tenant.props.crmMode);
   }
 }
 
-@Injectable()
 export class ContentScopeStep implements ProvisioningStep {
   readonly name = 'content.scope';
-
-  constructor(private provisioner: any) {} // Placeholder for ContentProvisioner
-
-  async execute(ctx: { tenant: Tenant }): Promise<void> {
-    // Implementation would call provisioner.ensureTenantScope
+  constructor(private readonly content: ContentProvisioner) {}
+  execute(ctx: ProvisioningContext): Promise<void> {
+    return this.content.ensureTenantScope(ctx.tenant.props.id);
   }
 }
 
-@Injectable()
 export class SmokeCheckStep implements ProvisioningStep {
   readonly name = 'smoke.check';
-
-  constructor(@Inject(TENANT_DIRECTORY) private directory: TenantDirectory) {}
-
-  async execute(ctx: { tenant: Tenant }): Promise<void> {
-    const found = await this.directory.findBySlug(ctx.tenant.props.slug);
-    if (!found) throw new Error('Smoke check failed: tenant not found');
+  constructor(private readonly directory: TenantDirectory) {}
+  async execute(ctx: ProvisioningContext): Promise<void> {
+    const resolved = await this.directory.findByHost(ctx.host);
+    if (resolved?.tenant.props.id !== ctx.tenant.props.id) throw new Error(`Host ${ctx.host} does not resolve to the tenant`);
   }
 }
 
-@Injectable()
+export type SagaOutcome = { ok: true } | { ok: false; failedStep: string };
+
+/** Runs steps in order, skipping those already completed; stops at the first failure so it can be resumed. */
 export class ProvisioningSaga {
   constructor(
-    private steps: ProvisioningStep[],
-    @Inject(PROVISIONING_STATE_REPOSITORY) private stateRepo: ProvisioningStateRepository,
-    private logger: Logger
+    private readonly steps: ProvisioningStep[],
+    private readonly state: ProvisioningStateRepository,
+    private readonly logger: Logger,
   ) {}
 
-  async run(ctx: { tenant: Tenant; admin: { name: string; phone?: string; email?: string } }): Promise<{ ok: true } | { ok: false; failedStep: string }> {
-    const completedSteps = await this.stateRepo.completedSteps(ctx.tenant.props.id);
-
+  async run(ctx: ProvisioningContext): Promise<SagaOutcome> {
+    const done = new Set(await this.state.completedSteps(ctx.tenant.props.id));
     for (const step of this.steps) {
-      if (completedSteps.includes(step.name)) {
-        continue; // Skip already completed steps
-      }
-
+      if (done.has(step.name)) continue;
       try {
         await step.execute(ctx);
-        await this.stateRepo.markCompleted(ctx.tenant.props.id, step.name);
+        await this.state.markCompleted(ctx.tenant.props.id, step.name);
       } catch (error) {
-        this.logger.warn('tenant.provisioning.step_failed', {}, { step: step.name });
-        await this.stateRepo.markFailed(ctx.tenant.props.id, step.name, String(error));
+        const message = error instanceof Error ? error.message : String(error);
+        await this.state.markFailed(ctx.tenant.props.id, step.name, message);
+        this.logger.warn('tenant.provisioning.step_failed', 'Provisioning step failed', { tenantId: ctx.tenant.props.id, step: step.name });
         return { ok: false, failedStep: step.name };
       }
     }
-
     return { ok: true };
   }
 }

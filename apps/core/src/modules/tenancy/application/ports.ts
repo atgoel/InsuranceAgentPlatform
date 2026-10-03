@@ -1,6 +1,5 @@
 import { Transaction } from '../../../kernel/persistence/unit-of-work';
-import { TenantKind, PlanCode } from '../domain/tenant';
-import { EntityType } from '../domain/distributor-entity';
+import { TenantKind } from '../domain/tenant';
 import { LineOfBusiness } from '../domain/tie-up';
 import { TenantStatus } from '../domain/tenant';
 import { Tenant } from '../domain/tenant';
@@ -29,6 +28,7 @@ export const TIE_UP_LIMIT_POLICY = Symbol('TIE_UP_LIMIT_POLICY');
 export const TIE_UP_READER = Symbol('TIE_UP_READER');
 export const ENTITLEMENT_CHECKER = Symbol('ENTITLEMENT_CHECKER');
 export const TENANCY_OPTIONS = Symbol('TENANCY_OPTIONS');
+export const PROVISIONING_SAGA = Symbol('PROVISIONING_SAGA');
 
 export interface TenantHostRecord {
   tenantId: string;
@@ -70,6 +70,8 @@ export interface ProvisioningStateRepository {
 export interface SignupRepository {
   get(id: string): Promise<SoloSignup | undefined>;
   save(s: SoloSignup): Promise<void>;
+  /** Signups started for this phone since the given time (rate limiting). */
+  countStartedSince(phoneE164: string, since: Date): Promise<number>;
 }
 
 export interface IdentityProvisioner {

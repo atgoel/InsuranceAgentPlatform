@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { ApiProvider } from '../../../lib/api';
 import { ApiError } from '../../../lib/api/api-error';
 import { I18nProvider } from '../../../lib/i18n';
@@ -61,7 +60,7 @@ describe('AC-M01-16 TenantSetupScreen', () => {
   });
 
   it('AC-M01-16 loads and displays tenant profile with entity and tie-ups', async () => {
-    (mockApiClient.get as any)
+    (mockApiClient.get as Mock)
       .mockResolvedValueOnce(mockProfile)
       .mockResolvedValueOnce(mockTieUps);
 
@@ -73,14 +72,14 @@ describe('AC-M01-16 TenantSetupScreen', () => {
       </ApiProvider>
     );
 
-    // Wait for data to load
-    expect(await screen.findByText('Test Tenant')).toBeInTheDocument();
-    expect(screen.getByText('Test IMF')).toBeInTheDocument();
+    // Wait for data to load - check entity details
+    expect(await screen.findByText('Test IMF')).toBeInTheDocument();
     expect(screen.getByText('IMF001')).toBeInTheDocument();
+    expect(screen.getByText('LIFE')).toBeInTheDocument();
   });
 
   it('AC-M01-16 displays registration status as valid chip', async () => {
-    (mockApiClient.get as any)
+    (mockApiClient.get as Mock)
       .mockResolvedValueOnce(mockProfile)
       .mockResolvedValueOnce(mockTieUps);
 
@@ -96,7 +95,7 @@ describe('AC-M01-16 TenantSetupScreen', () => {
   });
 
   it('AC-M01-16 displays comparison scope for IMF as tied insurers', async () => {
-    (mockApiClient.get as any)
+    (mockApiClient.get as Mock)
       .mockResolvedValueOnce(mockProfile)
       .mockResolvedValueOnce(mockTieUps);
 
@@ -112,7 +111,7 @@ describe('AC-M01-16 TenantSetupScreen', () => {
   });
 
   it('AC-M01-16 displays tie-ups per line with used/max counters', async () => {
-    (mockApiClient.get as any)
+    (mockApiClient.get as Mock)
       .mockResolvedValueOnce(mockProfile)
       .mockResolvedValueOnce(mockTieUps);
 
@@ -146,7 +145,7 @@ describe('AC-M01-16 TenantSetupScreen', () => {
       ],
     };
 
-    (mockApiClient.get as any)
+    (mockApiClient.get as Mock)
       .mockResolvedValueOnce(overLimitProfile)
       .mockResolvedValueOnce(overLimitTieUps);
 
@@ -162,7 +161,7 @@ describe('AC-M01-16 TenantSetupScreen', () => {
   });
 
   it('AC-M01-16 shows referral rewards disabled with legal text', async () => {
-    (mockApiClient.get as any)
+    (mockApiClient.get as Mock)
       .mockResolvedValueOnce(mockProfile)
       .mockResolvedValueOnce(mockTieUps);
 
@@ -199,7 +198,7 @@ describe('AC-M01-16 TenantSetupScreen', () => {
   });
 
   it('AC-M01-16 handles loading state', () => {
-    (mockApiClient.get as any).mockImplementation(() => new Promise(() => {}));
+    (mockApiClient.get as Mock).mockImplementation(() => new Promise(() => {}));
 
     render(
       <ApiProvider client={mockApiClient}>

@@ -37,7 +37,7 @@ Patterns are used where they remove a conditional or a coupling, never decorativ
 ## 3. Clean code rules
 
 - **Names** reveal intent: `markPaidNotIssued()`, not `update2()`. Booleans read as predicates (`isSuppressed`). No abbreviations except domain terms (UIN, POSP, ISP, KYC, DPDP).
-- **Functions** do one thing; ≤ 40 lines target (lint warns at 60), ≤ 4 parameters (use an options object beyond), cyclomatic complexity ≤ 10, cognitive complexity ≤ 15, nesting depth ≤ 3.
+- **Functions** do one thing; ≤ 40 lines target (lint warns at 60), ≤ 4 parameters (use an options object beyond; NestJS constructors that receive injected collaborators may take up to 8 — beyond that, split the class), cyclomatic complexity ≤ 10, cognitive complexity ≤ 15, nesting depth ≤ 3.
 - **No magic values**: statuses are string-literal unions or enums; thresholds come from configuration objects with defaults in one file.
 - **Errors**: throw typed `DomainError` subclasses (see M00) for business rule violations; never throw strings; never swallow an error without logging it at the right level once (log where handled, not where thrown).
 - **Immutability**: value objects are immutable; entities expose intention-revealing methods, not setters. Use `readonly` everywhere possible.

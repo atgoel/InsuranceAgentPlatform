@@ -23,7 +23,7 @@ import { LogOverridesController } from './observability/log-overrides.controller
 import { RouteTemplateInterceptor } from './observability/route-template.interceptor';
 import { ProblemDetailsFilter } from './errors/problem-details.filter';
 import { HmacJwtVerifier } from './tenancy/jwt';
-import { StaticTenantResolver } from './tenancy/tenant-resolver';
+import { DelegatingTenantResolver, StaticTenantResolver } from './tenancy/tenant-resolver';
 import { RolePermissionMatrix } from './tenancy/permissions';
 import { AuthGuard } from './tenancy/auth.guard';
 import { PermissionGuard } from './tenancy/permission.guard';
@@ -66,7 +66,7 @@ function coreProviders(config: KernelConfig): Provider[] {
     { provide: T.FLUSH_POLICY, useValue: new FlushPolicy() },
     { provide: T.HEAD_SAMPLER, useValue: new HeadSampler({ rates: config.logSampleRates }) },
     { provide: T.TOKEN_VERIFIER, useFactory: (clock: Clock) => new HmacJwtVerifier(config.tokenSecret, clock), inject: [T.CLOCK] },
-    { provide: T.TENANT_RESOLVER, useValue: new StaticTenantResolver(config.staticTenants) },
+    { provide: T.TENANT_RESOLVER, useValue: new DelegatingTenantResolver(new StaticTenantResolver(config.staticTenants)) },
     { provide: T.PERMISSION_POLICY, useValue: new RolePermissionMatrix() },
     { provide: T.EVENT_BUS, useValue: new InProcessEventBus() },
     IdempotencyInterceptor,

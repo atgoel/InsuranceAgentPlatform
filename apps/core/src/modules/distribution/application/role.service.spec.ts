@@ -327,16 +327,16 @@ describe('AC-M02-11, AC-M02-12 RoleService and DataDrivenPermissionPolicy', () =
 // Helper stubs
 class RoleService {
   constructor(_deps: Record<string, unknown>) {}
-  list(_tx: Record<string, unknown>): Promise<any[]> {
+  list(_tx: Record<string, unknown>): Promise<Record<string, unknown>[]> {
     throw new Error('not implemented');
   }
-  get(_tx: Record<string, unknown>, _role: string): Promise<any> {
+  get(_tx: Record<string, unknown>, _role: string): Promise<Record<string, unknown>> {
     throw new Error('not implemented');
   }
-  updatePermissions(_tx: Record<string, unknown>, _role: string, _permissions: string[], _version: number): Promise<any> {
+  updatePermissions(_tx: Record<string, unknown>, _role: string, _permissions: string[], _version: number): Promise<Record<string, unknown>> {
     throw new Error('not implemented');
   }
-  preview(_tx: Record<string, unknown>, _role: string): Promise<any> {
+  preview(_tx: Record<string, unknown>, _role: string): Promise<Record<string, unknown>> {
     throw new Error('not implemented');
   }
 }
@@ -349,7 +349,7 @@ class DataDrivenPermissionPolicy {
 }
 
 class MfaPolicy {
-  static requiresMfa(_roles: string[], amr?: string[]): boolean {
+  static requiresMfa(_roles: string[], _amr?: string[]): boolean {
     throw new Error('not implemented');
   }
 }
@@ -410,7 +410,7 @@ function createMockRoleRepo() {
 
 function createMockLogger(_logs: Record<string, unknown>) {
   return {
-    info: (event: string, msg: string, ctx?: Record<string, unknown>) => {
+    info: (event: string, msg: string, _ctx?: Record<string, unknown>) => {
       logs.events.push({ event, msg });
     },
   };

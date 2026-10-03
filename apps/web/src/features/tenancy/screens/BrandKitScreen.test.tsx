@@ -76,7 +76,7 @@ describe('AC-M01-17 BrandKitScreen', () => {
     await user.type(colorInput, '#FFFFFF');
 
     // Should show warning
-    expect(await screen.findByText(/contrast.*warning/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Contrast below 4.5:1/i)).toBeInTheDocument();
   });
 
   it('AC-M01-17 disables Save when contrast insufficient', async () => {

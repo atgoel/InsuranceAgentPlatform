@@ -1,31 +1,51 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { AuthProvider } from '../lib/auth';
-import { I18nProvider } from '../lib/i18n';
-import { ApiProvider, FetchApiClient } from '../lib/api';
-import { ToastProvider } from '../design-system';
+import { routes } from './routes';
 
 describe('AC-M00-32 Routes', () => {
-  const mockClient = new FetchApiClient({
-    baseUrl: '/api',
-    getToken: () => undefined,
+  it('defines routes array', () => {
+    expect(routes).toBeDefined();
+    expect(Array.isArray(routes)).toBe(true);
   });
 
-  it('shows coming soon for unknown routes', () => {
-    render(
-      <MemoryRouter initialEntries={['/unknown-route']}>
-        <AuthProvider>
-          <I18nProvider>
-            <ApiProvider client={mockClient}>
-              <ToastProvider>
-                <div>Coming in a later module</div>
-              </ToastProvider>
-            </ApiProvider>
-          </I18nProvider>
-        </AuthProvider>
-      </MemoryRouter>,
-    );
-    expect(screen.getByText(/Coming in a later module/)).toBeInTheDocument();
+  it('has index route with Home component', () => {
+    const indexRoute = routes.find(r => r.index);
+    expect(indexRoute).toBeDefined();
+    expect(indexRoute?.element).toBeDefined();
+  });
+
+  it('has login route', () => {
+    const loginRoute = routes.find(r => r.path === 'login');
+    expect(loginRoute).toBeDefined();
+    expect(loginRoute?.lazy).toBeDefined();
+  });
+
+  it('has signup route', () => {
+    const signupRoute = routes.find(r => r.path === 'signup');
+    expect(signupRoute).toBeDefined();
+    expect(signupRoute?.lazy).toBeDefined();
+  });
+
+  it('has mobile routes', () => {
+    const mRoute = routes.find(r => r.path === 'm');
+    expect(mRoute).toBeDefined();
+    expect(mRoute?.children).toBeDefined();
+    expect(mRoute?.children?.length).toBeGreaterThan(0);
+  });
+
+  it('has crm routes', () => {
+    const crmRoute = routes.find(r => r.path === 'crm');
+    expect(crmRoute).toBeDefined();
+    expect(crmRoute?.children).toBeDefined();
+  });
+
+  it('has console routes', () => {
+    const consoleRoute = routes.find(r => r.path === 'console');
+    expect(consoleRoute).toBeDefined();
+    expect(consoleRoute?.children).toBeDefined();
+  });
+
+  it('has catch-all route for unknown paths', () => {
+    const catchAllRoute = routes.find(r => r.path === '*');
+    expect(catchAllRoute).toBeDefined();
   });
 });

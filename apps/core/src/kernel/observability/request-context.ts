@@ -41,7 +41,7 @@ export class RequestContext {
     const keys: (keyof typeof patch)[] = ['traceId', 'spanId', 'tenantId', 'actor', 'module', 'route', 'forceDebug', 'hasError', 'startedAtMs'];
     for (const key of keys) {
       if (patch[key] !== undefined) {
-        (current as Record<string, unknown>)[key] = patch[key];
+        (current as unknown as Record<string, unknown>)[key] = patch[key];
       }
     }
   }

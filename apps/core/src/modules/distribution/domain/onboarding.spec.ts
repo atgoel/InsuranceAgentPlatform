@@ -6,7 +6,6 @@ import { ValidationError } from '../../../kernel/errors/domain-errors';
  * the requirement; missing() lists open items.
  */
 describe('AC-M02-03 OnboardingChecklist', () => {
-  const _now = new Date('2026-01-01T00:00:00Z');
 
   describe('POSP template', () => {
     it('includes all 5 items with 15 hour training requirement', () => {

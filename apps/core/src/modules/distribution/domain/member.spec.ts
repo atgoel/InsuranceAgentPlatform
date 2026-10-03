@@ -7,7 +7,6 @@ import { PhoneNumber, EmailAddress } from '../../../kernel/domain';
  * illegal_member_transition; expired invites cannot be accepted.
  */
 describe('AC-M02-02 Member aggregate', () => {
-  const _now = new Date('2026-01-01T00:00:00Z');
 
   describe('invite', () => {
     it('creates invited member with phone only', () => {
@@ -310,7 +309,7 @@ describe('AC-M02-02 Member aggregate', () => {
       member.acceptInvite('user_ref_001', now);
 
       expect(() => {
-        (member as any).props.status = 'invited';
+        (member as unknown).props.status = 'invited';
       }).not.toThrow(); // setter test - actual enforcement in methods
     });
 
@@ -335,7 +334,6 @@ describe('AC-M02-02 Member aggregate', () => {
 
   describe('acceptInvite validation', () => {
     it('rejects expired invite', () => {
-      const _now = new Date('2026-01-01T00:00:00Z');
       const member = Member.invite({
         id: 'mem_001',
         displayName: 'John',

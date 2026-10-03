@@ -1,3 +1,5 @@
+import { newIdempotencyKey } from '../support/idempotency';
+import { TenancyModule } from '../../src/modules/tenancy/tenancy.module';
 import { createTestApp, TestApp } from '../support/test-app';
 
 /**
@@ -8,7 +10,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
   let testApp: TestApp;
 
   beforeAll(async () => {
-    testApp = await createTestApp();
+    testApp = await createTestApp({ imports: [TenancyModule] });
   });
 
   afterAll(async () => {
@@ -22,6 +24,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
     it('starts a signup with phone, licence, and consent', async () => {
       const response = await testApp.http
         .post('/api/v1/public/solo-signups')
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({
           phone: '9876543210',
           displayName: 'John Agent',
@@ -44,6 +47,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
     it('rejects signup without consent', async () => {
       const response = await testApp.http
         .post('/api/v1/public/solo-signups')
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({
           phone: '9876543210',
           displayName: 'John Agent',
@@ -80,7 +84,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
       // Start 4 signups
       const responses = await Promise.all(
         Array.from({ length: 4 }, () =>
-          testApp.http.post('/api/v1/public/solo-signups').send(request),
+          testApp.http.post('/api/v1/public/solo-signups').set('Idempotency-Key', newIdempotencyKey()).send(request),
         ),
       );
 
@@ -99,6 +103,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
     it('requires consent.accepted === true', async () => {
       const response = await testApp.http
         .post('/api/v1/public/solo-signups')
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({
           phone: '9876543212',
           displayName: 'Test',
@@ -119,6 +124,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
     it('validates phone format', async () => {
       const response = await testApp.http
         .post('/api/v1/public/solo-signups')
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({
           phone: 'invalid-phone',
           displayName: 'Test',
@@ -140,6 +146,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
     it('validates displayName length 2..80', async () => {
       const response1 = await testApp.http
         .post('/api/v1/public/solo-signups')
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({
           phone: '9876543213',
           displayName: 'A',
@@ -158,6 +165,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
 
       const response2 = await testApp.http
         .post('/api/v1/public/solo-signups')
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({
           phone: '9876543214',
           displayName: 'A'.repeat(81),
@@ -176,7 +184,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
     });
 
     it('is idempotent (Idempotency-Key)', async () => {
-      const idempotencyKey = 'sig-test-' + Math.random();
+      const idempotencyKey = newIdempotencyKey();
       const request = {
         phone: '9876543215',
         displayName: 'Idempotent Test',
@@ -216,6 +224,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
     beforeEach(async () => {
       const response = await testApp.http
         .post('/api/v1/public/solo-signups')
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({
           phone: `${Math.floor(Math.random() * 1000000000) + 6000000000}`,
           displayName: 'OTP Test',
@@ -236,6 +245,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
     it('verifies with correct OTP', async () => {
       const response = await testApp.http
         .post(`/api/v1/public/solo-signups/${signupId}/verifications`)
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({ otp: '123456' });
 
       expect([200, 201]).toContain(response.status);
@@ -249,6 +259,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
     it('rejects invalid OTP format', async () => {
       const response = await testApp.http
         .post(`/api/v1/public/solo-signups/${signupId}/verifications`)
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({ otp: 'abc123' });
 
       expect(response.status).toBe(400);
@@ -257,12 +268,14 @@ describe('solo signup endpoints (AC-M01-10)', () => {
     it('rejects OTP not matching format /^\\d{6}$/', async () => {
       const response1 = await testApp.http
         .post(`/api/v1/public/solo-signups/${signupId}/verifications`)
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({ otp: '12345' }); // 5 digits
 
       expect(response1.status).toBe(400);
 
       const response2 = await testApp.http
         .post(`/api/v1/public/solo-signups/${signupId}/verifications`)
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({ otp: '1234567' }); // 7 digits
 
       expect(response2.status).toBe(400);
@@ -271,6 +284,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
     it('returns otp_invalid on wrong OTP', async () => {
       const response = await testApp.http
         .post(`/api/v1/public/solo-signups/${signupId}/verifications`)
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({ otp: '000000' });
 
       expect(response.status).toBe(422);
@@ -282,12 +296,14 @@ describe('solo signup endpoints (AC-M01-10)', () => {
       for (let i = 0; i < 4; i++) {
         await testApp.http
           .post(`/api/v1/public/solo-signups/${signupId}/verifications`)
+          .set('Idempotency-Key', newIdempotencyKey())
           .send({ otp: `00000${i}` });
       }
 
       // Attempt 5: lock
       const response5 = await testApp.http
         .post(`/api/v1/public/solo-signups/${signupId}/verifications`)
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({ otp: '000004' });
 
       expect(response5.status).toBe(422);
@@ -299,12 +315,14 @@ describe('solo signup endpoints (AC-M01-10)', () => {
       for (let i = 0; i < 5; i++) {
         await testApp.http
           .post(`/api/v1/public/solo-signups/${signupId}/verifications`)
+          .set('Idempotency-Key', newIdempotencyKey())
           .send({ otp: `00000${i % 10}` });
       }
 
       // Try to verify with correct OTP
       const response = await testApp.http
         .post(`/api/v1/public/solo-signups/${signupId}/verifications`)
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({ otp: '123456' });
 
       expect(response.status).toBe(422);
@@ -316,6 +334,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
 
       await testApp.http
         .post(`/api/v1/public/solo-signups/${signupId}/verifications`)
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({ otp: '123456' });
 
       // Check that no log record contains the OTP
@@ -329,6 +348,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
 
       const response = await testApp.http
         .post(`/api/v1/public/solo-signups/${signupId}/verifications`)
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({ otp: '123456' });
 
       expect(response.status).toBe(422);
@@ -338,6 +358,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
     it('provisions an active SOLO tenant on success', async () => {
       const response = await testApp.http
         .post(`/api/v1/public/solo-signups/${signupId}/verifications`)
+        .set('Idempotency-Key', newIdempotencyKey())
         .send({ otp: '123456' });
 
       expect(response.status).toBe(200);
@@ -349,7 +370,7 @@ describe('solo signup endpoints (AC-M01-10)', () => {
     });
 
     it('is idempotent (Idempotency-Key)', async () => {
-      const idempotencyKey = 'verify-' + Math.random();
+      const idempotencyKey = newIdempotencyKey();
 
       const response1 = await testApp.http
         .post(`/api/v1/public/solo-signups/${signupId}/verifications`)

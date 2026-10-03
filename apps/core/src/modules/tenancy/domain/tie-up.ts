@@ -65,22 +65,21 @@ export class TieUpSet {
     this.tieUps = tieUps;
   }
 
-  validate(entityType: EntityType, policy: TieUpLimitPolicy): void {
-    // Check for invalid date ranges (effectiveTo < effectiveFrom)
+  private validateDates(): void {
     for (const tieUp of this.tieUps) {
       if (tieUp.effectiveTo && tieUp.effectiveTo < tieUp.effectiveFrom) {
         throw new ValidationError('tie_up_dates_invalid', 'effectiveTo must be >= effectiveFrom');
       }
     }
+  }
 
-    // Check for overlapping periods for same insurer+line
+  private validateNoOverlap(): void {
     for (let i = 0; i < this.tieUps.length; i++) {
       for (let j = i + 1; j < this.tieUps.length; j++) {
         const t1 = this.tieUps[i];
         const t2 = this.tieUps[j];
 
         if (t1.insurerId === t2.insurerId && t1.line === t2.line) {
-          // Check if periods overlap
           const t1End = t1.effectiveTo || '9999-12-31';
           const t2End = t2.effectiveTo || '9999-12-31';
 
@@ -89,24 +88,39 @@ export class TieUpSet {
           const t2From = new Date(t2.effectiveFrom);
           const t2To = new Date(t2End);
 
-          // Overlapping if: NOT (t1 ends before t2 starts OR t2 ends before t1 starts)
           if (!(t1To < t2From || t2To < t1From)) {
             throw new ValidationError('tie_up_overlap', 'Tie-up periods cannot overlap for same insurer and line');
           }
         }
       }
     }
+  }
 
-    // Check limits at every effectiveFrom boundary
+  private boundaryDates(): string[] {
     const allDates = new Set<string>();
     for (const tieUp of this.tieUps) {
       allDates.add(tieUp.effectiveFrom);
     }
+    return Array.from(allDates).sort();
+  }
 
-    for (const dateStr of Array.from(allDates).sort()) {
+  private activeInsurerCount(line: LineOfBusiness, date: string): number {
+    const activeOnDate = this.activeOn(date);
+    const insurers = new Set<string>();
+    for (const tieUp of activeOnDate) {
+      if (tieUp.line === line) {
+        insurers.add(tieUp.insurerId);
+      }
+    }
+    return insurers.size;
+  }
+
+  private validateLimits(entityType: EntityType, policy: TieUpLimitPolicy): void {
+    const dates = this.boundaryDates();
+
+    for (const dateStr of dates) {
       const activeOnDate = this.activeOn(dateStr);
 
-      // Group by line and count distinct insurers
       const byLine = new Map<LineOfBusiness, Set<string>>();
       for (const tieUp of activeOnDate) {
         if (!byLine.has(tieUp.line)) {
@@ -115,7 +129,6 @@ export class TieUpSet {
         byLine.get(tieUp.line)!.add(tieUp.insurerId);
       }
 
-      // Check limits for each line
       for (const [line, insurers] of byLine) {
         const max = policy.maxFor(entityType, line);
         if (max !== null && insurers.size > max) {
@@ -127,6 +140,12 @@ export class TieUpSet {
         }
       }
     }
+  }
+
+  validate(entityType: EntityType, policy: TieUpLimitPolicy): void {
+    this.validateDates();
+    this.validateNoOverlap();
+    this.validateLimits(entityType, policy);
   }
 
   activeOn(date: string, line?: LineOfBusiness): TieUp[] {

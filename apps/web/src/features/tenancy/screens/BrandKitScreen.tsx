@@ -27,8 +27,6 @@ export function BrandKitScreen() {
     poweredByVisible: true,
   });
 
-  const [contrastWarning, setContrastWarning] = useState(false);
-
   useEffect(() => {
     const loadBrandKit = async () => {
       try {
@@ -39,7 +37,7 @@ export function BrandKitScreen() {
           brandName: kit.brandName,
           primary: kit.primary,
           secondary: kit.secondary,
-          typeface: kit.typeface as any,
+          typeface: kit.typeface as 'IBM Plex Sans' | 'Noto Sans' | 'Mukta',
           logoRef: kit.logoRef,
           poweredByVisible: kit.poweredByVisible,
         });
@@ -56,13 +54,11 @@ export function BrandKitScreen() {
   }, []);
 
   // Live contrast check
-  useEffect(() => {
-    const ratio = contrastRatio(formData.primary, '#FFFFFF');
-    setContrastWarning(ratio < 4.5);
-  }, [formData.primary]);
+  const ratio = contrastRatio(formData.primary, '#FFFFFF');
+  const hasContrastWarning = ratio < 4.5;
 
   const handleSave = async () => {
-    if (contrastWarning) return;
+    if (hasContrastWarning) return;
 
     setSaving(true);
     try {
@@ -88,8 +84,6 @@ export function BrandKitScreen() {
     return <ErrorState error={error} />;
   }
 
-  const ratio = contrastRatio(formData.primary, '#FFFFFF');
-
   return (
     <div className="brand-kit-screen">
       <div className="page-header">
@@ -100,7 +94,7 @@ export function BrandKitScreen() {
         <Button
           onClick={handleSave}
           loading={saving}
-          disabled={contrastWarning}
+          disabled={hasContrastWarning}
           size="lg"
         >
           {t('common.save')}
@@ -135,7 +129,7 @@ export function BrandKitScreen() {
               </div>
               <div className="contrast-info">
                 <span>{t('tenancy.brand.contrast')}: {ratio.toFixed(2)}:1</span>
-                {contrastWarning && (
+                {hasContrastWarning && (
                   <span className="contrast-warning">
                     {t('tenancy.brand.contrast_warning')}
                   </span>
@@ -168,7 +162,7 @@ export function BrandKitScreen() {
                     name="typeface"
                     value={tf}
                     checked={formData.typeface === tf}
-                    onChange={e => setFormData({ ...formData, typeface: e.target.value as any })}
+                    onChange={e => setFormData({ ...formData, typeface: e.target.value as 'IBM Plex Sans' | 'Noto Sans' | 'Mukta' })}
                   />
                   <span className="typeface-name">{tf}</span>
                   <span

@@ -1,3 +1,5 @@
+import { newIdempotencyKey } from '../support/idempotency';
+import { TenancyModule } from '../../src/modules/tenancy/tenancy.module';
 import { createTestApp, TestApp } from '../support/test-app';
 import { tokenFor } from '../support/tokens';
 
@@ -9,7 +11,7 @@ describe('tenant-scoped endpoints (AC-M01-13)', () => {
   let testApp: TestApp;
 
   beforeAll(async () => {
-    testApp = await createTestApp();
+    testApp = await createTestApp({ imports: [TenancyModule] });
   });
 
   afterAll(async () => {
@@ -226,6 +228,7 @@ describe('tenant-scoped endpoints (AC-M01-13)', () => {
 
       const response = await testApp.http
         .post('/api/v1/tenant/feature-flags/online_purchase/compliance-reviews')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({ reviewRef: 'REV-2026-ACME-001' });
@@ -244,6 +247,7 @@ describe('tenant-scoped endpoints (AC-M01-13)', () => {
 
       const response = await testApp.http
         .post('/api/v1/tenant/feature-flags/online_purchase/compliance-reviews')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({ reviewRef: 'REV-2026-001' });
@@ -403,6 +407,7 @@ describe('tenant-scoped endpoints (AC-M01-13)', () => {
 
       const response = await testApp.http
         .post('/api/v1/tenant/trials')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({ planCode: 'SOLO_PRO' });
@@ -421,6 +426,7 @@ describe('tenant-scoped endpoints (AC-M01-13)', () => {
 
       const response = await testApp.http
         .post('/api/v1/tenant/trials')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({ planCode: 'SOLO_PRO' });

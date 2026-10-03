@@ -11,8 +11,25 @@ export interface SignupLicence {
   licenceNo: string;
 }
 
+/** OTP validity window (M01 §3.8). */
+export const SIGNUP_OTP_TTL_MS = 10 * 60 * 1000;
+export const SIGNUP_MAX_ATTEMPTS = 5;
+
 export function hashOtp(otp: string, pepper: string): string {
   return createHmac('sha256', pepper).update(otp).digest('hex');
+}
+
+interface SoloSignupState {
+  id: string;
+  state: SignupState;
+  expiresAt: Date;
+  otpHash: string;
+  phone: PhoneNumber;
+  displayName: string;
+  licence: SignupLicence;
+  consentNoticeVersion: string;
+  attempts?: number;
+  tenantId?: string;
 }
 
 export class SoloSignup {
@@ -27,28 +44,17 @@ export class SoloSignup {
   readonly consentNoticeVersion: string;
   tenantId?: string;
 
-  private constructor(
-    id: string,
-    state: SignupState,
-    expiresAt: Date,
-    otpHash: string,
-    phone: PhoneNumber,
-    displayName: string,
-    licence: SignupLicence,
-    consentNoticeVersion: string,
-    attempts: number = 0,
-    tenantId?: string
-  ) {
-    this.id = id;
-    this.internalState = state;
-    this.internalExpiresAt = expiresAt;
-    this.otpHash = otpHash;
-    this.phone = phone;
-    this.displayName = displayName;
-    this.licence = licence;
-    this.consentNoticeVersion = consentNoticeVersion;
-    this.internalAttempts = attempts;
-    this.tenantId = tenantId;
+  private constructor(props: SoloSignupState) {
+    this.id = props.id;
+    this.internalState = props.state;
+    this.internalExpiresAt = props.expiresAt;
+    this.otpHash = props.otpHash;
+    this.phone = props.phone;
+    this.displayName = props.displayName;
+    this.licence = props.licence;
+    this.consentNoticeVersion = props.consentNoticeVersion;
+    this.internalAttempts = props.attempts ?? 0;
+    this.tenantId = props.tenantId;
   }
 
   static start(input: {
@@ -60,18 +66,18 @@ export class SoloSignup {
     otpHash: string;
     now: Date;
   }): SoloSignup {
-    const expiresAt = new Date(input.now.getTime() + 10 * 60 * 1000); // 10 minutes
-    return new SoloSignup(
-      input.id,
-      'otp_sent',
+    const expiresAt = new Date(input.now.getTime() + SIGNUP_OTP_TTL_MS);
+    return new SoloSignup({
+      id: input.id,
+      state: 'otp_sent',
       expiresAt,
-      input.otpHash,
-      input.phone,
-      input.displayName,
-      input.licence,
-      input.consentNoticeVersion,
-      0
-    );
+      otpHash: input.otpHash,
+      phone: input.phone,
+      displayName: input.displayName,
+      licence: input.licence,
+      consentNoticeVersion: input.consentNoticeVersion,
+      attempts: 0,
+    });
   }
 
   get state(): SignupState {

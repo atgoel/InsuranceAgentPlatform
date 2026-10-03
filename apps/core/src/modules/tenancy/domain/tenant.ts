@@ -85,6 +85,11 @@ export class Tenant {
     return { ...this.state };
   }
 
+  /** Called by the repository after a successful optimistic write; the aggregate now holds the stored version. */
+  markSaved(): void {
+    this.state = { ...this.state, version: this.state.version + 1 };
+  }
+
   activate(): void {
     const current = this.state.status;
     if (current === 'provisioning' || current === 'suspended') {

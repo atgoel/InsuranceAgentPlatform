@@ -3,6 +3,14 @@ import { TenantKind } from './tenant';
 
 export type EntityType = 'IMF' | 'BROKER' | 'INDIVIDUAL_AGENT' | 'CORPORATE_AGENT';
 
+interface DistributorEntityProps {
+  entityType: EntityType;
+  legalName: string;
+  registrationNo: string;
+  registrationValidTo: string;
+  principalOfficerName?: string;
+}
+
 export class DistributorEntity {
   readonly entityType: EntityType;
   readonly legalName: string;
@@ -10,18 +18,53 @@ export class DistributorEntity {
   readonly registrationValidTo: string;
   readonly principalOfficerName?: string;
 
-  private constructor(
-    entityType: EntityType,
-    legalName: string,
-    registrationNo: string,
-    registrationValidTo: string,
-    principalOfficerName?: string
-  ) {
-    this.entityType = entityType;
-    this.legalName = legalName;
-    this.registrationNo = registrationNo;
-    this.registrationValidTo = registrationValidTo;
-    this.principalOfficerName = principalOfficerName;
+  private constructor(props: DistributorEntityProps) {
+    this.entityType = props.entityType;
+    this.legalName = props.legalName;
+    this.registrationNo = props.registrationNo;
+    this.registrationValidTo = props.registrationValidTo;
+    this.principalOfficerName = props.principalOfficerName;
+  }
+
+  private static validateEntityTypeForKind(tenantKind: TenantKind, entityType: EntityType): void {
+    if (tenantKind === 'SOLO' && entityType !== 'INDIVIDUAL_AGENT') {
+      throw new BusinessRuleError(
+        'entity_type_not_allowed_for_kind',
+        'SOLO tenants must have INDIVIDUAL_AGENT entity type'
+      );
+    }
+
+    if (tenantKind === 'ORGANISATION' && entityType === 'INDIVIDUAL_AGENT') {
+      throw new BusinessRuleError(
+        'entity_type_not_allowed_for_kind',
+        'ORGANISATION tenants cannot have INDIVIDUAL_AGENT entity type'
+      );
+    }
+  }
+
+  private static validateLegalName(legalName: string): void {
+    if (legalName.length < 2 || legalName.length > 200) {
+      throw new ValidationError('invalid_legal_name', 'Legal name must be 2-200 characters');
+    }
+  }
+
+  private static validateRegistrationNo(registrationNo: string): void {
+    if (registrationNo.length < 3 || registrationNo.length > 40) {
+      throw new ValidationError('invalid_registration_no', 'Registration number must be 3-40 characters');
+    }
+
+    if (!/^[A-Z0-9/-]+$/.test(registrationNo)) {
+      throw new ValidationError('invalid_registration_no', 'Registration number must contain only A-Z, 0-9, /, -');
+    }
+  }
+
+  private static validatePrincipalOfficer(entityType: EntityType, principalOfficerName: string | undefined): void {
+    if ((entityType === 'IMF' || entityType === 'BROKER') && !principalOfficerName) {
+      throw new ValidationError(
+        'principal_officer_required',
+        'Principal officer name is required for IMF and BROKER entity types'
+      );
+    }
   }
 
   static create(input: {
@@ -32,50 +75,18 @@ export class DistributorEntity {
     registrationValidTo: string;
     principalOfficerName?: string;
   }): DistributorEntity {
-    // SOLO ⇔ INDIVIDUAL_AGENT
-    if (input.tenantKind === 'SOLO' && input.entityType !== 'INDIVIDUAL_AGENT') {
-      throw new BusinessRuleError(
-        'entity_type_not_allowed_for_kind',
-        'SOLO tenants must have INDIVIDUAL_AGENT entity type'
-      );
-    }
+    this.validateEntityTypeForKind(input.tenantKind, input.entityType);
+    this.validateLegalName(input.legalName);
+    this.validateRegistrationNo(input.registrationNo);
+    this.validatePrincipalOfficer(input.entityType, input.principalOfficerName);
 
-    if (input.tenantKind === 'ORGANISATION' && input.entityType === 'INDIVIDUAL_AGENT') {
-      throw new BusinessRuleError(
-        'entity_type_not_allowed_for_kind',
-        'ORGANISATION tenants cannot have INDIVIDUAL_AGENT entity type'
-      );
-    }
-
-    // Validate legalName length 2..200
-    if (input.legalName.length < 2 || input.legalName.length > 200) {
-      throw new ValidationError('invalid_legal_name', 'Legal name must be 2-200 characters');
-    }
-
-    // Validate registrationNo 3..40 [A-Z0-9/-]
-    if (input.registrationNo.length < 3 || input.registrationNo.length > 40) {
-      throw new ValidationError('invalid_registration_no', 'Registration number must be 3-40 characters');
-    }
-
-    if (!/^[A-Z0-9\/-]+$/.test(input.registrationNo)) {
-      throw new ValidationError('invalid_registration_no', 'Registration number must contain only A-Z, 0-9, /, -');
-    }
-
-    // Principal officer required for IMF and BROKER
-    if ((input.entityType === 'IMF' || input.entityType === 'BROKER') && !input.principalOfficerName) {
-      throw new ValidationError(
-        'principal_officer_required',
-        'Principal officer name is required for IMF and BROKER entity types'
-      );
-    }
-
-    return new DistributorEntity(
-      input.entityType,
-      input.legalName,
-      input.registrationNo,
-      input.registrationValidTo,
-      input.principalOfficerName
-    );
+    return new DistributorEntity({
+      entityType: input.entityType,
+      legalName: input.legalName,
+      registrationNo: input.registrationNo,
+      registrationValidTo: input.registrationValidTo,
+      principalOfficerName: input.principalOfficerName,
+    });
   }
 
   registrationStatus(today: Date): 'valid' | 'expiring' | 'expired' {

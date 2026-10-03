@@ -1,3 +1,5 @@
+import { newIdempotencyKey } from '../support/idempotency';
+import { TenancyModule } from '../../src/modules/tenancy/tenancy.module';
 import { createTestApp, TestApp } from '../support/test-app';
 import { operatorToken, tokenFor } from '../support/tokens';
 
@@ -9,7 +11,7 @@ describe('tenant provisioning and management (AC-M01-07, 08, 09, 12, 13, 14)', (
   let testApp: TestApp;
 
   beforeAll(async () => {
-    testApp = await createTestApp();
+    testApp = await createTestApp({ imports: [TenancyModule] });
   });
 
   afterAll(async () => {
@@ -25,6 +27,7 @@ describe('tenant provisioning and management (AC-M01-07, 08, 09, 12, 13, 14)', (
     it('provisions a SOLO tenant with INDIVIDUAL_AGENT entity', async () => {
       const response = await testApp.http
         .post('/api/v1/ops/tenants')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Authorization', `Bearer ${operatorToken()}`)
         .send({
           slug: 'john-agent-001',
@@ -52,6 +55,7 @@ describe('tenant provisioning and management (AC-M01-07, 08, 09, 12, 13, 14)', (
     it('provisions an ORGANISATION tenant with IMF entity', async () => {
       const response = await testApp.http
         .post('/api/v1/ops/tenants')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Authorization', `Bearer ${operatorToken()}`)
         .send({
           slug: 'acme-org-001',
@@ -97,11 +101,13 @@ describe('tenant provisioning and management (AC-M01-07, 08, 09, 12, 13, 14)', (
 
       await testApp.http
         .post('/api/v1/ops/tenants')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Authorization', `Bearer ${operatorToken()}`)
         .send(input);
 
       const duplicate = await testApp.http
         .post('/api/v1/ops/tenants')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Authorization', `Bearer ${operatorToken()}`)
         .send(input);
 
@@ -117,6 +123,7 @@ describe('tenant provisioning and management (AC-M01-07, 08, 09, 12, 13, 14)', (
 
       const response = await testApp.http
         .post('/api/v1/ops/tenants')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Authorization', `Bearer ${token}`)
         .send({
           slug: 'test',
@@ -141,6 +148,7 @@ describe('tenant provisioning and management (AC-M01-07, 08, 09, 12, 13, 14)', (
       // The response should include failedStep when status is provisioning
       const response = await testApp.http
         .post('/api/v1/ops/tenants')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Authorization', `Bearer ${operatorToken()}`)
         .send({
           slug: 'incomplete-provision',
@@ -175,6 +183,7 @@ describe('tenant provisioning and management (AC-M01-07, 08, 09, 12, 13, 14)', (
       // First, provision a tenant
       const provision = await testApp.http
         .post('/api/v1/ops/tenants')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Authorization', `Bearer ${operatorToken()}`)
         .send({
           slug: 'resume-test-001',
@@ -195,6 +204,7 @@ describe('tenant provisioning and management (AC-M01-07, 08, 09, 12, 13, 14)', (
       // Then resume if needed
       const resume = await testApp.http
         .post(`/api/v1/ops/tenants/${tenantId}/provisioning-resumptions`)
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Authorization', `Bearer ${operatorToken()}`)
         .send({});
 
@@ -276,6 +286,7 @@ describe('tenant provisioning and management (AC-M01-07, 08, 09, 12, 13, 14)', (
     it('transitions tenant status to suspended', async () => {
       const provision = await testApp.http
         .post('/api/v1/ops/tenants')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Authorization', `Bearer ${operatorToken()}`)
         .send({
           slug: 'suspend-test',
@@ -295,6 +306,7 @@ describe('tenant provisioning and management (AC-M01-07, 08, 09, 12, 13, 14)', (
 
       const response = await testApp.http
         .post(`/api/v1/ops/tenants/${tenantId}/status-transitions`)
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Authorization', `Bearer ${operatorToken()}`)
         .send({
           to: 'suspended',
@@ -308,6 +320,7 @@ describe('tenant provisioning and management (AC-M01-07, 08, 09, 12, 13, 14)', (
     it('changes tenant plan with If-Match', async () => {
       const provision = await testApp.http
         .post('/api/v1/ops/tenants')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Authorization', `Bearer ${operatorToken()}`)
         .send({
           slug: 'plan-change-test',
@@ -324,7 +337,8 @@ describe('tenant provisioning and management (AC-M01-07, 08, 09, 12, 13, 14)', (
         });
 
       const tenantId = provision.body.tenantId;
-      const version = provision.body.version || 1;
+      const listed = await testApp.http.get('/api/v1/ops/tenants?limit=100').set('Authorization', `Bearer ${operatorToken()}`);
+      const version = listed.body.items.find((t: { id: string; version: number }) => t.id === tenantId).version;
 
       const response = await testApp.http
         .patch(`/api/v1/ops/tenants/${tenantId}`)
@@ -339,6 +353,7 @@ describe('tenant provisioning and management (AC-M01-07, 08, 09, 12, 13, 14)', (
     it('rejects stale version with 412', async () => {
       const provision = await testApp.http
         .post('/api/v1/ops/tenants')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Authorization', `Bearer ${operatorToken()}`)
         .send({
           slug: 'stale-version-test',

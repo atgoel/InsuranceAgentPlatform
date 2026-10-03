@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiProvider } from '../../../lib/api';
@@ -57,15 +57,15 @@ describe('AC-M01-20 SoloPlanScreen', () => {
 
   beforeEach(() => {
     mockApiClient = {
-      get: vi.fn((path) => {
-        if (path.includes('entitlements')) return Promise.resolve(mockEntitlements);
-        return Promise.resolve(mockProfile);
-      }),
+      get: vi.fn()
+        .mockResolvedValueOnce(mockProfile)
+        .mockResolvedValueOnce(mockEntitlements)
+        .mockResolvedValue(mockProfile),
       post: vi.fn().mockResolvedValue(mockProfile),
       put: vi.fn().mockResolvedValue(mockProfile),
       patch: vi.fn().mockResolvedValue(mockProfile),
       del: vi.fn().mockResolvedValue(undefined),
-    };
+    } as unknown as ApiClient;
   });
 
   it('AC-M01-20 displays plan name and usage meters', async () => {
@@ -91,7 +91,7 @@ describe('AC-M01-20 SoloPlanScreen', () => {
     );
 
     // 80% > 75% threshold
-    expect(await screen.findByText(/usage.*warning/i)).toBeInTheDocument();
+    expect(await screen.findByText(/You've used 80% of this month's allowance/i)).toBeInTheDocument();
   });
 
   it('AC-M01-20 shows Pro trial CTA when on SOLO plan', async () => {
@@ -115,11 +115,11 @@ describe('AC-M01-20 SoloPlanScreen', () => {
       trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
     };
 
-    (mockApiClient.get as any)
+    (mockApiClient.get as Mock)
       .mockResolvedValueOnce(mockProfile)
       .mockResolvedValueOnce(mockEntitlements);
 
-    (mockApiClient.post as any).mockResolvedValueOnce(updatedProfile);
+    (mockApiClient.post as Mock).mockResolvedValueOnce(updatedProfile);
 
     render(
       <ApiProvider client={mockApiClient}>
@@ -163,7 +163,7 @@ describe('AC-M01-20 SoloPlanScreen', () => {
       trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
     };
 
-    (mockApiClient.get as any)
+    (mockApiClient.get as Mock)
       .mockResolvedValueOnce(profileWithTrial)
       .mockResolvedValueOnce(mockEntitlements);
 

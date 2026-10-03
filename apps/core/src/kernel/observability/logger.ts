@@ -16,6 +16,9 @@ export interface LoggerDeps {
   metrics?: MetricsRegistry;
 }
 
+/** Stack traces are capped to bound log volume; the top frames carry the diagnostic value. */
+const MAX_STACK_LINES = 12;
+
 export class Logger {
   private bindings: { module?: string };
 
@@ -172,9 +175,9 @@ export class Logger {
 
     return {
       type: errorType,
-      code: String(errorCode),
-      message: this.deps.redactor.redact(errorMessage),
-      stack: errorStack,
+      code: typeof errorCode === 'string' ? errorCode : undefined,
+      message: String(this.deps.redactor.redact(errorMessage)),
+      stack: errorStack ? this.deps.redactor.scrub(errorStack.split('\n').slice(0, MAX_STACK_LINES).join('\n')) : undefined,
       fingerprint,
       suppressedSinceLast: suppressedSinceLast > 0 ? suppressedSinceLast : undefined,
     };
@@ -210,16 +213,13 @@ export class Logger {
     const context = RequestContext.current();
 
     const record: LogRecord = {
+      ...partial,
       ts: this.deps.clock.now().toISOString(),
-      level: partial.level,
-      event: partial.event,
-      msg: partial.msg,
       traceId: context?.traceId,
       spanId: context?.spanId,
       tenantId: context?.tenantId,
       actor: context?.actor,
       module: this.bindings.module,
-      ...partial,
     };
 
     try {

@@ -1,5 +1,6 @@
 import { BusinessRuleError } from '../../../kernel/errors/domain-errors';
 
+ 
 /**
  * AC-M02-03, AC-M02-04: OnboardingService handles checklist evidence, training, insurer codes,
  * and activation with permission checks and selling scope emission.
@@ -40,7 +41,6 @@ describe('AC-M02-03, AC-M02-04 OnboardingService', () => {
   describe('recordEvidence (AC-M02-03)', () => {
     it('records evidence for identity item', async () => {
       const tx = mockTx();
-      const _now = new Date('2026-01-01T00:00:00Z');
       const checklist = createMockChecklist('POSP', false);
       checklistRepo.setChecklist('mem_001', checklist);
 
@@ -55,7 +55,6 @@ describe('AC-M02-03, AC-M02-04 OnboardingService', () => {
 
     it('rejects recording TRAINING evidence (only via logTraining)', async () => {
       const tx = mockTx();
-      const _now = new Date('2026-01-01T00:00:00Z');
       const checklist = createMockChecklist('POSP', false);
       checklistRepo.setChecklist('mem_001', checklist);
 
@@ -70,7 +69,6 @@ describe('AC-M02-03, AC-M02-04 OnboardingService', () => {
   describe('logTraining (AC-M02-03)', () => {
     it('logs training hours', async () => {
       const tx = mockTx();
-      const _now = new Date('2026-01-01T00:00:00Z');
       const checklist = createMockChecklist('POSP', false);
       checklistRepo.setChecklist('mem_001', checklist);
 
@@ -83,7 +81,6 @@ describe('AC-M02-03, AC-M02-04 OnboardingService', () => {
 
     it('marks training complete when hours meet requirement (AC-M02-03)', async () => {
       const tx = mockTx();
-      const _now = new Date('2026-01-01T00:00:00Z');
       const checklist = createMockChecklist('POSP', false);
       checklistRepo.setChecklist('mem_001', checklist);
 
@@ -158,7 +155,6 @@ describe('AC-M02-03, AC-M02-04 OnboardingService', () => {
 
     it('activates seller with complete checklist (AC-M02-04)', async () => {
       const tx = mockTx();
-      const _now = new Date('2026-01-01T00:00:00Z');
       const member = createMockMember('mem_001', 'POSP');
       memberRepo.setMember('mem_001', member);
       const checklist = createMockChecklist('POSP', true);
@@ -173,7 +169,6 @@ describe('AC-M02-03, AC-M02-04 OnboardingService', () => {
 
     it('emits distribution.member.activated with selling scope (AC-M02-04)', async () => {
       const tx = mockTx();
-      const _now = new Date('2026-01-01T00:00:00Z');
       const member = createMockMember('mem_001', 'POSP');
       memberRepo.setMember('mem_001', member);
       const checklist = createMockChecklist('POSP', true);
@@ -233,9 +228,10 @@ describe('AC-M02-03, AC-M02-04 OnboardingService', () => {
 // Helper stubs
 class OnboardingService {
   constructor(_deps: Record<string, unknown>) {}
-  get(_tx: Record<string, unknown>, _memberId: string): Promise<any> {
+  get(_tx: Record<string, unknown>, _memberId: string): Promise<Record<string, unknown>> {
     throw new Error('not implemented');
   }
+  // eslint-disable-next-line max-params
   recordEvidence(_tx: Record<string, unknown>, _memberId: string, _key: string, _input: Record<string, unknown>, _now: Date): Promise<void> {
     throw new Error('not implemented');
   }
@@ -245,7 +241,7 @@ class OnboardingService {
   mapInsurerCode(_tx: Record<string, unknown>, _memberId: string, _input: Record<string, unknown>): Promise<void> {
     throw new Error('not implemented');
   }
-  activate(_tx: Record<string, unknown>, _memberId: string, _principal: Record<string, unknown>): Promise<any> {
+  activate(_tx: Record<string, unknown>, _memberId: string, _principal: Record<string, unknown>): Promise<Record<string, unknown>> {
     throw new Error('not implemented');
   }
 }
@@ -346,7 +342,7 @@ function createMockMember(_memberId: string, salespersonType: string) {
 
 function createMockLogger(_logs: Record<string, unknown>) {
   return {
-    info: (event: string, msg: string, ctx?: Record<string, unknown>) => {
+    info: (event: string, msg: string, _ctx?: Record<string, unknown>) => {
       logs.events.push({ event, msg });
     },
   };
