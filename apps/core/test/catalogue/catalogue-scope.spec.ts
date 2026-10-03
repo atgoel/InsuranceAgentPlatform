@@ -4,6 +4,10 @@ import { DistributionModule } from '../../src/modules/distribution/distribution.
 import { createTestApp, TestApp } from '../support/test-app';
 import { tokenFor } from '../support/tokens';
 import { HOST, adminToken, sellerToken, setEntityType, tieUps } from './fixtures';
+import { UNIT_OF_WORK } from '../../src/kernel/tokens';
+import { UnitOfWork } from '../../src/kernel/persistence/unit-of-work';
+import { Principal } from '../../src/kernel/tenancy/principal';
+import { COMPARISON_SCOPE_FACADE, ComparisonScopeFacade } from '../../src/modules/catalogue/application/ports';
 
 interface ScopedVersion { versionId: string; insurerId: string; productName: string; insurerName: string }
 interface Scope { versions: ScopedVersion[]; insurerIds: string[]; excluded: Array<{ versionId: string; reason: string }>; disclosure: string }
@@ -131,6 +135,25 @@ describe('AC-M05-02/03/04/05/08 Comparison scope over HTTP', () => {
       expect([outOfScope.status, missing.status]).toEqual([404, 404]);
       expect(outOfScope.body.code).toBe('product_version_not_found');
       expect(missing.body.code).toBe('product_version_not_found');
+    });
+  });
+
+  describe('assertInScope (published to M06 quotes)', () => {
+    const principal = (memberId?: string): Principal => ({ userRef: 'u1', tenantId: 'ten_acme', roles: memberId ? ['SALESPERSON'] : ['TENANT_ADMIN'], memberId, realm: 'customers' });
+    const assertInScope = (p: Principal, versionId: string) =>
+      t.app.get<UnitOfWork>(UNIT_OF_WORK).run('ten_acme', (tx) => t.app.get<ComparisonScopeFacade>(COMPARISON_SCOPE_FACADE).assertInScope(tx, p, versionId, '2026-01-01'));
+
+    it('AC-M05-05 passes for an in-scope version', async () => {
+      await tieUps(t, [['ins_hdfc_life', 'LIFE']]);
+      await expect(assertInScope(principal(), 'pv_hdfc_term_v1')).resolves.toBeUndefined();
+    });
+
+    it('AC-M05-05 rejects an out-of-scope version with 403 product_out_of_scope and the exclusion reason', async () => {
+      await tieUps(t, [['ins_hdfc_life', 'LIFE']]);
+      await expect(assertInScope(principal(), 'pv_icici_term_v1')).rejects.toMatchObject({ httpStatus: 403, code: 'product_out_of_scope', details: { reason: 'insurer_not_tied' } });
+      const { memberId } = await sellerToken(t, 'POSP', ['POSP_LIFE']);
+      await expect(assertInScope(principal(memberId), 'pv_hdfc_term_v1')).rejects.toMatchObject({ code: 'product_out_of_scope', details: { reason: 'not_pos_eligible' } });
+      await expect(assertInScope(principal(), 'pv_missing')).rejects.toMatchObject({ code: 'product_out_of_scope', details: { reason: 'unknown_version' } });
     });
   });
 

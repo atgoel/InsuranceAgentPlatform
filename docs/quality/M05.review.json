@@ -1,0 +1,51 @@
+{
+  "module": "M05",
+  "reviewer": "Claude Haiku 4.5",
+  "reviewDate": "2026-10-03",
+  "score": 9.5,
+  "dimensions": {
+    "specConformance": 3,
+    "design": 2,
+    "securityTenancy": 2,
+    "observability": 1.5,
+    "testQuality": 1
+  },
+  "summary": "M05 implements the comparison scope (LA-6) as a chain of scope filters behind a published facade, with inputs taken only from verified context (M01 tie-ups and entity type, M02 selling scope). Admin writes are operator-only, audited and emit id-only events; the app role has read-only grants on the platform catalogue. All 10 acceptance criteria are traced to tests; one traceability claim (assertInScope) was false at review time and has since been covered. Branch coverage in the backend (73.8%) is the weakest metric; Postgres repositories are not yet implemented (in-memory adapters only).",
+  "verification": {
+    "unitTests": "133 passed (src/modules/catalogue + test/catalogue), re-run by architect after fixes; 6 Postgres tests in catalogue.int.spec.ts",
+    "typeScript": "PASS: No errors with tsc --noEmit -p tsconfig.json",
+    "eslint": "PASS: No errors or warnings (apps/core and apps/web)",
+    "webTests": "16 passed (src/features/catalogue); full web suite 501 passed"
+  },
+  "acTraceability": {
+    "AC-M05-01": "src/modules/catalogue/domain/product-version.spec.ts: ProductVersion lifecycle draft→active→withdrawn, locked versions reject edits with product_version_locked, isEffective honours dates and status",
+    "AC-M05-02": "test/catalogue/catalogue-scope.spec.ts + domain/scope-engine.spec.ts: IMF/CORPORATE_AGENT sees tied insurers, BROKER sees market-wide, POSP sees POS-eligible only, INDIVIDUAL_AGENT sees appointing insurer, each exclusion carries first failing reason",
+    "AC-M05-03": "test/catalogue/catalogue-scope.spec.ts + domain/scope-engine.spec.ts: Versions not effective on date, inactive insurers, not permitted for channel, outside licensed lines are excluded with specific reasons",
+    "AC-M05-04": "domain/disclosure.spec.ts: Disclosure texts match wireframe exactly per persona (IMF, BROKER, POSP, AGENT, CORPORATE_AGENT) with alphabetically sorted insurer names",
+    "AC-M05-05": "test/catalogue/catalogue-scope.spec.ts: 'assertInScope (published to M06 quotes)' (403 product_out_of_scope with reason: insurer_not_tied, not_pos_eligible, unknown_version) and 'an out-of-scope version is a 404 indistinguishable from a missing one'",
+    "AC-M05-06": "test/catalogue/catalogue-research.spec.ts: Research items include source and date, flag stale when wording changed or review older than 365 days, only in-scope versions",
+    "AC-M05-07": "test/catalogue/catalogue-admin.spec.ts: Operator-only writes via @OperatorOnly, all admin changes audited, first quote locks version via event subscriber",
+    "AC-M05-08": "test/catalogue/catalogue-scope.spec.ts: Catalogue table marks non-tied products as not in scope, tenant isolation: tenant B tie-ups never affect tenant A",
+    "AC-M05-09": "migrations/050_catalogue.sql:49: Postgres grant select only (iap_app role), no write privileges",
+    "AC-M05-10": "web/src/features/catalogue/components/CatalogueTable.test.tsx: Table shows scope chips; research screen shows stale banner and POSP chip; compare screen shows API-returned plans and disclosure"
+  },
+  "findings": [
+    {
+      "severity": "info",
+      "area": "design",
+      "file": "apps/core/src/modules/catalogue/domain/scope-engine.ts:10",
+      "summary": "ScopeInput.tiedInsurerIds is Partial<Record<LineOfBusiness, string[]>> while spec shows Record<LineOfBusiness, string[]>; implementation is defensively more correct (handles missing lines), filter uses optional chaining (?.)",
+      "status": "dismissed",
+      "resolution": "Architect: deliberate — a tenant may have no tie-up for a line; the TieUpFilter treats a missing line as no tied insurers."
+    },
+    {
+      "severity": "medium",
+      "area": "test traceability (architect verification)",
+      "file": "apps/core/test/catalogue/catalogue-scope.spec.ts",
+      "summary": "Reviewer cited catalogue-scope.spec.ts as covering assertInScope (403 product_out_of_scope with reason); no test called assertInScope at review time.",
+      "status": "fixed",
+      "resolution": "Architect added two tests against the published ComparisonScopeFacade (in scope passes; out of scope rejects with the first exclusion reason)."
+    }
+  ],
+  "architectNotes": "Verified by re-running every check. One reviewer traceability claim was false (AC-M05-05 assertInScope) and is fixed. Earlier in the build the architect also fixed: sellers without a selling scope saw the full tied catalogue; research search unmounted the input on each keystroke; compare cards were not keyboard-accessible."
+}

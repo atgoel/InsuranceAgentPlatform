@@ -58,5 +58,17 @@
     "covAvg": 64.3,
     "allPass": true,
     "date": "2026-10-03"
+  },
+  "M05": {
+    "name": "Product Catalogue & comparison",
+    "total": 98.8,
+    "coverage": 35,
+    "lint": 15,
+    "types": 10,
+    "trace": 15,
+    "review": 23.8,
+    "covAvg": 93.4,
+    "allPass": true,
+    "date": "2026-10-03"
   }
 }
