@@ -46,5 +46,17 @@
     "covAvg": 84.8,
     "allPass": true,
     "date": "2026-10-03"
+  },
+  "M04": {
+    "name": "CRM Engagement",
+    "total": 83.3,
+    "coverage": 25,
+    "lint": 12,
+    "types": 10,
+    "trace": 12.5,
+    "review": 23.8,
+    "covAvg": 64.3,
+    "allPass": true,
+    "date": "2026-10-03"
   }
 }

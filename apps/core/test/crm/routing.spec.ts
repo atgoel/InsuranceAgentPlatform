@@ -4,6 +4,7 @@ import { DistributionModule } from '../../src/modules/distribution/distribution.
 import { createTestApp, TestApp } from '../support/test-app';
 import { tokenFor } from '../support/tokens';
 import { newIdempotencyKey } from '../support/idempotency';
+import { setupSellerWithRouting } from './fixtures';
 
 /**
  * AC-M04-06 Routing: rules evaluated by priority, first matching rule that yields an eligible seller wins;
@@ -103,57 +104,42 @@ describe('AC-M04-06/07 Routing and eligibility', () => {
     });
   });
 
-  describe('Routing simulation', () => {
-    it('AC-M04-06 POST /routing-rules/simulations returns a decision', async () => {
-      // Set a rule
-      const ruleRes = await put('/api/v1/routing-rules', {
-        rules: [
-          {
-            id: 'r_sim',
-            priority: 1,
-            name: 'Simulation rule',
-            active: true,
-            conditions: [{ field: 'productInterest', op: 'eq', value: 'HEALTH' }],
-            method: 'ROUND_ROBIN',
-            slaMinutes: 30,
-            onBreach: 'NOTIFY_MANAGER',
-          },
-        ],
-      });
-      expect(ruleRes.status).toBe(200);
+  describe('AC-M04-06/19 round-robin, simulation and capacity end to end', () => {
+    it('AC-M04-19 simulation names the next seller without advancing the cursor; captures alternate; capacity counts open leads', async () => {
+      const a = await setupSellerWithRouting(testApp, 'rr_a');
+      const b = await setupSellerWithRouting(testApp, 'rr_b'); // same single rule; both sellers active
+      const [first, second] = [a.memberId, b.memberId].sort(); // round-robin walks stable id order
+      const sim = () =>
+        testApp.http.post('/api/v1/routing-rules/simulations').set('Host', 'acme.iap.test').set('Authorization', `Bearer ${tenant_admin()}`)
+          .send({ productInterest: 'TERM_LIFE', source: 'WEB_FORM' });
 
-      // Simulate
-      const simRes = await testApp.http
-        .post('/api/v1/routing-rules/simulations')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${tenant_admin()}`)
-        .send({
-          productInterest: 'HEALTH',
-          source: 'WEB_FORM',
-        });
-      expect(simRes.status).toBe(200);
-      expect(simRes.body).toMatchObject({
-        reason: expect.any(String),
-      });
+      const s1 = await sim();
+      const s2 = await sim();
+      expect(s1.status).toBe(200);
+      expect(s1.body.memberId).toBe(first);
+      expect(s2.body.memberId).toBe(first); // no side effects: cursor not advanced
+      expect(s1.body.memberName).toMatch(/^Seller rr_/);
+      expect(s1.body.reason).toBe(`Rule "All leads" (round robin) → ${s1.body.memberName}`);
 
-      // Simulate again — should return same decision structure
-      const sim2Res = await testApp.http
-        .post('/api/v1/routing-rules/simulations')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${tenant_admin()}`)
-        .send({
-          productInterest: 'HEALTH',
-          source: 'WEB_FORM',
-        });
-      expect(sim2Res.status).toBe(200);
-      expect(sim2Res.body).toMatchObject({
-        reason: expect.any(String),
-      });
+      const capture = (mobile: string) =>
+        post('/api/v1/leads', { fullName: `Lead ${mobile.slice(-4)}`, mobile, productInterest: 'TERM_LIFE', source: 'WEB_FORM',
+          consent: { granted: true, noticeVersion: 'v2', channels: ['CALL'], purposes: ['SERVICE'] } });
+      const l1 = await capture('+919812345001');
+      const l2 = await capture('+919812345002');
+      expect([l1.status, l2.status]).toEqual([201, 201]);
+      expect([l1.body.ownerMemberId, l2.body.ownerMemberId]).toEqual([first, second]);
+      expect((await sim()).body.memberId).toBe(first); // wrapped around after the second capture
+
+      const capacity = await get('/api/v1/routing/capacity');
+      expect(capacity.status).toBe(200);
+      const byId = Object.fromEntries(capacity.body.items.map((r: { memberId: string; openLeadsToday: number; available: boolean }) => [r.memberId, [r.openLeadsToday, r.available]]));
+      expect(byId[first]).toEqual([1, true]);
+      expect(byId[second]).toEqual([1, true]);
     });
   });
 
   describe('Rule validation', () => {
-    it('AC-M04-06 PUT with duplicate priorities → 400 duplicate_priority', async () => {
+    it('AC-M04-19 PUT with duplicate priorities → 400 duplicate_priority', async () => {
       const ruleRes = await put('/api/v1/routing-rules', {
         rules: [
           { id: 'r1', priority: 1, name: 'Rule 1', active: true, conditions: [], method: 'ROUND_ROBIN', slaMinutes: 30, onBreach: 'NOTIFY_MANAGER' },
@@ -162,16 +148,6 @@ describe('AC-M04-06/07 Routing and eligibility', () => {
       });
       expect(ruleRes.status).toBe(400);
       expect(ruleRes.body.code).toBe('duplicate_priority');
-    });
-  });
-
-  describe('Capacity', () => {
-    it('AC-M04-06 GET /routing/capacity returns capacity structure', async () => {
-      const capRes = await get('/api/v1/routing/capacity');
-      expect(capRes.status).toBe(200);
-      expect(capRes.body).toMatchObject({
-        items: expect.any(Array),
-      });
     });
   });
 

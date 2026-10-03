@@ -5,13 +5,13 @@ import {
   ErrorState,
   EmptyState,
   PermissionDenied,
-  FilterChips,
   type FilterOption,
 } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
 import { createCrmApi, type LeadListItem, type LeadStage, type LeadStats, type ProductLine, type Temperature } from '../api';
 import { LeadsGrid } from '../components/LeadsGrid';
+import { LeadFilterBar } from '../components/LeadFilterBar';
 import { NewLeadForm } from '../components/NewLeadForm';
 import { BulkAssignForm } from '../components/BulkAssignForm';
 import '../styles/LeadsWorkspaceScreen.css';
@@ -186,23 +186,13 @@ export function LeadsWorkspaceScreen() {
       </div>
 
       {/* View Filters */}
-      <div className="view-selector">
-        <FilterChips options={viewOptions} selected={[selectedView]} onChange={(ids) => setSelectedView(ids[0] || 'all_open')} />
-        <label className="product-filter">
-          {t('crm.leads.product')}
-          <select
-            value={productFilter ?? ''}
-            onChange={(e) => setProductFilter(e.target.value ? (e.target.value as ProductLine) : undefined)}
-          >
-            <option value="">{t('crm.leads.all_products')}</option>
-            {PRODUCT_LINES.map((p) => (
-              <option key={p} value={p}>
-                {p.replace('_', ' ')}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <LeadFilterBar
+        views={viewOptions}
+        selectedView={selectedView}
+        onViewChange={setSelectedView}
+        product={productFilter}
+        onProductChange={setProductFilter}
+      />
 
       {/* Action Bar */}
       {selectedLeadIds.length > 0 && (
@@ -250,7 +240,6 @@ export function LeadsWorkspaceScreen() {
   );
 }
 
-const PRODUCT_LINES: ProductLine[] = ['TERM_LIFE', 'SAVINGS_LIFE', 'HEALTH', 'HEALTH_FLOATER', 'CHILD', 'RETIREMENT', 'MOTOR', 'OTHER'];
 
 /** Saved view → API filter (M04 §10: All open, Unassigned, SLA breached, Mine). */
 export function leadQueryFor(view: string, product?: ProductLine): Parameters<ReturnType<typeof createCrmApi>['listLeads']>[0] {
