@@ -1,22 +1,8 @@
 import { Button } from '../Button';
 import './ErrorState.css';
+import { ApiError } from '../../lib/api/api-error';
 
-export class ApiError extends Error {
-  status: number;
-  code: string;
-  title: string;
-  detail?: string;
-  traceId?: string;
-
-  constructor(status: number, code: string, title: string, detail?: string, traceId?: string) {
-    super(title);
-    this.status = status;
-    this.code = code;
-    this.title = title;
-    this.detail = detail;
-    this.traceId = traceId;
-  }
-}
+export { ApiError };
 
 export interface ErrorStateProps {
   error: ApiError | Error;

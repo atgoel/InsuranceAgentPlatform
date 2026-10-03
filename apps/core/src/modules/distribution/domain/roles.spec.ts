@@ -1,4 +1,5 @@
-import { BusinessRuleError, ValidationError } from '../../../kernel/errors/domain-errors';
+import { BusinessRuleError, ValidationError, NotFoundError } from '../../../kernel/errors/domain-errors';
+import { RoleCatalogue } from './roles';
 
 /**
  * AC-M02-11: Role editor - locked permissions cannot be added or removed, non-editable roles

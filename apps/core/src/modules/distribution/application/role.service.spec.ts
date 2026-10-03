@@ -204,7 +204,7 @@ describe('AC-M02-11, AC-M02-12 RoleService and DataDrivenPermissionPolicy', () =
     it('allows operation with permission', async () => {
       const principal = {
         tenantId: 'ten_acme',
-        _roles: ['BRANCH_MANAGER'],
+        roles: ['BRANCH_MANAGER'],
       };
 
       const allowed = await permissionPolicy.allows(
@@ -219,7 +219,7 @@ describe('AC-M02-11, AC-M02-12 RoleService and DataDrivenPermissionPolicy', () =
     it('denies operation without permission', async () => {
       const principal = {
         tenantId: 'ten_acme',
-        _roles: ['SALESPERSON'],
+        roles: ['SALESPERSON'],
       };
 
       const allowed = await permissionPolicy.allows(
@@ -234,7 +234,7 @@ describe('AC-M02-11, AC-M02-12 RoleService and DataDrivenPermissionPolicy', () =
     it('uses widest scope for multiple roles', async () => {
       const principal = {
         tenantId: 'ten_acme',
-        _roles: ['SALESPERSON', 'BRANCH_MANAGER'],
+        roles: ['SALESPERSON', 'BRANCH_MANAGER'],
       };
 
       const allowed = await permissionPolicy.allows(
@@ -255,7 +255,7 @@ describe('AC-M02-11, AC-M02-12 RoleService and DataDrivenPermissionPolicy', () =
       await roleService.updatePermissions(tx, 'BRANCH_MANAGER', newPermissions, original.version);
 
       // Check that policy reflects change
-      const principal = { tenantId: 'ten_acme', _roles: ['BRANCH_MANAGER'] };
+      const principal = { tenantId: 'ten_acme', roles: ['BRANCH_MANAGER'] };
       const allowed = await permissionPolicy.allows(tx, principal, 'distribution.member.read');
 
       expect(allowed).toBe(false);
@@ -264,7 +264,7 @@ describe('AC-M02-11, AC-M02-12 RoleService and DataDrivenPermissionPolicy', () =
     it('grants ops.* to platform.operator (AC-M02-11)', async () => {
       const principal = {
         tenantId: 'platform',
-        _roles: ['platform.operator'],
+        roles: ['platform.operator'],
       };
 
       const allowed = await permissionPolicy.allows(
@@ -349,7 +349,7 @@ class DataDrivenPermissionPolicy {
 }
 
 class MfaPolicy {
-  static requiresMfa(_roles: string[], _amr?: string[]): boolean {
+  static requiresMfa(roles: string[], _amr?: string[]): boolean {
     throw new Error('not implemented');
   }
 }

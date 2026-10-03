@@ -1,3 +1,4 @@
+import { newIdempotencyKey } from '../support/idempotency';
 import { DistributionModule } from '../../src/modules/distribution/distribution.module';
 import { createTestApp, TestApp } from '../support/test-app';
 import { tokenFor } from '../support/tokens';
@@ -27,6 +28,7 @@ describe('Licences endpoints (AC-M02-08, 09, 13)', () => {
 
       const response = await testApp.http
         .post('/api/v1/members/mem_001/licences')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
@@ -51,6 +53,7 @@ describe('Licences endpoints (AC-M02-08, 09, 13)', () => {
 
       const response = await testApp.http
         .post('/api/v1/members/mem_001/licences')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({

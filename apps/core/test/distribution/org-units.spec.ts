@@ -1,3 +1,4 @@
+import { newIdempotencyKey } from '../support/idempotency';
 import { DistributionModule } from '../../src/modules/distribution/distribution.module';
 import { createTestApp, TestApp } from '../support/test-app';
 import { tokenFor } from '../support/tokens';
@@ -90,6 +91,7 @@ describe('OrgUnits endpoints (AC-M02-01, 13)', () => {
 
       const response = await testApp.http
         .post('/api/v1/org-units')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
@@ -115,6 +117,7 @@ describe('OrgUnits endpoints (AC-M02-01, 13)', () => {
       // Try to create TEAM under HEAD_OFFICE (invalid)
       const response = await testApp.http
         .post('/api/v1/org-units')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
@@ -137,6 +140,7 @@ describe('OrgUnits endpoints (AC-M02-01, 13)', () => {
 
       const response = await testApp.http
         .post('/api/v1/org-units')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
@@ -158,6 +162,7 @@ describe('OrgUnits endpoints (AC-M02-01, 13)', () => {
 
       const response = await testApp.http
         .post('/api/v1/org-units/ou_br1/moves')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
@@ -179,6 +184,7 @@ describe('OrgUnits endpoints (AC-M02-01, 13)', () => {
       // Try to move parent under its own child
       const response = await testApp.http
         .post('/api/v1/org-units/ou_root/moves')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
@@ -199,6 +205,7 @@ describe('OrgUnits endpoints (AC-M02-01, 13)', () => {
 
       const response = await testApp.http
         .post('/api/v1/org-units/ou_tm1/moves')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({

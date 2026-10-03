@@ -335,7 +335,7 @@ function createMockMember(_memberId: string, salespersonType: string) {
       displayName: 'John',
       salespersonType,
       orgUnitId: 'ou_br1',
-      _roles: ['SALESPERSON'],
+      roles: ['SALESPERSON'],
     },
   };
 }

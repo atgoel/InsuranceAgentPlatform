@@ -1,4 +1,4 @@
-import { TieUpSet, TieUpLimitPolicy } from './tie-up';
+import { TieUpSet, TieUpLimitPolicy, TieUp } from './tie-up';
 import { ValidationError, BusinessRuleError } from '../../../kernel/errors/domain-errors';
 
 /**
@@ -251,7 +251,7 @@ describe('AC-M01-03 TieUp limits and validation', () => {
 
   describe('TieUpSet activeOn', () => {
     it('returns active tie-ups on a given date', () => {
-      const tieUps = [
+      const tieUps: TieUp[] = [
         {
           insurerId: 'ins_001',
           line: 'LIFE',
@@ -277,7 +277,7 @@ describe('AC-M01-03 TieUp limits and validation', () => {
     });
 
     it('returns empty when no tie-ups active on date', () => {
-      const tieUps = [
+      const tieUps: TieUp[] = [
         {
           insurerId: 'ins_001',
           line: 'LIFE',
@@ -294,7 +294,7 @@ describe('AC-M01-03 TieUp limits and validation', () => {
 
   describe('TieUpSet insurersFor', () => {
     it('returns list of insurer IDs active on date for line', () => {
-      const tieUps = [
+      const tieUps: TieUp[] = [
         {
           insurerId: 'ins_001',
           line: 'LIFE',

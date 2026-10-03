@@ -52,7 +52,7 @@ export class OrgTree {
   toNested(): OrgUnitNode[]                // { ...unit, children: OrgUnitNode[] } for the hierarchy view
 }
 ```
-Every tenant gets a HEAD_OFFICE root at provisioning (subscribe to `tenant.tenant.provisioned`; idempotent). Solo tenants have only the root.
+Every tenant gets a HEAD_OFFICE root at provisioning (subscribe to `tenant.tenant.provisioned`; idempotent) with the well-known id `ou_root` (ids are unique per tenant: primary key `(tenant_id, id)`). Solo tenants have only the root.
 
 ### 3.2 Member aggregate (State pattern)
 ```ts
@@ -252,7 +252,8 @@ All writes run in `uow.run(tenantId, …)` with outbox + audit in the same trans
 ## 7. DDL — `apps/core/migrations/020_distribution.sql`
 ```sql
 create table if not exists org_unit (
-  id text primary key, tenant_id text not null references tenant(id), parent_id text references org_unit(id),
+  id text not null, tenant_id text not null references tenant(id), parent_id text,
+  -- primary key (tenant_id, id): the root is 'ou_root' in every tenant; parent is (tenant_id, parent_id)
   kind text not null check (kind in ('HEAD_OFFICE','REGION','BRANCH','TEAM')), name text not null,
   territory_codes text[] not null default '{}', created_at timestamptz not null default now()
 );

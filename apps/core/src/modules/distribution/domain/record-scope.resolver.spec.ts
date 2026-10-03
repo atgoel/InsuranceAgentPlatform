@@ -1,4 +1,5 @@
 import { ForbiddenError } from '../../../kernel/errors/domain-errors';
+import { inScope } from './roles';
 
 /**
  * AC-M02-10: RecordScopeResolver gives OWN for salespeople, UNIT_SUBTREE for branch/sales

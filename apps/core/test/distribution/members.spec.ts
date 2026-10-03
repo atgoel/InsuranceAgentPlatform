@@ -1,3 +1,4 @@
+import { newIdempotencyKey } from '../support/idempotency';
 import { DistributionModule } from '../../src/modules/distribution/distribution.module';
 import { createTestApp, TestApp } from '../support/test-app';
 import { tokenFor } from '../support/tokens';
@@ -23,17 +24,18 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('AC-M02-02 invites seller with validation', async () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
       });
 
       const response = await testApp.http
         .post('/api/v1/members')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
           displayName: 'John Doe',
           phone: '+919876543210',
-          _roles: ['SALESPERSON'],
+          roles: ['SALESPERSON'],
           salespersonType: 'POSP',
           orgUnitId: 'ou_root',
         });
@@ -49,17 +51,18 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('AC-M02-13 never returns raw phone or email', async () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
       });
 
       const response = await testApp.http
         .post('/api/v1/members')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
           displayName: 'Jane Doe',
           email: 'jane@example.com',
-          _roles: ['SALESPERSON'],
+          roles: ['SALESPERSON'],
           salespersonType: 'ISP',
           orgUnitId: 'ou_root',
         });
@@ -73,18 +76,19 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('AC-M02-05 rejects duplicate contact in same tenant', async () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
       });
 
       // First invite
       await testApp.http
         .post('/api/v1/members')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
           displayName: 'John Doe',
           phone: '+919876543210',
-          _roles: ['SALESPERSON'],
+          roles: ['SALESPERSON'],
           salespersonType: 'POSP',
           orgUnitId: 'ou_root',
         });
@@ -92,12 +96,13 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
       // Second invite with same contact
       const duplicateResponse = await testApp.http
         .post('/api/v1/members')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
           displayName: 'John Another',
           phone: '+919876543210',
-          _roles: ['SALESPERSON'],
+          roles: ['SALESPERSON'],
           salespersonType: 'ISP',
           orgUnitId: 'ou_root',
         });
@@ -109,23 +114,24 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('AC-M02-05 allows same contact in different tenant', async () => {
       const tokenAcme = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
       });
 
       const tokenZen = tokenFor({
         tenantId: 'ten_zen',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
       });
 
       // Invite in acme
       await testApp.http
         .post('/api/v1/members')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${tokenAcme}`)
         .send({
           displayName: 'John Doe',
           phone: '+919876543210',
-          _roles: ['SALESPERSON'],
+          roles: ['SALESPERSON'],
           salespersonType: 'POSP',
           orgUnitId: 'ou_root',
         });
@@ -133,12 +139,13 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
       // Same contact in zen should succeed
       const zenResponse = await testApp.http
         .post('/api/v1/members')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'zen.iap.test')
         .set('Authorization', `Bearer ${tokenZen}`)
         .send({
           displayName: 'John Doe',
           phone: '+919876543210',
-          _roles: ['SALESPERSON'],
+          roles: ['SALESPERSON'],
           salespersonType: 'POSP',
           orgUnitId: 'ou_root',
         });
@@ -149,19 +156,20 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('AC-M02-05 rejects invite beyond seat limit', async () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
       });
 
       // Assuming plan limit is 25, after filling seats, next invite fails
       // This test assumes mocking of entitlements or actual database setup
       const response = await testApp.http
         .post('/api/v1/members')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
           displayName: 'Over Limit',
           phone: '+919999999999',
-          _roles: ['SALESPERSON'],
+          roles: ['SALESPERSON'],
           salespersonType: 'POSP',
           orgUnitId: 'ou_root',
         });
@@ -175,7 +183,7 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('returns member view without raw contact data', async () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
         memberId: 'mem_001',
       });
 
@@ -195,13 +203,13 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('AC-M02-13 tenant isolation: B cannot read A members', async () => {
       const tokenAcme = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
         memberId: 'mem_acme_001',
       });
 
       const tokenZen = tokenFor({
         tenantId: 'ten_zen',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
       });
 
       // Get from acme works
@@ -225,7 +233,7 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('AC-M02-06 role change revokes sessions', async () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
         memberId: 'mem_001',
       });
 
@@ -248,7 +256,7 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('stale If-Match returns 412', async () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
       });
 
       const response = await testApp.http
@@ -270,11 +278,12 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('AC-M02-06 suspend revokes sessions and disables identity', async () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
       });
 
       const response = await testApp.http
         .post('/api/v1/members/mem_001/status-transitions')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
@@ -293,11 +302,12 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('AC-M02-07 exit of non-seller succeeds', async () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
       });
 
       const response = await testApp.http
         .post('/api/v1/members/mem_manager/exit')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
@@ -311,11 +321,12 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('AC-M02-07 exit of seller requires transfer target', async () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
       });
 
       const response = await testApp.http
         .post('/api/v1/members/mem_posp/exit')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
@@ -331,12 +342,13 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('AC-M02-07 no export produced for ISP exit', async () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
       });
 
       // The API does not return an export link
       const response = await testApp.http
         .post('/api/v1/members/mem_isp/exit')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({
@@ -354,11 +366,12 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('AC-M02-04 activation requires distribution.onboarding.approve permission', async () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['SALESPERSON'],
+        roles: ['SALESPERSON'],
       });
 
       const response = await testApp.http
         .post('/api/v1/members/mem_onboard/activation')
+        .set('Idempotency-Key', newIdempotencyKey())
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
         .send({});
@@ -371,7 +384,7 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
     it('privileged role without mfa claim gets 403 mfa_required', async () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['TENANT_ADMIN'],
+        roles: ['TENANT_ADMIN'],
         // No amr claim with 'mfa'
       });
 
@@ -391,7 +404,7 @@ describe('Members endpoints (AC-M02-02, 05, 06, 07, 12, 13)', () => {
       // For now, test that salesperson with OTP is not blocked by MFA
       const token = tokenFor({
         tenantId: 'ten_acme',
-        _roles: ['SALESPERSON'],
+        roles: ['SALESPERSON'],
       });
 
       const response = await testApp.http

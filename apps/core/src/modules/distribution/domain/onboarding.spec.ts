@@ -1,4 +1,7 @@
 import { ValidationError } from '../../../kernel/errors/domain-errors';
+import { OnboardingChecklist } from './onboarding';
+
+const now = new Date('2026-01-01T00:00:00Z');
 
 /**
  * AC-M02-03: Checklist templates differ by salesperson type (POSP 15 h, ISP 25 h training,

@@ -1,4 +1,4 @@
-import { BrandKit, contrastRatio } from './brand-kit';
+import { BrandKit, contrastRatio, BrandKitProps } from './brand-kit';
 import { PlanCatalogue } from './plan';
 import { ValidationError, BusinessRuleError } from '../../../kernel/errors/domain-errors';
 
@@ -122,7 +122,7 @@ describe('AC-M01-05 BrandKit', () => {
             brandName: 'Test',
             primary: '#1F5FBF',
             secondary: '#163F7F',
-            typeface: 'Comic Sans',
+            typeface: 'Comic Sans' as unknown as BrandKitProps['typeface'],
             poweredByVisible: true,
           },
           plan,

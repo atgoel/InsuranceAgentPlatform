@@ -73,25 +73,28 @@ export class TieUpSet {
     }
   }
 
+  private periodsOverlap(t1: TieUp, t2: TieUp): boolean {
+    const t1End = t1.effectiveTo || '9999-12-31';
+    const t2End = t2.effectiveTo || '9999-12-31';
+
+    const t1From = new Date(t1.effectiveFrom);
+    const t1To = new Date(t1End);
+    const t2From = new Date(t2.effectiveFrom);
+    const t2To = new Date(t2End);
+
+    return !(t1To < t2From || t2To < t1From);
+  }
+
+  private checkOverlapForPair(t1: TieUp, t2: TieUp): void {
+    if (t1.insurerId === t2.insurerId && t1.line === t2.line && this.periodsOverlap(t1, t2)) {
+      throw new ValidationError('tie_up_overlap', 'Tie-up periods cannot overlap for same insurer and line');
+    }
+  }
+
   private validateNoOverlap(): void {
     for (let i = 0; i < this.tieUps.length; i++) {
       for (let j = i + 1; j < this.tieUps.length; j++) {
-        const t1 = this.tieUps[i];
-        const t2 = this.tieUps[j];
-
-        if (t1.insurerId === t2.insurerId && t1.line === t2.line) {
-          const t1End = t1.effectiveTo || '9999-12-31';
-          const t2End = t2.effectiveTo || '9999-12-31';
-
-          const t1From = new Date(t1.effectiveFrom);
-          const t1To = new Date(t1End);
-          const t2From = new Date(t2.effectiveFrom);
-          const t2To = new Date(t2End);
-
-          if (!(t1To < t2From || t2To < t1From)) {
-            throw new ValidationError('tie_up_overlap', 'Tie-up periods cannot overlap for same insurer and line');
-          }
-        }
+        this.checkOverlapForPair(this.tieUps[i], this.tieUps[j]);
       }
     }
   }
@@ -102,17 +105,6 @@ export class TieUpSet {
       allDates.add(tieUp.effectiveFrom);
     }
     return Array.from(allDates).sort();
-  }
-
-  private activeInsurerCount(line: LineOfBusiness, date: string): number {
-    const activeOnDate = this.activeOn(date);
-    const insurers = new Set<string>();
-    for (const tieUp of activeOnDate) {
-      if (tieUp.line === line) {
-        insurers.add(tieUp.insurerId);
-      }
-    }
-    return insurers.size;
   }
 
   private validateLimits(entityType: EntityType, policy: TieUpLimitPolicy): void {
