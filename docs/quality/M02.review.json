@@ -1,0 +1,96 @@
+{
+  "module": "M02 Distribution Network",
+  "reviewer": "Claude Haiku 4.5",
+  "date": "2026-10-03",
+  "score": 9.6,
+  "dimensions": {
+    "specConformance": 2.8,
+    "design": 1.9,
+    "securityTenancy": 2.0,
+    "observability": 1.4,
+    "testQuality": 1.5
+  },
+  "summary": "M02 Distribution Network is well-implemented with comprehensive coverage of domain logic, proper tenant isolation via RLS and record-scope filtering, and strong test quality (177 tests, 100% pass rate). The module correctly integrates data-driven permission and MFA policies. One endpoint is missing from the spec's API documentation and lacks idempotency marking, which is a compliance gap. Core domain entities enforce state machines correctly, and the Composite pattern for org units is clean. Minor architecture observations around event payload design and codec visibility.",
+  "verification": {
+    "tests": {
+      "status": "PASS",
+      "output": "Test Suites: 10 passed, 10 total\nTests: 177 passed, 177 total\nTime: ~5.5 seconds"
+    },
+    "typeScript": {
+      "status": "PASS",
+      "output": "tsc --noEmit -p . (no errors)"
+    },
+    "linting": {
+      "status": "PASS",
+      "output": "npx eslint src/modules/distribution test/distribution (no errors)"
+    }
+  },
+  "findings": [
+    {
+      "severity": "Medium",
+      "area": "API specification conformance",
+      "file": "docs/spec/modules/M02-distribution.md:226-249",
+      "summary": "Endpoint POST /api/v1/me/invitation-acceptance is implemented (src/modules/distribution/api/members.controller.ts:155-161) but not documented in the LLD's \u00a76 (API) section. The endpoint is called by identity webhook/first login but lacks @Idempotent() decorator despite being webhook-invoked.",
+      "status": "fixed",
+      "resolution": "Architect: acceptance is now naturally idempotent (same identity returns current state; different identity 422) with an HTTP test; endpoint documented in M02 \u00a76. @Idempotent() not used because the identity webhook does not send Idempotency-Key."
+    },
+    {
+      "severity": "Low",
+      "area": "Event design / observability",
+      "file": "src/modules/distribution/application/licence.service.ts:66",
+      "summary": "Event payload for distribution.licence.expiring includes memberId in data object. While this is not sensitive data and appears acceptable, consider if member identity should be a separate 'subject' field for consistency with M02 event patterns (e.g., distribution.member.invited uses memberId in data). Verify this is intentional.",
+      "status": "open"
+    },
+    {
+      "severity": "Low",
+      "area": "API codec visibility",
+      "file": "src/modules/distribution/api/schemas.ts:38",
+      "summary": "EvidenceSchema excludes 'TRAINING' from enum of recordable evidence items (key: enum(['IDENTITY_PAN', 'EXAM', 'CERTIFICATE', 'INSURER_CODE'])). This is correct as per LLD (TRAINING uses logTraining endpoint), but schema comment explaining why TRAINING is excluded would improve clarity.",
+      "status": "open"
+    }
+  ],
+  "findings_summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 1,
+    "low": 2
+  },
+  "strengths": [
+    "Domain model correctly enforces invariants: OrgTree validates single HEAD_OFFICE root, no cycles, valid parent kinds; Member state machine prevents illegal transitions; OnboardingChecklist templates are type-safe per salesperson type.",
+    "Tenant isolation is comprehensively implemented: every repository is keyed by tx.tenantId; RLS enabled on all 8 tables (org_unit, member, onboarding_checklist, licence, licence_alert, insurer_code, member_leave, tenant_role); record-scope filtering applied in queries (member list scoped by UNIT_SUBTREE for managers, OWN for salespeople).",
+    "Security and MFA correctly integrated: MFA policy is data-driven via CatalogueMfaPolicy, privileged roles checked in AuthGuard (amr claim required), security logs emitted for role changes and suspensions, no raw contact data in API responses (only masked phone/email).",
+    "Concurrency and idempotency properly handled: PATCH /members/{id} requires If-Match header (parseIfMatch enforces version matching, 412 on mismatch); all POST endpoints creating/transitioning records marked @Idempotent().",
+    "Test quality is high: 177 tests cover all acceptance criteria, boundary conditions (expired invites, duplicate contacts, seat limit), cross-tenant isolation, and permission scoping; tests follow AAA pattern with builders (fixtures).",
+    "Architecture is clean: services are focused (MemberService, OnboardingService, LicenceService); SellerDirectory correctly filters by licence validity, leave status, language; RecordScopeResolver elegantly resolves widest scope across roles."
+  ],
+  "areas_for_attention": [
+    "The /me/invitation-acceptance endpoint (line 155 in members.controller.ts) is webhook-called but lacks @Idempotent(). If Keycloak retries the webhook, the second call will fail with 'illegal_member_transition' because status is no longer 'invited'. Consider either: (a) marking the endpoint @Idempotent() and implementing idempotency storage, (b) documenting why it does not need idempotency, or (c) making the acceptInvite method idempotent at the domain level.",
+    "Confirm that licence validity checks in SellerDirectory.linesFor (line 58) correctly handle time zones. The code uses ISO string comparison (validFrom <= day <= validTo), which is correct for date-only fields, but verify all callers pass the intended 'at' date.",
+    "The LicenceExpiryScanner runs a full scan of all licences (line 61 in licence.service.ts) without pagination. For large tenants, this could be slow. Monitor query performance or add pagination if licence tables grow beyond ~10k rows.",
+    "The RoleCatalogueCache in role.service.ts uses a 60-second TTL. In a multi-instance deployment, two services might have different cached catalogues during a role edit. Consider: (a) publishing a cache-invalidation event to other services, or (b) using a shared cache backend if available."
+  ],
+  "spec_alignment": {
+    "domains_covered": [
+      "Member aggregate",
+      "OrgTree (Composite)",
+      "OnboardingChecklist (Strategy)",
+      "Licence validity",
+      "RoleCatalogue with versioning",
+      "RecordScopeResolver",
+      "SellerDirectory"
+    ],
+    "patterns_used": [
+      "Strategy (salesperson onboarding types)",
+      "Composite (org units)",
+      "State machine (member status)"
+    ],
+    "unimplemented_or_deferred": [
+      "None identified; all LLD requirements are in code"
+    ]
+  },
+  "history": [
+    {
+      "note": "testQuality capped at the 1.5 rubric maximum (reviewer reported 1.7); score recomputed from dimensions"
+    }
+  ]
+}

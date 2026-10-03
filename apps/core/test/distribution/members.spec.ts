@@ -932,4 +932,29 @@ describe('Members endpoints (AC-M02-02, 04, 05, 06, 07, 12, 13)', () => {
       expect(response.body.lines).toEqual(['LIFE', 'HEALTH', 'GENERAL']);
     });
   });
+
+  describe('POST /me/invitation-acceptance', () => {
+    it('AC-M02-02 is idempotent for the same identity and refuses a different one', async () => {
+      const admin = tokenFor({ tenantId: 'ten_acme', roles: ['TENANT_ADMIN'] });
+      const createRes = await testApp.http
+        .post('/api/v1/members')
+        .set('Idempotency-Key', newIdempotencyKey())
+        .set('Host', 'acme.iap.test')
+        .set('Authorization', `Bearer ${admin}`)
+        .send({ displayName: 'Retry Seller', phone: '+919876505001', roles: ['SALESPERSON'], salespersonType: 'POSP', orgUnitId: 'ou_root' });
+      expect(createRes.status).toBe(201);
+      const memberId = createRes.body.id;
+      const accept = (sub: string) =>
+        testApp.http.post('/api/v1/me/invitation-acceptance').set('Host', 'acme.iap.test')
+          .set('Authorization', `Bearer ${tokenFor({ tenantId: 'ten_acme', roles: [], memberId, sub })}`);
+
+      expect((await accept('user_a')).body).toEqual({ id: memberId, status: 'onboarding' });
+      const retry = await accept('user_a');
+      expect(retry.status).toBe(200);
+      expect(retry.body).toEqual({ id: memberId, status: 'onboarding' });
+      const other = await accept('user_b');
+      expect(other.status).toBe(422);
+      expect(other.body.code).toBe('illegal_member_transition');
+    });
+  });
 });

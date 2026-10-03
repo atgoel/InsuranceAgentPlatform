@@ -3,6 +3,9 @@ import { PartyModule } from '../../src/modules/party/party.module';
 import { createTestApp, TestApp } from '../support/test-app';
 import { tokenFor } from '../support/tokens';
 import { newIdempotencyKey } from '../support/idempotency';
+import { PARTY_FACADE, PartyFacade } from '../../src/modules/party/application/ports';
+import { UNIT_OF_WORK } from '../../src/kernel/tokens';
+import { UnitOfWork } from '../../src/kernel/persistence/unit-of-work';
 
 /**
  * AC-M03-07 duplicate queue, AC-M03-09 reviewed merge and 30-day reversal, AC-M03-13 scope/isolation.
@@ -144,6 +147,24 @@ describe('AC-M03-07/09 Duplicate queue and merge endpoints', () => {
       const again = await post(`/api/v1/merges/${merged.body.mergeId}/reversal`);
       expect(again.status).toBe(409);
       expect(again.body.code).toBe('merge_already_reversed');
+    });
+
+    it('moves role links to the survivor and, on reversal, moves exactly those links back', async () => {
+      const facade = testApp.app.get<PartyFacade>(PARTY_FACADE);
+      const uow = testApp.app.get<UnitOfWork>(UNIT_OF_WORK);
+      await uow.run('ten_acme', async (tx) => {
+        await facade.linkRole(tx, { partyId: johnId, role: 'PROPOSER', subjectType: 'PROPOSAL', subjectId: 'prp_john' });
+        await facade.linkRole(tx, { partyId: jonId, role: 'INSURED', subjectType: 'HELD_POLICY', subjectId: 'pol_jon', label: 'health' });
+      });
+      const c = await onlyCandidate();
+      const merged = await post(`/api/v1/duplicates/${c.id}/merge`, { survivor: c.a.id === johnId ? 'A' : 'B', choices: [] });
+      expect(merged.status).toBe(200);
+      const roleSubjects = async (id: string) => (await get(`/api/v1/parties/${id}`, seller())).body.roles.map((r: { subjectId: string }) => r.subjectId).sort();
+      expect(await roleSubjects(johnId)).toEqual(['pol_jon', 'prp_john']);
+
+      expect((await post(`/api/v1/merges/${merged.body.mergeId}/reversal`)).status).toBe(200);
+      expect(await roleSubjects(johnId)).toEqual(['prp_john']);
+      expect(await roleSubjects(jonId)).toEqual(['pol_jon']);
     });
 
     it('refuses reversal after 30 days', async () => {

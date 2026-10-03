@@ -245,6 +245,7 @@ All writes run in `uow.run(tenantId, …)` with outbox + audit in the same trans
 | GET | `/roles` | `distribution.role.read` | `{ items: RoleDefinition[] }` |
 | PUT | `/roles/{role}/permissions` (`If-Match: "v<version>"`) | `distribution.role.write` (TENANT_ADMIN) | `{ permissions: string[] }` → `RoleDefinition` |
 | GET | `/roles/{role}/preview` | `distribution.role.read` | `{ role, sees: string[] }` |
+| POST | `/me/invitation-acceptance` | the invited member (token `mid` + `sub`) | — → `{ id, status }`; first sign-in runs `acceptInvite(memberId, userRef=sub)`; naturally idempotent: a repeat by the same identity returns the current state, a different identity → 422 `illegal_member_transition` |
 | GET | `/me/selling-scope` | authenticated seller | `SellingScope` |
 
 `MemberView = { id, displayName, phoneMasked?, emailMasked?, roles, salespersonType?, orgUnitId, orgUnitName, status, capacityPerDay, skills, languages, invitedAt, activatedAt?, mfaRequired: boolean, version }` — raw phone/e-mail are never returned.

@@ -94,6 +94,8 @@ export class MemberService {
   acceptInvite(tenantId: string, id: string, userRef: string): Promise<Member> {
     return this.ctx.uow.run(tenantId, async (tx) => {
       const member = await this.require(tx, id);
+      // Retried webhook / repeated first login by the same identity: already accepted, return as-is.
+      if (member.props.status !== 'invited' && member.props.userRef === userRef) return member;
       member.acceptInvite(userRef, this.ctx.clock.now());
       await this.members.save(tx, member);
       await this.record(tx, member, 'distribution.member.invite_accepted', { status: member.props.status });
