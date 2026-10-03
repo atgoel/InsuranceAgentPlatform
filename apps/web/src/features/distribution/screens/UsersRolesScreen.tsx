@@ -44,7 +44,7 @@ export function UsersRolesScreen() {
     rolesHook.loadRoles().catch(() => {
       // Error handled in hook state
     });
-  }, []);
+  }, [membersHook, rolesHook]);
 
   // Load role preview when editing
   useEffect(() => {
