@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiProvider } from '../../../lib/api';
 import { ApiError } from '../../../lib/api/api-error';
@@ -317,12 +317,7 @@ describe('AC-M03-17 DuplicateQueueScreen', () => {
   });
 
   it('AC-M03-17 handles API errors gracefully', async () => {
-    const apiError = new ApiError({
-      status: 500,
-      title: 'Server error',
-      detail: 'Internal server error',
-      traceId: 'trace-123',
-    });
+    const apiError = new ApiError(500, 'server_error', 'Server error', 'Internal server error', 'trace-123');
     (mockApiClient.get as Mock).mockRejectedValueOnce(apiError);
 
     render(
@@ -339,12 +334,7 @@ describe('AC-M03-17 DuplicateQueueScreen', () => {
   });
 
   it('AC-M03-17 displays permission denied when status is 403', async () => {
-    const apiError = new ApiError({
-      status: 403,
-      title: 'Forbidden',
-      detail: 'You do not have permission',
-      traceId: 'trace-123',
-    });
+    const apiError = new ApiError(403, 'forbidden', 'Forbidden', 'You do not have permission', 'trace-123');
     (mockApiClient.get as Mock).mockRejectedValueOnce(apiError);
 
     render(

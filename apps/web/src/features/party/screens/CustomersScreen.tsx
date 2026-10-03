@@ -1,33 +1,31 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useApi } from '../../../lib/api';
 import {
-  DataGrid,
-  Button,
   LoadingSkeleton,
   ErrorState,
   EmptyState,
   PermissionDenied,
   FilterChips,
-  type Column,
   type FilterOption,
 } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
 import { createPartyApi, PartyListItem } from '../api';
+import { CustomersGrid } from '../components/CustomersGrid';
+import { HouseholdPanel } from '../components/HouseholdPanel';
 import '../styles/CustomersScreen.css';
 
-interface HouseholdPanel {
-  partyId: string;
+interface SelectedParty {
+  id: string;
   displayName: string;
   householdName?: string;
-  members?: Array<{ partyId: string; relation: string }>;
   roles?: string[];
 }
 
 const SEGMENT_OPTIONS: FilterOption[] = [
-  { label: 'All', value: '', count: 0 },
-  { label: 'With dues', value: 'with_dues', count: 0 },
-  { label: 'No policy', value: 'no_policy', count: 0 },
+  { id: '', label: 'All', count: 0 },
+  { id: 'with_dues', label: 'With dues', count: 0 },
+  { id: 'no_policy', label: 'No policy', count: 0 },
 ];
 
 export function CustomersScreen() {
@@ -39,52 +37,34 @@ export function CustomersScreen() {
   const [error, setError] = useState<ApiError | undefined>();
   const [items, setItems] = useState<PartyListItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSegment, setSelectedSegment] = useState('');
-  const [householdPanel, setHouseholdPanel] = useState<HouseholdPanel | undefined>();
-  const [nextCursor, setNextCursor] = useState<string | undefined>();
+  const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
+  const [selectedParty, setSelectedParty] = useState<SelectedParty | undefined>();
 
-  const loadCustomers = useCallback(
-    async (cursor?: string) => {
+  useEffect(() => {
+    const loadCustomers = async () => {
       try {
         setLoading(true);
         setError(undefined);
         const result = await partyApi.listParties({
           q: searchQuery || undefined,
-          tag: selectedSegment || undefined,
-          cursor,
+          tag: selectedSegments.length > 0 ? selectedSegments[0] : undefined,
         });
         setItems(result.items);
-        setNextCursor(result.nextCursor);
       } catch (err) {
         if (err instanceof ApiError) {
-          if (err.status === 403) {
-            setError(err);
-          } else {
-            setError(err);
-          }
+          setError(err);
         }
       } finally {
         setLoading(false);
       }
-    },
-    [partyApi, searchQuery, selectedSegment]
-  );
+    };
 
-  useEffect(() => {
     loadCustomers();
-  }, [loadCustomers]);
-
-  const handleSearch = (value: string) => {
-    setSearchQuery(value);
-  };
-
-  const handleSegmentChange = (segment: string) => {
-    setSelectedSegment(segment);
-  };
+  }, [partyApi, searchQuery, selectedSegments]);
 
   const handleRowClick = (item: PartyListItem) => {
-    setHouseholdPanel({
-      partyId: item.id,
+    setSelectedParty({
+      id: item.id,
       displayName: item.displayName,
       householdName: item.householdName,
       roles: item.rolesSummary,
@@ -92,49 +72,10 @@ export function CustomersScreen() {
   };
 
   const handleOpenRecord = () => {
-    if (householdPanel) {
-      // Navigate to customer record
-      window.location.hash = `/crm/customers/${householdPanel.partyId}`;
+    if (selectedParty) {
+      window.location.hash = `/crm/customers/${selectedParty.id}`;
     }
   };
-
-  const handleClosePanel = () => {
-    setHouseholdPanel(undefined);
-  };
-
-  const columns: Column[] = [
-    {
-      key: 'displayName',
-      label: t('party.customers.name'),
-      sortable: true,
-      render: (value) => value,
-    },
-    {
-      key: 'primaryMobileMasked',
-      label: t('party.customers.mobile'),
-      render: (value) => value || '–',
-    },
-    {
-      key: 'householdName',
-      label: t('party.customers.household'),
-      render: (value) => value || '–',
-    },
-    {
-      key: 'rolesSummary',
-      label: t('party.customers.roles'),
-      render: (value: string[]) => value.join(', ') || '–',
-    },
-    {
-      key: 'ownerMemberId',
-      label: t('party.customers.owner'),
-      render: (value) => value || '–',
-    },
-    {
-      key: 'tags',
-      label: t('party.customers.tags'),
-      render: (value: string[]) => value.join(', ') || '–',
-    },
-  ];
 
   if (loading && items.length === 0) {
     return <LoadingSkeleton />;
@@ -144,7 +85,7 @@ export function CustomersScreen() {
     if (error.status === 403) {
       return <PermissionDenied />;
     }
-    return <ErrorState error={error} onRetry={() => loadCustomers()} />;
+    return <ErrorState error={error} onRetry={() => window.location.reload()} />;
   }
 
   return (
@@ -162,71 +103,33 @@ export function CustomersScreen() {
           className="search-box"
           placeholder={t('party.customers.search_placeholder')}
           value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={(e) => setSearchQuery(e.target.value)}
           aria-label="Search customers"
         />
         <FilterChips
           options={SEGMENT_OPTIONS}
-          selected={selectedSegment}
-          onChange={handleSegmentChange}
+          selected={selectedSegments}
+          onChange={setSelectedSegments}
         />
       </div>
 
       {items.length === 0 ? (
         <EmptyState
           title={t('party.customers.empty_title')}
-          description={t('party.customers.empty_description')}
-          icon="👥"
+          body={t('party.customers.empty_description')}
         />
       ) : (
-        <DataGrid
-          columns={columns}
-          data={items}
-          onRowClick={handleRowClick}
-          rowKey="id"
-          aria-label="Customers grid"
-        />
+        <CustomersGrid items={items} onRowClick={handleRowClick} />
       )}
 
-      {householdPanel && (
-        <div className="household-panel" role="complementary" aria-label="Household details">
-          <div className="panel-header">
-            <h3>{householdPanel.displayName}</h3>
-            <button
-              className="close-button"
-              onClick={handleClosePanel}
-              aria-label="Close panel"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="panel-content">
-            {householdPanel.householdName && (
-              <div className="panel-section">
-                <label>{t('party.customers.household_label')}</label>
-                <p>{householdPanel.householdName}</p>
-              </div>
-            )}
-
-            {householdPanel.roles && householdPanel.roles.length > 0 && (
-              <div className="panel-section">
-                <label>{t('party.customers.roles_label')}</label>
-                <ul>
-                  {householdPanel.roles.map((role, idx) => (
-                    <li key={idx}>{role}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          <div className="panel-actions">
-            <Button variant="primary" onClick={handleOpenRecord}>
-              {t('party.customers.open_full_record')}
-            </Button>
-          </div>
-        </div>
+      {selectedParty && (
+        <HouseholdPanel
+          displayName={selectedParty.displayName}
+          householdName={selectedParty.householdName}
+          roles={selectedParty.roles}
+          onClose={() => setSelectedParty(undefined)}
+          onOpenRecord={handleOpenRecord}
+        />
       )}
     </div>
   );
