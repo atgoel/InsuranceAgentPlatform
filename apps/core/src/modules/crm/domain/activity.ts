@@ -29,7 +29,7 @@ export interface Activity {
 export class SensitiveContentGuard {
   static check(text: string): void {
     // PAN: 5 uppercase letters + 4 digits + 1 uppercase letter = ABCDE1234F
-    if (/[A-Z]{5}[0-9]{4}[A-Z]/.test(text)) {
+    if (/\b[A-Za-z]{5}[0-9]{4}[A-Za-z]\b/.test(text)) {
       throw new BusinessRuleError('sensitive_content_not_allowed', 'Sensitive content detected');
     }
 

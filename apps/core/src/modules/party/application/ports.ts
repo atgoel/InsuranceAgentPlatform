@@ -147,6 +147,8 @@ export interface PartyFacade {
   summary(tx: Transaction, partyId: string): Promise<PartySummary | undefined>;
   absorb(tx: Transaction, fromPartyId: string, intoPartyId: string): Promise<{ mergeId: string }>;
   candidatesFor(tx: Transaction, partyId: string): Promise<DuplicateCandidateView[]>;
+  /** Latest consent per purpose × channel (for CRM lead views). */
+  consentSummary(tx: Transaction, partyId: string): Promise<ReturnType<ConsentLedger['summary']>>;
 }
 
 export const PARTY_REPOSITORY = Symbol('PartyRepository');

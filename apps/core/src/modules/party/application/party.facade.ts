@@ -69,6 +69,10 @@ export class PartyFacadeService implements PartyFacade {
     return (await this.duplicates.candidatesFor(tx, partyId)).map(view);
   }
 
+  async consentSummary(tx: Transaction, partyId: string) {
+    return this.consents.summaryIn(tx, partyId);
+  }
+
   private async require(tx: Transaction, id: string): Promise<Party> {
     const p = await this.parties.get(tx, id);
     if (!p) throw new NotFoundError('party', id);

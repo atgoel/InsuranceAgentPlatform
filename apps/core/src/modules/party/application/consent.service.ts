@@ -71,6 +71,10 @@ export class ConsentService {
     });
   }
 
+  async summaryIn(tx: Transaction, partyId: string) {
+    return (await this.consents.ledger(tx, partyId)).summary();
+  }
+
   contactability(principal: Principal, partyId: string, channel: ContactChannel, purpose: ConsentPurpose): Promise<ContactabilityDecision> {
     return this.ctx.uow.run(principal.tenantId, async (tx) => {
       const party = await this.partyService.requireInScope(tx, principal, partyId);

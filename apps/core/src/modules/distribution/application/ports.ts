@@ -111,6 +111,8 @@ export interface SellerCriteria {
 export interface SellerDirectory {
   eligibleSellers(tx: Transaction, criteria: SellerCriteria): Promise<EligibleSeller[]>;
   sellingScope(tx: Transaction, memberId: string, at: Date): Promise<SellingScope | undefined>;
+  /** Display names for owner columns (any status). */
+  displayNames(tx: Transaction, memberIds: readonly string[]): Promise<Record<string, string>>;
 }
 
 export type { RecordScope };

@@ -47,6 +47,15 @@ export class SellerDirectoryService implements SellerDirectory {
     };
   }
 
+  async displayNames(tx: Transaction, memberIds: readonly string[]): Promise<Record<string, string>> {
+    const names: Record<string, string> = {};
+    for (const id of new Set(memberIds)) {
+      const member = await this.members.get(tx, id);
+      if (member) names[id] = member.props.displayName;
+    }
+    return names;
+  }
+
   private async isEligible(tx: Transaction, member: Member, c: SellerCriteria): Promise<boolean> {
     const type = member.props.salespersonType;
     if (!type) return false;

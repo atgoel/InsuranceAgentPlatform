@@ -32,6 +32,10 @@ describe('AC-M04-04 SensitiveContentGuard', () => {
     });
   });
 
+  it('AC-M04-04 rejects a PAN typed in lower case', () => {
+    expect(() => SensitiveContentGuard.check('pan is abcde1234f')).toThrow(BusinessRuleError);
+  });
+
   describe('rejects Aadhaar numbers', () => {
     it('rejects 12-digit Aadhaar without spaces', () => {
       expect(() => {
