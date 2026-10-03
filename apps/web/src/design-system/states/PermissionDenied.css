@@ -1,0 +1,27 @@
+.permission-denied {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xxl);
+  text-align: center;
+  min-height: 300px;
+}
+
+.permission-icon {
+  font-size: 48px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.permission-title {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.permission-message {
+  margin: 0;
+  color: var(--secondary);
+  max-width: 400px;
+}

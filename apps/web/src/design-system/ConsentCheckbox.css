@@ -1,0 +1,29 @@
+.consent-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  cursor: pointer;
+  min-height: var(--touch-min-height);
+}
+
+.consent-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-top: 12px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.consent-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.consent-notice {
+  font-size: 12px;
+  color: var(--caption);
+  font-weight: 400;
+}

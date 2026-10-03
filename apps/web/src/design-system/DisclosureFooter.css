@@ -1,0 +1,8 @@
+.disclosure-footer {
+  padding: var(--spacing-lg);
+  border-top: 1px solid var(--line);
+  background-color: var(--ground);
+  font-size: 12px;
+  color: var(--caption);
+  line-height: 1.6;
+}

@@ -1,0 +1,49 @@
+.data-grid-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.data-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.data-grid caption {
+  padding: var(--spacing-md);
+  text-align: left;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.data-grid thead {
+  background-color: var(--ground);
+  border-bottom: 1px solid var(--line);
+}
+
+.data-grid th {
+  padding: var(--spacing-md) var(--spacing-lg);
+  text-align: left;
+  font-weight: 600;
+  color: var(--secondary);
+}
+
+.data-grid td {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.data-grid tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.data-grid tbody tr:hover {
+  background-color: var(--ground);
+}
+
+.data-grid-empty {
+  padding: var(--spacing-xxl);
+  text-align: center;
+}

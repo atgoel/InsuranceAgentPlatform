@@ -1,0 +1,93 @@
+/* Design system theme */
+:root {
+  /* Colors */
+  --ink: #1b1f27;
+  --secondary: #4a5262;
+  --caption: #5f6776;
+  --line: #d5d9e0;
+  --ground: #f4f5f7;
+  --accent: #1f5fbf;
+
+  /* Tones */
+  --ok-fg: #1d5f3a;
+  --ok-bg: #e8f4ec;
+  --warn-fg: #7a3e06;
+  --warn-bg: #fff4e5;
+  --bad-fg: #8a1f1f;
+  --bad-bg: #fdecec;
+  --info-fg: #163f7f;
+  --info-bg: #e8f0fb;
+  --neutral-fg: #4a5262;
+  --neutral-bg: #f4f5f7;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+
+  /* Typography */
+  --font-sans: "IBM Plex Sans", "IBM Plex Sans Devanagari", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  /* Touch targets */
+  --touch-min-height: 44px;
+  --touch-min-width: 44px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(27, 31, 39, 0.08);
+  --shadow-md: 0 4px 6px rgba(27, 31, 39, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #f0f2f5;
+    --secondary: #b8c1d0;
+    --caption: #9da5b3;
+    --line: #4a525c;
+    --ground: #242a33;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ink: #f0f2f5;
+  --secondary: #b8c1d0;
+  --caption: #9da5b3;
+  --line: #4a525c;
+  --ground: #242a33;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background-color: white;
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--ground);
+  }
+}
+
+body[data-theme="dark"] {
+  background-color: var(--ground);
+}

@@ -1,0 +1,45 @@
+.filter-chips {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: 1px solid var(--line);
+  background-color: white;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+  background-color: var(--ground);
+}
+
+.filter-chip[aria-pressed="true"] {
+  background-color: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.filter-chip[aria-pressed="true"] .chip-count {
+  background-color: rgba(255, 255, 255, 0.5);
+}
