@@ -1,3 +1,5 @@
+> **Superseded by [Requirements Rev 3.0](Requirements-Rev3.0.md).** Kept for history; only its sales-funnel stages and data-model refinements not contradicted by Rev 3.0 are used (see spec 05).
+
 India InsuranceSales Platform
 Comprehensive feature catalogue, CRM/CMS choices and lean architecture
 Prepared for Atul Goel | Revision 2.0 | 2 October 2026

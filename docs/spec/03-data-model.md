@@ -29,17 +29,20 @@ Ownership follows HLD §8: every fact has one system of record. This document is
 ## 3. Module entities
 
 ### M01 Tenant & Entitlements (system of record: Core)
-- `tenant` — id, slug, legal_name, entity_type (`IMF`,`BROKER`,`CORPORATE_AGENT`,`SOLO_AGENT`,`WEB_AGGREGATOR`), status (`provisioning`,`active`,`suspended`,`offboarded`), plan_id, cell, deployment_mode (`pooled`,`dedicated`), crm_mode (`solo_lite`,`twenty`), irdai_licence_no, licence_expiry.
+- `tenant` — id, slug, kind (`ORGANISATION`,`SOLO`), status (`provisioning`,`active`,`suspended`,`offboarded`), plan_id, cell, deployment_mode (`pooled`,`dedicated`), crm_mode (`solo_lite`,`twenty`).
+- `distributor_entity` (Rev 3.0) — tenant_id, entity_type (`IMF`,`BROKER`,`INDIVIDUAL_AGENT`,`CORPORATE_AGENT`), legal_name, registration_no, registration_valid_to, principal_officer_member_id.
+- `tie_up_limit` — entity_type, line_of_business, max_insurers (null = market-wide); platform data, versioned by effective date (IMF 6 per line, agent 1 per line today).
 - `tenant_domain` — tenant_id, host (unique), verified_at, kind (`platform_subdomain`,`custom`).
-- `plan` — id, code (`SOLO`,`TEAM`,`BUSINESS`,`WHITE_LABEL`), limits jsonb (seats, leads/month, AI credits, custom fields), features text[].
+- `plan` — id, code (`SOLO`,`TEAM`,`BUSINESS`,`WHITE_LABEL`,`DEDICATED`), limits jsonb (seats, leads/month, AI credits, custom fields), features text[].
 - `tenant_feature_flag` — tenant_id, flag, enabled, gated_reason.
 - `tie_up` — tenant_id, insurer_id, line_of_business (`LIFE`,`HEALTH`,`MOTOR`,`GENERAL`), effective_from, effective_to (IRDAI tie-up limits per line per entity type).
-- `brand_kit` — tenant_id, tokens jsonb, logo_ref, letterhead_ref.
+- `brand_kit` — tenant_id, tokens jsonb, logo_ref, letterhead_ref, powered_by_visible.
+- `usage_counter` (F99) — tenant_id, metric (`ai_credits`,`messages`,`seats`,`customers`), period, used, limit.
 
 ### M02 Distribution Network
 - `org_unit` — id, tenant_id, parent_id, kind (`HEAD_OFFICE`,`REGION`,`BRANCH`,`TEAM`), name, territory_codes text[] (Composite tree).
-- `member` — id, tenant_id, user_ref (Keycloak subject), display_name, phone_masked, salesperson_type (`EMPLOYEE`,`ISP`,`POSP`,`SOLO`,`MANAGER`,`OPS`,`ADMIN`), org_unit_id, status (`invited`,`onboarding`,`active`,`suspended`,`exited`), capacity_per_day, skills text[], languages text[].
-- `member_role` — member_id, role (`AGENT`,`MANAGER`,`OPS`,`COMPLIANCE`,`FINANCE`,`MARKETER`,`TENANT_ADMIN`,`PRINCIPAL_OFFICER`).
+- `member` — id, tenant_id, user_ref (Keycloak subject), display_name, phone_masked, salesperson_type (`EMPLOYEE`,`ISP`,`POSP`,`SOLO`, null for non-sellers), org_unit_id, status (`invited`,`onboarding`,`active`,`suspended`,`exited`), capacity_per_day, skills text[], languages text[].
+- `member_role` — member_id, role — catalogue in [05 §1](05-requirements-traceability.md#1-requirements-that-shape-the-design).
 - `licence` — member_id, kind (`POSP_LIFE`,`POSP_GENERAL`,`ISP`,…), number, valid_from, valid_to, verified_at; expiry alerts at 60/30/7 days.
 - `insurer_code` — member_id, insurer_id, code.
 - `leave` — member_id, from, to (routing excludes on leave).
@@ -74,6 +77,7 @@ Ownership follows HLD §8: every fact has one system of record. This document is
 
 ### M07 Book & Retention
 - `held_policy` — id, tenant_id, party_id, insurer_id, product_version_id, policy_number_enc/hash/last4, status (`IN_FORCE`,`GRACE`,`LAPSED`,`PAID_UP`,`SURRENDERED`,`MATURED`), sum_assured_enc (P3), premium_paise, frequency, start_date, renewal_date, source (`IMPORT`,`ISSUANCE`,`MANUAL`), servicing_member_id.
+- `servicing_request` (F74 lite) — id, tenant_id, party_id, policy_id, type, insurer_reference, status, follow_up_date, insurer_link, notes.
 - `premium_schedule` — policy_id, frequency, next_due_date, grace_days.
 - `premium_due` — id, tenant_id, policy_id, due_date, grace_end, amount_paise, status (`UPCOMING`,`DUE`,`IN_GRACE`,`PAID`,`LAPSED`,`REVIVED`), outcome, assigned_member_id, source (`COMPUTED`,`INSURER`).
 - `book_import_batch` / `book_import_row` — batch status, row raw jsonb, mapped jsonb, confidence per field, review status.

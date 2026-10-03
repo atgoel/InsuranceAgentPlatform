@@ -1,6 +1,6 @@
 # 00 · Implementation spec overview
 
-Status: **Approved for build** · Owner: Senior system architect (orchestrator) · Source: [HLD Rev 1.0](../hld/HLD-Rev1.0.md), [Product review Rev 2.0](../requirements/Product-Review-Rev2.0.md), [screen inventory](../../design/screen-inventory.md), [wireframes](../../design/wireframes/)
+Status: **Approved for build** · Owner: Senior system architect (orchestrator) · Source: [HLD Rev 1.0](../hld/HLD-Rev1.0.md), [Requirements Rev 3.0](../requirements/Requirements-Rev3.0.md) (primary requirements), [screen inventory](../../design/screen-inventory.md), [wireframes](../../design/wireframes/)
 
 This spec turns the HLD into buildable units. It is the single source of truth for the agents that write tests, backend code, frontend code and reviews. When the spec and the code disagree, the spec wins until an ADR changes it (see [§8](#8-change-control)).
 
@@ -85,13 +85,13 @@ Modules are built in dependency order, one at a time. Each row links its LLD onc
 | ID | Module (HLD §7) | Depends on | Backend scope | Screens (wireframe) |
 |---|---|---|---|---|
 | M00 | Kernel & observability | — | logger, request context, debug buffer, metrics, errors/Problem Details, Result, Money, clock, ids, tenant guard, UoW, outbox, audit, idempotency | Web shell, design system, API client, i18n, telemetry, state components |
-| M01 | Tenant & Entitlements | M00 | tenant directory, host → tenant resolution, plans, limits, feature flags, tie-ups, brand kit | W07 Tenant setup, W09 Operator tenants |
+| M01 | Tenant & Entitlements | M00 | tenant directory, host → tenant resolution, distributor entity, plans, limits, usage metering, feature flags, tie-ups (limits as data), brand kit, solo signup | W07 Tenant setup, W09 Operator tenants |
 | M02 | Distribution Network | M01 | branches/teams hierarchy, users & memberships, salesperson type, licences & expiry, roles/permissions | W02 Onboarding & hierarchy, W10 Users & roles |
 | M03 | Party & Consent | M01 | party, contact points, household roles, consent ledger, suppression, dedup matcher | CRM04 Customers, CRM09 Customer record |
 | M04 | CRM Engagement | M02, M03 | CRM Port (Solo-CRM-lite adapter + Twenty adapter contract), leads, routing engine, SLA, stages, tasks, activities, opportunities, dedup | CRM01, CRM02, CRM03, CRM05, CRM07, M02, M16, M17 |
 | M05 | Product Catalogue & Comparison Scope | M01, M02 | insurers, product versions, eligibility, comparison scope engine (F78) | M08 Compare, W07 catalogue tab |
 | M06 | Advice & Quote | M05 | needs calculators, quotes, benefit illustration ack, advice records | M06 Calculators, M09 Quote & BI |
-| M07 | Book & Retention | M03, M05 | held policies, premium schedule, due engine, book import with review | M04 Due calendar, M05 Book import, M01 Today |
+| M07 | Book & Retention | M03, M05 | held policies, premium schedule, due engine, lifecycle alerts, servicing lite, book import with review | M04 Due calendar, M05 Book import, M01 Today |
 | M08 | Integration Hub | M00 | adapter SPI, capability manifest, circuit breaker, bulkhead, retry, DLQ | W12 Integrations |
 | M09 | Proposal & Issuance | M06, M08 | proposal, frozen snapshot, submission saga, unknown state, reconcile, issuance | M10 Proposal, M11 Tracker, W16 Proposal desk |
 | M10 | Commission & Performance | M09 | rate cards, expected/received, reconciliation, persistency | W05 Commission, M14 Income |
