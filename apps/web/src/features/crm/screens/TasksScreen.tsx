@@ -47,7 +47,7 @@ export function TasksScreen() {
   }, [crmApi, taskTab]);
 
   const handleTaskCreated = useCallback(
-    async (_taskId: string) => {
+    async () => {
       try {
         setShowNewTaskForm(false);
         // Reload tasks

@@ -670,11 +670,12 @@ describe('AC-M05-02, AC-M05-03 ComparisonScopeEngine', () => {
         insurers: [activeInsurer],
       });
 
-      expect(result.excluded).toHaveLength(4);
+      // An EMPLOYEE salesperson is not restricted to POS products: pv_5 is in scope (the POSP rule applies to POSPs only)
+      expect(result.excluded).toHaveLength(3);
       expect(result.excluded).toContainEqual({ versionId: 'pv_2', reason: 'not_effective' });
       expect(result.excluded).toContainEqual({ versionId: 'pv_3', reason: 'channel_not_permitted' });
-      expect(result.excluded).toContainEqual({ versionId: 'pv_5', reason: 'not_pos_eligible' });
       expect(result.excluded).toContainEqual({ versionId: 'pv_6', reason: 'line_not_licensed' });
+      expect(result.versions.map((v) => v.versionId).sort()).toEqual(['pv_1', 'pv_5']);
     });
 
     it('includes ScopedVersion entries with versionId, productId, insurerId, line', () => {
@@ -807,5 +808,36 @@ describe('AC-M05-02, AC-M05-03 ComparisonScopeEngine', () => {
 
       expect(result.versions).toHaveLength(1);
     });
+  });
+});
+
+describe('AC-M05-03 request narrowing and unknown insurers', () => {
+  const today = '2026-10-03';
+  const insurer: Insurer = { id: 'ins_a', name: 'Alpha Health', irdaiRegNo: '123', lines: ['HEALTH'], active: true };
+  const version = (id: string, productId: string): ProductVersionProps => ({
+    id, productId, insurerId: 'ins_a', line: 'HEALTH', uin: `UIN${id.toUpperCase()}`, wordingVersion: 'w1', posEligible: true,
+    channels: ['BROKER'], effectiveFrom: '2026-01-01', status: 'active', quoteRequirements: [], keyFacts: [],
+  });
+  const input: ScopeInput = {
+    entityType: 'BROKER', comparisonScope: 'MARKET_WIDE', tiedInsurerIds: {}, salesperson: { type: 'EMPLOYEE', lines: ['HEALTH'] },
+    date: today, category: 'HEALTH_FLOATER',
+  };
+
+  it('narrows by the product category resolved from the products list', () => {
+    const result = new ComparisonScopeEngine().evaluate(input, {
+      versions: [version('pv_f', 'prod_floater'), version('pv_i', 'prod_individual')],
+      insurers: [insurer],
+      products: [
+        { id: 'prod_floater', insurerId: 'ins_a', line: 'HEALTH', name: 'Family Floater', category: 'HEALTH_FLOATER' },
+        { id: 'prod_individual', insurerId: 'ins_a', line: 'HEALTH', name: 'Individual', category: 'HEALTH_INDIVIDUAL' },
+      ],
+    });
+    expect(result.versions.map((v) => v.versionId)).toEqual(['pv_f']);
+    expect(result.excluded).toEqual([{ versionId: 'pv_i', reason: 'filtered_out' }]);
+  });
+
+  it('excludes (never silently drops) a version whose insurer is unknown', () => {
+    const result = new ComparisonScopeEngine().evaluate({ ...input, category: undefined }, { versions: [{ ...version('pv_x', 'prod_x'), insurerId: 'ins_missing' }], insurers: [insurer] });
+    expect(result.excluded).toEqual([{ versionId: 'pv_x', reason: 'insurer_inactive' }]);
   });
 });

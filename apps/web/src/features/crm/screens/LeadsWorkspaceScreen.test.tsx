@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiProvider } from '../../../lib/api';
 import { ApiError } from '../../../lib/api/api-error';
 import { I18nProvider } from '../../../lib/i18n';
-import { LeadsWorkspaceScreen } from './LeadsWorkspaceScreen';
+import { LeadsWorkspaceScreen, leadQueryFor } from './LeadsWorkspaceScreen';
 import { ApiClient } from '../../../lib/api/api-client';
 import { type LeadListItem, type LeadStats } from '../api';
 
@@ -233,10 +233,10 @@ describe('AC-M04-25 LeadsWorkspaceScreen', () => {
   });
 
   it('AC-M04-25 shows saved views with proper filtering', async () => {
-    mockApiClient.get = vi.fn().mockImplementation((path: string, query?: any) => {
+    mockApiClient.get = vi.fn().mockImplementation((path: string, opts?: { query?: Record<string, unknown> }) => {
       if (path === '/api/v1/leads/stats') return Promise.resolve(mockStats);
       if (path === '/api/v1/leads') {
-        const params = query?.query || {};
+        const params = opts?.query || {};
         if (params.owner === 'unassigned') {
           return Promise.resolve({ items: [mockLeads[1]], nextCursor: undefined });
         }
@@ -259,5 +259,33 @@ describe('AC-M04-25 LeadsWorkspaceScreen', () => {
     await waitFor(() => {
       expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
     });
+  });
+
+  it('AC-M04-25 maps saved views to server-side queries', () => {
+    const open = ['NEW', 'CONTACTED', 'QUALIFIED'];
+    expect(leadQueryFor('all_open')).toEqual({ stage: open, product: undefined });
+    expect(leadQueryFor('unassigned')).toEqual({ stage: open, product: undefined, owner: 'unassigned' });
+    expect(leadQueryFor('sla_breached', 'HEALTH')).toEqual({ stage: open, product: 'HEALTH', sla: 'breached' });
+    expect(leadQueryFor('mine')).toEqual({ stage: open, product: undefined, owner: 'me' });
+  });
+
+  it('AC-M04-25 choosing a view or a product reloads leads with that query', async () => {
+    const user = userEvent.setup();
+    render(
+      <ApiProvider client={mockApiClient}>
+        <I18nProvider>
+          <LeadsWorkspaceScreen />
+        </I18nProvider>
+      </ApiProvider>,
+    );
+    await screen.findByRole('button', { name: /Unassigned/ });
+    const leadQueries = () =>
+      (mockApiClient.get as ReturnType<typeof vi.fn>).mock.calls.filter(([path]) => path === '/api/v1/leads').map(([, opts]) => opts.query);
+
+    await user.click(screen.getByRole('button', { name: /Unassigned/ }));
+    await waitFor(() => expect(leadQueries().at(-1)).toMatchObject({ owner: 'unassigned', stage: 'NEW,CONTACTED,QUALIFIED' }));
+
+    await user.selectOptions(screen.getByLabelText('Product'), 'HEALTH');
+    await waitFor(() => expect(leadQueries().at(-1)).toMatchObject({ owner: 'unassigned', product: 'HEALTH' }));
   });
 });

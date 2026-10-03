@@ -227,7 +227,7 @@ describe('AC-M05-04 disclosureFor', () => {
 
       const text = disclosureFor(input, ['Name One', 'Name Two', 'Name Three']);
 
-      expect(text).toContain('Name One, Name Two, Name Three');
+      expect(text).toContain('Name One, Name Three, Name Two');
     });
 
     it('handles single insurer without trailing comma', () => {

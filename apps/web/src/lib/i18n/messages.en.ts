@@ -207,6 +207,7 @@ export const messagesEn = {
   'crm.leads.view.unassigned': 'Unassigned',
   'crm.leads.view.sla_breached': 'SLA breached',
   'crm.leads.view.mine': 'Mine',
+  'crm.leads.all_products': 'All products',
   'crm.leads.grid_label': 'Leads grid',
   'crm.leads.select_all': 'Select all leads',
   'crm.leads.select_item': 'Select lead',

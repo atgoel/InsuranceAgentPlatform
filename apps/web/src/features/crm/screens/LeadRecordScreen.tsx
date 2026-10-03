@@ -8,7 +8,7 @@ import {
 } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
-import { createCrmApi, type LeadDetailView, type LeadStage, type LostReason, type ProductLine, type OpportunityStage, type Qualification } from '../api';
+import { createCrmApi, type LeadDetailView, type LeadStage, type ProductLine, type Qualification, type LostReason } from '../api';
 import { LeadHeader } from '../components/LeadHeader';
 import { StageBar } from '../components/StageBar';
 import { QualificationForm } from '../components/QualificationForm';
@@ -62,10 +62,10 @@ export function LeadRecordScreen() {
   );
 
   const handleStageTransition = useCallback(
-    async (toStage: LeadStage, lostReason?: LostReason) => {
+    async (toStage: LeadStage, lostReason?: string) => {
       if (!id) return;
       try {
-        const updated = await crmApi.transitionLeadStage(id, { to: toStage, lostReason });
+        const updated = await crmApi.transitionLeadStage(id, { to: toStage, lostReason: lostReason as LostReason | undefined });
         setLead(updated);
       } catch (err) {
         if (err instanceof ApiError) {
@@ -92,7 +92,7 @@ export function LeadRecordScreen() {
   );
 
   const handleConvert = useCallback(
-    async (conversion: { partyChoice: 'LEAD_PARTY' | { existingPartyId: string }; productInterest: ProductLine; expectedPremiumPaise: number; startStage: OpportunityStage }) => {
+    async (conversion: { partyChoice: 'LEAD_PARTY' | { existingPartyId: string }; productInterest: ProductLine; expectedPremiumPaise: number; startStage: 'DISCOVERY' | 'QUOTE_SHARED' }) => {
       if (!id) return;
       try {
         await crmApi.convertLead(id, conversion);

@@ -67,14 +67,14 @@ export interface ScopeFilter { readonly reason: ScopeExclusion; allows(v: Produc
 export const EffectiveFilter, InsurerActiveFilter, ChannelFilter, TieUpFilter, PosEligibilityFilter, LicensedLineFilter, RequestFilter: ScopeFilter
 export class ComparisonScopeEngine {
   constructor(filters?: ScopeFilter[])   // default order as listed; first failing filter gives the exclusion reason
-  evaluate(input: ScopeInput, catalogue: { versions: ProductVersionProps[]; insurers: Insurer[] }): ScopeResult
+  evaluate(input: ScopeInput, catalogue: { versions: ProductVersionProps[]; insurers: Insurer[]; products?: Product[] }): ScopeResult   // products resolve each version's category for RequestFilter; a version with an unknown insurer is excluded as insurer_inactive
 }
 export function disclosureFor(input: ScopeInput, insurerNames: string[]): string
 ```
 Filter rules:
 - `ChannelFilter`: `version.channels` includes `input.entityType`.
 - `TieUpFilter`: when `comparisonScope === 'TIED_INSURERS'`, insurer must be in `tiedInsurerIds[version.line]`; MARKET_WIDE passes all.
-- `PosEligibilityFilter`: salesperson type POSP → `version.posEligible`.
+- `PosEligibilityFilter`: salesperson type POSP → `version.posEligible`; every other salesperson type passes.
 - `LicensedLineFilter`: version line ∈ `salesperson.lines`.
 - `RequestFilter`: optional `line`/`category` narrowing (reason `filtered_out`).
 

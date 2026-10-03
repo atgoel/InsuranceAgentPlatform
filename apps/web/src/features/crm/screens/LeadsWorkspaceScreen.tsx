@@ -10,7 +10,7 @@ import {
 } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
-import { createCrmApi, type LeadListItem, type LeadStats, type ProductLine, type LeadSource, type Temperature } from '../api';
+import { createCrmApi, type LeadListItem, type LeadStage, type LeadStats, type ProductLine, type Temperature } from '../api';
 import { LeadsGrid } from '../components/LeadsGrid';
 import { NewLeadForm } from '../components/NewLeadForm';
 import { BulkAssignForm } from '../components/BulkAssignForm';
@@ -34,58 +34,36 @@ export function LeadsWorkspaceScreen() {
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
   const [selectedView, setSelectedView] = useState<string>('all_open');
   const [productFilter, setProductFilter] = useState<ProductLine | undefined>();
-  const [ownerFilter, setOwnerFilter] = useState<string | undefined>();
   const [showNewLeadForm, setShowNewLeadForm] = useState(false);
   const [showBulkAssignForm, setShowBulkAssignForm] = useState(false);
 
-  // Load initial data
+  // Saved views and the product filter are API queries (server-side scope and paging), never client-side filters.
+  const query = useMemo(() => leadQueryFor(selectedView, productFilter), [selectedView, productFilter]);
+
   useEffect(() => {
+    let cancelled = false;
     const loadData = async () => {
       try {
         setLoading(true);
         setError(undefined);
-        const [statsResult, leadsResult] = await Promise.all([
-          crmApi.getLeadStats(),
-          crmApi.listLeads({ stage: ['NEW', 'CONTACTED', 'QUALIFIED'] }),
-        ]);
+        const [statsResult, leadsResult] = await Promise.all([crmApi.getLeadStats(), crmApi.listLeads(query)]);
+        if (cancelled) return;
         setStats(statsResult);
         setLeads(leadsResult.items);
+        setSelectedLeadIds([]);
       } catch (err) {
-        if (err instanceof ApiError) {
-          setError(err);
-        }
+        if (!cancelled && err instanceof ApiError) setError(err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     loadData();
-  }, [crmApi]);
+    return () => {
+      cancelled = true;
+    };
+  }, [crmApi, query]);
 
-  // Filter leads based on view and filters
-  const filteredLeads = useMemo(() => {
-    let filtered = leads;
-
-    if (selectedView === 'all_open') {
-      filtered = filtered.filter((l) => ['NEW', 'CONTACTED', 'QUALIFIED'].includes(l.stage));
-    } else if (selectedView === 'unassigned') {
-      filtered = filtered.filter((l) => !l.ownerMemberId);
-    } else if (selectedView === 'sla_breached') {
-      filtered = filtered.filter((l) => l.slaState === 'breached');
-    } else if (selectedView === 'mine') {
-      // Typically filtered at API level, but here for demo
-      filtered = filtered.filter((l) => l.ownerMemberId); // Placeholder
-    }
-
-    if (productFilter) {
-      filtered = filtered.filter((l) => l.productInterest === productFilter);
-    }
-
-    if (ownerFilter) {
-      filtered = filtered.filter((l) => l.ownerMemberId === ownerFilter);
-    }
-
-    return filtered;
-  }, [leads, selectedView, productFilter, ownerFilter]);
+  const filteredLeads = leads;
 
   const handleNewLeadCreated = useCallback(
     async (leadId: string) => {
@@ -210,6 +188,20 @@ export function LeadsWorkspaceScreen() {
       {/* View Filters */}
       <div className="view-selector">
         <FilterChips options={viewOptions} selected={[selectedView]} onChange={(ids) => setSelectedView(ids[0] || 'all_open')} />
+        <label className="product-filter">
+          {t('crm.leads.product')}
+          <select
+            value={productFilter ?? ''}
+            onChange={(e) => setProductFilter(e.target.value ? (e.target.value as ProductLine) : undefined)}
+          >
+            <option value="">{t('crm.leads.all_products')}</option>
+            {PRODUCT_LINES.map((p) => (
+              <option key={p} value={p}>
+                {p.replace('_', ' ')}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       {/* Action Bar */}
@@ -256,4 +248,16 @@ export function LeadsWorkspaceScreen() {
       )}
     </main>
   );
+}
+
+const PRODUCT_LINES: ProductLine[] = ['TERM_LIFE', 'SAVINGS_LIFE', 'HEALTH', 'HEALTH_FLOATER', 'CHILD', 'RETIREMENT', 'MOTOR', 'OTHER'];
+
+/** Saved view → API filter (M04 §10: All open, Unassigned, SLA breached, Mine). */
+export function leadQueryFor(view: string, product?: ProductLine): Parameters<ReturnType<typeof createCrmApi>['listLeads']>[0] {
+  const open: LeadStage[] = ['NEW', 'CONTACTED', 'QUALIFIED'];
+  const base = { stage: open, product };
+  if (view === 'unassigned') return { ...base, owner: 'unassigned' };
+  if (view === 'sla_breached') return { ...base, sla: 'breached' };
+  if (view === 'mine') return { ...base, owner: 'me' };
+  return base;
 }

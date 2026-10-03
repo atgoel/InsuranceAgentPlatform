@@ -7,7 +7,7 @@ import {
 } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
-import { createCrmApi, type BoardResponse } from '../api';
+import { createCrmApi, type BoardResponse, type OpportunityStage, type LostReason } from '../api';
 import { PipelineBoard } from '../components/PipelineBoard';
 import '../styles/PipelineScreen.css';
 
@@ -39,7 +39,7 @@ export function PipelineScreen() {
   }, [crmApi]);
 
   const handleMoveOpportunity = useCallback(
-    async (opportunityId: string, toStage: any) => {
+    async (opportunityId: string, toStage: OpportunityStage) => {
       try {
         await crmApi.moveOpportunityStage(opportunityId, toStage);
         // Reload board
@@ -55,7 +55,7 @@ export function PipelineScreen() {
   );
 
   const handleMarkLost = useCallback(
-    async (opportunityId: string, reason: any) => {
+    async (opportunityId: string, reason: LostReason) => {
       try {
         await crmApi.markOpportunityLost(opportunityId, reason);
         // Reload board
