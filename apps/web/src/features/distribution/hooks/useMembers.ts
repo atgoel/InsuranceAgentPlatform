@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { ApiError } from '../../../lib/api/api-error';
-import { createDistributionApi, MemberView } from '../api';
+import { createDistributionApi, MemberView, SalespersonType } from '../api';
 import { ApiClient } from '../../../lib/api/api-client';
 
 interface UseMembersOptions {
@@ -37,7 +37,14 @@ export function useMembers({ apiClient }: UseMembersOptions) {
   );
 
   const inviteMember = useCallback(
-    async (input: Parameters<typeof api.inviteMember>[0]) => {
+    async (input: {
+      displayName: string;
+      phone?: string;
+      email?: string;
+      roles: string[];
+      salespersonType?: SalespersonType;
+      orgUnitId: string;
+    }) => {
       const newMember = await api.inviteMember(input);
       setState((prev) => ({ ...prev, members: [...prev.members, newMember] }));
       return newMember;
