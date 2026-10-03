@@ -526,3 +526,22 @@ describe('AC-M04-02 Lead stage transitions', () => {
     for (const [product, line] of Object.entries(expected)) expect(lineOfBusiness(product as ProductLine)).toBe(line);
   });
 });
+
+describe('AC-M04-13 SLA breach announcement bookkeeping', () => {
+  const now = new Date('2026-10-03T10:00:00Z');
+  const capture = () =>
+    Lead.capture({
+      id: 'lead_sla', partyId: 'pty_1', productInterest: 'TERM_LIFE', now, by: 'customer',
+      attribution: { source: 'WEB_FORM', firstTouch: { channel: 'WEB_FORM', at: now.toISOString() }, lastTouch: { channel: 'WEB_FORM', at: now.toISOString() } },
+    });
+
+  it('records the announcement and clears it when a new SLA clock starts on re-assignment', () => {
+    const lead = capture();
+    lead.assign('mem_1', 'ou_1', 30, now);
+    lead.markSlaBreachNotified(new Date('2026-10-03T10:45:00Z'));
+    expect(lead.props.slaBreachNotifiedAt).toBe('2026-10-03T10:45:00.000Z');
+    lead.assign('mem_2', 'ou_1', 30, new Date('2026-10-03T11:00:00Z'));
+    expect(lead.props.slaBreachNotifiedAt).toBeUndefined();
+    expect(lead.props.slaDueAt).toBe('2026-10-03T11:30:00.000Z');
+  });
+});

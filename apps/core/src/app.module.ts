@@ -4,8 +4,9 @@ import { KernelModule } from './kernel/kernel.module';
 import { TenancyModule } from './modules/tenancy/tenancy.module';
 import { DistributionModule } from './modules/distribution/distribution.module';
 import { PartyModule } from './modules/party/party.module';
+import { CrmModule } from './modules/crm/crm.module';
 
 @Module({
-  imports: [KernelModule.forRoot(loadConfig(process.env)), TenancyModule, DistributionModule, PartyModule],
+  imports: [KernelModule.forRoot(loadConfig(process.env)), TenancyModule, DistributionModule, PartyModule, CrmModule],
 })
 export class AppModule {}

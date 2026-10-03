@@ -126,6 +126,18 @@ export class Opportunity {
     this._props.stageEnteredAt = now.toISOString();
   }
 
+  /** Book transfer when the owner leaves (F97). Closed opportunities keep their historical owner. */
+  reassign(memberId: string, orgUnitId?: string): void {
+    if (this._props.stage === 'ISSUED' || this._props.stage === 'LOST') return;
+    this._props.ownerMemberId = memberId;
+    if (orgUnitId) this._props.orgUnitId = orgUnitId;
+  }
+
+  /** The customer record was merged into another party (M03). */
+  relinkParty(partyId: string): void {
+    this._props.partyId = partyId;
+  }
+
   updateExpectedPremium(m: Money): void {
     this._props.expectedPremium = m;
   }

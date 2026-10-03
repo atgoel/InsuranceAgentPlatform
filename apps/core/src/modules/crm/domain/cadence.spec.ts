@@ -258,3 +258,13 @@ describe('AC-M04-08 Cadence policies', () => {
     });
   });
 });
+
+describe('AC-M04-08 cadence task titles', () => {
+  it('names tasks by purpose and never embeds internal ids', () => {
+    const policy = new DefaultCadencePolicy();
+    const at = new Date('2026-10-03T10:00:00Z');
+    const lead = { id: 'lead_1', partyId: 'pty_secret', ownerMemberId: 'mem_1', slaDueAt: '2026-10-03T10:30:00.000Z' } as never;
+    const titles = [...policy.onLeadAssigned(lead, at), ...policy.onCallOutcome(lead, 'NO_ANSWER', at, 1), ...policy.onCallOutcome(lead, 'NO_ANSWER', at, 2)].map((d) => d.title);
+    expect(titles).toEqual(['First call to new lead', 'Retry call (attempt 2)', 'Retry call (attempt 3)']);
+  });
+});

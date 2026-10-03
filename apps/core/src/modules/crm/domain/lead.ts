@@ -76,6 +76,8 @@ export interface LeadProps {
   lostReason?: LostReason;
   slaDueAt?: string;
   firstRespondedAt?: string;
+  /** Set when crm.lead.sla_breached was announced, so the sweep announces each breach once. */
+  slaBreachNotifiedAt?: string;
   stageHistory: StageHistoryEntry[];
   convertedOpportunityId?: string;
   syncState: 'synced' | 'pending' | 'failed' | 'local';
@@ -163,9 +165,14 @@ export class Lead {
       const due = new Date(now);
       due.setMinutes(due.getMinutes() + slaMinutes);
       this._props.slaDueAt = due.toISOString();
+      this._props.slaBreachNotifiedAt = undefined; // a new SLA clock can breach (and be announced) again
     }
 
     this._props.updatedAt = now.toISOString();
+  }
+
+  markSlaBreachNotified(now: Date): void {
+    this._props.slaBreachNotifiedAt = now.toISOString();
   }
 
   unassign(): void {

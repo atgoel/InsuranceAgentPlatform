@@ -99,14 +99,16 @@ function rejections(input: LeadImportInput): Array<{ row: number; reasons: strin
   });
 }
 
+const ROW_CHECKS: Array<[string, (row: ImportRow) => boolean]> = [
+  ['Name is missing', (r) => !r.fullName || r.fullName.trim().length < 2],
+  ['No mobile or e-mail', (r) => !r.mobile && !r.email],
+  ['Invalid mobile', (r) => !!r.mobile && !parses(() => PhoneNumber.parse(r.mobile as string))],
+  ['Invalid e-mail', (r) => !!r.email && !parses(() => EmailAddress.parse(r.email as string))],
+  ['Invalid pincode', (r) => !!r.pincode && !/^[1-9][0-9]{5}$/.test(r.pincode)],
+];
+
 function rowProblems(row: ImportRow): string[] {
-  const reasons: string[] = [];
-  if (!row.fullName || row.fullName.trim().length < 2) reasons.push('Name is missing');
-  if (!row.mobile && !row.email) reasons.push('No mobile or e-mail');
-  if (row.mobile && !parses(() => PhoneNumber.parse(row.mobile as string))) reasons.push('Invalid mobile');
-  if (row.email && !parses(() => EmailAddress.parse(row.email as string))) reasons.push('Invalid e-mail');
-  if (row.pincode && !/^[1-9][0-9]{5}$/.test(row.pincode)) reasons.push('Invalid pincode');
-  return reasons;
+  return ROW_CHECKS.filter(([, failed]) => failed(row)).map(([reason]) => reason);
 }
 
 function parses(fn: () => unknown): boolean {

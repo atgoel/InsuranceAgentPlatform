@@ -511,3 +511,31 @@ function codeOf(fn: () => unknown): string | undefined {
   }
   return undefined;
 }
+
+describe('AC-M04-18 Opportunity book transfer and party relink', () => {
+  const now = new Date('2026-10-03T10:00:00Z');
+  const open = () =>
+    Opportunity.open({
+      id: 'opp_t', partyId: 'pty_a', productInterest: 'TERM_LIFE', title: 'Term', expectedPremium: Money.ofPaise(1_500_000),
+      startStage: 'DISCOVERY', ownerMemberId: 'mem_leaver', orgUnitId: 'ou_1', now,
+    });
+
+  it('reassigns an open opportunity to the transfer target and its unit', () => {
+    const o = open();
+    o.reassign('mem_target', 'ou_2');
+    expect([o.props.ownerMemberId, o.props.orgUnitId]).toEqual(['mem_target', 'ou_2']);
+  });
+
+  it('keeps the historical owner on a closed opportunity', () => {
+    const o = open();
+    o.markLost('NOT_INTERESTED', now);
+    o.reassign('mem_target');
+    expect(o.props.ownerMemberId).toBe('mem_leaver');
+  });
+
+  it('relinks to the surviving party after a merge', () => {
+    const o = open();
+    o.relinkParty('pty_survivor');
+    expect(o.props.partyId).toBe('pty_survivor');
+  });
+});
