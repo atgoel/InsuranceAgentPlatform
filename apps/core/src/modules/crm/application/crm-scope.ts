@@ -7,9 +7,4 @@ export function inScope(record: { ownerMemberId?: string; orgUnitId?: string }, 
   return !!scope.memberId && record.ownerMemberId === scope.memberId;
 }
 
-/** Start of the IST calendar day containing `at` (fixed +05:30, India has no DST). */
-export function istDayStart(at: Date): Date {
-  const offset = 330 * 60_000;
-  const local = new Date(at.getTime() + offset);
-  return new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()) - offset);
-}
+export { istDayStart } from '../../../kernel/domain/ist';

@@ -1,0 +1,24 @@
+# Local Postgres for IAP integration tests and PERSISTENCE=pg development.
+# Port 5433 so it does not clash with other projects' Postgres on 5432.
+#   docker compose -f infra/dev/docker-compose.yml up -d
+name: iap-dev
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: iap-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./init-roles.sql:/docker-entrypoint-initdb.d/01-init-roles.sql:ro
+      - iap-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d iap"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+volumes:
+  iap-pg-data:

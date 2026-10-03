@@ -1,3 +1,4 @@
+import { addDays, istAt, istDate } from '../../../kernel/domain/ist';
 import type { LeadProps } from './lead';
 import type { CallOutcome } from './activity';
 import type { TaskProps, TaskKind, TaskSource } from './task';
@@ -49,10 +50,7 @@ export class DefaultCadencePolicy implements CadencePolicy {
         ];
       } else if (attemptsSoFar === 2) {
         // Second retry: next day 10:00 IST (04:30Z)
-        const nextDay = new Date(now);
-        nextDay.setDate(nextDay.getDate() + 1);
-        // Set to 04:30 UTC which is 10:00 IST
-        nextDay.setHours(4, 30, 0, 0);
+        const nextDay = istAt(addDays(istDate(now), 1), 10, 0);
         return [
           {
             ownerMemberId: lead.ownerMemberId,

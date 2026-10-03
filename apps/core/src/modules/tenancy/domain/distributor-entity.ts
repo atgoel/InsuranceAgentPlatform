@@ -1,3 +1,4 @@
+import { daysBetween, istDate } from '../../../kernel/domain/ist';
 import { ValidationError, BusinessRuleError } from '../../../kernel/errors/domain-errors';
 import { TenantKind } from './tenant';
 
@@ -98,24 +99,13 @@ export class DistributorEntity {
     });
   }
 
+  /** Valid through the end of its IST expiry date; 'expiring' within 60 calendar days. */
   registrationStatus(today: Date): 'valid' | 'expiring' | 'expired' {
-    const expiryDate = new Date(this.registrationValidTo);
-    expiryDate.setHours(23, 59, 59, 999);
-
-    if (today > expiryDate) {
-      return 'expired';
-    }
-
-    // Expiring within 60 days
-    const sixtyDaysFromNow = new Date(today);
-    sixtyDaysFromNow.setDate(sixtyDaysFromNow.getDate() + 60);
-
-    if (today <= expiryDate && expiryDate <= sixtyDaysFromNow) {
-      return 'expiring';
-    }
-
-    return 'valid';
+    const left = daysBetween(istDate(today), this.registrationValidTo.slice(0, 10));
+    if (left < 0) return 'expired';
+    return left <= 60 ? 'expiring' : 'valid';
   }
+
 
   comparisonScope(): 'MARKET_WIDE' | 'TIED_INSURERS' {
     return this.entityType === 'BROKER' ? 'MARKET_WIDE' : 'TIED_INSURERS';
