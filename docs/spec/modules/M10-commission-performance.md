@@ -82,3 +82,12 @@ W05 `CommissionSetupScreen` (rate rules table by insurer/product/basis/years, ef
 - **AC-M10-07** Income and MIS respect record scope (self, team subtree, tenant); export audited and limited to the period.
 - **AC-M10-08** Postgres: append-only commission entries; platform default rates visible read-only to tenants. *(integration)*
 - **AC-M10-09** Commission setup and income screens as in §8.
+
+## 11. CR-001 additions — commission base, invoice, register import
+
+Source: [CR-001](../change-requests/CR-001-sales-register-fields.md). Built with M10.
+- Commission base is the **net premium** (`commercials.premiumNetPaise`, without GST): `expectedCommission(netPremiumPaise, ratePct)`; `CommissionEntry.premiumPaise` is renamed `netPremiumPaise` and always holds the base used.
+- RECEIVED entries gain `invoiceNo?: string` (1..40, the intermediary's GST invoice to the insurer) and `invoiceDate?: string` (YYYY-MM-DD); `POST /commissions/received` accepts both; DDL `commission_entry` adds `invoice_no text`, `invoice_date date`, `custom_fields jsonb not null default '{}'`, `custom_schema_version int not null default 1`.
+- `CommissionImportPort.recordReceived(tx, { heldPolicyId, insurerId, sellerMemberId, amountPaise, ratePct?, reason?, invoiceNo?, occurredOn })` used by the M07 register import (CR-001 §3.4); one RECEIVED entry per imported row with a commission amount.
+- MIS gains "business by referrer" and "business by source" (from `referred_by_name` / `business_source` of held policies and sales) and filters by reportable custom fields; P2 custom fields never appear in MIS or exports.
+- **AC-CR001-03** (M10 part) Expected commission is computed on net premium (e.g. net ₹24,971, tax ₹4,495, gross ₹29,466 at 15 % → ₹3,745.65); a RECEIVED entry stores invoice number and date; an imported register row with Commission and Invoice No. creates one RECEIVED entry linked to the held policy.

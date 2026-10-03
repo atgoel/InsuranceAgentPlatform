@@ -35,7 +35,7 @@ const attribution = (source: LeadProps['attribution']['source'] = 'WEB_FORM'): L
 function leadProps(id: string, partyId: string, o: Partial<LeadProps> = {}): LeadProps {
   return {
     id, partyId, productInterest: 'TERM_LIFE', stage: 'NEW', temperature: 'WARM', attribution: attribution(), qualification: {},
-    stageHistory: [{ to: 'NEW', at: at(-60), by: 'system' }], syncState: 'local', createdAt: at(-60), updatedAt: at(-60), version: 1, ...o,
+    stageHistory: [{ to: 'NEW', at: at(-60), by: 'system' }], customFields: {}, syncState: 'local', createdAt: at(-60), updatedAt: at(-60), version: 1, ...o,
   };
 }
 
@@ -366,7 +366,7 @@ export function crmRepositoriesContract(label: string, setup: () => Promise<Cont
 
     const baseOpp = (id: string, partyId: string, o: Partial<OpportunityProps> = {}): OpportunityProps => ({
       id, partyId, productInterest: 'TERM_LIFE', title: 'Term plan', expectedPremium: Money.ofPaise(1_500_000), stage: 'DISCOVERY', ownerMemberId: 'mem_1', orgUnitId: 'ou_1',
-      stageEnteredAt: at(-60), createdAt: at(-60), version: 1, ...o,
+      stageEnteredAt: at(-60), createdAt: at(-60), customFields: {}, version: 1, ...o,
     });
 
     it('AC-M04-10 opportunity round-trips exact paise and JSON attribution, and rejects a stale save', async () => {
@@ -392,6 +392,35 @@ export function crmRepositoriesContract(label: string, setup: () => Promise<Cont
       await expect(h.run(tenantId, (tx) => h.repos.opportunities.save(tx, second))).rejects.toMatchObject({ code: 'version_mismatch', httpStatus: 412 });
       expect((await h.run(tenantId, (tx) => h.repos.opportunities.get(tx, id)))?.props.expectedPremium.paise).toBe(100);
       expect(await h.run(tenantId, (tx) => h.repos.opportunities.get(tx, h.uid('missing')))).toBeUndefined();
+    });
+
+    it('AC-CR001-08 lead and opportunity custom_fields round-trip, are replaced on save and stay tenant-isolated', async () => {
+      const a = await h.newTenant();
+      const b = await h.newTenant();
+      const leadId = h.uid('lead');
+      const oppId = h.uid('opp');
+      const leadValues = { source_note: 'Met at expo', budget_paise: 2_500_000, hot: true };
+      const oppValues = { riders: 'CRITICAL_ILLNESS', sum_assured_paise: 10_000_000 };
+      await h.run(a.tenantId, async (tx) => {
+        await h.repos.leads.save(tx, Lead.restore(leadProps(leadId, a.parties[0], { customFields: leadValues })));
+        await h.repos.opportunities.save(tx, Opportunity.restore(baseOpp(oppId, a.parties[0], { customFields: oppValues })));
+      });
+      expect((await h.run(a.tenantId, (tx) => h.repos.leads.get(tx, leadId)))?.props.customFields).toEqual(leadValues);
+      expect((await h.run(a.tenantId, (tx) => h.repos.opportunities.get(tx, oppId)))?.props.customFields).toEqual(oppValues);
+      await h.run(a.tenantId, async (tx) => {
+        const lead = await h.repos.leads.get(tx, leadId);
+        const opp = await h.repos.opportunities.get(tx, oppId);
+        if (!lead || !opp) throw new Error('missing');
+        lead.replaceCustomFields({ budget_paise: 3_000_000 }, NOW);
+        opp.replaceCustomFields({});
+        await h.repos.leads.save(tx, lead);
+        await h.repos.opportunities.save(tx, opp);
+      });
+      const lead = await h.run(a.tenantId, (tx) => h.repos.leads.get(tx, leadId));
+      expect(lead?.props.customFields).toEqual({ budget_paise: 3_000_000 });
+      expect(lead?.props.version).toBe(3);
+      expect((await h.run(a.tenantId, (tx) => h.repos.opportunities.get(tx, oppId)))?.props.customFields).toEqual({});
+      expect(await h.run(b.tenantId, (tx) => h.repos.leads.get(tx, leadId))).toBeUndefined();
     });
 
     it('AC-M04-10 board applies record scope, owner and product filters and orders by stage entry', async () => {

@@ -1,0 +1,9 @@
+.custom-fields-section { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid #D9DEE7; border-radius: 8px; }
+.cf-section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.cf-values { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0; }
+.cf-value-row dt { font-size: 12px; color: #4A5262; }
+.cf-value-row dd { margin: 0; font-weight: 500; }
+.cf-edit-form { display: flex; flex-direction: column; gap: 16px; }
+.cf-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #4A5262; }
+.cf-field-check { flex-direction: row; align-items: center; gap: 8px; }
+.cf-field-error { color: #B3261E; font-size: 13px; }

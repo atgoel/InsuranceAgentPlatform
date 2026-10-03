@@ -17,6 +17,7 @@ describe('AC-M04-08 Cadence policies', () => {
   describe('onLeadAssigned', () => {
     it('creates first call task at slaDueAt when provided', () => {
       const lead: LeadProps = {
+      customFields: {},
         id: 'lead_1',
         partyId: 'party_1',
         productInterest: 'TERM_LIFE',
@@ -47,6 +48,7 @@ describe('AC-M04-08 Cadence policies', () => {
 
     it('creates first call task at now+2h when no slaDueAt', () => {
       const lead: LeadProps = {
+      customFields: {},
         id: 'lead_1',
         partyId: 'party_1',
         productInterest: 'TERM_LIFE',
@@ -75,6 +77,7 @@ describe('AC-M04-08 Cadence policies', () => {
 
   describe('onCallOutcome - NO_ANSWER', () => {
     const lead: LeadProps = {
+      customFields: {},
       id: 'lead_1',
       partyId: 'party_1',
       productInterest: 'TERM_LIFE',
@@ -122,6 +125,7 @@ describe('AC-M04-08 Cadence policies', () => {
 
   describe('onCallOutcome - CALL_BACK', () => {
     const lead: LeadProps = {
+      customFields: {},
       id: 'lead_1',
       partyId: 'party_1',
       productInterest: 'TERM_LIFE',
@@ -163,6 +167,7 @@ describe('AC-M04-08 Cadence policies', () => {
 
   describe('onCallOutcome - other outcomes', () => {
     const lead: LeadProps = {
+      customFields: {},
       id: 'lead_1',
       partyId: 'party_1',
       productInterest: 'TERM_LIFE',
@@ -202,6 +207,7 @@ describe('AC-M04-08 Cadence policies', () => {
     it('calculates next day 10:00 IST correctly from evening UTC', () => {
       const eveningUtc = new Date('2026-10-03T18:00:00Z'); // 11:30 PM IST
       const lead: LeadProps = {
+      customFields: {},
         id: 'lead_1',
         partyId: 'party_1',
         productInterest: 'TERM_LIFE',
@@ -231,6 +237,7 @@ describe('AC-M04-08 Cadence policies', () => {
     it('calculates next day 10:00 IST correctly from early morning UTC', () => {
       const earlyUtc = new Date('2026-10-03T02:00:00Z'); // 7:30 AM IST
       const lead: LeadProps = {
+      customFields: {},
         id: 'lead_1',
         partyId: 'party_1',
         productInterest: 'TERM_LIFE',

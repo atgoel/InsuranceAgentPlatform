@@ -20,6 +20,7 @@ import {
 } from '../api';
 import { PartyHeader } from '../components/PartyHeader';
 import { PartyTabs } from '../components/PartyTabs';
+import { PartyCustomFields } from '../components/PartyCustomFields';
 import { RecordConsentSheet } from '../components/RecordConsentSheet';
 import '../styles/CustomerRecordScreen.css';
 
@@ -129,6 +130,8 @@ export function CustomerRecordScreen() {
       </button>
 
       <PartyHeader party={party} contactability={contactability} />
+
+      <PartyCustomFields party={party} onUpdated={(updated) => setDetail((prev) => (prev ? { ...prev, party: { ...prev.party, ...updated } } : prev))} />
 
       <PartyTabs
         activeTab={activeTab}

@@ -1,6 +1,6 @@
 import { Inject, Module, OnModuleInit, Provider } from '@nestjs/common';
 import { Pool } from 'pg';
-import { APP_POOL, CLOCK, KERNEL_OPTIONS, LOGGER, METRICS, PERMISSION_POLICY, PLATFORM_POOL, TENANT_RESOLVER, UNIT_OF_WORK } from '../../kernel/tokens';
+import { APP_POOL, CLOCK, KERNEL_OPTIONS, LOGGER, METRICS, CUSTOM_FIELD_DEFINITIONS, PERMISSION_POLICY, PLATFORM_POOL, TENANT_RESOLVER, UNIT_OF_WORK } from '../../kernel/tokens';
 import { AesGcmFieldCipher, fieldMasterKey } from '../../kernel/crypto/aes-gcm-field-cipher';
 import { KernelConfig } from '../../kernel/config';
 import { Clock } from '../../kernel/domain/clock';
@@ -10,7 +10,7 @@ import { UnitOfWork } from '../../kernel/persistence/unit-of-work';
 import { RolePermissionMatrix } from '../../kernel/tenancy/permissions';
 import { DelegatingTenantResolver } from '../../kernel/tenancy/tenant-resolver';
 import {
-  CONTENT_PROVISIONER, CRM_PROVISIONER, ContentProvisioner, CrmProvisioner, ENTITLEMENT_CHECKER, IDENTITY_PROVISIONER, IdentityProvisioner,
+  CONTENT_PROVISIONER, CRM_PROVISIONER, CUSTOM_FIELD_REPOSITORY, ContentProvisioner, CustomFieldRepository, CrmProvisioner, ENTITLEMENT_CHECKER, IDENTITY_PROVISIONER, IdentityProvisioner,
   OTP_GENERATOR, OTP_SENDER, PLAN_CATALOGUE, PROVISIONING_SAGA, PROVISIONING_STATE_REPOSITORY, ProvisioningStateRepository, SIGNUP_REPOSITORY, SignupRepository,
   TENANCY_OPTIONS, TENANT_DIRECTORY, TENANT_SETTINGS_REPOSITORY, TIE_UP_LIMIT_POLICY, TIE_UP_READER, TenancyOptions, TenantDirectory, TenantSettingsRepository,
 } from './application/ports';
@@ -30,6 +30,9 @@ import { UsageService } from './application/usage.service';
 import { OperatorTenantService, TENANT_RESOLVER_CACHE } from './application/operator-tenant.service';
 import { SoloSignupService } from './application/solo-signup.service';
 import { TrialService } from './application/trial.service';
+import { CustomFieldService } from './application/custom-field.service';
+import { InMemoryCustomFieldRepository } from './infrastructure/in-memory-custom-field.repository';
+import { PgCustomFieldRepository } from './infrastructure/pg-custom-field.repository';
 import {
   InMemoryProvisioningStateRepository, InMemorySignupRepository, InMemoryTenantDirectory, InMemoryTenantSettingsRepository,
 } from './infrastructure/in-memory-tenancy.repositories';
@@ -44,9 +47,9 @@ import { PublicTenantController } from './api/public-tenant.controller';
 
 /** Role → permission rows this module contributes to the policy (M01 §6.4). */
 export const TENANCY_PERMISSIONS: Record<string, string[]> = {
-  TENANT_ADMIN: ['tenant.read', 'tenant.tie_up.write', 'tenant.flag.write', 'tenant.brand.write', 'tenant.plan.write'],
+  TENANT_ADMIN: ['tenant.read', 'tenant.tie_up.write', 'tenant.flag.write', 'tenant.brand.write', 'tenant.plan.write', 'tenant.custom_field.write'],
   PRINCIPAL_OFFICER: ['tenant.read', 'tenant.tie_up.write', 'tenant.flag.write'],
-  SOLO_OWNER: ['tenant.read', 'tenant.brand.write', 'tenant.plan.write'],
+  SOLO_OWNER: ['tenant.read', 'tenant.brand.write', 'tenant.plan.write', 'tenant.custom_field.write'],
   BRANCH_MANAGER: ['tenant.read'],
   SALES_MANAGER: ['tenant.read'],
   SALESPERSON: ['tenant.read'],
@@ -75,6 +78,7 @@ function byPersistence(): Provider[] {
   return [
     pick<TenantDirectory>(TENANT_DIRECTORY, () => new InMemoryTenantDirectory(), (app, owner) => new PgTenantDirectory(app, owner)),
     pick<TenantSettingsRepository>(TENANT_SETTINGS_REPOSITORY, () => new InMemoryTenantSettingsRepository(), () => new PgTenantSettingsRepository()),
+    pick<CustomFieldRepository>(CUSTOM_FIELD_REPOSITORY, () => new InMemoryCustomFieldRepository(), () => new PgCustomFieldRepository()),
     pick<ProvisioningStateRepository>(PROVISIONING_STATE_REPOSITORY, () => new InMemoryProvisioningStateRepository(), (_app, owner) => new PgProvisioningStateRepository(owner)),
     pick<SignupRepository>(SIGNUP_REPOSITORY, () => new InMemorySignupRepository(), (_app, owner, config) => new PgSignupRepository(owner, new AesGcmFieldCipher(fieldMasterKey(config)))),
   ];
@@ -112,7 +116,8 @@ const resolverCache: Provider = {
 
 const services: Provider[] = [
   TenancyRecorder, ProvisionTenantService, TenantQueryService, TieUpService, FeatureFlagService, BrandKitService,
-  UsageService, OperatorTenantService, SoloSignupService, TrialService,
+  UsageService, OperatorTenantService, SoloSignupService, TrialService, CustomFieldService,
+  { provide: CUSTOM_FIELD_DEFINITIONS, useExisting: CUSTOM_FIELD_REPOSITORY },
   { provide: ENTITLEMENT_CHECKER, useExisting: UsageService },
   { provide: TIE_UP_READER, useExisting: TieUpService },
 ];
@@ -124,7 +129,7 @@ const services: Provider[] = [
 @Module({
   controllers: [OperatorTenantsController, TenantController, PublicTenantController],
   providers: [...adapters, saga, resolverCache, ...services],
-  exports: [ENTITLEMENT_CHECKER, TIE_UP_READER, TENANT_DIRECTORY, TENANT_SETTINGS_REPOSITORY, PLAN_CATALOGUE, TENANT_RESOLVER_CACHE],
+  exports: [CUSTOM_FIELD_DEFINITIONS, ENTITLEMENT_CHECKER, TIE_UP_READER, TENANT_DIRECTORY, TENANT_SETTINGS_REPOSITORY, PLAN_CATALOGUE, TENANT_RESOLVER_CACHE],
 })
 export class TenancyModule implements OnModuleInit {
   constructor(

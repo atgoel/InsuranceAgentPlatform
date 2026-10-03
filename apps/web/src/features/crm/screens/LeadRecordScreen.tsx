@@ -10,6 +10,7 @@ import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
 import { createCrmApi, type LeadDetailView, type LeadStage, type ProductLine, type Qualification, type LostReason } from '../api';
 import { LeadHeader } from '../components/LeadHeader';
+import { LeadCustomFields } from '../components/LeadCustomFields';
 import { StageBar } from '../components/StageBar';
 import { QualificationForm } from '../components/QualificationForm';
 import { ActivityComposer } from '../components/ActivityComposer';
@@ -131,6 +132,7 @@ export function LeadRecordScreen() {
     <main className="lead-record-screen" role="main">
       {actionError && <p role="alert" className="action-error">{t('crm.lead.action_failed', { reason: actionError })}</p>}
       <LeadHeader lead={lead} />
+      <LeadCustomFields lead={lead} onUpdated={setLead} />
 
       <div className="lead-content">
         <section className="stage-section">

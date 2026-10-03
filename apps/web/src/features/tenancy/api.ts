@@ -194,6 +194,52 @@ export interface SoloSignupVerifyResponse {
 
 // API functions using spec §6
 
+// Custom fields (CR-001; kernel M00 section 16.5)
+export const CUSTOM_FIELD_ENTITIES = ['party', 'lead', 'opportunity', 'held_policy', 'policy_sale', 'commission_entry'] as const;
+export type CustomFieldEntity = (typeof CUSTOM_FIELD_ENTITIES)[number];
+export type CustomFieldType = 'text' | 'number' | 'money' | 'date' | 'enum' | 'boolean';
+export type PiiClass = 'P0' | 'P1' | 'P2' | 'P3';
+export interface LocalisedLabel { en: string; hi?: string }
+export interface CustomFieldEnumOption { value: string; label: LocalisedLabel }
+export interface CustomFieldDefinition {
+  id: string;
+  entity: CustomFieldEntity;
+  key: string;
+  label: LocalisedLabel;
+  type: CustomFieldType;
+  enumOptions?: CustomFieldEnumOption[];
+  required: boolean;
+  piiClass: PiiClass;
+  reportable: boolean;
+  version: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+export type CustomFieldValue = string | number | boolean;
+export type CustomFieldValues = Record<string, CustomFieldValue>;
+export interface DefineCustomFieldInput {
+  entity: CustomFieldEntity;
+  key: string;
+  label: LocalisedLabel;
+  type: CustomFieldType;
+  enumOptions?: CustomFieldEnumOption[];
+  required?: boolean;
+  piiClass: PiiClass;
+  reportable?: boolean;
+}
+export interface ReviseCustomFieldInput {
+  label?: LocalisedLabel;
+  enumOptions?: CustomFieldEnumOption[];
+  required?: boolean;
+  reportable?: boolean;
+  active?: boolean;
+}
+export interface CustomFieldList {
+  items: CustomFieldDefinition[];
+  usage: { active: number; limit: number };
+}
+
 const newIdempotencyKey = () => {
   // Generate a simple UUID v4-like string
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -244,6 +290,18 @@ export function createTenancyApi(apiClient: ApiClient) {
 
     async updateBrandKit(props: BrandKitProps): Promise<BrandKitResponse> {
       return apiClient.put('/api/v1/tenant/brand-kit', props);
+    },
+
+    async listCustomFields(entity?: CustomFieldEntity): Promise<CustomFieldList> {
+      return apiClient.get('/api/v1/tenant/custom-fields', { query: { entity } });
+    },
+
+    async defineCustomField(input: DefineCustomFieldInput): Promise<CustomFieldDefinition> {
+      return apiClient.post('/api/v1/tenant/custom-fields', input, { idempotencyKey: newIdempotencyKey() });
+    },
+
+    async reviseCustomField(id: string, patch: ReviseCustomFieldInput, version: number): Promise<CustomFieldDefinition> {
+      return apiClient.patch(`/api/v1/tenant/custom-fields/${id}`, patch, { ifMatch: `"v${version}"` });
     },
 
     async startTrial(): Promise<TenantProfile> {

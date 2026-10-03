@@ -1,16 +1,17 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Put, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, Param, Post, Put, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { z } from 'zod';
 import { CurrentPrincipal, RequirePermission } from '../../../kernel/tenancy/decorators';
 import { Principal } from '../../../kernel/tenancy/principal';
 import { Idempotent } from '../../../kernel/idempotency/idempotency.interceptor';
 import { ZodValidationPipe } from '../../../kernel/http/zod-validation.pipe';
+import { etagFor, parseIfMatch } from '../../../kernel/http/if-match';
 import { LeadCaptureService } from '../application/lead-capture.service';
 import { LeadService } from '../application/lead.service';
 import { ActivityService } from '../application/activity.service';
 import { ConversionService } from '../application/conversion.service';
 import {
-  ActivitySchema, AssignSchema, BulkAssignSchema, CaptureLeadSchema, ConversionSchema, ListLeadsQuery, PartyLinkSchema, QualificationSchema,
+  ActivitySchema, AssignSchema, BulkAssignSchema, CaptureLeadSchema, ConversionSchema, ListLeadsQuery, PartyLinkSchema, QualificationSchema, ReplaceCustomFieldsSchema,
   StageTransitionSchema, TemperatureSchema,
 } from './schemas';
 
@@ -75,6 +76,17 @@ export class LeadsController {
   @RequirePermission('crm.lead.write')
   qualify(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Body(new ZodValidationPipe(QualificationSchema)) body: z.infer<typeof QualificationSchema>) {
     return this.leads.qualify(p, id, body);
+  }
+
+  @Put(':id/custom-fields')
+  @RequirePermission('crm.lead.write')
+  async replaceCustomFields(
+    @CurrentPrincipal() p: Principal, @Param('id') id: string, @Headers('if-match') ifMatch: string | undefined,
+    @Body(new ZodValidationPipe(ReplaceCustomFieldsSchema)) body: z.infer<typeof ReplaceCustomFieldsSchema>, @Res({ passthrough: true }) res: Response,
+  ) {
+    const view = await this.leads.replaceCustomFields(p, id, body.customFields, parseIfMatch(ifMatch));
+    res.setHeader('ETag', etagFor(view.version));
+    return view;
   }
 
   @Put(':id/temperature')

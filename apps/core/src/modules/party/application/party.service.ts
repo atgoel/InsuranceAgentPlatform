@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConflictError, NotFoundError, PreconditionFailedError } from '../../../kernel/errors/domain-errors';
+import { CustomFieldDefinition, CustomFieldValidator, CustomFieldValues } from '../../../kernel/custom-fields';
 import { Principal } from '../../../kernel/tenancy/principal';
 import { Party } from '../domain/party';
 import { Channel, ContactPointFactory } from '../domain/contact-point';
@@ -42,9 +43,11 @@ export class PartyService {
     this.contacts = new ContactPointFactory(cipher);
   }
 
-  create(principal: Principal, input: CreatePartyInput, onDuplicate: 'create' | 'reject'): Promise<{ party: Party; candidates: DuplicateCandidate[] }> {
+  create(principal: Principal, input: Omit<CreatePartyInput, 'customFields'> & { customFields?: unknown }, onDuplicate: 'create' | 'reject'): Promise<{ party: Party; candidates: DuplicateCandidate[] }> {
     return this.ctx.uow.run(principal.tenantId, async (tx) => {
-      const prepared = await this.writer.prepare(tx, input, { memberId: principal.memberId, orgUnitId: principal.orgUnitId, capturedBy: principal.memberId ?? 'customer' });
+      // Validated before anything is written (AC-CR001-08); absent → {}.
+      const customFields = input.customFields === undefined ? undefined : CustomFieldValidator.validate(await this.ctx.defs.activeFor(tx, 'party'), input.customFields);
+      const prepared = await this.writer.prepare(tx, { ...input, customFields }, { memberId: principal.memberId, orgUnitId: principal.orgUnitId, capturedBy: principal.memberId ?? 'customer' });
       const strong = prepared.candidates.filter((c) => c.score >= REJECT_THRESHOLD);
       if (onDuplicate === 'reject' && strong.length > 0) {
         throw new ConflictError('possible_duplicate', 'A matching customer already exists', {
@@ -86,6 +89,32 @@ export class PartyService {
       });
       return party;
     });
+  }
+
+  /**
+   * Full replace of the custom-field set (M03 §11). `values` are validated against the active 'party' definitions; keys of
+   * definitions that are no longer active are hidden but preserved. Audit carries keys only, never values. No domain event.
+   */
+  replaceCustomFields(principal: Principal, id: string, values: unknown, expectedVersion: number): Promise<Party> {
+    return this.ctx.uow.run(principal.tenantId, async (tx) => {
+      const party = await this.requireInScope(tx, principal, id);
+      if (party.props.version !== expectedVersion) throw new PreconditionFailedError('version_mismatch', 'The customer was changed by someone else; reload and retry');
+      const defs = await this.ctx.defs.activeFor(tx, 'party');
+      const validated = CustomFieldValidator.validate(defs, values);
+      const active = new Set(defs.map((d) => d.key));
+      const preserved: CustomFieldValues = Object.fromEntries(Object.entries(party.props.customFields).filter(([k]) => !active.has(k)));
+      party.replaceCustomFields({ ...preserved, ...validated }, this.ctx.clock.now());
+      await this.parties.save(tx, party);
+      await this.ctx.recorder.record(tx, {
+        audit: { action: 'party.custom_fields.replaced', entityType: 'party', entityId: id, metadata: { keys: Object.keys(validated) } },
+      });
+      return party;
+    });
+  }
+
+  /** Active 'party' definitions, for building views (detail shows visible values). */
+  activeDefinitions(principal: Principal): Promise<CustomFieldDefinition[]> {
+    return this.ctx.uow.run(principal.tenantId, (tx) => this.ctx.defs.activeFor(tx, 'party'));
   }
 
   /** Out-of-scope parties are reported as missing so their existence is not revealed (AC-M03-13). */

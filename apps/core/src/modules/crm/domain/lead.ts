@@ -1,4 +1,5 @@
 import { ValidationError, BusinessRuleError } from '../../../kernel/errors/domain-errors';
+import type { CustomFieldValues } from '../../../kernel/custom-fields';
 import type { StageRuleSet, StageRuleContext } from './stage-rules';
 
 export type LeadStage = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'CONVERTED' | 'LOST';
@@ -80,6 +81,8 @@ export interface LeadProps {
   slaBreachNotifiedAt?: string;
   stageHistory: StageHistoryEntry[];
   convertedOpportunityId?: string;
+  /** CR-001 custom-field values (descriptive only; never projected to Twenty, never logged). */
+  customFields: CustomFieldValues;
   syncState: 'synced' | 'pending' | 'failed' | 'local';
   externalRef?: string;
   createdAt: string;
@@ -113,6 +116,7 @@ export class Lead {
     attribution: Attribution;
     pincode?: string;
     language?: string;
+    customFields?: CustomFieldValues;
     now: Date;
     by: string;
   }): Lead {
@@ -131,6 +135,7 @@ export class Lead {
       temperature: 'WARM',
       attribution: input.attribution,
       qualification: {},
+      customFields: { ...(input.customFields ?? {}) },
       stageHistory: [{ to: 'NEW', at: now, by: input.by }],
       syncState: 'local',
       createdAt: now,
@@ -140,7 +145,7 @@ export class Lead {
   }
 
   static restore(props: LeadProps): Lead {
-    return new Lead(props);
+    return new Lead({ ...props, customFields: props.customFields ?? {} });
   }
 
   private constructor(props: LeadProps) {
@@ -269,6 +274,15 @@ export class Lead {
 
     this._props.stage = 'CONVERTED';
     this._props.convertedOpportunityId = opportunityId;
+    this._props.updatedAt = now.toISOString();
+  }
+
+  /**
+   * Replaces the stored custom-field set with `values`. LeadService passes the validated values merged with the hidden keys of
+   * inactive definitions (M00 section 16.5). Bumps updatedAt; the version moves on save like every other mutation.
+   */
+  replaceCustomFields(values: CustomFieldValues, now: Date): void {
+    this._props.customFields = { ...values };
     this._props.updatedAt = now.toISOString();
   }
 

@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { NotFoundError } from '../../../kernel/errors/domain-errors';
+import { CustomFieldValidator } from '../../../kernel/custom-fields';
+import { NotFoundError, PreconditionFailedError } from '../../../kernel/errors/domain-errors';
 import { DomainEvent } from '../../../kernel/domain/domain-event';
 import { Principal } from '../../../kernel/tenancy/principal';
 import { ProductLine } from '../domain/lead';
@@ -45,6 +46,34 @@ export class OpportunityService implements OpportunityLookup {
         stats: { openCount: open.length, openExpectedPremiumPaise: sumPaise(open), medianDaysToIssue: medianDaysToIssue(all), winRate90d: winRate(all, now) },
       };
     });
+  }
+
+  /** Detail with custom fields (visible, unmasked); out of scope or unknown -> 404. */
+  get(principal: Principal, id: string) {
+    return this.ctx.uow.run(principal.tenantId, async (tx) => this.detail(tx, await this.requireInScope(tx, principal, id)));
+  }
+
+  /** Full replace (M04 section 11.1): scope 404, version 412, validate 400, audit keys only; hidden keys of inactive definitions are preserved. */
+  replaceCustomFields(principal: Principal, id: string, values: unknown, expectedVersion: number) {
+    return this.ctx.uow.run(principal.tenantId, async (tx) => {
+      const opp = await this.requireInScope(tx, principal, id);
+      if (opp.props.version !== expectedVersion) throw new PreconditionFailedError('version_mismatch', 'The opportunity was changed by someone else; reload and retry');
+      const defs = await this.ctx.defs.activeFor(tx, 'opportunity');
+      const validated = CustomFieldValidator.validate(defs, values);
+      const active = new Set(defs.map((d) => d.key));
+      const preserved = Object.fromEntries(Object.entries(opp.props.customFields).filter(([k]) => !active.has(k)));
+      opp.replaceCustomFields({ ...preserved, ...validated });
+      await (await this.ports.forTenant(tx.tenantId)).saveOpportunity(tx, opp);
+      await this.ctx.recorder.record(tx, {
+        audit: { action: 'crm.custom_fields.replaced', entityType: 'opportunity', entityId: id, metadata: { subjectType: 'opportunity', subjectId: id, keys: Object.keys(validated) } },
+      });
+      return this.detail(tx, opp);
+    });
+  }
+
+  private async detail(tx: Transaction, opp: Opportunity) {
+    const customFields = CustomFieldValidator.visible(await this.ctx.defs.activeFor(tx, 'opportunity'), opp.props.customFields);
+    return { ...opportunityView(opp, this.ctx.clock.now()), customFields };
   }
 
   move(principal: Principal, id: string, to: OpportunityStage) {
@@ -115,7 +144,9 @@ export class OpportunityService implements OpportunityLookup {
 }
 
 export function opportunityView(o: Opportunity, now: Date) {
-  const p = o.props;
+  // Custom fields are deliberately left out of board/move views (they would be unmasked); the detail view adds the visible set.
+  const { customFields, ...p } = o.props;
+  void customFields;
   return { ...p, expectedPremium: p.expectedPremium.toJSON(), ageInStageDays: o.ageInStageDays(now) };
 }
 

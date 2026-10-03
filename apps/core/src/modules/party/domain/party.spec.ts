@@ -440,3 +440,48 @@ describe('AC-M03-01 Party aggregate', () => {
     });
   });
 });
+
+describe('AC-CR001-08 Party custom fields', () => {
+  const now = new Date('2026-10-03T00:00:00Z');
+  const later = new Date('2026-10-04T00:00:00Z');
+  const cp: ContactPoint = { channel: 'MOBILE', valueEnc: 'enc', valueHash: 'hash_cf', masked: '+91-XXXXXX1234', isPrimary: true };
+  const make = (customFields?: Record<string, string | number | boolean>) =>
+    Party.create({ id: 'pty_cf', kind: 'PERSON', displayName: 'Meera Nair', contactPoints: [cp], source: { kind: 'MANUAL' }, customFields, now });
+
+  it('AC-CR001-08 defaults customFields to {} and stores a copy of the given values', () => {
+    expect(make().props.customFields).toEqual({});
+    const values = { occupation: 'Architect' };
+    const party = make(values);
+    expect(party.props.customFields).toEqual({ occupation: 'Architect' });
+    values.occupation = 'changed';
+    expect(party.props.customFields).toEqual({ occupation: 'Architect' });
+  });
+
+  it('AC-CR001-08 replaceCustomFields replaces the whole set and bumps updatedAt', () => {
+    const party = make({ occupation: 'Architect', nri: false });
+    party.replaceCustomFields({ occupation: 'Doctor' }, later);
+    expect(party.props.customFields).toEqual({ occupation: 'Doctor' });
+    expect(party.props.updatedAt).toBe(later.toISOString());
+  });
+
+  it('AC-CR001-08 merge copies only the keys the survivor lacks and reversal removes exactly those', () => {
+    const survivor = make({ occupation: 'Architect' });
+    const copied = survivor.absorbCustomFields({ occupation: 'Clerk', income_paise: 5_000_000 }, later);
+    expect(copied).toEqual(['income_paise']);
+    expect(survivor.props.customFields).toEqual({ occupation: 'Architect', income_paise: 5_000_000 });
+    survivor.releaseCustomFields(copied, later);
+    expect(survivor.props.customFields).toEqual({ occupation: 'Architect' });
+  });
+
+  it('AC-CR001-08 restore of a legacy row without customFields yields {}', () => {
+    const { customFields: _dropped, ...rest } = make({ a: 'b' }).props;
+    expect(_dropped).toEqual({ a: 'b' });
+    expect(Party.restore(rest as never).props.customFields).toEqual({});
+  });
+
+  it('AC-CR001-08 erase clears custom fields', () => {
+    const party = make({ occupation: 'Architect' });
+    party.erase(later);
+    expect(party.props.customFields).toEqual({});
+  });
+});

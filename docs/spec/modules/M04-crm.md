@@ -460,3 +460,40 @@ Frontend
 - **AC-M04-28** Tasks and My tasks: buckets, complete with outcome, type filters; Routing rules: edit, test a lead shows who and why, capacity table.
 - **AC-M04-29** Today (mobile): my-work list with one-tap actions, EN/हि, offline banner, queued log actions replayed with the same `clientRef`.
 - **AC-M04-30** Lead import wizard: mapping, preview counts, rejected-row download, commit result with batch id.
+
+## 11. CR-001 additions — custom fields on leads and opportunities, attribution alignment
+
+Kernel contract: M00 §16.5; definitions from M01 (`CUSTOM_FIELD_DEFINITIONS`, entities `lead`, `opportunity`).
+
+### 11.1 Custom fields
+- Domain: `LeadProps.customFields` and `OpportunityProps.customFields` (`CustomFieldValues`, default `{}`); `replaceCustomFields(values, now)` on both aggregates (keys of inactive definitions preserved; bumps `updatedAt`/version as other mutations do).
+- `LeadCaptureService.capture`: `CaptureLeadInput.customFields?` accepted on the authenticated `POST /leads` only and validated against `lead` definitions before anything is written; `/public/leads` and lead imports never set custom fields (start as `{}`); a deduplicated capture does not change the existing lead's values.
+- `LeadService.replaceCustomFields(principal, id, values, expectedVersion)` and `OpportunityService.replaceCustomFields(...)`: record scope (out of scope → 404), version (412), validate, save, audit `crm.custom_fields.replaced` with `{ subjectType, subjectId, keys }` only.
+- `OpportunityService.get(principal, id)` → `OpportunityView & { customFields }` (scoped; 404).
+- Views: `LeadDetailView.customFields` and the opportunity detail use `CustomFieldValidator.visible`; `LeadListItem.customFields` uses `CustomFieldValidator.mask`.
+- Conversion does not copy lead values to the opportunity (different definitions).
+- M04b: the Twenty projection never contains custom-field values (`TwentyProjector` field lists unchanged); logs carry keys only.
+
+| Method | Path | Permission | Request / Response |
+|---|---|---|---|
+| POST ✱ | `/leads` | `crm.lead.write` | `CaptureLeadInput` gains `customFields?: Record<string, string \| number \| boolean \| null>`; 400 `invalid_custom_fields` |
+| PUT | `/leads/{id}/custom-fields` (`If-Match`) | `crm.lead.write` | `{ customFields }` → `LeadDetailView` + `ETag`; 400 `invalid_custom_fields`; 404; 412 |
+| GET | `/opportunities/{id}` | `crm.opportunity.read` | `OpportunityView & { customFields }` + `ETag`; 404 |
+| PUT | `/opportunities/{id}/custom-fields` (`If-Match`) | `crm.opportunity.write` | `{ customFields }` → `OpportunityView & { customFields }` + `ETag`; 400; 404; 412 |
+
+DDL — `apps/core/migrations/042_crm_custom_fields.sql`:
+```sql
+alter table crm_lead add column if not exists custom_fields jsonb not null default '{}'::jsonb;
+alter table crm_lead add column if not exists custom_schema_version int not null default 1;
+alter table crm_opportunity add column if not exists custom_fields jsonb not null default '{}'::jsonb;
+alter table crm_opportunity add column if not exists custom_schema_version int not null default 1;
+```
+
+### 11.2 Attribution alignment (CR-001 step 5)
+Platform sales (M09) and imported policies (M07) record `business_source` (kernel `BusinessSource`) and `referred_by`. For platform sales, `businessSource = businessSourceForLeadSource(lead.attribution.source)` and `referredBy.partyId = lead.attribution.referrerPartyId` (name = the referrer party's display name). M04 exposes this through `OPPORTUNITY_LOOKUP` by adding `attribution?: { source: LeadSource; referrerPartyId?: string }` (from the converted lead; absent for opportunities without a lead). No change to lead capture. This snapshot field is added together with its consumer in the M09 build (no unused code now).
+
+### 11.3 Frontend
+`CustomFieldsSection` (shared component in `apps/web/src/features/party/components/`, reused by CRM): read view of label/value pairs (localised labels, money as ₹, enum labels, P2 shown as entered on detail screens) and an edit sheet generating inputs per type, required markers and inline `invalid_custom_fields` errors, saving with `If-Match`. Shown on `/crm/leads/:id` (lead entity) and `/crm/customers/:id` (party entity) when the tenant has active definitions for the entity; hidden otherwise.
+
+- **AC-CR001-05** (M04 part) With P0/P1/P2 custom-field values on a lead, opportunity and party, the Twenty projection payloads contain none of them and no log line contains a value.
+- **AC-CR001-08** (M04 part) `POST /leads` with valid `customFields` stores them; invalid → 400 before any write (no party/lead created); `PUT /leads/{id}/custom-fields` and `PUT /opportunities/{id}/custom-fields` replace values with `If-Match`; `GET /opportunities/{id}` returns them; list masks P2; tenant isolation; Postgres persistence *(integration)*. Web: the section renders values per type and saves edits; invalid fields are shown inline.

@@ -58,7 +58,7 @@ interface LeadRow {
   id: string; party_id: string; product_interest: LeadProps['productInterest']; pincode: string | null; language: string | null; stage: LeadProps['stage']; temperature: LeadProps['temperature'];
   owner_member_id: string | null; org_unit_id: string | null; routed_by_rule_id: string | null; attribution: Attribution; qualification: LeadProps['qualification']; lost_reason: LeadProps['lostReason'] | null;
   sla_due_at: Date | null; first_responded_at: Date | null; sla_breach_notified_at: Date | null; stage_history: LeadProps['stageHistory']; converted_opportunity_id: string | null;
-  sync_state: LeadProps['syncState']; external_ref: string | null; created_at: Date; updated_at: Date; version: number;
+  sync_state: LeadProps['syncState']; external_ref: string | null; created_at: Date; updated_at: Date; version: number; custom_fields: LeadProps['customFields'];
 }
 
 const toLead = (r: LeadRow): Lead => Lead.restore({
@@ -66,7 +66,7 @@ const toLead = (r: LeadRow): Lead => Lead.restore({
   ...opt('ownerMemberId', r.owner_member_id), ...opt('orgUnitId', r.org_unit_id), ...opt('routedByRuleId', r.routed_by_rule_id), attribution: r.attribution, qualification: r.qualification,
   ...opt('lostReason', r.lost_reason), ...opt('slaDueAt', iso(r.sla_due_at)), ...opt('firstRespondedAt', iso(r.first_responded_at)), ...opt('slaBreachNotifiedAt', iso(r.sla_breach_notified_at)),
   stageHistory: r.stage_history, ...opt('convertedOpportunityId', r.converted_opportunity_id), syncState: r.sync_state, ...opt('externalRef', r.external_ref),
-  createdAt: r.created_at.toISOString(), updatedAt: r.updated_at.toISOString(), version: r.version,
+  createdAt: r.created_at.toISOString(), updatedAt: r.updated_at.toISOString(), version: r.version, customFields: r.custom_fields ?? {},
 });
 
 const nul = <T>(v: T | undefined): T | null => v ?? null;
@@ -74,7 +74,7 @@ const nul = <T>(v: T | undefined): T | null => v ?? null;
 function leadParams(tenantId: string, p: Readonly<LeadProps>): unknown[] {
   return [p.id, tenantId, p.partyId, p.productInterest, nul(p.pincode), nul(p.language), p.stage, p.temperature, nul(p.ownerMemberId), nul(p.orgUnitId), nul(p.routedByRuleId),
     json(p.attribution), json(p.qualification), nul(p.lostReason), nul(p.slaDueAt), nul(p.firstRespondedAt), nul(p.slaBreachNotifiedAt), json(p.stageHistory),
-    nul(p.convertedOpportunityId), p.syncState, nul(p.externalRef), p.createdAt, p.updatedAt, p.version + 1];
+    nul(p.convertedOpportunityId), p.syncState, nul(p.externalRef), p.createdAt, p.updatedAt, p.version + 1, json(p.customFields)];
 }
 
 const LEAD_SORT: Record<NonNullable<LeadFilter['sort']>, string> = {
@@ -99,13 +99,13 @@ export class PgLeadRepository implements LeadRepository {
     const p = lead.props;
     const { rowCount } = await pg(tx).query(
       `insert into crm_lead (id, tenant_id, party_id, product_interest, pincode, language, stage, temperature, owner_member_id, org_unit_id, routed_by_rule_id, attribution, qualification, lost_reason,
-         sla_due_at, first_responded_at, sla_breach_notified_at, stage_history, converted_opportunity_id, sync_state, external_ref, created_at, updated_at, version, assigned_at)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13::jsonb,$14,$15,$16,$17,$18::jsonb,$19,$20,$21,$22,$23,$24, case when $9::text is null then null else $23::timestamptz end)
+         sla_due_at, first_responded_at, sla_breach_notified_at, stage_history, converted_opportunity_id, sync_state, external_ref, created_at, updated_at, version, custom_fields, assigned_at)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13::jsonb,$14,$15,$16,$17,$18::jsonb,$19,$20,$21,$22,$23,$24,$25::jsonb, case when $9::text is null then null else $23::timestamptz end)
        on conflict (id) do update set party_id = excluded.party_id, product_interest = excluded.product_interest, pincode = excluded.pincode, language = excluded.language, stage = excluded.stage,
          temperature = excluded.temperature, owner_member_id = excluded.owner_member_id, org_unit_id = excluded.org_unit_id, routed_by_rule_id = excluded.routed_by_rule_id,
          attribution = excluded.attribution, qualification = excluded.qualification, lost_reason = excluded.lost_reason, sla_due_at = excluded.sla_due_at, first_responded_at = excluded.first_responded_at,
          sla_breach_notified_at = excluded.sla_breach_notified_at, stage_history = excluded.stage_history, converted_opportunity_id = excluded.converted_opportunity_id,
-         updated_at = excluded.updated_at, version = excluded.version,
+         updated_at = excluded.updated_at, version = excluded.version, custom_fields = excluded.custom_fields,
          assigned_at = case when excluded.owner_member_id is not distinct from crm_lead.owner_member_id then crm_lead.assigned_at
                             when excluded.owner_member_id is null then null else excluded.updated_at end
        where crm_lead.version = excluded.version - 1`,
@@ -274,13 +274,13 @@ export class PgTaskRepository implements TaskRepository {
 interface OpportunityRow {
   id: string; party_id: string; lead_id: string | null; product_interest: OpportunityProps['productInterest']; title: string; expected_premium_paise: string; currency: string;
   stage: OpportunityProps['stage']; owner_member_id: string; org_unit_id: string | null; attribution: Attribution | null; insurer_name: string | null; lost_reason: OpportunityProps['lostReason'] | null;
-  issued_policy_sale_id: string | null; stage_entered_at: Date; created_at: Date; version: number;
+  issued_policy_sale_id: string | null; stage_entered_at: Date; created_at: Date; version: number; custom_fields: OpportunityProps['customFields'];
 }
 
 const toOpportunity = (r: OpportunityRow): Opportunity => Opportunity.restore({
   id: r.id, partyId: r.party_id, ...opt('leadId', r.lead_id), productInterest: r.product_interest, title: r.title, expectedPremium: Money.ofPaise(Number(r.expected_premium_paise)),
   stage: r.stage, ownerMemberId: r.owner_member_id, ...opt('orgUnitId', r.org_unit_id), ...opt('attribution', r.attribution), ...opt('insurerName', r.insurer_name), ...opt('lostReason', r.lost_reason),
-  ...opt('issuedPolicySaleId', r.issued_policy_sale_id), stageEnteredAt: r.stage_entered_at.toISOString(), createdAt: r.created_at.toISOString(), version: r.version,
+  ...opt('issuedPolicySaleId', r.issued_policy_sale_id), stageEnteredAt: r.stage_entered_at.toISOString(), createdAt: r.created_at.toISOString(), version: r.version, customFields: r.custom_fields ?? {},
 });
 
 export class PgOpportunityRepository implements OpportunityRepository {
@@ -293,15 +293,15 @@ export class PgOpportunityRepository implements OpportunityRepository {
     const p = o.props;
     const { rowCount } = await pg(tx).query(
       `insert into crm_opportunity (id, tenant_id, party_id, lead_id, product_interest, title, expected_premium_paise, currency, stage, owner_member_id, org_unit_id, attribution, insurer_name, lost_reason,
-         issued_policy_sale_id, stage_entered_at, created_at, version)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13,$14,$15,$16,$17,$18)
+         issued_policy_sale_id, stage_entered_at, created_at, version, custom_fields)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13,$14,$15,$16,$17,$18,$19::jsonb)
        on conflict (id) do update set party_id = excluded.party_id, lead_id = excluded.lead_id, product_interest = excluded.product_interest, title = excluded.title,
          expected_premium_paise = excluded.expected_premium_paise, currency = excluded.currency, stage = excluded.stage, owner_member_id = excluded.owner_member_id, org_unit_id = excluded.org_unit_id,
          attribution = excluded.attribution, insurer_name = excluded.insurer_name, lost_reason = excluded.lost_reason, issued_policy_sale_id = excluded.issued_policy_sale_id,
-         stage_entered_at = excluded.stage_entered_at, version = excluded.version
+         stage_entered_at = excluded.stage_entered_at, version = excluded.version, custom_fields = excluded.custom_fields
        where crm_opportunity.version = excluded.version - 1`,
       [p.id, tx.tenantId, p.partyId, p.leadId ?? null, p.productInterest, p.title, p.expectedPremium.paise, p.expectedPremium.currency, p.stage, p.ownerMemberId, p.orgUnitId ?? null,
-        p.attribution ? json(p.attribution) : null, p.insurerName ?? null, p.lostReason ?? null, p.issuedPolicySaleId ?? null, p.stageEnteredAt, p.createdAt, p.version + 1]);
+        p.attribution ? json(p.attribution) : null, p.insurerName ?? null, p.lostReason ?? null, p.issuedPolicySaleId ?? null, p.stageEnteredAt, p.createdAt, p.version + 1, json(p.customFields)]);
     if (rowCount === 0) throw new PreconditionFailedError('version_mismatch', 'The opportunity was changed by someone else; reload and retry');
     o.markSaved();
   }

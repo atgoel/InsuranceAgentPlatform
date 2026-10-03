@@ -352,3 +352,27 @@ Logs never contain raw contact values: the kernel redactor masks them, and servi
 - **AC-M03-15** Customers screen: search, segment chips, grid with masked mobiles, household panel with roles, and the shared-number note.
 - **AC-M03-16** Customer record screen: header with preferences and consent notice version, consent tab with granted/withdrawn chips, record-consent sheet (notice version shown), WhatsApp/Call disabled with the contactability reason when denied.
 - **AC-M03-17** Duplicate queue: compare with per-field survivor choice, merge confirmation mentioning 30-day reversibility, "Not a duplicate", and the empty state.
+
+## 11. CR-001 additions — custom fields on parties
+
+Kernel contract: M00 §16.5; definitions from M01 (`CUSTOM_FIELD_DEFINITIONS`, entity `party`).
+
+- Domain: `PartyProps.customFields: CustomFieldValues` (default `{}`); `Party.replaceCustomFields(values: CustomFieldValues, now: Date): void` (values already validated; keys of definitions that are not active are preserved from the current set; bumps `updatedAt`). `Party.create` takes optional `customFields` (validated by the service).
+- `PartyService.create`: when `customFields` is present, validate with `CustomFieldValidator.validate(await defs.activeFor(tx, 'party'), input.customFields)`; absent → `{}` (also for `PartyFacade.findOrCreate` from leads/imports).
+- `PartyService.replaceCustomFields(principal, id, values, expectedVersion)`: scope check as `get` (out of scope → 404); version check (412); validate; save; audit `party.custom_fields.replaced` with keys only (never values); no domain event.
+- Views: `PartyView.customFields` = `CustomFieldValidator.visible(...)` (unmasked, active definitions only); `PartyListItem.customFields` = `CustomFieldValidator.mask(...)` (P2 → `'****'`).
+- Merge: the survivor keeps its values; keys it lacks are copied from the merged party; reversal restores both sets.
+- Never projected to Twenty, never logged.
+
+| Method | Path | Permission | Request / Response |
+|---|---|---|---|
+| POST ✱ | `/parties` | `party.write` | body gains `customFields?: Record<string, string \| number \| boolean \| null>`; 400 `invalid_custom_fields` with `errors[{ path: 'customFields.<key>', code }]` |
+| PUT | `/parties/{id}/custom-fields` (`If-Match`) | `party.write` | `{ customFields: Record<string, string \| number \| boolean \| null> }` → `PartyView` + `ETag`; 400 `invalid_custom_fields`; 404; 412 |
+
+DDL — `apps/core/migrations/032_party_custom_fields.sql`:
+```sql
+alter table party add column if not exists custom_fields jsonb not null default '{}'::jsonb;
+alter table party add column if not exists custom_schema_version int not null default 1;   -- envelope version of custom_fields (CR-001 §3.3)
+```
+
+- **AC-CR001-08** (M03) A party created with `customFields` stores validated values; `PUT /parties/{id}/custom-fields` replaces them (stale `If-Match` → 412, unknown key / wrong type / required missing / PAN in text → 400 `invalid_custom_fields` naming the field); the detail view shows values, the list masks P2 values; values are tenant-isolated and persisted on Postgres *(integration)*.

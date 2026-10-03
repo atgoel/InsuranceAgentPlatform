@@ -13,6 +13,10 @@ export const ConsentSchema = z
   })
   .strict();
 
+/** CR-001: values are type-checked against the tenant's definitions by the service (invalid_custom_fields). */
+export const CustomFieldsBody = z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]));
+export const ReplaceCustomFieldsSchema = z.object({ customFields: CustomFieldsBody }).strict();
+
 export const CreatePartySchema = z
   .object({
     kind: z.enum(['PERSON', 'ORGANISATION']),
@@ -24,6 +28,7 @@ export const CreatePartySchema = z
     preferredChannel: PreferredChannel.optional(),
     tags: z.array(z.string().min(1).max(40)).max(20).optional(),
     consent: z.array(ConsentSchema).max(10).optional(),
+    customFields: CustomFieldsBody.optional(),
     onDuplicate: z.enum(['create', 'reject']).default('create'),
   })
   .strict();

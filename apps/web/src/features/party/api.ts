@@ -1,4 +1,5 @@
 import { ApiClient } from '../../lib/api/api-client';
+import type { CustomFieldValues } from '../tenancy/api';
 
 // Party types from spec §3
 export type PartyKind = 'PERSON' | 'ORGANISATION';
@@ -31,6 +32,8 @@ export interface PartyView {
   status: PartyStatus;
   createdAt: string;
   version: number;
+  /** Absent on payloads from before CR-001. */
+  customFields?: CustomFieldValues;
 }
 
 export interface PartyListItem {
@@ -152,6 +155,10 @@ export function createPartyApi(apiClient: ApiClient) {
       }
     > {
       return apiClient.get(`/api/v1/parties/${id}`);
+    },
+
+    async replacePartyCustomFields(id: string, customFields: Record<string, string | number | boolean | null>, version: number): Promise<PartyView> {
+      return apiClient.put(`/api/v1/parties/${id}/custom-fields`, { customFields }, { ifMatch: `"v${version}"` });
     },
 
     // Contactability check

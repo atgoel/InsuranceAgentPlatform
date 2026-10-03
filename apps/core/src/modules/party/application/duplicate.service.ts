@@ -81,6 +81,7 @@ export class DuplicateService {
     const now = this.ctx.clock.now();
     const { survivor, merged } = MergePlan.build(a, b, choices, survivorSide).apply(now);
     const mergeId = this.ctx.ids.next('mrg');
+    const customFieldKeys = survivor.absorbCustomFields(merged.props.customFields, now);
     const roleLinkKeys = await this.roles.repoint(tx, merged.props.id, survivor.props.id);
     const consents = await this.copyConsents(tx, merged.props.id, survivor.props.id, mergeId);
     const household = await this.moveHousehold(tx, merged.props.id, survivor.props.id);
@@ -89,7 +90,7 @@ export class DuplicateService {
     await this.parties.save(tx, merged);
     const record: MergeRecord = {
       id: mergeId, survivorId: survivor.props.id, mergedId: merged.props.id, choices,
-      movedLinks: { roleLinks: roleLinkKeys.length, consents, household: household?.id, householdRelation: household?.relation, roleLinkKeys },
+      movedLinks: { roleLinks: roleLinkKeys.length, consents, household: household?.id, householdRelation: household?.relation, roleLinkKeys, customFieldKeys },
       mergedAt: now.toISOString(), mergedBy, reversibleUntil: new Date(now.getTime() + REVERSIBLE_DAYS * DAY_MS).toISOString(),
     };
     await this.duplicates.saveMerge(tx, record);
@@ -119,6 +120,12 @@ export class DuplicateService {
       const merged = await this.requireParty(tx, record.mergedId);
       merged.restoreFromMerge(now);
       await this.parties.save(tx, merged);
+      const customFieldKeys = record.movedLinks.customFieldKeys ?? [];
+      if (customFieldKeys.length > 0) {
+        const survivor = await this.requireParty(tx, record.survivorId);
+        survivor.releaseCustomFields(customFieldKeys, now);
+        await this.parties.save(tx, survivor);
+      }
       await this.roles.repoint(tx, record.survivorId, record.mergedId, record.movedLinks.roleLinkKeys ?? []);
       if (record.movedLinks.household) await this.swapHouseholdMember(tx, record.movedLinks.household, record.survivorId, record.mergedId);
       await this.duplicates.saveMerge(tx, { ...record, reversedAt: now.toISOString() });

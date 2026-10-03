@@ -13,6 +13,7 @@ import { CrmMode } from '../domain/tenant';
 import { Capability, UsageMetric } from '../domain/plan';
 import { FeatureFlagKey } from '../domain/feature-flags';
 import { PhoneNumber } from '../../../kernel/domain/phone-number';
+import { CustomFieldDefinition, CustomFieldDefinitionReader } from '../../../kernel/custom-fields';
 
 export const TENANT_DIRECTORY = Symbol('TENANT_DIRECTORY');
 export const TENANT_SETTINGS_REPOSITORY = Symbol('TENANT_SETTINGS_REPOSITORY');
@@ -27,6 +28,7 @@ export const PLAN_CATALOGUE = Symbol('PLAN_CATALOGUE');
 export const TIE_UP_LIMIT_POLICY = Symbol('TIE_UP_LIMIT_POLICY');
 export const TIE_UP_READER = Symbol('TIE_UP_READER');
 export const ENTITLEMENT_CHECKER = Symbol('ENTITLEMENT_CHECKER');
+export const CUSTOM_FIELD_REPOSITORY = Symbol('CUSTOM_FIELD_REPOSITORY');
 export const TENANCY_OPTIONS = Symbol('TENANCY_OPTIONS');
 export const PROVISIONING_SAGA = Symbol('PROVISIONING_SAGA');
 
@@ -110,4 +112,15 @@ export interface TenancyOptions {
   platformDomain: string;
   otpPepper: string;
   cacheTtlMs: number;
+}
+
+/** Governed custom-field registry (CR-001, M01 §3.9); tenant-scoped through the caller's transaction. */
+export interface CustomFieldRepository extends CustomFieldDefinitionReader {
+  /** All entities, active and inactive, ordered by entity, key. */
+  list(tx: Transaction): Promise<CustomFieldDefinition[]>;
+  get(tx: Transaction, id: string): Promise<CustomFieldDefinition | undefined>;
+  /** Unique (tenant, entity, key) → ConflictError('custom_field_exists'). */
+  insert(tx: Transaction, def: CustomFieldDefinition): Promise<void>;
+  /** Version mismatch → PreconditionFailedError. */
+  update(tx: Transaction, def: CustomFieldDefinition, expectedVersion: number): Promise<void>;
 }

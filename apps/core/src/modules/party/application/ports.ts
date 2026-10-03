@@ -7,6 +7,7 @@ import { PartyRoleLink } from '../domain/party-role';
 import { ContactabilityDecision } from '../domain/contactability';
 import { MergeRecord } from '../domain/merge';
 import { Channel } from '../domain/contact-point';
+import { CustomFieldValues } from '../../../kernel/custom-fields';
 import { RecordScope } from '../../distribution/application/ports';
 
 export type { Transaction, RecordScope };
@@ -111,6 +112,8 @@ export interface CreatePartyInput {
   readonly preferredLanguage?: string;
   readonly preferredChannel?: PreferredChannel;
   readonly tags?: string[];
+  /** Already validated by PartyService (CR-001); facade callers leave it unset. */
+  readonly customFields?: CustomFieldValues;
   readonly consent?: ConsentInput[];
   readonly source?: Party['props']['source'];
   readonly ownerMemberId?: string;

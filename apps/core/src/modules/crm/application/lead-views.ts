@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { CustomFieldDefinition, CustomFieldValidator } from '../../../kernel/custom-fields';
 import { Lead, LeadProps, LeadStage } from '../domain/lead';
 import { StageRuleSet } from '../domain/stage-rules';
 import { Activity } from '../domain/activity';
@@ -23,7 +24,8 @@ export class LeadViews {
 
   async listItems(tx: Transaction, leads: Lead[]) {
     const names = await this.sellers.displayNames(tx, leads.flatMap((l) => (l.props.ownerMemberId ? [l.props.ownerMemberId] : [])));
-    return Promise.all(leads.map((l) => this.listItem(tx, l, names)));
+    const defs = await this.ctx.defs.activeFor(tx, 'lead');
+    return Promise.all(leads.map((l) => this.listItem(tx, l, names, defs)));
   }
 
   async detail(tx: Transaction, lead: Lead) {
@@ -45,6 +47,8 @@ export class LeadViews {
       possibleMatches, consentSummary, activities,
       openTasks: openTasks.map((t) => t.props),
       convertedOpportunityId: p.convertedOpportunityId, version: p.version,
+      // Detail: visible (unmasked) values of active definitions; the list item carries the masked set.
+      customFields: CustomFieldValidator.visible(await this.ctx.defs.activeFor(tx, 'lead'), p.customFields),
     };
   }
 
@@ -63,7 +67,7 @@ export class LeadViews {
     return status;
   }
 
-  private async listItem(tx: Transaction, lead: Lead, ownerNames: Record<string, string>) {
+  private async listItem(tx: Transaction, lead: Lead, ownerNames: Record<string, string>, defs: readonly CustomFieldDefinition[]) {
     const p = lead.props;
     const now = this.ctx.clock.now();
     const [sync, party, ...marketing] = await Promise.all([
@@ -78,6 +82,7 @@ export class LeadViews {
       stage: p.stage, temperature: p.temperature, slaState: lead.slaState(now), slaDueAt: p.slaDueAt,
       consent: marketing.some((d) => d.allowed) ? ('granted' as const) : ('not_given' as const), createdAt: p.createdAt,
       syncState: sync?.state ?? p.syncState,
+      customFields: CustomFieldValidator.mask(defs, p.customFields),
     };
   }
 }

@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { BusinessRuleError, NotFoundError } from '../../../kernel/errors/domain-errors';
+import { BusinessRuleError, NotFoundError, PreconditionFailedError } from '../../../kernel/errors/domain-errors';
+import { CustomFieldValidator } from '../../../kernel/custom-fields';
 import { Principal } from '../../../kernel/tenancy/principal';
 import { Lead, LeadStage, LostReason, Qualification, Temperature, lineOfBusiness } from '../domain/lead';
 import { SensitiveContentGuard } from '../domain/activity';
@@ -77,6 +78,27 @@ export class LeadService {
     return this.mutate(principal, id, async (_tx, lead) => {
       lead.qualify(q);
       return undefined;
+    });
+  }
+
+  /**
+   * Full replace of custom-field values (M04 section 11.1): scope (404), version (412), validate (400), save, audit keys only.
+   * Keys of definitions that are no longer active are hidden but preserved. No domain event, no Twenty content.
+   */
+  replaceCustomFields(principal: Principal, id: string, values: unknown, expectedVersion: number) {
+    return this.ctx.uow.run(principal.tenantId, async (tx) => {
+      const lead = await this.requireInScope(tx, principal, id);
+      if (lead.props.version !== expectedVersion) throw new PreconditionFailedError('version_mismatch', 'The lead was changed by someone else; reload and retry');
+      const defs = await this.ctx.defs.activeFor(tx, 'lead');
+      const validated = CustomFieldValidator.validate(defs, values);
+      const active = new Set(defs.map((d) => d.key));
+      const preserved = Object.fromEntries(Object.entries(lead.props.customFields).filter(([k]) => !active.has(k)));
+      lead.replaceCustomFields({ ...preserved, ...validated }, this.ctx.clock.now());
+      await (await this.d.ports.forTenant(tx.tenantId)).saveLead(tx, lead);
+      await this.ctx.recorder.record(tx, {
+        audit: { action: 'crm.custom_fields.replaced', entityType: 'lead', entityId: id, metadata: { subjectType: 'lead', subjectId: id, keys: Object.keys(validated) } },
+      });
+      return this.views.detail(tx, lead);
     });
   }
 

@@ -1,6 +1,7 @@
 import { BusinessRuleError } from '../../../kernel/errors/domain-errors';
 import { Money } from '../../../kernel/domain';
 import type { ProductLine, LostReason, Attribution } from './lead';
+import type { CustomFieldValues } from '../../../kernel/custom-fields';
 
 export type OpportunityStage = 'DISCOVERY' | 'QUOTE_SHARED' | 'PROPOSAL_COMPLETE' | 'INSURER_PENDING' | 'ISSUED' | 'LOST';
 
@@ -20,6 +21,8 @@ export interface OpportunityProps {
   issuedPolicySaleId?: string;
   stageEnteredAt: string;
   createdAt: string;
+  /** CR-001 custom-field values (descriptive only; never projected to Twenty, never logged). */
+  customFields: CustomFieldValues;
   version: number;
 }
 
@@ -53,12 +56,13 @@ export class Opportunity {
       attribution: input.attribution,
       stageEnteredAt: now,
       createdAt: now,
+      customFields: {},
       version: 1,
     });
   }
 
   static restore(props: OpportunityProps): Opportunity {
-    return new Opportunity(props);
+    return new Opportunity({ ...props, customFields: props.customFields ?? {} });
   }
 
   private constructor(props: OpportunityProps) {
@@ -71,6 +75,11 @@ export class Opportunity {
 
   get props(): Readonly<OpportunityProps> {
     return this._props;
+  }
+
+  /** As Lead.replaceCustomFields: `values` already validated and merged with hidden keys; the version bumps on save. */
+  replaceCustomFields(values: CustomFieldValues): void {
+    this._props.customFields = { ...values };
   }
 
   move(to: OpportunityStage, now: Date): void {

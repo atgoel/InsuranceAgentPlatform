@@ -184,11 +184,11 @@ export class InMemoryOpportunityRepository implements OpportunityRepository {
 
   async get(tx: Transaction, id: string): Promise<Opportunity | undefined> {
     const p = this.items.of(tx).get(id);
-    return p && Opportunity.restore({ ...p });
+    return p && Opportunity.restore({ ...p, customFields: { ...p.customFields } });
   }
 
   async save(tx: Transaction, o: Opportunity): Promise<void> {
-    saveVersioned(this.items.of(tx), o.props as OpportunityProps, 'opportunity', (p) => ({ ...p }));
+    saveVersioned(this.items.of(tx), o.props as OpportunityProps, 'opportunity', (p) => ({ ...p, customFields: { ...p.customFields } }));
     o.markSaved();
   }
 
@@ -196,7 +196,7 @@ export class InMemoryOpportunityRepository implements OpportunityRepository {
     return this.all(tx)
       .filter((p) => inScope(p, f.scope) && (!f.ownerMemberId || p.ownerMemberId === f.ownerMemberId) && (!f.productInterest || p.productInterest === f.productInterest))
       .sort((a, b) => a.stageEnteredAt.localeCompare(b.stageEnteredAt))
-      .map((p) => Opportunity.restore({ ...p }));
+      .map((p) => Opportunity.restore({ ...p, customFields: { ...p.customFields } }));
   }
 
   async findByProposal(): Promise<Opportunity | undefined> {
@@ -204,11 +204,11 @@ export class InMemoryOpportunityRepository implements OpportunityRepository {
   }
 
   async openForOwner(tx: Transaction, memberId: string): Promise<Opportunity[]> {
-    return this.all(tx).filter((p) => p.ownerMemberId === memberId && !['ISSUED', 'LOST'].includes(p.stage)).map((p) => Opportunity.restore({ ...p }));
+    return this.all(tx).filter((p) => p.ownerMemberId === memberId && !['ISSUED', 'LOST'].includes(p.stage)).map((p) => Opportunity.restore({ ...p, customFields: { ...p.customFields } }));
   }
 
   async forParty(tx: Transaction, partyId: string): Promise<Opportunity[]> {
-    return this.all(tx).filter((p) => p.partyId === partyId).map((p) => Opportunity.restore({ ...p }));
+    return this.all(tx).filter((p) => p.partyId === partyId).map((p) => Opportunity.restore({ ...p, customFields: { ...p.customFields } }));
   }
 
   private all(tx: Transaction): OpportunityProps[] {

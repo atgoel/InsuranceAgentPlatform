@@ -31,7 +31,7 @@ interface PartyRow {
   id: string; kind: PartyProps['kind']; display_name: string; dob_enc: string | null; dob_year: number | null; gender: 'F' | 'M' | 'X' | null;
   pan_enc: string | null; pan_hash: string | null; pan_last4: string | null; preferred_language: string; preferred_channel: string | null;
   owner_member_id: string | null; org_unit_id: string | null; tags: string[]; source_kind: PartyProps['source']['kind']; source_ref: string | null;
-  status: PartyProps['status']; merged_into_id: string | null; created_at: Date; updated_at: Date; version: number;
+  status: PartyProps['status']; merged_into_id: string | null; created_at: Date; updated_at: Date; version: number; custom_fields: PartyProps['customFields'];
 }
 interface ContactRow { party_id: string; channel: ContactPoint['channel']; value_enc: string; value_hash: string; masked: string; is_primary: boolean; verified_at: Date | null }
 
@@ -46,7 +46,7 @@ const toParty = (r: PartyRow, contacts: ContactPoint[]): Party => Party.restore(
   preferredLanguage: r.preferred_language, ...opt('preferredChannel', r.preferred_channel),
   ...opt('ownerMemberId', r.owner_member_id), ...opt('orgUnitId', r.org_unit_id),
   tags: r.tags, source: { kind: r.source_kind, ...opt('ref', r.source_ref) }, status: r.status, ...opt('mergedIntoId', r.merged_into_id),
-  contactPoints: contacts, createdAt: iso(r.created_at), updatedAt: iso(r.updated_at), version: r.version,
+  contactPoints: contacts, createdAt: iso(r.created_at), updatedAt: iso(r.updated_at), version: r.version, customFields: r.custom_fields ?? {},
 });
 
 export class PgPartyRepository implements PartyRepository {
@@ -65,19 +65,19 @@ export class PgPartyRepository implements PartyRepository {
     const values = [
       p.id, c.tenantId, p.kind, p.displayName, normaliseName(p.displayName), n(p.dateOfBirthEnc), n(p.dobYear), n(p.gender),
       n(p.panEnc), n(p.panHash), n(p.panLast4), p.preferredLanguage, n(p.preferredChannel), n(p.ownerMemberId), n(p.orgUnitId),
-      [...p.tags], p.source.kind, n(p.source.ref), p.status, n(p.mergedIntoId), p.createdAt, p.updatedAt, p.version + 1,
+      [...p.tags], p.source.kind, n(p.source.ref), p.status, n(p.mergedIntoId), p.createdAt, p.updatedAt, p.version + 1, JSON.stringify(p.customFields),
     ];
     if (existing.rows[0]) {
       await c.query(
         `update party set kind=$3, display_name=$4, display_name_norm=$5, dob_enc=$6, dob_year=$7, gender=$8, pan_enc=$9, pan_hash=$10, pan_last4=$11,
            preferred_language=$12, preferred_channel=$13, owner_member_id=$14, org_unit_id=$15, tags=$16, source_kind=$17, source_ref=$18, status=$19,
-           merged_into_id=$20, created_at=$21, updated_at=$22, version=$23
+           merged_into_id=$20, created_at=$21, updated_at=$22, version=$23, custom_fields=$24::jsonb
          where id = $1 and tenant_id = $2`, values);
     } else {
       await c.query(
         `insert into party (id, tenant_id, kind, display_name, display_name_norm, dob_enc, dob_year, gender, pan_enc, pan_hash, pan_last4, preferred_language,
-           preferred_channel, owner_member_id, org_unit_id, tags, source_kind, source_ref, status, merged_into_id, created_at, updated_at, version)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)`, values);
+           preferred_channel, owner_member_id, org_unit_id, tags, source_kind, source_ref, status, merged_into_id, created_at, updated_at, version, custom_fields)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24::jsonb)`, values);
     }
     await c.query('delete from contact_point where party_id = $1', [p.id]);
     for (const [position, cp] of p.contactPoints.entries()) {

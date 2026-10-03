@@ -34,3 +34,4 @@ export const TENANT_PERMISSION_POLICY = Symbol('TenantPermissionPolicy');
 export const MFA_POLICY = Symbol('MfaPolicy');
 /** Moves committed outbox events to EventBus subscribers (scheduled outside tests; tests call relayOnce()). */
 export const OUTBOX_RELAY = Symbol('OutboxRelay');
+export const CUSTOM_FIELD_DEFINITIONS = Symbol('CustomFieldDefinitions');

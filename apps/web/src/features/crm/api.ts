@@ -88,6 +88,8 @@ export interface LeadDetailView extends LeadListItem {
   convertedOpportunityId?: string;
   syncState: 'synced' | 'pending' | 'failed' | 'local';
   version: number;
+  /** Absent on payloads from before CR-001. */
+  customFields?: Record<string, string | number | boolean>;
 }
 
 export interface LeadStats {
@@ -274,6 +276,10 @@ function leadQueries(apiClient: ApiClient) {
     // Lead record
     async getLead(id: string): Promise<LeadDetailView> {
       return apiClient.get(`/api/v1/leads/${id}`);
+    },
+
+    async replaceLeadCustomFields(id: string, customFields: Record<string, string | number | boolean | null>, version: number): Promise<LeadDetailView> {
+      return apiClient.put(`/api/v1/leads/${id}/custom-fields`, { customFields }, { ifMatch: `"v${version}"` });
     },
 
     async updateLeadQualification(id: string, qualification: Qualification): Promise<LeadDetailView> {

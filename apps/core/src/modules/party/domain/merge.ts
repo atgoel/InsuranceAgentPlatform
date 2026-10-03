@@ -16,7 +16,7 @@ export interface MergeRecord {
   readonly mergedId: string;
   readonly choices: readonly SurvivorChoice[];
   /** What moved to the survivor, so a reversal can move exactly that back (roleLinkKeys = role|subjectType|subjectId). */
-  readonly movedLinks: { roleLinks: number; consents: number; household?: string; householdRelation?: Relation; roleLinkKeys?: string[] };
+  readonly movedLinks: { roleLinks: number; consents: number; household?: string; householdRelation?: Relation; roleLinkKeys?: string[]; customFieldKeys?: string[] };
   readonly mergedAt: string;
   readonly mergedBy: string;
   readonly reversibleUntil: string;

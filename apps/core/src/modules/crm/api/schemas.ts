@@ -7,7 +7,7 @@ const ContactChannel = z.enum(['CALL', 'WHATSAPP', 'SMS', 'EMAIL']);
 const Pincode = z.string().regex(/^[1-9][0-9]{5}$/);
 const Iso = z.string().datetime();
 
-export const CaptureLeadSchema = z
+const CaptureLeadBase = z
   .object({
     fullName: z.string().trim().min(2).max(120),
     mobile: z.string().max(20).optional(),
@@ -28,8 +28,13 @@ export const CaptureLeadSchema = z
       .strict(),
   })
   .strict();
+/** CR-001: type-checked against the tenant's definitions by the service (invalid_custom_fields). */
+export const CustomFieldsBody = z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]));
+export const ReplaceCustomFieldsSchema = z.object({ customFields: CustomFieldsBody }).strict();
+/** Authenticated capture accepts custom fields; the public form below does not (strict: the key is rejected). */
+export const CaptureLeadSchema = CaptureLeadBase.extend({ customFields: CustomFieldsBody.optional() }).strict();
 /** Public form: same fields plus the honeypot; source is fixed by the channel, never trusted for IMPORT. */
-export const PublicLeadSchema = CaptureLeadSchema.extend({ website: z.string().max(200).optional(), source: LeadSource.exclude(['IMPORT']) }).strict();
+export const PublicLeadSchema = CaptureLeadBase.extend({ website: z.string().max(200).optional(), source: LeadSource.exclude(['IMPORT']) }).strict();
 
 export const ListLeadsQuery = z.object({
   stage: z.string().optional().transform((s) => (s ? s.split(',') : undefined)).pipe(z.array(z.enum(['NEW', 'CONTACTED', 'QUALIFIED', 'CONVERTED', 'LOST'])).optional()),

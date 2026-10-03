@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Inject, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Inject, Param, Patch, Post, Put, Query, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { z } from 'zod';
 import { CurrentPrincipal, RequirePermission } from '../../../kernel/tenancy/decorators';
 import { Principal } from '../../../kernel/tenancy/principal';
 import { Idempotent } from '../../../kernel/idempotency/idempotency.interceptor';
 import { ZodValidationPipe } from '../../../kernel/http/zod-validation.pipe';
+import { etagFor, parseIfMatch } from '../../../kernel/http/if-match';
 import { CLOCK } from '../../../kernel/tokens';
 import { Clock } from '../../../kernel/domain/clock';
 import { TenantQueryService } from '../application/tenant-query.service';
@@ -11,7 +13,10 @@ import { TieUpService } from '../application/tie-up.service';
 import { FeatureFlagService } from '../application/feature-flag.service';
 import { BrandKitService } from '../application/brand-kit.service';
 import { TrialService } from '../application/trial.service';
-import { BrandKitSchema, ComplianceReviewSchema, FlagKey, SetFlagSchema, TieUpsSchema, TrialSchema } from './schemas';
+import { CustomFieldService } from '../application/custom-field.service';
+import {
+  BrandKitSchema, ComplianceReviewSchema, DefineCustomFieldSchema, FlagKey, ListCustomFieldsQuery, ReviseCustomFieldSchema, SetFlagSchema, TieUpsSchema, TrialSchema,
+} from './schemas';
 
 /** Tenant-scoped settings (W07, W08, M19). The tenant is always the host-verified principal tenant. */
 @Controller('api/v1/tenant')
@@ -22,6 +27,7 @@ export class TenantController {
     private readonly flags: FeatureFlagService,
     private readonly brand: BrandKitService,
     private readonly trials: TrialService,
+    private readonly customFields: CustomFieldService,
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
@@ -93,6 +99,33 @@ export class TenantController {
   @RequirePermission('tenant.plan.write')
   startTrial(@CurrentPrincipal() p: Principal, @Body(new ZodValidationPipe(TrialSchema)) body: z.infer<typeof TrialSchema>) {
     return this.trials.start(p.tenantId, body.planCode);
+  }
+
+  @Get('custom-fields')
+  @RequirePermission('tenant.read')
+  listCustomFields(@CurrentPrincipal() p: Principal, @Query(new ZodValidationPipe(ListCustomFieldsQuery)) q: z.infer<typeof ListCustomFieldsQuery>) {
+    return this.customFields.list(p, q.entity);
+  }
+
+  @Post('custom-fields')
+  @Idempotent()
+  @RequirePermission('tenant.custom_field.write')
+  defineCustomField(@CurrentPrincipal() p: Principal, @Body(new ZodValidationPipe(DefineCustomFieldSchema)) body: z.infer<typeof DefineCustomFieldSchema>) {
+    return this.customFields.define(p, body);
+  }
+
+  @Patch('custom-fields/:id')
+  @RequirePermission('tenant.custom_field.write')
+  async reviseCustomField(
+    @CurrentPrincipal() p: Principal,
+    @Param('id') id: string,
+    @Headers('if-match') ifMatch: string | undefined,
+    @Body(new ZodValidationPipe(ReviseCustomFieldSchema)) body: z.infer<typeof ReviseCustomFieldSchema>,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const def = await this.customFields.revise(p, id, body, parseIfMatch(ifMatch));
+    res.setHeader('ETag', etagFor(def.version));
+    return def;
   }
 
   private today(): string {

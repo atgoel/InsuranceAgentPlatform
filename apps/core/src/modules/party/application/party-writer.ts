@@ -48,7 +48,7 @@ export class PartyWriter {
     const contactPoints = await Promise.all(input.contacts.map((c) => this.contacts.create(tx.tenantId, c)));
     const party = Party.create({
       id: this.ctx.ids.next('pty'), kind: input.kind, displayName: input.displayName, contactPoints,
-      preferredLanguage: input.preferredLanguage, preferredChannel: input.preferredChannel, tags: input.tags,
+      preferredLanguage: input.preferredLanguage, preferredChannel: input.preferredChannel, tags: input.tags, customFields: input.customFields,
       ownerMemberId: input.ownerMemberId ?? actor.memberId, orgUnitId: input.orgUnitId ?? actor.orgUnitId,
       source: input.source ?? { kind: 'MANUAL' }, now,
     });

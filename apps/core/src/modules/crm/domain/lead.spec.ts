@@ -545,3 +545,24 @@ describe('AC-M04-13 SLA breach announcement bookkeeping', () => {
     expect(lead.props.slaDueAt).toBe('2026-10-03T11:30:00.000Z');
   });
 });
+
+describe('AC-CR001-08 Lead custom fields', () => {
+  const now = new Date('2026-10-03T10:00:00Z');
+  const later = new Date('2026-10-04T10:00:00Z');
+  const make = (customFields?: Record<string, string | number | boolean>) => Lead.capture({
+    id: 'lead_cf', partyId: 'party_1', productInterest: 'TERM_LIFE', customFields, now, by: 'mem_1',
+    attribution: { source: 'WEB_FORM', firstTouch: { channel: 'WEB', at: now.toISOString() }, lastTouch: { channel: 'WEB', at: now.toISOString() } },
+  });
+
+  it('AC-CR001-08 a captured lead starts with {} unless values are given', () => {
+    expect(make().props.customFields).toEqual({});
+    expect(make({ campaign_code: 'X' }).props.customFields).toEqual({ campaign_code: 'X' });
+  });
+
+  it('AC-CR001-08 replaceCustomFields replaces the set and bumps updatedAt', () => {
+    const lead = make({ campaign_code: 'X', budget_paise: 100 });
+    lead.replaceCustomFields({ campaign_code: 'Y' }, later);
+    expect(lead.props.customFields).toEqual({ campaign_code: 'Y' });
+    expect(lead.props.updatedAt).toBe(later.toISOString());
+  });
+});

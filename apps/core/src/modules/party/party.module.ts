@@ -4,6 +4,7 @@ import { APP_POOL, KERNEL_OPTIONS, PERMISSION_POLICY } from '../../kernel/tokens
 import { KernelConfig } from '../../kernel/config';
 import { RolePermissionMatrix } from '../../kernel/tenancy/permissions';
 import { DistributionModule } from '../distribution/distribution.module';
+import { TenancyModule } from '../tenancy/tenancy.module';
 import {
   CONSENT_REPOSITORY, ConsentRepository, DUPLICATE_REPOSITORY, DuplicateRepository, FIELD_CIPHER, HouseholdRepository, PartyRepository, RoleLinkRepository, SuppressionRepository, HOUSEHOLD_REPOSITORY, PARTY_FACADE, PARTY_REPOSITORY, POLICY_NUMBER_LOOKUP,
   ROLE_LINK_REPOSITORY, SUPPRESSION_REPOSITORY,
@@ -78,7 +79,7 @@ const services: Provider[] = [
 
 /** M03 Party & Consent — system of record for customers, consent ledger and reviewed merges. */
 @Module({
-  imports: [DistributionModule],
+  imports: [DistributionModule, TenancyModule],
   controllers: [PartiesController, ConsentsController, DuplicatesController, HouseholdsController],
   providers: [...adapters, ...services],
   exports: [PARTY_FACADE],

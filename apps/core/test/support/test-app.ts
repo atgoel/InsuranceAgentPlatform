@@ -1,6 +1,6 @@
 import { ModuleMetadata } from '@nestjs/common';
 import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, TestingModule, TestingModuleBuilder } from '@nestjs/testing';
 import request from 'supertest';
 import {
   KernelConfig,
@@ -49,6 +49,10 @@ export function testConfig(overrides?: Partial<KernelConfig>): KernelConfig {
   };
 }
 
+function withOverrides(builder: TestingModuleBuilder, overrides: Array<{ token: symbol; value: unknown }> = []): TestingModuleBuilder {
+  return overrides.reduce((b, o) => b.overrideProvider(o.token).useValue(o.value), builder);
+}
+
 /**
  * AC-M00-* (test support)
  * createTestApp returns a TestApp with an INestApplication, supertest http client,
@@ -60,17 +64,20 @@ export async function createTestApp(opts?: {
   controllers?: ModuleMetadata['controllers'];
   providers?: ModuleMetadata['providers'];
   config?: Partial<KernelConfig>;
+  /** Replaces providers by token (e.g. fixed custom-field definitions). */
+  overrides?: Array<{ token: symbol; value: unknown }>;
 }): Promise<TestApp> {
   const config = testConfig(opts?.config);
   const memoryLogSink = new MemoryLogSink();
   const fixedClock = new FixedClock();
   const metricsRegistry = new MetricsRegistry();
 
-  const moduleFixture: TestingModule = await Test.createTestingModule({
+  const builder = Test.createTestingModule({
     imports: [KernelModule.forRoot(config), ...(opts?.imports ?? [])],
     controllers: opts?.controllers ?? [],
     providers: opts?.providers ?? [],
-  })
+  });
+  const moduleFixture: TestingModule = await withOverrides(builder, opts?.overrides)
     .overrideProvider(LOG_SINK)
     .useValue(memoryLogSink)
     .overrideProvider(CLOCK)

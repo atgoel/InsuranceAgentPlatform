@@ -1,0 +1,19 @@
+.custom-fields-screen { padding: 24px 32px; max-width: 1320px; margin: 0 auto; }
+.custom-fields-screen .page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+.cf-usage { font-weight: 500; }
+.cf-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+.cf-table th, .cf-table td { text-align: start; padding: 8px 12px; border-bottom: 1px solid #D9DEE7; }
+.cf-banner { padding: 12px 16px; background: #FFF4E0; border: 1px solid #E0A030; border-radius: 8px; }
+.cf-error { color: #B3261E; font-size: 13px; }
+.cf-note { font-size: 13px; color: #4A5262; }
+.cf-form { display: flex; flex-direction: column; gap: 16px; }
+.cf-form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #4A5262; }
+.cf-form label.cf-check { flex-direction: row; align-items: center; gap: 8px; }
+.cf-options { display: flex; flex-direction: column; gap: 12px; border: 1px solid #D9DEE7; border-radius: 8px; padding: 12px; }
+.cf-option-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cf-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 640px) {
+  .custom-fields-screen { padding: 16px; }
+  .cf-option-row { grid-template-columns: 1fr; }
+  .cf-table { display: block; overflow-x: auto; }
+}

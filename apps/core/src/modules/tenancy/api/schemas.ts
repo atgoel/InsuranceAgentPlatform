@@ -78,3 +78,27 @@ export const StartSignupSchema = z
   .strict();
 
 export const VerifySignupSchema = z.object({ otp: z.string().regex(/^\d{6}$/) }).strict();
+
+const LocalisedLabel = z.object({ en: z.string(), hi: z.string().optional() }).strict();
+const EnumOptions = z.array(z.object({ value: z.string(), label: LocalisedLabel }).strict());
+export const CustomFieldEntityQuery = z.enum(['held_policy', 'policy_sale', 'party', 'lead', 'opportunity', 'commission_entry']);
+
+export const ListCustomFieldsQuery = z.object({ entity: CustomFieldEntityQuery.optional() }).strict();
+
+/** Domain rules (P3, P2 reportable, key pattern, label length, options) are enforced by the kernel with specific codes. */
+export const DefineCustomFieldSchema = z
+  .object({
+    entity: CustomFieldEntityQuery,
+    key: z.string(),
+    label: LocalisedLabel,
+    type: z.enum(['text', 'number', 'money', 'date', 'enum', 'boolean']),
+    enumOptions: EnumOptions.optional(),
+    required: z.boolean().optional(),
+    piiClass: z.enum(['P0', 'P1', 'P2', 'P3']),
+    reportable: z.boolean().optional(),
+  })
+  .strict();
+
+export const ReviseCustomFieldSchema = z
+  .object({ label: LocalisedLabel.optional(), enumOptions: EnumOptions.optional(), required: z.boolean().optional(), reportable: z.boolean().optional(), active: z.boolean().optional() })
+  .strict();

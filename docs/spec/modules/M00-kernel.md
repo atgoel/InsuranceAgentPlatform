@@ -779,3 +779,169 @@ Frontend
 - **AC-M00-30** `ClientTelemetry` deduplicates errors by fingerprint, rate-limits per minute and batches sends; `ErrorBoundary` renders `ErrorState` and reports.
 - **AC-M00-31** Design-system components meet the props contracts: `Tabs` keyboard navigation and `aria-selected`; `BottomSheet` closes on Escape and is a modal dialog; `Button` loading state is disabled and `aria-busy`; `DataGrid` renders columns/rows and the empty state; `FilterChips` toggles `aria-pressed`.
 - **AC-M00-32** Shells: `MobileShell` shows the five bottom-nav destinations and the language switch; `ConsoleShell` sidebar sections collapse and filter by search; `DevLogin` obtains a token and routes by role; unknown routes show the "later module" empty state.
+
+---
+
+## 16. CR-001 extension — typed payloads, policy commercials, custom fields
+
+Source: [CR-001](../change-requests/CR-001-sales-register-fields.md) (approved 2026-10-03). The kernel holds the pieces shared by M03/M04 (custom fields now) and M07/M09/M10 (held policy, sale, commission — built with those modules).
+
+### 16.1 File map
+```
+kernel/
+  domain/         schema-registry.ts  sensitive-content.ts
+  insurance/      policy-commercials.ts  risk-details.ts  index.ts
+  custom-fields/  custom-field.ts  custom-field-validator.ts  ports.ts  index.ts
+```
+`tokens.ts` adds `CUSTOM_FIELD_DEFINITIONS` (implemented by M01 §3.9).
+
+### 16.2 SchemaRegistry (`kernel/domain/schema-registry.ts`) — versioned JSONB payloads
+```ts
+export interface RegisteredSchema<T = unknown> {
+  id: string;                    // e.g. 'motor'; /^[a-z][a-z0-9_]{1,39}$/
+  version: number;               // positive integer
+  schema: ZodType<T>;
+  p2Paths: readonly string[];    // top-level keys holding P2 data (encrypted by the owning repository, masked in lists)
+}
+export class SchemaRegistry {
+  register<T>(entry: RegisteredSchema<T>): void            // duplicate id+version or bad id/version → Error (programming error, at boot)
+  has(id: string, version: number): boolean
+  get(id: string, version: number): RegisteredSchema       // unknown → ValidationError('unknown_schema', …, [], { schemaId, version })
+  latest(id: string): RegisteredSchema                     // highest version; unknown id → ValidationError('unknown_schema')
+  parse<T = unknown>(id: string, version: number, payload: unknown): T
+  // invalid → ValidationError('schema_validation_failed', msg, FieldError[] { path: zod path joined by '.', code: zod issue code, message }, { schemaId, version })
+}
+```
+
+### 16.3 SensitiveContentGuard moves to the kernel (`kernel/domain/sensitive-content.ts`)
+Same contract as M04 §3.3 (`static check(text): void` → `BusinessRuleError('sensitive_content_not_allowed')`); M04 `crm/domain/activity.ts` re-exports it so existing imports keep working.
+
+### 16.4 Insurance value objects (`kernel/insurance`)
+```ts
+// policy-commercials.ts
+export const POLICY_CATEGORIES = ['TERM', 'SAVINGS', 'ULIP', 'PENSION', 'CHILD', 'HEALTH_INDIVIDUAL', 'HEALTH_FLOATER', 'STANDARD_HEALTH',
+  'PERSONAL_ACCIDENT', 'MOTOR', 'TRAVEL', 'HOME', 'COMMERCIAL', 'OTHER'] as const;   // M05 categories + CR-001 additions
+export type PolicyCategory = (typeof POLICY_CATEGORIES)[number];
+export type PolicyLine = 'LIFE' | 'HEALTH' | 'GENERAL';
+export function lineOfCategory(category: PolicyCategory): PolicyLine | undefined
+// TERM, SAVINGS, ULIP, PENSION, CHILD → LIFE; HEALTH_INDIVIDUAL, HEALTH_FLOATER, STANDARD_HEALTH, PERSONAL_ACCIDENT → HEALTH;
+// MOTOR, TRAVEL, HOME, COMMERCIAL → GENERAL; OTHER → undefined (any line accepted)
+export const BUSINESS_TYPES = ['FRESH', 'RENEWAL', 'PORTABILITY', 'ROLLOVER'] as const;
+export type BusinessType = (typeof BUSINESS_TYPES)[number];
+export const BUSINESS_SOURCES = ['IN_HOUSE', 'REFERRAL', 'POSP', 'WALK_IN', 'DIGITAL', 'CAMPAIGN', 'OTHER'] as const;
+export type BusinessSource = (typeof BUSINESS_SOURCES)[number];
+export function businessSourceForLeadSource(source: string): BusinessSource
+// M04 LeadSource → REFERRAL→REFERRAL; WALK_IN→WALK_IN; WEB_FORM, MICROSITE, API→DIGITAL; CAMPAIGN, EVENT→CAMPAIGN; PHONE, IMPORT→IN_HOUSE; anything else → OTHER
+export interface ReferredBy { name: string; partyId?: string; memberId?: string }   // name 1..120 chars, trimmed, as written; never the seller
+export interface PolicyCommercialsProps {
+  category: PolicyCategory; line: PolicyLine; businessType: BusinessType; previousInsurerName?: string;
+  bookedOn: string; commencementDate: string; expiryDate?: string; policyTermMonths?: number;   // dates 'YYYY-MM-DD' (IST calendar dates)
+  premiumNetPaise: number; premiumTaxPaise: number; premiumGrossPaise: number;
+  bookingChannelCode?: string; businessSource?: BusinessSource; referredBy?: ReferredBy; remarks?: string;
+}
+export class PolicyCommercials {
+  static create(input: PolicyCommercialsProps): PolicyCommercials
+  // Throws one ValidationError('invalid_policy_commercials', msg, FieldError[]) collecting every problem; FieldError codes:
+  //  premium_not_integer (a premium is not a safe non-negative integer) · premium_mismatch (net + tax ≠ gross)
+  //  category_line_mismatch (lineOfCategory(category) defined and ≠ line) · invalid_date (not a real YYYY-MM-DD)
+  //  expiry_before_start (expiryDate < commencementDate) · invalid_term (policyTermMonths not integer 1..1200)
+  //  business_type_line_mismatch (PORTABILITY only on HEALTH; ROLLOVER only on GENERAL)
+  //  previous_insurer_required (PORTABILITY / ROLLOVER without previousInsurerName)
+  //  invalid_referrer (referredBy.name empty or > 120 after trim) · remarks_too_long (> 1000) · booking_channel_too_long (> 60)
+  // then remarks: SensitiveContentGuard.check → BusinessRuleError('sensitive_content_not_allowed')
+  get props(): Readonly<PolicyCommercialsProps>
+  renewalDate(): string | undefined     // HEALTH/GENERAL with expiryDate → addDays(expiryDate, 1) (kernel ist.ts); LIFE → undefined
+  bookingMonth(): string                // 'YYYY-MM' of bookedOn (register "Month" column is derived, never stored)
+}
+
+// risk-details.ts — schemas registered in a SchemaRegistry (ids/versions below)
+export const MOTOR_V1: RegisteredSchema<MotorRiskV1>    // id 'motor', version 1, p2Paths ['registrationNo']
+export interface MotorRiskV1 {
+  registrationNo: string;      // normalised by the schema (uppercase, spaces/hyphens removed); /^[A-Z]{2}\d{1,2}[A-Z]{0,3}\d{4}$/ or BH series /^\d{2}BH\d{4}[A-Z]{1,2}$/
+  registrationYear: number;    // integer 1950..2100 (upper bound vs today checked in checkRiskAgainstCommercials)
+  make: string; model: string; variant?: string;   // 1..60 chars
+  fuel?: 'PETROL' | 'DIESEL' | 'CNG' | 'LPG' | 'ELECTRIC' | 'HYBRID';
+  ncbPercent: 0 | 20 | 25 | 35 | 45 | 50;
+  claimInPreviousYear: boolean;   // true → ncbPercent must be 0 (refinement, issue path 'ncbPercent')
+  odPremiumPaise: number; tpPremiumPaise: number;  // safe non-negative integers
+  addOns: string[];               // ≤ 20, each 1..40 chars
+}
+export const HEALTH_V1: RegisteredSchema<HealthRiskV1>  // id 'health', version 1, p2Paths []
+export type HealthRelation = 'SELF' | 'SPOUSE' | 'SON' | 'DAUGHTER' | 'FATHER' | 'MOTHER' | 'FATHER_IN_LAW' | 'MOTHER_IN_LAW' | 'OTHER';
+export type AgeBand = '0-17' | '18-35' | '36-45' | '46-55' | '56-60' | '61-65' | '66-70' | '71+';
+export interface HealthRiskV1 {
+  coverType: 'INDIVIDUAL' | 'FLOATER';
+  members: Array<{ relation: HealthRelation; ageBand: AgeBand }>;   // 1..12; FLOATER needs ≥ 2 (issue path 'members')
+  portabilityFrom?: { insurerName: string; continuousCoverSince: string /* YYYY-MM-DD */ };
+}
+export function memberMix(members: HealthRiskV1['members']): string   // adults = ageBand ≠ '0-17'; '2A+1C'; no children → '2A'; no adults → '0A+2C'
+export const LIFE_V1: RegisteredSchema<LifeRiskV1>      // id 'life', version 1, p2Paths []
+export interface LifeRiskV1 { ppt: number /* integer 1..100 */; payoutOption?: string /* 1..40 */; riders: string[] /* ≤ 10, each 1..60 */ }
+export function createRiskSchemaRegistry(): SchemaRegistry           // registers MOTOR_V1, HEALTH_V1, LIFE_V1
+export function riskSchemaFor(category: PolicyCategory): { id: string; version: number } | undefined
+// MOTOR → motor@1; HEALTH_INDIVIDUAL, HEALTH_FLOATER, STANDARD_HEALTH → health@1; LIFE-line categories → life@1; others → undefined
+export function checkRiskAgainstCommercials(schemaId: string, risk: unknown, commercials: PolicyCommercials, today: string): void
+// risk is the parsed payload of schemaId@1. Throws BusinessRuleError:
+// motor: odPremiumPaise + tpPremiumPaise > premiumNetPaise → 'motor_premium_exceeds_net'; registrationYear > year(today) → 'registration_year_in_future'
+// health: FLOATER needs category HEALTH_FLOATER or STANDARD_HEALTH, INDIVIDUAL needs HEALTH_INDIVIDUAL or STANDARD_HEALTH → 'cover_type_category_mismatch';
+//         businessType PORTABILITY without portabilityFrom → 'portability_details_required'
+// life: policyTermMonths known and ppt × 12 > policyTermMonths → 'ppt_exceeds_term'
+```
+Registration numbers are stored by the owning repository as `registration_no_enc` / `registration_no_hash` / `registration_no_last4` columns next to `risk_details` (same pattern as the policy number), never inside the JSONB.
+
+### 16.5 Custom fields (`kernel/custom-fields`) — governed field registry (HLD §8)
+```ts
+// custom-field.ts
+export const CUSTOM_FIELD_ENTITIES = ['held_policy', 'policy_sale', 'party', 'lead', 'opportunity', 'commission_entry'] as const;
+export type CustomFieldEntity = (typeof CUSTOM_FIELD_ENTITIES)[number];
+export type CustomFieldType = 'text' | 'number' | 'money' | 'date' | 'enum' | 'boolean';
+export type PiiClass = 'P0' | 'P1' | 'P2' | 'P3';
+export interface LocalisedLabel { en: string; hi?: string }          // en 1..60 after trim, hi ≤ 60
+export interface CustomFieldDefinition {
+  id: string /* 'cfd_' ULID */; entity: CustomFieldEntity; key: string /* /^[a-z][a-z0-9_]{1,39}$/ */; label: LocalisedLabel;
+  type: CustomFieldType; enumOptions?: Array<{ value: string /* /^[A-Z0-9_]{1,40}$/ */; label: LocalisedLabel }>;
+  required: boolean; piiClass: PiiClass; reportable: boolean; version: number; active: boolean; createdAt: string; updatedAt: string;
+}
+export type CustomFieldValue = string | number | boolean;   // text/enum/date → string ('YYYY-MM-DD' for date); number → finite number; money → safe integer paise; boolean
+export type CustomFieldValues = Record<string, CustomFieldValue>;
+export interface DefineCustomFieldInput { entity: CustomFieldEntity; key: string; label: LocalisedLabel; type: CustomFieldType; enumOptions?: CustomFieldDefinition['enumOptions']; required?: boolean /* false */; piiClass: PiiClass; reportable?: boolean /* false */ }
+export function defineCustomField(input: DefineCustomFieldInput, existing: readonly CustomFieldDefinition[], limit: number, id: string, now: Date): CustomFieldDefinition
+// piiClass P3 → ValidationError('pii_class_not_allowed') (refused at launch)
+// P2 + reportable → ValidationError('p2_not_reportable')
+// bad key → ValidationError('invalid_custom_field_key'); bad label → ValidationError('invalid_label')
+// enum without 1..50 unique options, or options on a non-enum → ValidationError('invalid_enum_options')
+// same entity + key already defined (active or not) → ConflictError('custom_field_exists')
+// active definitions (all entities) ≥ limit → BusinessRuleError('custom_field_limit_reached', …, { limit })
+// result: version 1, active true, createdAt = updatedAt = now
+export interface ReviseCustomFieldInput { label?: LocalisedLabel; enumOptions?: CustomFieldDefinition['enumOptions']; required?: boolean; reportable?: boolean; active?: boolean }
+export function reviseCustomField(def: CustomFieldDefinition, patch: ReviseCustomFieldInput, existing: readonly CustomFieldDefinition[], limit: number, now: Date): CustomFieldDefinition
+// key, entity, type and piiClass are immutable (a different type is a new field); enum options may be added or relabelled —
+// removing a value → ValidationError('enum_option_removed'); same label, P2/reportable and enum rules as define;
+// reactivating when active definitions ≥ limit → BusinessRuleError('custom_field_limit_reached'); version + 1, updatedAt = now
+
+// custom-field-validator.ts
+export class CustomFieldValidator {
+  static validate(defs: readonly CustomFieldDefinition[], values: unknown): CustomFieldValues
+  // defs = active definitions of one entity; values must be a plain object (else ValidationError('invalid_custom_fields'))
+  // null / undefined values are dropped; every problem is a FieldError { path: 'customFields.<key>', code } and the call throws one
+  // ValidationError('invalid_custom_fields', …, errors). Codes: unknown_custom_field (no active definition), required (required and missing),
+  // invalid_type, text_too_long (> 500 chars), sensitive_content (SensitiveContentGuard on text), invalid_date, money_not_integer, invalid_enum_value
+  static mask(defs: readonly CustomFieldDefinition[], values: CustomFieldValues): CustomFieldValues       // P2 values → '****'; keys without an active definition dropped
+  static visible(defs: readonly CustomFieldDefinition[], values: CustomFieldValues): CustomFieldValues    // keys with an active definition, values unmasked (detail views)
+  static reportable(defs: readonly CustomFieldDefinition[], values: CustomFieldValues): CustomFieldValues // only reportable (hence non-P2) keys
+}
+// Required is checked whenever a value set is written. Records created without a customFields block (public forms, imports, other modules) start as {}.
+
+// ports.ts
+export interface CustomFieldDefinitionReader {
+  activeFor(tx: unknown, entity: CustomFieldEntity): Promise<CustomFieldDefinition[]>   // caller's RLS transaction; tenant from tx
+}
+```
+Rules: custom-field values are descriptive only — never read by routing, commission, stage rules or eligibility logic. They are never sent to Twenty projections, never logged (services log keys only) and never put into AI prompts. A stored value whose definition was deactivated is kept but hidden from views until reactivated. A full write (`PUT …/custom-fields`) replaces the stored set; hidden keys of deactivated definitions are preserved.
+
+### 16.6 Acceptance criteria (CR-001, kernel part)
+- **AC-CR001-02** (kernel part) `motor.v1` validates the registration-number format (state series and BH series, normalised), NCB values (0/20/25/35/45/50; 0 when a claim was made) and `checkRiskAgainstCommercials` refuses OD + TP above the net premium and a future registration year.
+- **AC-CR001-03** (kernel part) `PolicyCommercials` enforces net + tax = gross with integer paise, category/line and business-type/line compatibility, previous insurer for portability/rollover, expiry ≥ start, and derives renewal date = expiry + 1 day for annual contracts.
+- **AC-CR001-04** (kernel part) `defineCustomField` refuses P3, P2-reportable, bad keys, duplicate keys and definitions beyond the plan limit; `reviseCustomField` keeps key/type/PII class immutable and refuses removing enum values; `CustomFieldValidator` type-checks each type, enforces required and enum values, refuses PAN/Aadhaar/card numbers in text and rejects unknown keys.
+- **AC-CR001-05** (kernel part) `CustomFieldValidator.mask` hides P2 values; `reportable` never returns P2 keys.
+- **AC-CR001-07** `SchemaRegistry` registers versioned schemas, refuses duplicates, returns the latest version and reports validation issues with paths; `riskSchemaFor` maps categories to schema ids; `health.v1` floater rule and `memberMix` ('2A+1C').

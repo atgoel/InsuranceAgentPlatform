@@ -130,6 +130,10 @@ export const routes: RouteObject[] = [
         lazy: () => import('../features/tenancy/screens/BrandKitScreen').then(m => ({ Component: m.BrandKitScreen })),
       },
       {
+        path: 'custom-fields',
+        lazy: () => import('../features/tenancy/screens/CustomFieldsScreen').then(m => ({ Component: m.CustomFieldsScreen })),
+      },
+      {
         path: 'onboarding',
         lazy: () => import('../features/distribution/screens/OnboardingHierarchyScreen').then(m => ({ Component: m.OnboardingHierarchyScreen })),
       },

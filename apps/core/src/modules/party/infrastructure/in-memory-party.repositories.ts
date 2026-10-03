@@ -20,7 +20,7 @@ function page<T>(all: T[], cursor: string | undefined, limit: number): { items: 
   return { items: all.slice(start, start + limit), nextCursor: start + limit < all.length ? encodeCursor({ offset: start + limit }) : undefined };
 }
 
-const clone = (p: PartyProps): PartyProps => ({ ...p, tags: [...p.tags], contactPoints: p.contactPoints.map((c) => ({ ...c })), source: { ...p.source } });
+const clone = (p: PartyProps): PartyProps => ({ ...p, tags: [...p.tags], customFields: { ...p.customFields }, contactPoints: p.contactPoints.map((c) => ({ ...c })), source: { ...p.source } });
 
 export class InMemoryPartyRepository implements PartyRepository {
   private readonly parties = new TenantBuckets<Map<string, PartyProps>>(() => new Map());

@@ -1,5 +1,6 @@
 import { ValidationError, ConflictError, BusinessRuleError } from '../../../kernel/errors/domain-errors';
 import { ContactPoint } from './contact-point';
+import { CustomFieldValues } from '../../../kernel/custom-fields';
 
 export type PartyKind = 'PERSON' | 'ORGANISATION';
 export type PartyStatus = 'ACTIVE' | 'MERGED' | 'ERASED';
@@ -20,6 +21,8 @@ export interface PartyProps {
   readonly ownerMemberId?: string;
   readonly orgUnitId?: string;
   readonly tags: readonly string[];
+  /** CR-001 custom-field values (descriptive only; validated by the service). */
+  readonly customFields: CustomFieldValues;
   readonly source: { readonly kind: 'LEAD' | 'IMPORT' | 'MANUAL' | 'SIGNUP' | 'BOOK'; readonly ref?: string };
   readonly status: PartyStatus;
   readonly mergedIntoId?: string;
@@ -44,6 +47,7 @@ interface MutablePartyProps {
   ownerMemberId?: string;
   orgUnitId?: string;
   tags: string[];
+  customFields: CustomFieldValues;
   source: { kind: 'LEAD' | 'IMPORT' | 'MANUAL' | 'SIGNUP' | 'BOOK'; ref?: string };
   status: PartyStatus;
   mergedIntoId?: string;
@@ -72,6 +76,7 @@ export class Party {
       ownerMemberId: props.ownerMemberId,
       orgUnitId: props.orgUnitId,
       tags: Array.from(props.tags),
+      customFields: { ...props.customFields },
       source: { ...props.source },
       status: props.status,
       mergedIntoId: props.mergedIntoId,
@@ -93,6 +98,7 @@ export class Party {
     orgUnitId?: string;
     source: { kind: 'LEAD' | 'IMPORT' | 'MANUAL' | 'SIGNUP' | 'BOOK'; ref?: string };
     tags?: string[];
+    customFields?: CustomFieldValues;
     now: Date;
   }): Party {
     const trimmed = input.displayName.trim();
@@ -116,6 +122,7 @@ export class Party {
       ownerMemberId: input.ownerMemberId,
       orgUnitId: input.orgUnitId,
       tags: input.tags ?? [],
+      customFields: { ...(input.customFields ?? {}) },
       source: input.source,
       status: 'ACTIVE',
       contactPoints,
@@ -128,7 +135,7 @@ export class Party {
   }
 
   static restore(p: PartyProps): Party {
-    return new Party(p);
+    return new Party({ ...p, customFields: p.customFields ?? {} });
   }
 
   private static ensureOnePrimaryPerChannel(points: readonly ContactPoint[]): ContactPoint[] {
@@ -216,6 +223,31 @@ export class Party {
     this._props.tags = Array.from(tags);
   }
 
+  /**
+   * Replaces the stored custom-field set with `values`. The caller (PartyService) passes the validated values merged with the
+   * hidden keys of non-active definitions, so those survive a full write (M00 §16.5). Bumps updatedAt.
+   */
+  replaceCustomFields(values: CustomFieldValues, now: Date): void {
+    this._props.customFields = { ...values };
+    this._props.updatedAt = now.toISOString();
+  }
+
+  /** Merge (M03 §11): copies keys this party lacks from `from`; returns the copied keys so a reversal can remove exactly those. */
+  absorbCustomFields(from: CustomFieldValues, now: Date): string[] {
+    const copied = Object.keys(from).filter((k) => !(k in this._props.customFields));
+    if (copied.length === 0) return copied;
+    this._props.customFields = { ...this._props.customFields, ...Object.fromEntries(copied.map((k) => [k, from[k]])) };
+    this._props.updatedAt = now.toISOString();
+    return copied;
+  }
+
+  /** Reversal of a merge: removes the keys copied in by `absorbCustomFields`. */
+  releaseCustomFields(keys: readonly string[], now: Date): void {
+    if (keys.length === 0) return;
+    this._props.customFields = Object.fromEntries(Object.entries(this._props.customFields).filter(([k]) => !keys.includes(k)));
+    this._props.updatedAt = now.toISOString();
+  }
+
   markMerged(intoId: string, now: Date): void {
     if (this._props.status !== 'ACTIVE') {
       throw new BusinessRuleError('party_not_active', 'Only ACTIVE parties can be merged');
@@ -243,6 +275,7 @@ export class Party {
     this._props.panEnc = undefined;
     this._props.panHash = undefined;
     this._props.panLast4 = undefined;
+    this._props.customFields = {};
     this._props.updatedAt = now.toISOString();
   }
 

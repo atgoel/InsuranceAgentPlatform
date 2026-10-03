@@ -6,3 +6,5 @@ export { Money } from './money';
 export { type DomainEvent, DomainEventFactory } from './domain-event';
 export { Specification } from './specification';
 export { type Result, ok, err } from './result';
+export { SchemaRegistry, type RegisteredSchema } from './schema-registry';
+export { SensitiveContentGuard } from './sensitive-content';

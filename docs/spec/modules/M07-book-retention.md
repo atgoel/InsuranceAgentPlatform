@@ -175,3 +175,46 @@ Events above; metrics `book_import_rows_total{outcome}`, `book_dues_computed_tot
 - **AC-M07-13** Tenant isolation and record scope on every endpoint.
 - **AC-M07-14** Postgres: migration, RLS, unique policy hash per tenant, raw import rows removed after commit. *(integration)*
 - **AC-M07-15** Due calendar, book import wizard, policies tab and servicing tracker screens as described in §9.
+
+## 11. CR-001 additions — register fields, risk details, custom fields, "Office sales register" import
+
+Source: [CR-001](../change-requests/CR-001-sales-register-fields.md). Kernel pieces (`PolicyCommercials`, risk schemas, custom fields) are in M00 §16 and are built already; everything below is built with M07. Where this section and §3–§10 differ, this section wins.
+
+### 11.1 Held policy
+`HeldPolicyProps` gains:
+```ts
+commercials: PolicyCommercialsProps;          // kernel M00 §16.4 — category, businessType, previousInsurerName?, bookedOn, commencementDate, expiryDate?, policyTermMonths?,
+                                              // premiumNetPaise / premiumTaxPaise / premiumGrossPaise, bookingChannelCode?, businessSource?, referredBy?, remarks?
+bookingChannel?: { code: string; insurerCodeId?: string };   // insurerCodeId when the code matches an M02 insurer code of the tenant
+risk?: { schemaId: string; schemaVersion: number; details: unknown };   // validated by the risk SchemaRegistry + checkRiskAgainstCommercials
+registrationNoLast4?: string;                 // motor: P2 registration number stored enc + hash + last4 (never in risk JSONB)
+customFields: CustomFieldValues;              // entity 'held_policy'
+```
+- `line` stays and must equal `commercials.line`; `premiumPaise` is replaced by `commercials.premiumGrossPaise` (gross, with GST) — `premiumPaise` remains as a read alias in views; `commencementDate` comes from `commercials`.
+- `renewalDate` for HEALTH/GENERAL = `commercials.renewalDate()` (expiry + 1 day) when an expiry is known; `policyTermMonths` supports short-term motor/travel.
+- `referredBy` is never the seller: `servicingMemberId` / seller stay as they are.
+- `HeldPolicy.register` calls `PolicyCommercials.create` and, when `riskSchemaFor(category)` is defined and risk details are given, `SchemaRegistry.parse` + `checkRiskAgainstCommercials(…, today)`.
+
+### 11.2 Import (extends §3.4)
+- Canonical keys added: `bookedOn`, `expiryDate`, `category` (+ line derived), `businessType`, `previousInsurerName`, `policyTerm` ('1 YEAR', '6 MONTHS', '3 YEARS' → months), `premiumNet`, `premiumGross`, `premiumTax`, `odPremium`, `tpPremium`, `ncb`, `registrationNo`, `registrationYear`, `familySizeOrModel`, `bookingChannelCode`, `businessSource`, `referredByName`, `remarks`, `commissionAmount`, `commissionRatePct`, `commissionRemarks`, `invoiceNo`, and `custom:<key>` (a tenant custom field of entity `held_policy`) and `risk:<field>`.
+- **Saved mapping profile "Office sales register"** (`ImportFormat` gains `'OFFICE_SALES_REGISTER'`): header synonyms (case/space-insensitive) — `S. No.`→rowNo, `Month`→ignored (derived), `Company Name`→insurerName, `Type`→category, `Client Name`→holderName, `CONTACT NO.`→mobile, `BOOKING DATE`→bookedOn, `RISK START DATE`→commencementDate, `POLICY END DATE`→expiryDate, `Plan Name`→productName, `Family Size/Model`→familySizeOrModel, `Regn. No.`→registrationNo, `Regn. Year`→registrationYear, `Policy No.`→policyNumber, `SI/IDV`→sumAssured, `NCB YES/NO PY`→ncb, `Final Premium`→premiumGross (cross-checked with `Prem. with GST`), `OD PREMIUM`→odPremium, `Premium w/o GST`→premiumNet, `Prem. with GST`→premiumGross, `Intermediary`→bookingChannelCode, `Port/Fresh/Rollover`→businessType, `Term`→policyTerm, `Proposer DOB`→dob, first `Remarks`→remarks, `Reference`→referredByName, `SOURCE`→businessSource, `Commission`→commissionAmount, `%`→commissionRatePct, second `Remarks`→commissionRemarks, `Invoice No.`→invoiceNo. Duplicate header names are disambiguated by position (first/second occurrence).
+- Value rules: dates `dd-mm-yyyy` (plus the existing formats); `Type` HEALTH → HEALTH line, category from `Family Size/Model` (INDIVIDUAL → HEALTH_INDIVIDUAL, FLOATER/2A+1C-style mixes → HEALTH_FLOATER); MOTOR → MOTOR; LIFE → LIFE with category OTHER unless the product matches M05; `Port/Fresh/Rollover` FRESH/RENEWAL/PORT(ABILITY)/ROLLOVER; `SOURCE` IN HOUSE → IN_HOUSE (others by synonym table, unknown → OTHER with a row warning); premium tax = gross − net (negative → row error `premium_mismatch`); when only gross is present, net is required for commission rows (row error `premium_net_required`).
+- **Money columns** (Commission, all premiums, SI/IDV, OD premium): a non-numeric value is a row error `invalid_amount` naming the column — never zero, never shifted (CR-001 D2). Mapping is by header with a preview-and-confirm step.
+- **Referrer** (D1): `Reference` → `commercials.referredBy.name` as written; the validator suggests `referredBy.memberId` / `partyId` by exact normalised-name match within the tenant (M02 members, M03 parties) and shows it in the review queue; the link is stored only after the importer confirms it (`PUT /book-imports/{id}/rows/{rowNo}/referrer` `{ memberId? , partyId? }`); otherwise only the name is kept. The seller stays unchanged.
+- Commission columns create, on commit, an M10 RECEIVED entry linked to the new held policy (`commissionAmount`, `ratePct`, `reason` = commission remarks, `invoiceNo`), via the M10 `CommissionImportPort`; rows without a commission amount create none.
+
+### 11.3 API changes
+- `POST /held-policies` and `PATCH /held-policies/{id}` accept the commercials fields, `risk` and `customFields`; `GET /held-policies?…` gains filters `category`, `businessType`, `businessSource`, `bookedFrom`, `bookedTo`, `referredBy` (name contains) and `cf.<key>=<value>` for reportable custom fields (non-reportable or unknown key → 400 `custom_field_not_reportable`).
+- `PUT /book-imports/{id}/rows/{rowNo}/referrer` (`book.import`) as above.
+
+### 11.4 DDL (`070_book.sql`, extended)
+`held_policy` adds: `booked_on date not null`, `expiry_date date`, `product_category text not null`, `business_type text not null check (business_type in ('FRESH','RENEWAL','PORTABILITY','ROLLOVER'))`, `previous_insurer_name text`, `policy_term_months int`, `premium_net_paise bigint not null`, `premium_tax_paise bigint not null`, `premium_gross_paise bigint not null`, `check (premium_net_paise + premium_tax_paise = premium_gross_paise)`, `booking_channel_code text`, `booking_insurer_code_id text`, `business_source text`, `referred_by_name text`, `referred_by_party_id text`, `referred_by_member_id text`, `remarks text`, `risk_details jsonb`, `risk_schema_id text`, `risk_schema_version int`, `registration_no_enc text`, `registration_no_hash text`, `registration_no_last4 text`, `custom_fields jsonb not null default '{}'`, `custom_schema_version int not null default 1`; check: risk_details null ⇔ risk_schema_id null. Indexes on (tenant_id, booked_on), (tenant_id, business_source), (tenant_id, referred_by_name).
+
+### 11.5 Screens
+Held-policy detail gains sections per line (motor: registration last-4, make/model, NCB, OD/TP; health: cover type and member mix e.g. "Floater · 2A+1C", portability), commercials (booked on, business type, source, referred by, channel), and the shared `CustomFieldsSection` (entity `held_policy`). The import screen gets the "Office sales register" profile in the format picker and a referrer-confirmation column in the review queue.
+
+### 11.6 Acceptance criteria
+- **AC-CR001-01** Importing the sample register row (`1 | JULY | STAR HEALTH | HEALTH | NITISH VATS | 99532xxxxx | 02-07-2026 | 02-07-2026 | 01-07-2027 | ASSURE | INDIVIDUAL | … | 199734823 | 1000000 | | 29466 | | 29466 | 29466 | OFFICE M11-DIRECT | FRESH | 1 YEAR | … | IN HOUSE | SAURABH`) creates the party (masked contact), a HEALTH held policy (category HEALTH_INDIVIDUAL, business type FRESH, booked 2026-07-02, risk start 2026-07-02, expiry 2027-07-01, renewal 2027-07-02, SI ₹10,00,000, gross ₹29,466) and links the seller.
+- **AC-CR001-02** (M07 part) Motor rows validate the registration number, NCB and OD + TP ≤ net premium with row reasons; the registration number is stored encrypted with a hash and shown as last-4.
+- **AC-CR001-04** (M07 part) An import column mapped to `custom:branch_code` stores the value on the held policy, and `GET /held-policies?cf.branch_code=…` filters by it; filtering by a non-reportable field → 400.
+- **AC-CR001-06** A register row whose *Reference* is "SAURABH" stores `referred_by_name = 'SAURABH'`, leaves the seller unchanged and links `referred_by_member_id` only after the importer confirms a suggested match; a row with text in *Commission* is rejected with `invalid_amount` naming the column.

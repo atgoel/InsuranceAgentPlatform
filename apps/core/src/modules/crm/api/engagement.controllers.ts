@@ -1,17 +1,18 @@
-import { Body, Controller, Get, Headers, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, Param, Patch, Post, Put, Query, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { z } from 'zod';
 import { CurrentPrincipal, RequirePermission } from '../../../kernel/tenancy/decorators';
 import { Principal } from '../../../kernel/tenancy/principal';
 import { Idempotent } from '../../../kernel/idempotency/idempotency.interceptor';
 import { ZodValidationPipe } from '../../../kernel/http/zod-validation.pipe';
-import { parseIfMatch } from '../../../kernel/http/if-match';
+import { etagFor, parseIfMatch } from '../../../kernel/http/if-match';
 import { OpportunityService } from '../application/opportunity.service';
 import { TaskService } from '../application/task.service';
 import { RoutingService } from '../application/routing.service';
 import { MyWorkService } from '../application/my-work.service';
 import { LeadImportService } from '../application/lead-import.service';
 import {
-  BoardQuery, CreateTaskSchema, LeadImportSchema, ListTasksQuery, LossSchema, OpportunityMoveSchema, PatchTaskSchema, RoutingRulesSchema, SimulationSchema,
+  BoardQuery, CreateTaskSchema, LeadImportSchema, ListTasksQuery, LossSchema, OpportunityMoveSchema, PatchTaskSchema, ReplaceCustomFieldsSchema, RoutingRulesSchema, SimulationSchema,
 } from './schemas';
 
 /** Pipeline (CRM03). There is deliberately no way to set ISSUED over HTTP. */
@@ -23,6 +24,26 @@ export class OpportunitiesController {
   @RequirePermission('crm.opportunity.read')
   board(@CurrentPrincipal() p: Principal, @Query(new ZodValidationPipe(BoardQuery)) q: z.infer<typeof BoardQuery>) {
     return this.opportunities.board(p, { ownerMemberId: q.owner === 'me' ? p.memberId : q.owner, productInterest: q.product });
+  }
+
+  @Get(':id')
+  @RequirePermission('crm.opportunity.read')
+  async get(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Res({ passthrough: true }) res: Response) {
+    const view = await this.opportunities.get(p, id);
+    res.setHeader('ETag', etagFor(view.version));
+    return view;
+  }
+
+  // eslint-disable-next-line max-params
+  @Put(':id/custom-fields')
+  @RequirePermission('crm.opportunity.write')
+  async replaceCustomFields(
+    @CurrentPrincipal() p: Principal, @Param('id') id: string, @Headers('if-match') ifMatch: string | undefined,
+    @Body(new ZodValidationPipe(ReplaceCustomFieldsSchema)) body: z.infer<typeof ReplaceCustomFieldsSchema>, @Res({ passthrough: true }) res: Response,
+  ) {
+    const view = await this.opportunities.replaceCustomFields(p, id, body.customFields, parseIfMatch(ifMatch));
+    res.setHeader('ETag', etagFor(view.version));
+    return view;
   }
 
   @Post(':id/stage-transitions')

@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { AUDIT_LOG, CLOCK, ID_GENERATOR, LOGGER, METRICS, OUTBOX, UNIT_OF_WORK } from '../../../kernel/tokens';
+import { CustomFieldDefinitionReader } from '../../../kernel/custom-fields';
+import { AUDIT_LOG, CUSTOM_FIELD_DEFINITIONS, CLOCK, ID_GENERATOR, LOGGER, METRICS, OUTBOX, UNIT_OF_WORK } from '../../../kernel/tokens';
 import { AuditLog } from '../../../kernel/audit/audit-log';
 import { ChangeRecorder } from '../../../kernel/audit/change-recorder';
 import { Outbox } from '../../../kernel/outbox/outbox';
@@ -23,6 +24,8 @@ export class PartyContext {
     @Inject(LOGGER) logger: Logger,
     @Inject(OUTBOX) outbox: Outbox,
     @Inject(AUDIT_LOG) auditLog: AuditLog,
+    /** CR-001: custom-field definitions (M01), read inside the caller's transaction. */
+    @Inject(CUSTOM_FIELD_DEFINITIONS) readonly defs: CustomFieldDefinitionReader,
   ) {
     this.logger = logger.child({ module: 'party' });
     this.recorder = new ChangeRecorder('party', { outbox, auditLog, clock, ids });

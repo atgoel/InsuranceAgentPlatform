@@ -198,6 +198,25 @@ export class SoloSignup {
 export function hashOtp(otp: string, pepper: string): string   // HMAC-SHA256 hex; raw OTP never stored or logged
 ```
 
+### 3.9 Custom field definitions (CR-001; kernel M00 §16.5)
+The tenant's governed field registry. Domain rules live in the kernel (`defineCustomField`, `reviseCustomField`); M01 stores definitions, applies the plan limit `plan.limits.customFields` (active definitions across all entities) and implements the kernel `CustomFieldDefinitionReader` (token `CUSTOM_FIELD_DEFINITIONS`) for other modules.
+```ts
+// application/ports.ts
+export const CUSTOM_FIELD_REPOSITORY = Symbol('CUSTOM_FIELD_REPOSITORY');
+export interface CustomFieldRepository extends CustomFieldDefinitionReader {     // tenant-scoped (RLS)
+  list(tx: Transaction): Promise<CustomFieldDefinition[]>                      // all entities, active and inactive, ordered by entity, key
+  get(tx: Transaction, id: string): Promise<CustomFieldDefinition | undefined>
+  insert(tx: Transaction, def: CustomFieldDefinition): Promise<void>            // unique (tenant, entity, key) → ConflictError('custom_field_exists')
+  update(tx: Transaction, def: CustomFieldDefinition, expectedVersion: number): Promise<void>   // version mismatch → PreconditionFailedError
+}
+// application/custom-field.service.ts
+export class CustomFieldService {
+  list(p: Principal, entity?: CustomFieldEntity): Promise<{ items: CustomFieldDefinition[]; usage: { active: number; limit: number } }>
+  define(p: Principal, input: DefineCustomFieldInput): Promise<CustomFieldDefinition>          // limit from the tenant's plan; audit; event tenant.custom_field.defined { id, entity, key, piiClass }
+  revise(p: Principal, id: string, patch: ReviseCustomFieldInput, expectedVersion: number): Promise<CustomFieldDefinition>   // unknown → NotFoundError; event tenant.custom_field.revised { id, version, active }
+}
+```
+
 ## 4. Ports (application/ports.ts)
 
 ```ts
@@ -314,6 +333,9 @@ export class CachingTenantResolver implements TenantResolver {                  
 | GET | `/tenant/brand-kit` | `tenant.read` | `BrandKitProps & { contrastRatio: number }` |
 | PUT | `/tenant/brand-kit` | `tenant.brand.write` | `BrandKitProps` → same as GET |
 | POST ✱ | `/tenant/trials` | `tenant.plan.write` | `{ planCode: 'SOLO_PRO' }` → profile (trial 14 days) |
+| GET | `/tenant/custom-fields?entity=` | `tenant.read` | `{ items: CustomFieldDefinition[], usage: { active, limit } }` (CR-001) |
+| POST ✱ | `/tenant/custom-fields` | `tenant.custom_field.write` | `DefineCustomFieldInput` → 201 `CustomFieldDefinition`; 400 `pii_class_not_allowed` / `p2_not_reportable` / `invalid_custom_field_key` / `invalid_label` / `invalid_enum_options`; 409 `custom_field_exists`; 422 `custom_field_limit_reached` `{ limit }` |
+| PATCH | `/tenant/custom-fields/{id}` (`If-Match`) | `tenant.custom_field.write` | `ReviseCustomFieldInput` (unknown keys such as `type`, `key`, `piiClass` → 400) → `CustomFieldDefinition` + `ETag`; 400 `enum_option_removed`; 404; 412 stale; 422 `custom_field_limit_reached` |
 
 ### 6.3 Public (`@Public()`, tenant from host where applicable)
 | Method | Path | Request / Response |
@@ -325,7 +347,7 @@ export class CachingTenantResolver implements TenantResolver {                  
 Idempotency on public routes uses tenant scope `'public'` (kernel rule).
 
 ### 6.4 Permissions registered by the module
-`TENANT_ADMIN → tenant.read, tenant.tie_up.write, tenant.flag.write, tenant.brand.write, tenant.plan.write` · `PRINCIPAL_OFFICER → tenant.read, tenant.tie_up.write, tenant.flag.write` · `SOLO_OWNER → tenant.read, tenant.brand.write, tenant.plan.write` · all other customer-realm roles → `tenant.read`.
+`TENANT_ADMIN → tenant.read, tenant.tie_up.write, tenant.flag.write, tenant.brand.write, tenant.plan.write, tenant.custom_field.write` · `PRINCIPAL_OFFICER → tenant.read, tenant.tie_up.write, tenant.flag.write` · `SOLO_OWNER → tenant.read, tenant.brand.write, tenant.plan.write, tenant.custom_field.write` · all other customer-realm roles → `tenant.read`.
 
 ## 7. DDL — `apps/core/migrations/010_tenancy.sql`
 
@@ -388,6 +410,26 @@ create table if not exists usage_counter (
 ```
 The `pg` adapters: `PgTenantDirectory` and `PgProvisioningStateRepository`/`PgSignupRepository` use the platform (owner) pool injected as `PLATFORM_POOL`; `PgTenantSettingsRepository` uses `PgTransaction` from the kernel unit of work (RLS).
 
+### 7.1 `apps/core/migrations/012_custom_fields.sql` (CR-001)
+```sql
+create table if not exists custom_field_definition (
+  tenant_id text not null, id text not null,
+  entity text not null check (entity in ('held_policy','policy_sale','party','lead','opportunity','commission_entry')),
+  key text not null check (key ~ '^[a-z][a-z0-9_]{1,39}$'),
+  label_en text not null, label_hi text,
+  type text not null check (type in ('text','number','money','date','enum','boolean')),
+  enum_options jsonb,                                   -- [{ value, label: { en, hi? } }], schema 'custom_field_enum_options' v1
+  required boolean not null default false,
+  pii_class text not null check (pii_class in ('P0','P1','P2')),   -- P3 refused at launch
+  reportable boolean not null default false check (not (reportable and pii_class = 'P2')),
+  active boolean not null default true,
+  created_at timestamptz not null, updated_at timestamptz not null, version int not null default 1,
+  primary key (tenant_id, id), unique (tenant_id, entity, key)
+);
+-- RLS: tenant_isolation policy on tenant_id = current_setting('app.tenant_id'); iap_app SELECT, INSERT, UPDATE (no DELETE — definitions are deactivated, never deleted)
+```
+In-memory and Pg adapters (`InMemoryCustomFieldRepository`, `PgCustomFieldRepository`) share a contract test (`test/tenancy/custom-fields.contract.ts`). M01 exports `CUSTOM_FIELD_DEFINITIONS` (bound to the same repository instance) for M03/M04.
+
 ## 8. Observability
 
 | Event / metric | Level | Notes |
@@ -410,6 +452,7 @@ API client functions in `api.ts` typed from §6. Screens (route → wireframe):
 | `/console/brand` | `BrandKitScreen` (W08 brand part) | Brand name, presets, primary/secondary colour inputs with live contrast check (client-side `contrastRatio` mirror, warning text from wireframe when < 4.5), typeface radio from approved set showing "नमस्ते" sample, powered-by toggle (disabled unless plan allows), live preview card, Save. |
 | `/console/ops/tenants` | `OperatorTenantsScreen` (W09) | Plan cards, tenant table (name, type, plan, status chips), "+ Provision tenant" BottomSheet form (legal name, entity type, plan, slug, registration, admin) → POST; suspend/resume actions. |
 | `/signup` | `SoloSignupScreen` (M15) | 3 steps (Stepper): phone + licence + consent (ConsentCheckbox notice v1.0) → OTP entry → success card with "Import my book" (link `/m/book/import`) and "Skip to Today" (`/m/today`). Errors: `otp_invalid` with attempts message, `otp_locked`, `otp_expired`. |
+| `/console/custom-fields` | `CustomFieldsScreen` (W11 Configuration, CR-001) | Usage "active / limit" meter; table per entity tab (Customers = party, Leads = lead, Opportunities = opportunity, Policies = held_policy, Sales = policy_sale, Commission = commission_entry) with key, label, type, PII class chip, required, reportable, active switch; "+ Add field" BottomSheet (key, label EN/HI, type, enum options editor, PII class P0/P1/P2 — P3 not offered, with the note "Highly sensitive data (P3) cannot be stored in custom fields", required, reportable — disabled and unchecked when P2); edit sheet (label, options add/relabel only, required, reportable, active) with `If-Match`; server errors inline (`custom_field_exists` on key, `custom_field_limit_reached` as a banner with the limit). Hidden for users without `tenant.custom_field.write` (read-only table). |
 | `/m/me/plan` | `SoloPlanScreen` (M19) | Plan name, usage meters (customers, AI credits, messages) with warning at the plan alert threshold ("You've used 76% of this month's AI actions…"), Pro trial CTA → POST `/tenant/trials`, trial-active state. |
 
 All screens: loading skeleton, error with trace reference, permission denied (403), Hindi strings for the mobile screens (M15, M19).
@@ -437,6 +480,7 @@ API
 
 Frontend
 - **AC-M01-16** Tenant setup screen shows entity, registration status chip, comparison scope, tie-ups per line with used/max; saving an over-limit line shows the server error inline; referral rewards switch is disabled with the legal explanation; online purchase requires a recorded review before enabling.
+- **AC-CR001-04** (M01 part) `POST /tenant/custom-fields` creates a reportable P0 field (e.g. "Branch code" on party), refuses P3 (400 `pii_class_not_allowed`), P2-reportable, duplicate keys (409) and definitions beyond the plan's `customFields` limit (422); `PATCH` with `If-Match` revises label/options/required/reportable/active, refuses type/key/PII-class changes and enum value removal; definitions are tenant-isolated and audited; Postgres RLS isolates `custom_field_definition` *(integration)*. Screen: P3 is not offered, reportable is disabled for P2, limit and duplicate errors are shown.
 - **AC-M01-17** Brand kit screen warns live when contrast < 4.5:1, disables Save in that state, shows the typeface sample and disables the powered-by toggle when the plan forbids it.
 - **AC-M01-18** Operator screen lists tenants with status chips and provisions a tenant via the sheet form (POST with Idempotency-Key), showing `failedStep` when provisioning is incomplete.
 - **AC-M01-19** Solo signup screen walks phone/licence/consent → OTP → success, blocks continue without consent, and shows `otp_invalid`, `otp_locked` and `otp_expired` messages; Hindi strings render when the language is हि.

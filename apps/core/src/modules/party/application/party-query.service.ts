@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { CustomFieldValidator, CustomFieldValues } from '../../../kernel/custom-fields';
 import { Principal } from '../../../kernel/tenancy/principal';
 import { Party } from '../domain/party';
 import { ContactPointFactory } from '../domain/contact-point';
@@ -32,6 +33,8 @@ export interface PartyListItem {
   rolesSummary: string[];
   tags: string[];
   ownerMemberId?: string;
+  /** CR-001: P2 values masked as '****'. */
+  customFields: CustomFieldValues;
 }
 
 /** Scoped customer lists and search for CRM04 (read side). */
@@ -69,11 +72,13 @@ export class PartyQueryService {
   }
 
   async listItems(tx: Transaction, parties: Party[]): Promise<PartyListItem[]> {
+    const defs = await this.ctx.defs.activeFor(tx, 'party');
     return Promise.all(parties.map(async (p) => {
       const [household, roles] = await Promise.all([this.households.forParty(tx, p.props.id), this.roles.forParty(tx, p.props.id)]);
       return {
         id: p.props.id, displayName: p.props.displayName, primaryMobileMasked: p.primary('MOBILE')?.masked, householdName: household?.name,
         rolesSummary: [...new Set(roles.map((r) => (r.label ? `${r.role} · ${r.label}` : r.role)))], tags: [...p.props.tags], ownerMemberId: p.props.ownerMemberId,
+        customFields: CustomFieldValidator.mask(defs, p.props.customFields),
       };
     }));
   }

@@ -123,3 +123,12 @@ Events above (ids/enums/paise only); metrics `proposal_submissions_total{route,o
 - **AC-M09-10** Record scope, tenant isolation; answers never logged (canary test).
 - **AC-M09-11** Postgres: migration, RLS, answer immutability after confirmation, unique submission idempotency key. *(integration)*
 - **AC-M09-12** Proposal, tracker, desk and portal screens as in §9.
+
+## 11. CR-001 additions — policy sale commercials
+
+Source: [CR-001](../change-requests/CR-001-sales-register-fields.md); kernel M00 §16.4. Built with M09.
+- `PolicySale` gains `commercials: PolicyCommercialsProps` (shared with M07 `HeldPolicy`), `risk?: { schemaId; schemaVersion; details }`, `registrationNoLast4?` and `customFields: CustomFieldValues` (entity `policy_sale`). `premiumPaise` becomes `commercials.premiumGrossPaise`; `issuedOn` = `commercials.bookedOn`.
+- `IssuanceService.recordIssuance` builds the commercials from the selected quote option (net, tax, gross from M06; category from M05; business type FRESH unless the quote marks renewal/portability) and the opportunity attribution (M04 §11.2: `businessSource = businessSourceForLeadSource(source)`, `referredBy.partyId = referrerPartyId`); seller = `sellerMemberId`, never the referrer.
+- `proposal.policy.issued` payload is unchanged (ids only); M07 copies commercials from the sale when creating the PLATFORM_SALE held policy; M10 computes expected commission on `premiumNetPaise`.
+- DDL `policy_sale`: the same commercials, risk, registration and custom-field columns as M07 §11.4 `held_policy`, with the net + tax = gross check.
+- **AC-CR001-03** (M09 part) A recorded issuance stores net, tax and gross with net + tax = gross, the business source and referrer from the lead attribution, and the seller unchanged.

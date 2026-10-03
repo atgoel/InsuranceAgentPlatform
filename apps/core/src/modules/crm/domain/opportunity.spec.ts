@@ -539,3 +539,19 @@ describe('AC-M04-18 Opportunity book transfer and party relink', () => {
     expect(o.props.partyId).toBe('pty_survivor');
   });
 });
+
+describe('AC-CR001-08 Opportunity custom fields', () => {
+  const now = new Date('2026-10-03T10:00:00Z');
+  const open = () => Opportunity.open({
+    id: 'opp_cf', partyId: 'party_1', productInterest: 'TERM_LIFE', title: 'Term plan', expectedPremium: Money.ofPaise(50000), startStage: 'DISCOVERY', ownerMemberId: 'mem_1', now,
+  });
+
+  it('AC-CR001-08 a new opportunity starts with {} and replaceCustomFields replaces the whole set', () => {
+    const opp = open();
+    expect(opp.props.customFields).toEqual({});
+    opp.replaceCustomFields({ rider_note: 'CI rider', sum_assured_paise: 10_000_000 });
+    expect(opp.props.customFields).toEqual({ rider_note: 'CI rider', sum_assured_paise: 10_000_000 });
+    opp.replaceCustomFields({ review_flag: true });
+    expect(opp.props.customFields).toEqual({ review_flag: true });
+  });
+});

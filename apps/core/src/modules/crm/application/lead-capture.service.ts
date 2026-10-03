@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ValidationError } from '../../../kernel/errors/domain-errors';
+import { CustomFieldValidator, CustomFieldValues } from '../../../kernel/custom-fields';
 import { Principal } from '../../../kernel/tenancy/principal';
 import { Attribution, Lead, LeadSource, ProductLine } from '../domain/lead';
 import { CRM_EVENTS } from '../domain/events';
@@ -27,6 +28,8 @@ export interface CaptureLeadInput {
   referrerPartyId?: string;
   micrositeMemberId?: string;
   touchRef?: string;
+  /** CR-001: authenticated POST /leads only; /public/leads and imports never set it. Validated before any write. */
+  customFields?: Record<string, string | number | boolean | null>;
   consent: { granted: boolean; noticeVersion: string; channels: ConsentChannel[]; purposes: Array<'SERVICE' | 'MARKETING'>; evidenceRef?: string };
 }
 
@@ -64,6 +67,10 @@ export class LeadCaptureService {
   async captureIn(tx: Transaction, input: CaptureLeadInput, origin: CaptureOrigin): Promise<CaptureLeadResult> {
     const now = this.ctx.clock.now();
     await this.screen(tx, input, origin, now);
+    // Staff capture only; validated before the party or lead is written (AC-CR001-08). Public forms and imports start as {}.
+    const customFields = origin.kind === 'STAFF' && input.customFields !== undefined
+      ? CustomFieldValidator.validate(await this.ctx.defs.activeFor(tx, 'lead'), input.customFields)
+      : undefined;
     const by = origin.kind === 'STAFF' ? (origin.principal.memberId ?? 'staff') : 'customer';
     const party = await this.parties.findOrCreate(tx, {
       kind: 'PERSON', displayName: input.fullName, contacts: contactsOf(input), preferredLanguage: input.language,
@@ -72,7 +79,7 @@ export class LeadCaptureService {
     const existing = await this.leads.findOpenByParties(tx, relatedParties(party), new Date(now.getTime() - DEDUP_WINDOW_MS));
     const result = existing
       ? await this.reEnquiry(tx, existing, input, now, by)
-      : await this.newLead(tx, { input, partyId: party.partyId, now, by, solo: await this.ports.isSolo(tx.tenantId) });
+      : await this.newLead(tx, { input, partyId: party.partyId, now, by, solo: await this.ports.isSolo(tx.tenantId), customFields });
     await this.recordConsents(tx, result.partyId, input, origin, by);
     if (party.created && (await this.ports.isSolo(tx.tenantId))) await this.entitlements.consume(tx.tenantId, 'customers', 1);
     this.ctx.metrics
@@ -88,11 +95,11 @@ export class LeadCaptureService {
     if (!input.consent.granted) throw new ValidationError('consent_required', 'Consent to be contacted is required');
   }
 
-  private async newLead(tx: Transaction, a: { input: CaptureLeadInput; partyId: string; now: Date; by: string; solo: boolean }): Promise<Omit<CaptureLeadResult, 'possibleMatches'>> {
+  private async newLead(tx: Transaction, a: { input: CaptureLeadInput; partyId: string; now: Date; by: string; solo: boolean; customFields?: CustomFieldValues }): Promise<Omit<CaptureLeadResult, 'possibleMatches'>> {
     const port = await this.ports.forTenant(tx.tenantId);
     const lead = Lead.capture({
       id: this.ctx.ids.next('lead'), partyId: a.partyId, productInterest: a.input.productInterest, attribution: attributionOf(a.input, a.now),
-      pincode: a.input.pincode, language: a.input.language, now: a.now, by: a.by,
+      pincode: a.input.pincode, language: a.input.language, customFields: a.customFields, now: a.now, by: a.by,
     });
     const p = lead.props;
     await this.ctx.recorder.record(tx, {

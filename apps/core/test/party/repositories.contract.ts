@@ -80,6 +80,22 @@ export function partyRepositoriesContract(label: string, setup: () => Promise<Co
       expect(await get(A(), id('pty', 'missing'))).toBeUndefined();
     });
 
+
+    it('AC-CR001-08 custom_fields round-trip, are replaced on save and stay tenant-isolated', async () => {
+      const p = Party.create({
+        id: id('pty', 'cf'), kind: 'PERSON', displayName: 'Meera Nair', contactPoints: [cp('cf')], source: { kind: 'MANUAL' }, now: new Date(T0),
+        customFields: { occupation: 'Architect', income_paise: 90_000_000, nri: false },
+      });
+      await save(A(), p);
+      expect(must(await get(A(), id('pty', 'cf'))).props.customFields).toEqual({ occupation: 'Architect', income_paise: 90_000_000, nri: false });
+      const loaded = must(await get(A(), id('pty', 'cf')));
+      loaded.replaceCustomFields({ occupation: 'Doctor' }, new Date(T0 + 60_000));
+      await save(A(), loaded);
+      const again = must(await get(A(), id('pty', 'cf')));
+      expect(again.props.customFields).toEqual({ occupation: 'Doctor' });
+      expect(again.props.version).toBe(3);
+      expect(await get(B(), id('pty', 'cf'))).toBeUndefined();
+    });
     it('AC-M03-01 an update replaces fields and contact points and bumps the version again', async () => {
       await save(A(), mk('up', 'Bimal Das'));
       const p = must(await get(A(), id('pty', 'up')));
