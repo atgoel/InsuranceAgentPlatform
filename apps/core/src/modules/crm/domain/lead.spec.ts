@@ -247,10 +247,10 @@ describe('AC-M04-02 Lead stage transitions', () => {
   const now = new Date('2026-10-03T10:00:00Z');
   const mockRuleSet: StageRuleSet = {
     missingFor: jest.fn(() => []),
-  } as any;
+  } as never;
   const mockContext: StageRuleContext = {
     activities: [],
-    lead: {} as any,
+    lead: {} as never,
     consentRecorded: true,
   };
 

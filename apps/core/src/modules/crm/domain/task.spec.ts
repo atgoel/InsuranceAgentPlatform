@@ -324,7 +324,7 @@ describe('AC-M04-09 Task aggregate', () => {
         subjectId: 'lead_1',
         kind: 'CALL',
         title: 'Call',
-        dueAt: new Date('2026-10-04T06:00:00Z'), // next IST day
+        dueAt: new Date('2026-10-04T19:00:00Z'), // 2026-10-05 00:30 IST: next IST day
         source: 'MANUAL',
         now: now_eveningUtc,
       });

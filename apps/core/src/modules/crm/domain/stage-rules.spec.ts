@@ -16,8 +16,8 @@ describe('AC-M04-03 Stage rules', () => {
     it('returns defaults with CONTACTED and QUALIFIED rules', () => {
       const rules = StageRuleSet.defaults();
 
-      expect(rules.missingFor('NEW', {} as any)).toEqual([]);
-      expect(rules.missingFor('CONTACTED', { activities: [], lead: {}, consentRecorded: false } as any)).toContain(
+      expect(rules.missingFor('NEW', {} as never)).toEqual([]);
+      expect(rules.missingFor('CONTACTED', { activities: [], lead: {}, consentRecorded: false } as never)).toContain(
         'Log a connected call, meeting or message'
       );
     });
@@ -41,7 +41,7 @@ describe('AC-M04-03 Stage rules', () => {
             actorMemberId: 'member_1',
           },
         ],
-        lead: { ownerMemberId: 'member_1' } as any,
+        lead: { ownerMemberId: 'member_1' } as never,
         consentRecorded: false,
       };
 
@@ -60,7 +60,7 @@ describe('AC-M04-03 Stage rules', () => {
             actorMemberId: 'member_1',
           },
         ],
-        lead: { ownerMemberId: 'member_1' } as any,
+        lead: { ownerMemberId: 'member_1' } as never,
         consentRecorded: false,
       };
 
@@ -79,7 +79,7 @@ describe('AC-M04-03 Stage rules', () => {
             actorMemberId: 'member_1',
           },
         ],
-        lead: { ownerMemberId: 'member_1' } as any,
+        lead: { ownerMemberId: 'member_1' } as never,
         consentRecorded: false,
       };
 
@@ -98,7 +98,7 @@ describe('AC-M04-03 Stage rules', () => {
             actorMemberId: 'member_1',
           },
         ],
-        lead: { ownerMemberId: 'member_1' } as any,
+        lead: { ownerMemberId: 'member_1' } as never,
         consentRecorded: false,
       };
 
@@ -117,7 +117,7 @@ describe('AC-M04-03 Stage rules', () => {
             actorMemberId: 'member_2',
           },
         ],
-        lead: { ownerMemberId: 'member_1' } as any,
+        lead: { ownerMemberId: 'member_1' } as never,
         consentRecorded: false,
       };
 
@@ -137,7 +137,7 @@ describe('AC-M04-03 Stage rules', () => {
             actorMemberId: 'member_1',
           },
         ],
-        lead: { ownerMemberId: 'member_1' } as any,
+        lead: { ownerMemberId: 'member_1' } as never,
         consentRecorded: false,
       };
 
@@ -147,7 +147,7 @@ describe('AC-M04-03 Stage rules', () => {
     it('is not satisfied when no activities', () => {
       const ctx: StageRuleContext = {
         activities: [],
-        lead: { ownerMemberId: 'member_1' } as any,
+        lead: { ownerMemberId: 'member_1' } as never,
         consentRecorded: false,
       };
 
@@ -169,7 +169,7 @@ describe('AC-M04-03 Stage rules', () => {
             budgetBand: 'LT_15K',
             timeline: 'THIS_MONTH',
           },
-        } as any,
+        } as never,
         consentRecorded: true,
       };
 
@@ -184,7 +184,7 @@ describe('AC-M04-03 Stage rules', () => {
             budgetBand: 'LT_15K',
             timeline: 'THIS_MONTH',
           },
-        } as any,
+        } as never,
         consentRecorded: true,
       };
 
@@ -199,7 +199,7 @@ describe('AC-M04-03 Stage rules', () => {
             need: 'PROTECTION',
             timeline: 'THIS_MONTH',
           },
-        } as any,
+        } as never,
         consentRecorded: true,
       };
 
@@ -214,7 +214,7 @@ describe('AC-M04-03 Stage rules', () => {
             need: 'PROTECTION',
             budgetBand: 'LT_15K',
           },
-        } as any,
+        } as never,
         consentRecorded: true,
       };
 
@@ -230,7 +230,7 @@ describe('AC-M04-03 Stage rules', () => {
     it('is satisfied when consentRecorded is true', () => {
       const ctx: StageRuleContext = {
         activities: [],
-        lead: {} as any,
+        lead: {} as never,
         consentRecorded: true,
       };
 
@@ -240,7 +240,7 @@ describe('AC-M04-03 Stage rules', () => {
     it('is not satisfied when consentRecorded is false', () => {
       const ctx: StageRuleContext = {
         activities: [],
-        lead: {} as any,
+        lead: {} as never,
         consentRecorded: false,
       };
 
@@ -252,14 +252,14 @@ describe('AC-M04-03 Stage rules', () => {
     const rules = StageRuleSet.defaults();
 
     it('returns empty list for NEW stage', () => {
-      const missing = rules.missingFor('NEW', { activities: [], lead: {}, consentRecorded: false } as any);
+      const missing = rules.missingFor('NEW', { activities: [], lead: {}, consentRecorded: false } as never);
       expect(missing).toEqual([]);
     });
 
     it('returns missing labels for CONTACTED when not satisfied', () => {
       const ctx: StageRuleContext = {
         activities: [],
-        lead: { ownerMemberId: 'member_1' } as any,
+        lead: { ownerMemberId: 'member_1' } as never,
         consentRecorded: false,
       };
       const missing = rules.missingFor('CONTACTED', ctx);
@@ -280,7 +280,7 @@ describe('AC-M04-03 Stage rules', () => {
             actorMemberId: 'member_1',
           },
         ],
-        lead: { ownerMemberId: 'member_1' } as any,
+        lead: { ownerMemberId: 'member_1' } as never,
         consentRecorded: false,
       };
       const missing = rules.missingFor('CONTACTED', ctx);
@@ -290,7 +290,7 @@ describe('AC-M04-03 Stage rules', () => {
     it('returns all missing labels for QUALIFIED when none are satisfied', () => {
       const ctx: StageRuleContext = {
         activities: [],
-        lead: { ownerMemberId: 'member_1', qualification: {} } as any,
+        lead: { ownerMemberId: 'member_1', qualification: {} } as never,
         consentRecorded: false,
       };
       const missing = rules.missingFor('QUALIFIED', ctx);
@@ -320,7 +320,7 @@ describe('AC-M04-03 Stage rules', () => {
             budgetBand: 'LT_15K',
             timeline: 'THIS_MONTH',
           },
-        } as any,
+        } as never,
         consentRecorded: false,
       };
       const missing = rules.missingFor('QUALIFIED', ctx);

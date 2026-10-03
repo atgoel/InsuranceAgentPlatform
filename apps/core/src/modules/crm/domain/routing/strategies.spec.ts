@@ -235,7 +235,7 @@ describe('AC-M04-06/07 Routing strategies', () => {
     it('falls back to least-loaded if no skill match', () => {
       const strategy = new SkillStrategy();
       const facts: LeadRoutingFacts = {
-        productInterest: 'GENERAL',
+        productInterest: 'MOTOR',
         line: 'GENERAL',
         posEligibleProduct: false,
         source: 'WEB_FORM',

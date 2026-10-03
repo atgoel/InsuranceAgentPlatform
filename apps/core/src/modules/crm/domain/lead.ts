@@ -153,6 +153,7 @@ export class Lead {
     return this._props;
   }
 
+  // eslint-disable-next-line max-params
   assign(memberId: string, orgUnitId: string, slaMinutes: number | undefined, now: Date, ruleId?: string): void {
     this._props.ownerMemberId = memberId;
     this._props.orgUnitId = orgUnitId;
@@ -197,14 +198,8 @@ export class Lead {
     this._props.qualification = q;
   }
 
-  moveTo(
-    stage: Exclude<LeadStage, 'CONVERTED'>,
-    rules: StageRuleSet,
-    ctx: StageRuleContext,
-    now: Date,
-    by: string,
-    lostReason?: LostReason
-  ): void {
+  // eslint-disable-next-line max-params
+  moveTo(stage: LeadStage, rules: StageRuleSet, ctx: StageRuleContext, now: Date, by: string, lostReason?: LostReason): void {
     // Check terminal states
     if (this._props.stage === 'CONVERTED' || this._props.stage === 'LOST') {
       throw new BusinessRuleError('lead_closed', `Cannot move from terminal stage ${this._props.stage}`);
