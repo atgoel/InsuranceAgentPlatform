@@ -70,8 +70,6 @@ describe('AC-M00-01 Money', () => {
     });
 
     it('rejects currency mismatch', () => {
-    const m1_test = Money.ofPaise(1001);
-    const m2_test = Money.ofPaise(1001);
       // If other currency exists, would test mismatch
       // For now assuming only INR exists
     });

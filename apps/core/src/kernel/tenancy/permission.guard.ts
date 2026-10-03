@@ -4,7 +4,7 @@ import { ForbiddenError } from '../errors/domain-errors';
 import { REQUIRED_PERMISSIONS_KEY } from './decorators';
 import { PERMISSION_POLICY } from '../tokens';
 import { PermissionPolicy, hasPermission } from './permissions';
-import { Principal } from './principal';
+import { Principal } from './jwt';
 
 /**
  * AC-M00-19 (tenancy): PermissionGuard
@@ -28,8 +28,8 @@ export class PermissionGuard implements CanActivate {
       return true;
     }
 
-    const request: any = context.switchToHttp().getRequest();
-    const principal: Principal = request.principal as Principal;
+    const request = context.switchToHttp().getRequest() as Record<string, unknown>;
+    const principal: Principal | undefined = request.principal as Principal | undefined;
 
     if (!principal) {
       return true; // Let auth guard handle it

@@ -172,7 +172,7 @@ describe('AC-M00-07 RequestContext', () => {
         RequestContext.patch({
           tenantId: 'ten_123',
           // buffer and deps cannot be passed
-        } as unknown);
+        });
 
         const current = RequestContext.current();
         expect(current?.buffer).toBe(originalBuffer);

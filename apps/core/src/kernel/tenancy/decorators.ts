@@ -29,7 +29,7 @@ export const RequirePermission = (...permissions: string[]): MethodDecorator & C
 /**
  * @CurrentPrincipal() - Inject the Principal from the request context
  */
-export const CurrentPrincipal = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
+export const CurrentPrincipal = createParamDecorator((_data: unknown, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest();
   return request.principal as Principal;
 });

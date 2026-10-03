@@ -6,7 +6,7 @@ import * as T from './tokens';
 import { Clock, SystemClock } from './domain/clock';
 import { IdGenerator, UlidIdGenerator } from './domain/id-generator';
 import { Logger } from './observability/logger';
-import { LogSink, MemoryLogSink, PinoLogSink } from './observability/log-sink';
+import { LogSink, MemoryLogSink } from './observability/log-sink';
 import { Redactor } from './observability/redactor';
 import { ErrorDeduplicator } from './observability/error-deduplicator';
 import { LogOverrideStore } from './observability/log-overrides';
@@ -49,7 +49,7 @@ function coreProviders(config: KernelConfig): Provider[] {
     { provide: T.KERNEL_OPTIONS, useValue: config },
     { provide: T.CLOCK, useValue: new SystemClock() },
     { provide: T.ID_GENERATOR, useFactory: (clock: Clock) => new UlidIdGenerator(clock), inject: [T.CLOCK] },
-    { provide: T.LOG_SINK, useFactory: (): LogSink => (config.env === 'test' ? new MemoryLogSink() : new PinoLogSink()) },
+    { provide: T.LOG_SINK, useFactory: (): LogSink => new MemoryLogSink() },
     { provide: T.METRICS, useValue: new MetricsRegistry() },
     { provide: T.REDACTOR, useValue: new Redactor() },
     { provide: T.TRACER, useFactory: (clock: Clock, m: MetricsRegistry) => new Tracer(clock, m), inject: [T.CLOCK, T.METRICS] },
@@ -57,6 +57,7 @@ function coreProviders(config: KernelConfig): Provider[] {
     { provide: T.LOG_OVERRIDES, useFactory: (clock: Clock, ids: IdGenerator) => new LogOverrideStore(clock, ids), inject: [T.CLOCK, T.ID_GENERATOR] },
     {
       provide: T.LOGGER,
+      // eslint-disable-next-line max-params
       useFactory: (sink: LogSink, redactor: Redactor, dedup: ErrorDeduplicator, overrides: LogOverrideStore, clock: Clock, metrics: MetricsRegistry) =>
         new Logger({ sink, redactor, dedup, overrides, clock, metrics }, { module: 'kernel' }),
       inject: [T.LOG_SINK, T.REDACTOR, T.ERROR_DEDUPLICATOR, T.LOG_OVERRIDES, T.CLOCK, T.METRICS],

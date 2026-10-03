@@ -2,6 +2,8 @@ import { createHmac } from 'crypto';
 import { UnauthenticatedError } from '../errors/domain-errors';
 import { Clock } from '../domain/clock';
 
+export { UnauthenticatedError };
+
 export interface JwtClaims {
   sub: string;
   org: string;
@@ -52,7 +54,11 @@ export function signHs256(claims: JwtClaims, secret: string): string {
  * - Required claims (sub, org) are present and non-empty
  * - Issuer and audience if configured
  */
-export class HmacJwtVerifier {
+export interface TokenVerifier {
+  verify(token: string): Promise<Principal>;
+}
+
+export class HmacJwtVerifier implements TokenVerifier {
   constructor(
     private readonly secret: string,
     private readonly clock: Clock,
@@ -66,67 +72,68 @@ export class HmacJwtVerifier {
   async verify(token: string): Promise<Principal> {
     try {
       const parts = token.split('.');
-      if (parts.length !== 3) {
-        throw new Error('Invalid token format');
-      }
+      if (parts.length !== 3) throw new Error('Invalid token format');
 
       const [encodedHeader, encodedPayload, signature] = parts;
+      this.verifySignature(encodedHeader, encodedPayload, signature);
 
-      // Verify signature (timing-safe compare)
-      const message = `${encodedHeader}.${encodedPayload}`;
-      const expectedSignature = createHmac('sha256', this.secret)
-        .update(message)
-        .digest('base64url');
-
-      if (!this.timingSafeEqual(signature, expectedSignature)) {
-        throw new Error('Invalid signature');
-      }
-
-      // Decode header and validate algorithm
       const header = JSON.parse(Buffer.from(encodedHeader, 'base64url').toString());
-      if (header.alg !== 'HS256') {
-        throw new Error('Invalid algorithm');
-      }
+      if (header.alg !== 'HS256') throw new Error('Invalid algorithm');
 
-      // Decode and validate claims
       const claims = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString()) as JwtClaims;
+      this.validateClaims(claims);
 
-      // Validate required claims
-      if (!claims.sub || claims.sub === '') {
-        throw new Error('Missing or empty sub claim');
-      }
-      if (!claims.org || claims.org === '') {
-        throw new Error('Missing or empty org claim');
-      }
-
-      // Validate expiration
-      const now = Math.floor(this.clock.now().getTime() / 1000);
-      const leewaySeconds = this.opts?.leewaySeconds ?? 30;
-      if (claims.exp < now - leewaySeconds) {
-        throw new Error('Token expired');
-      }
-
-      // Validate issuer if configured
-      if (this.opts?.issuer && claims.iss && claims.iss !== this.opts.issuer) {
-        throw new Error('Invalid issuer');
-      }
-
-      // Validate audience if configured
-      if (this.opts?.audience && claims.aud && claims.aud !== this.opts.audience) {
-        throw new Error('Invalid audience');
-      }
-
-      return {
-        userRef: claims.sub,
-        tenantId: claims.org,
-        memberId: claims.mid,
-        orgUnitId: claims.ou,
-        roles: claims.roles || [],
-        realm: claims.realm || 'customers',
-      };
-    } catch (error) {
+      return this.principalFromClaims(claims);
+    } catch {
       throw new UnauthenticatedError('invalid_token', 'Invalid or expired token');
     }
+  }
+
+  private verifySignature(encodedHeader: string, encodedPayload: string, signature: string): void {
+    const message = `${encodedHeader}.${encodedPayload}`;
+    const expectedSignature = createHmac('sha256', this.secret)
+      .update(message)
+      .digest('base64url');
+    if (!this.timingSafeEqual(signature, expectedSignature)) {
+      throw new Error('Invalid signature');
+    }
+  }
+
+  private validateClaims(claims: JwtClaims): void {
+    this.validateRequiredClaims(claims);
+    this.validateExpiration(claims);
+    this.validateOptionalClaims(claims);
+  }
+
+  private validateRequiredClaims(claims: JwtClaims): void {
+    if (!claims.sub || claims.sub === '') throw new Error('Missing or empty sub claim');
+    if (!claims.org || claims.org === '') throw new Error('Missing or empty org claim');
+  }
+
+  private validateExpiration(claims: JwtClaims): void {
+    const now = Math.floor(this.clock.now().getTime() / 1000);
+    const leewaySeconds = this.opts?.leewaySeconds ?? 30;
+    if (claims.exp < now - leewaySeconds) throw new Error('Token expired');
+  }
+
+  private validateOptionalClaims(claims: JwtClaims): void {
+    if (this.opts?.issuer && claims.iss && claims.iss !== this.opts.issuer) {
+      throw new Error('Invalid issuer');
+    }
+    if (this.opts?.audience && claims.aud && claims.aud !== this.opts.audience) {
+      throw new Error('Invalid audience');
+    }
+  }
+
+  private principalFromClaims(claims: JwtClaims): Principal {
+    return {
+      userRef: claims.sub,
+      tenantId: claims.org,
+      memberId: claims.mid,
+      orgUnitId: claims.ou,
+      roles: claims.roles || [],
+      realm: claims.realm || 'customers',
+    };
   }
 
   private timingSafeEqual(a: string, b: string): boolean {

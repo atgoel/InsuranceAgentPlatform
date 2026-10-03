@@ -88,7 +88,10 @@ export class Tracer {
     outcome: string,
     duration: number
   ): void {
-    const opLabel = op ? { dep, op, outcome } : { outcome };
+    const opLabel: Record<string, string> = { dep, outcome };
+    if (op) {
+      opLabel.op = op;
+    }
     this.metrics.counter('dependency_calls_total', 'Dependency calls', ['dep', 'op', 'outcome']).inc(opLabel);
     this.metrics.histogram('dependency_duration_ms', 'Dependency duration', ['dep', 'op']).observe(duration);
   }

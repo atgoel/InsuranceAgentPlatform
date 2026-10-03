@@ -5,28 +5,40 @@ describe('Result', () => {
     it('creates a successful result', () => {
       const result = ok(42);
       expect(result.ok).toBe(true);
-      expect(result.value).toBe(42);
+      if (result.ok) {
+        expect(result.value).toBe(42);
+      }
     });
 
     it('wraps any value type', () => {
       const stringResult = ok('hello');
-      expect(stringResult.value).toBe('hello');
+      if (stringResult.ok) {
+        expect(stringResult.value).toBe('hello');
+      }
 
       const objResult = ok({ name: 'Alice', age: 30 });
-      expect(objResult.value).toEqual({ name: 'Alice', age: 30 });
+      if (objResult.ok) {
+        expect(objResult.value).toEqual({ name: 'Alice', age: 30 });
+      }
 
       const arrayResult = ok([1, 2, 3]);
-      expect(arrayResult.value).toEqual([1, 2, 3]);
+      if (arrayResult.ok) {
+        expect(arrayResult.value).toEqual([1, 2, 3]);
+      }
     });
 
     it('wraps null and undefined', () => {
       const nullResult = ok(null);
       expect(nullResult.ok).toBe(true);
-      expect(nullResult.value).toBe(null);
+      if (nullResult.ok) {
+        expect(nullResult.value).toBe(null);
+      }
 
       const undefinedResult = ok(undefined);
       expect(undefinedResult.ok).toBe(true);
-      expect(undefinedResult.value).toBeUndefined();
+      if (undefinedResult.ok) {
+        expect(undefinedResult.value).toBeUndefined();
+      }
     });
   });
 
@@ -34,17 +46,23 @@ describe('Result', () => {
     it('creates a failed result', () => {
       const result = err(new Error('Something went wrong'));
       expect(result.ok).toBe(false);
-      expect(result.error).toEqual(new Error('Something went wrong'));
+      if (!result.ok) {
+        expect(result.error).toEqual(new Error('Something went wrong'));
+      }
     });
 
     it('wraps any error type', () => {
       const stringError = err('error message');
       expect(stringError.ok).toBe(false);
-      expect(stringError.error).toBe('error message');
+      if (!stringError.ok) {
+        expect(stringError.error).toBe('error message');
+      }
 
       const objError = err({ code: 'NOT_FOUND', message: 'Resource not found' });
       expect(objError.ok).toBe(false);
-      expect(objError.error).toEqual({ code: 'NOT_FOUND', message: 'Resource not found' });
+      if (!objError.ok) {
+        expect(objError.error).toEqual({ code: 'NOT_FOUND', message: 'Resource not found' });
+      }
     });
   });
 

@@ -44,7 +44,7 @@ export class Logger {
     const shouldLog =
       context.forceDebug || this.deps.overrides.isDebugEnabled(scope);
 
-    const redactedCtx = ctx ? this.deps.redactor.redact(ctx) : undefined;
+    const redactedCtx = ctx ? (this.deps.redactor.redact(ctx) as Record<string, unknown>) : undefined;
 
     if (shouldLog) {
       // Write to sink with forced sampling
@@ -69,7 +69,7 @@ export class Logger {
 
   info(event: string, msg: string, ctx?: Record<string, unknown>): void {
     const context = RequestContext.current();
-    const redactedCtx = ctx ? this.deps.redactor.redact(ctx) : undefined;
+    const redactedCtx = ctx ? (this.deps.redactor.redact(ctx) as Record<string, unknown>) : undefined;
 
     // Write to sink
     this.writeToSink({
@@ -94,7 +94,7 @@ export class Logger {
 
   warn(event: string, msg: string, ctx?: Record<string, unknown>): void {
     const context = RequestContext.current();
-    const redactedCtx = ctx ? this.deps.redactor.redact(ctx) : undefined;
+    const redactedCtx = ctx ? (this.deps.redactor.redact(ctx) as Record<string, unknown>) : undefined;
 
     // Write to sink
     this.writeToSink({
@@ -146,7 +146,7 @@ export class Logger {
       errorData.fingerprint,
       errorData.suppressedSinceLast
     );
-    const redactedCtx = errorData.ctx ? this.deps.redactor.redact(errorData.ctx) : undefined;
+    const redactedCtx = errorData.ctx ? (this.deps.redactor.redact(errorData.ctx) as Record<string, unknown>) : undefined;
 
     this.writeToSink({
       level: 'error',
@@ -181,7 +181,7 @@ export class Logger {
   }
 
   security(event: string, msg: string, ctx?: Record<string, unknown>): void {
-    const redactedCtx = ctx ? this.deps.redactor.redact(ctx) : undefined;
+    const redactedCtx = ctx ? (this.deps.redactor.redact(ctx) as Record<string, unknown>) : undefined;
 
     this.writeToSink({
       level: 'warn',
@@ -196,12 +196,12 @@ export class Logger {
     const fullRecord: LogRecord = {
       ...record,
       ts: this.deps.clock.now().toISOString(),
-      ctx: record.ctx ? this.deps.redactor.redact(record.ctx) : record.ctx,
+      ctx: record.ctx ? (this.deps.redactor.redact(record.ctx) as Record<string, unknown>) : record.ctx,
     };
 
     try {
       this.deps.sink.write(fullRecord);
-    } catch (_error) {
+    } catch {
       // Swallow sink failures
     }
   }
@@ -224,7 +224,7 @@ export class Logger {
 
     try {
       this.deps.sink.write(record);
-    } catch (error) {
+    } catch {
       // Swallow sink failures
     }
   }

@@ -186,6 +186,7 @@ export class MetricsRegistry {
     return this.register(name, 'histogram', help, () => new HistogramImpl(this.store(name, labelNames), sorted)) as HistogramImpl;
   }
 
+  // eslint-disable-next-line sonarjs/cognitive-complexity
   render(): string {
     const lines: string[] = [];
     for (const [name, m] of this.metrics) {
@@ -202,6 +203,7 @@ export class MetricsRegistry {
     return lines.join('\n') + '\n';
   }
 
+  // eslint-disable-next-line max-params
   private renderHistogram(lines: string[], name: string, labels: Labels, s: HistogramState, buckets: readonly number[]): void {
     buckets.forEach((le, i) => lines.push(`${name}_bucket${formatLabels({ ...labels, le: String(le) })} ${s.bucketCounts[i]}`));
     lines.push(`${name}_bucket${formatLabels({ ...labels, le: '+Inf' })} ${s.count}`);

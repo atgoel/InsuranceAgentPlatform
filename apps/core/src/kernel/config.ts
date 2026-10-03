@@ -72,15 +72,14 @@ const configSchema = z.object({
   debugTokenSecret: z.string(),
   devAuth: z.boolean(),
   trustProxy: z.boolean(),
-  staticTenants: z.record(
-    z.object({
-      tenantId: z.string(),
-      status: z.enum(['active', 'suspended', 'provisioning', 'offboarded']),
-    }),
-  ),
-  logSampleRates: z.record(z.number()),
+  staticTenants: z.record(z.string(), z.object({
+    tenantId: z.string(),
+    status: z.enum(['active', 'suspended', 'provisioning', 'offboarded']),
+  })),
+  logSampleRates: z.record(z.string(), z.number()),
 });
 
+// eslint-disable-next-line complexity, sonarjs/cognitive-complexity
 export function loadConfig(env: NodeJS.ProcessEnv): KernelConfig {
   const nodeEnv = env.NODE_ENV || 'development';
   const persistence = (env.PERSISTENCE || 'memory') as 'memory' | 'pg';

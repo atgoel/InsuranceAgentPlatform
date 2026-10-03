@@ -7,7 +7,7 @@ import { FixedClock } from '../domain/clock';
 import { SequentialIdGenerator } from '../domain/id-generator';
 import { MetricsRegistry } from './metrics';
 import { RequestContext } from './request-context';
-import { ValidationError, BusinessRuleError } from '../errors/domain-errors';
+import { ValidationError } from '../errors/domain-errors';
 
 describe('AC-M00-09/10/11/12 Logger rules (§4.8)', () => {
   let logger: Logger;
@@ -247,8 +247,6 @@ describe('AC-M00-09/10/11/12 Logger rules (§4.8)', () => {
     });
 
     it('security logs are not deduped', () => {
-      const error = new Error('Same error');
-
       for (let i = 0; i < 10; i++) {
         logger.security('security.event', 'Event', {});
       }
@@ -265,7 +263,7 @@ describe('AC-M00-09/10/11/12 Logger rules (§4.8)', () => {
         },
       };
       const badLogger = new Logger({
-        sink: badSink as MemoryLogSink,
+        sink: badSink as unknown as MemoryLogSink,
         redactor: new Redactor(),
         dedup: new ErrorDeduplicator(clock),
         overrides: new LogOverrideStore(clock, new SequentialIdGenerator()),

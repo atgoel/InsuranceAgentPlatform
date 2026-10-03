@@ -66,6 +66,9 @@ export class InMemoryOutbox implements Outbox, OutboxSource {
   }
 }
 
-export { EventBus, EventHandler, InProcessEventBus } from './event-bus';
-export { OutboxRelay, OutboxRelayDeps } from './outbox-relay';
-export { Inbox, InMemoryInbox } from './inbox';
+export type { EventBus, EventHandler } from './event-bus';
+export { InProcessEventBus } from './event-bus';
+export { OutboxRelay } from './outbox-relay';
+export type { OutboxRelayDeps } from './outbox-relay';
+export type { Inbox } from './inbox';
+export { InMemoryInbox } from './inbox';

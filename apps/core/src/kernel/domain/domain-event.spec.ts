@@ -210,7 +210,7 @@ describe('AC-M00-05 DomainEvent & DomainEventFactory', () => {
       expect(event.type).toBe('crm.lead_status.changed');
     });
 
-    it('rejects type not matching /^[a-z]+(\.[a-z_]+){2}$/', () => {
+    it('rejects type not matching /^[a-z]+([.][a-z_]+){2}$/', () => {
       expect(() =>
         factory.create({
           type: 'CRM.lead.created', // Uppercase

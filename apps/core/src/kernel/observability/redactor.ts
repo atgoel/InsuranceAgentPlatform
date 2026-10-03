@@ -52,49 +52,31 @@ export class Redactor {
     maxArray?: number;
     maxDepth?: number;
   }) {
-    this.scrubbers = opts?.scrubbers ?? [
-      aadhaarScrubber,
-      phoneScrubber,
-      emailScrubber,
-      panScrubber,
-    ];
-    this.denyKeys =
-      opts?.denyKeys ??
-      /^(password|otp|token|authorization|secret|pan|aadhaar|dob|dateOfBirth|health.*|medical.*|nominee.*|bankAccount|ifsc|address.*|declaration.*)$/i;
-    this.maxString = opts?.maxString ?? 256;
-    this.maxArray = opts?.maxArray ?? 20;
-    this.maxDepth = opts?.maxDepth ?? 4;
+    const merged = {
+      scrubbers: [aadhaarScrubber, phoneScrubber, emailScrubber, panScrubber],
+      denyKeys: /^(password|otp|token|authorization|secret|pan|aadhaar|dob|dateOfBirth|health.*|medical.*|nominee.*|bankAccount|ifsc|address.*|declaration.*)$/i,
+      maxString: 256,
+      maxArray: 20,
+      maxDepth: 4,
+      ...opts,
+    };
+    this.scrubbers = merged.scrubbers;
+    this.denyKeys = merged.denyKeys;
+    this.maxString = merged.maxString;
+    this.maxArray = merged.maxArray;
+    this.maxDepth = merged.maxDepth;
   }
 
   redact(value: unknown, depth = 0): unknown {
-    if (value === null || value === undefined) {
-      return value;
-    }
+    if (!value) return value;
+    if (depth > this.maxDepth) return '[DEPTH]';
+    if (value instanceof Error) return this.redactError(value);
 
-    if (depth > this.maxDepth) {
-      return '[DEPTH]';
-    }
-
-    if (value instanceof Error) {
-      return this.redactError(value);
-    }
-
-    if (typeof value === 'string') {
-      return this.redactString(value);
-    }
-
-    if (typeof value === 'number' || typeof value === 'boolean') {
-      return value;
-    }
-
-    if (Array.isArray(value)) {
-      return this.redactArray(value, depth);
-    }
-
-    if (typeof value === 'object') {
-      return this.redactObject(value, depth);
-    }
-
+    const type = typeof value;
+    if (type === 'string') return this.redactString(value as string);
+    if (type === 'number' || type === 'boolean') return value;
+    if (Array.isArray(value)) return this.redactArray(value, depth);
+    if (type === 'object') return this.redactObject(value, depth);
     return value;
   }
 
@@ -111,7 +93,8 @@ export class Redactor {
 
   private redactObject(value: unknown, depth: number): Record<string, unknown> {
     const result: Record<string, unknown> = {};
-    for (const [key, val] of Object.entries(value)) {
+    const entries = Object.entries(value as Record<string, unknown>);
+    for (const [key, val] of entries) {
       if (this.denyKeys.test(key)) {
         result[key] = '[REDACTED]';
       } else {

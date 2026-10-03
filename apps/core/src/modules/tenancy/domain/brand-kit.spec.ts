@@ -16,7 +16,8 @@ describe('AC-M01-05 BrandKit', () => {
 
     it('returns approximately 6.0 for #1F5FBF against #FFFFFF', () => {
       const ratio = contrastRatio('#1F5FBF', '#FFFFFF');
-      expect(ratio).toBeCloseTo(6.0, 1);
+      expect(ratio).toBeGreaterThan(6.0);
+      expect(ratio).toBeLessThan(6.2); // WCAG: ≈ 6.09
     });
 
     it('returns 1 for same colors', () => {

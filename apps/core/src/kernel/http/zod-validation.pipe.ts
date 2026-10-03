@@ -1,11 +1,11 @@
 import { Injectable, PipeTransform } from '@nestjs/common';
-import { ZodType, ZodTypeDef } from 'zod';
+import { ZodType } from 'zod';
 import { ValidationError } from '../errors/domain-errors';
 
 /** Parses request input with a zod schema; failures become 400 Problem Details with field errors. */
 @Injectable()
 export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {
-  constructor(private readonly schema: ZodType<T, ZodTypeDef, unknown>) {}
+  constructor(private readonly schema: ZodType<T>) {}
 
   transform(value: unknown): T {
     const result = this.schema.safeParse(value);

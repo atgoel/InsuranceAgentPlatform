@@ -65,9 +65,9 @@ export async function createTestApp(opts?: {
   const metricsRegistry = new MetricsRegistry();
 
   const moduleFixture: TestingModule = await Test.createTestingModule({
-    imports: [KernelModule.forRoot(config), ...(opts?.imports ?? [])],
-    controllers: opts?.controllers ?? [],
-    providers: opts?.providers ?? [],
+    imports: [KernelModule.forRoot(config), ...(opts?.imports ? (opts.imports as unknown as Array<unknown>) : [])],
+    controllers: opts?.controllers ? (opts.controllers as unknown as Array<unknown>) : [],
+    providers: opts?.providers ? (opts.providers as unknown as Array<unknown>) : [],
   })
     .overrideProvider(LOG_SINK)
     .useValue(memoryLogSink)

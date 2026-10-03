@@ -38,15 +38,12 @@ export class RequestContext {
     const current = this.current();
     if (!current) return;
 
-    if (patch.traceId !== undefined) current.traceId = patch.traceId;
-    if (patch.spanId !== undefined) current.spanId = patch.spanId;
-    if (patch.tenantId !== undefined) current.tenantId = patch.tenantId;
-    if (patch.actor !== undefined) current.actor = patch.actor;
-    if (patch.module !== undefined) current.module = patch.module;
-    if (patch.route !== undefined) current.route = patch.route;
-    if (patch.forceDebug !== undefined) current.forceDebug = patch.forceDebug;
-    if (patch.hasError !== undefined) current.hasError = patch.hasError;
-    if (patch.startedAtMs !== undefined) current.startedAtMs = patch.startedAtMs;
+    const keys: (keyof typeof patch)[] = ['traceId', 'spanId', 'tenantId', 'actor', 'module', 'route', 'forceDebug', 'hasError', 'startedAtMs'];
+    for (const key of keys) {
+      if (patch[key] !== undefined) {
+        (current as Record<string, unknown>)[key] = patch[key];
+      }
+    }
   }
 
   static create(init: {

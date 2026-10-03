@@ -1,0 +1,159 @@
+.brand-kit-screen {
+  padding: 24px 32px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.brand-kit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-section label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: #4A5262;
+}
+
+.label-text {
+  font-weight: 500;
+}
+
+.form-section input[type="text"],
+.form-section input[type="color"],
+.form-section input[type="date"] {
+  padding: 10px 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.colour-input {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.colour-input input[type="color"] {
+  width: 60px;
+  height: 44px;
+  cursor: pointer;
+}
+
+.colour-input input[type="text"] {
+  flex: 1;
+  font-family: monospace;
+}
+
+.contrast-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.contrast-warning {
+  color: #F59E0B;
+  font-weight: 500;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+legend {
+  font-weight: 500;
+  font-size: 13px;
+  color: #4A5262;
+  margin-bottom: 4px;
+}
+
+.typeface-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.typeface-option input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.typeface-name {
+  font-size: 13px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.typeface-sample {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.checkbox-label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.checkbox-label input {
+  cursor: pointer;
+}
+
+.preview-card {
+  padding: 32px;
+  border-radius: 10px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 300px;
+  justify-content: center;
+}
+
+.preview-card h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.preview-card p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.powered-by {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+}

@@ -19,6 +19,7 @@ const UNMATCHED = 'unmatched';
  */
 @Injectable()
 export class ObservabilityMiddleware implements NestMiddleware {
+  // eslint-disable-next-line max-params
   constructor(
     @Inject(CLOCK) private readonly clock: Clock,
     @Inject(LOGGER) private readonly logger: Logger,

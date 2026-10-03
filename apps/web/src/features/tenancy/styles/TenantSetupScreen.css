@@ -1,0 +1,197 @@
+.tenant-setup-screen {
+  padding: 24px 32px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.page-header p {
+  margin: 8px 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.setup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+}
+
+.entity-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.entity-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entity-field label {
+  font-weight: 500;
+  font-size: 13px;
+  color: #4A5262;
+}
+
+.entity-field p {
+  margin: 0;
+  padding: 12px;
+  background: #F9FAFB;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+}
+
+.registration-status {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.scope-info {
+  padding: 12px;
+  background: #EEF3FB;
+  border-radius: 8px;
+  border: 1px solid #B9CBEA;
+}
+
+.gated-capabilities {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.gated-capabilities h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.capability-item {
+  padding: 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.capability-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.capability-description {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.tieups-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.error-banner {
+  padding: 12px;
+  background: #FEE2E2;
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  color: #991B1B;
+  font-size: 13px;
+}
+
+.line-section {
+  padding: 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+}
+
+.line-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.line-header strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.limit-text {
+  font-size: 12px;
+  color: #666;
+}
+
+.limit-warning {
+  padding: 8px;
+  background: #FEF3C7;
+  border: 1px solid #FCD34D;
+  border-radius: 4px;
+  color: #92400E;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.insurers-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.insurer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #F3F4F6;
+  border: 1px solid #D1D5DB;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  color: #666;
+}
+
+.remove-btn:hover {
+  color: #000;
+}
+
+.add-insurer {
+  display: flex;
+  gap: 8px;
+}
+
+.add-insurer input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 14px;
+}

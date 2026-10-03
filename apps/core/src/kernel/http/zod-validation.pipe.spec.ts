@@ -9,7 +9,7 @@ describe('AC-M00-26 ZodValidationPipe', () => {
       const pipe = new ZodValidationPipe(schema);
 
       const input = { name: 'Alice', age: 30 };
-      const result = pipe.transform(input, {} as any);
+      const result = pipe.transform(input);
 
       expect(result).toEqual(input);
     });
@@ -21,7 +21,7 @@ describe('AC-M00-26 ZodValidationPipe', () => {
       });
       const pipe = new ZodValidationPipe(schema);
 
-      const result = pipe.transform({ name: 'Alice' }, {} as any);
+      const result = pipe.transform({ name: 'Alice' });
 
       expect(result.role).toBe('user');
     });
@@ -30,7 +30,7 @@ describe('AC-M00-26 ZodValidationPipe', () => {
       const schema = z.object({ count: z.coerce.number() });
       const pipe = new ZodValidationPipe(schema);
 
-      const result = pipe.transform({ count: '42' }, {} as any);
+      const result = pipe.transform({ count: '42' });
 
       expect(result.count).toBe(42);
     });
@@ -42,11 +42,11 @@ describe('AC-M00-26 ZodValidationPipe', () => {
       const pipe = new ZodValidationPipe(schema);
 
       expect(() => {
-        pipe.transform({ email: 'not-email' }, {} as any);
+        pipe.transform({ email: 'not-email' });
       }).toThrow(ValidationError);
 
       try {
-        pipe.transform({ email: 'invalid' }, {} as any);
+        pipe.transform({ email: 'invalid' });
       } catch (error: unknown) {
         if (error instanceof ValidationError) {
           expect(error.code).toBe('validation_failed');
@@ -63,7 +63,7 @@ describe('AC-M00-26 ZodValidationPipe', () => {
       const pipe = new ZodValidationPipe(schema);
 
       try {
-        pipe.transform({ user: { email: 'bad-email' } }, {} as any);
+        pipe.transform({ user: { email: 'bad-email' } });
       } catch (error: unknown) {
         if (error instanceof ValidationError) {
           expect(error.errors).toBeDefined();
@@ -92,7 +92,6 @@ describe('AC-M00-26 ZodValidationPipe', () => {
       try {
         pipe.transform(
           { person: { contact: { email: 'invalid' } } },
-          {} as any,
         );
       } catch (error: unknown) {
         if (error instanceof ValidationError) {
@@ -115,7 +114,6 @@ describe('AC-M00-26 ZodValidationPipe', () => {
       try {
         pipe.transform(
           { email: 'invalid', age: 10, name: '' },
-          {} as any,
         );
       } catch (error: unknown) {
         if (error instanceof ValidationError) {

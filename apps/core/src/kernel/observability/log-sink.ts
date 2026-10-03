@@ -1,5 +1,7 @@
 import { LogRecord } from './log-record';
 
+export type { LogRecord };
+
 export interface LogSink {
   write(record: LogRecord): void;
 }

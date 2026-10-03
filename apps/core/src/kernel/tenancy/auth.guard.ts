@@ -7,12 +7,11 @@ import {
 } from '../errors/domain-errors';
 import { IS_PUBLIC_KEY, IS_OPERATOR_ONLY_KEY } from './decorators';
 import { TOKEN_VERIFIER, TENANT_RESOLVER } from '../tokens';
-import { TokenVerifier } from './jwt';
+import { TokenVerifier, Principal } from './jwt';
 import { TenantResolver } from './tenant-resolver';
 import { RequestContext } from '../observability/request-context';
 import { Logger } from '../observability/logger';
 import { pseudonymiseActor } from './actor-pseudonym';
-import { Principal } from './principal';
 import { LOGGER } from '../tokens';
 
 /**
@@ -34,59 +33,69 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request: any = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest() as Record<string, unknown> & { get: (name: string) => string | undefined };
+    const req = request as Record<string, unknown> & { principal?: Principal };
 
-    // Check if endpoint is public
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
     if (isPublic) {
-      // Still try to resolve tenant for telemetry if Host is present
-      const host = request.get('Host') as string;
-      if (host) {
-        try {
-          const tenant = await this.tenantResolver.resolveByHost(host);
-          if (tenant) {
-            RequestContext.patch({ tenantId: tenant.tenantId });
-          }
-        } catch {
-          // Ignore errors for public endpoints
-        }
-      }
+      await this.handlePublicEndpoint(request);
       return true;
     }
 
-    // Extract and verify token
-    const authHeader = request.get('Authorization') as string | undefined;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthenticatedError();
-    }
+    const principal = await this.verifyAuthorization(request);
 
-    const token = authHeader.slice(7);
-    const principal = await this.tokenVerifier.verify(token);
-
-    // Check for OperatorOnly
     const isOperatorOnly = this.reflector.getAllAndOverride<boolean>(IS_OPERATOR_ONLY_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
     if (isOperatorOnly) {
-      if (principal.realm !== 'workforce' || !principal.roles.includes('platform.operator')) {
-        throw new ForbiddenError('operator_only', 'Operator access required');
-      }
-      // Operators don't need host validation
-      request.principal = principal;
-      RequestContext.patch({
-        tenantId: principal.tenantId,
-        actor: pseudonymiseActor(principal.userRef, process.env.ACTOR_PEPPER || ''),
-      });
-      return true;
+      return this.handleOperatorOnly(req, principal);
     }
 
-    // Resolve tenant from Host header
+    return this.handleTenantValidation(req, principal, request);
+  }
+
+  private async handlePublicEndpoint(request: Record<string, unknown> & { get: (name: string) => string | undefined }): Promise<void> {
+    const host = request.get('Host') as string;
+    if (host) {
+      try {
+        const tenant = await this.tenantResolver.resolveByHost(host);
+        if (tenant) {
+          RequestContext.patch({ tenantId: tenant.tenantId });
+        }
+      } catch {
+        // Ignore errors for public endpoints
+      }
+    }
+  }
+
+  private async verifyAuthorization(request: Record<string, unknown> & { get: (name: string) => string | undefined }): Promise<Principal> {
+    const authHeader = request.get('Authorization') as string | undefined;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthenticatedError();
+    }
+    const token = authHeader.slice(7);
+    return this.tokenVerifier.verify(token);
+  }
+
+  private handleOperatorOnly(req: Record<string, unknown> & { principal?: Principal }, principal: Principal): boolean {
+    if (principal.realm !== 'workforce' || !principal.roles.includes('platform.operator')) {
+      throw new ForbiddenError('operator_only', 'Operator access required');
+    }
+    req.principal = principal;
+    RequestContext.patch({
+      tenantId: principal.tenantId,
+      actor: pseudonymiseActor(principal.userRef, process.env.ACTOR_PEPPER || ''),
+    });
+    return true;
+  }
+
+  private async handleTenantValidation(req: Record<string, unknown> & { principal?: Principal }, principal: Principal, request: Record<string, unknown> & { get: (name: string) => string | undefined }): Promise<boolean> {
     const host = request.get('Host') as string | undefined;
     if (!host) {
       throw new UnauthenticatedError();
@@ -97,12 +106,10 @@ export class AuthGuard implements CanActivate {
       throw new NotFoundError('tenant');
     }
 
-    // Check tenant status
     if (tenant.status !== 'active') {
       throw new ForbiddenError('tenant_inactive', 'Tenant is not active');
     }
 
-    // Verify token tenant matches host tenant
     if (principal.tenantId !== tenant.tenantId) {
       this.logger.security('security.tenant_mismatch', 'Token tenant does not match host tenant', {
         tokenTenant: principal.tenantId,
@@ -111,8 +118,7 @@ export class AuthGuard implements CanActivate {
       throw new ForbiddenError('tenant_mismatch', 'Tenant mismatch');
     }
 
-    // Attach principal and patch context
-    request.principal = principal;
+    req.principal = principal;
     RequestContext.patch({
       tenantId: principal.tenantId,
       actor: pseudonymiseActor(principal.userRef, process.env.ACTOR_PEPPER || ''),

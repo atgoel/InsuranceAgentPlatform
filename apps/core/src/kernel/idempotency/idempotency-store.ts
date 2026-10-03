@@ -1,4 +1,3 @@
-import { createHash } from 'crypto';
 import { Clock } from '../domain/clock';
 
 export type IdempotencyBegin =

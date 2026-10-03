@@ -81,7 +81,7 @@ describe('AC-M00-08 Redactor', () => {
     it('redacts Error objects', () => {
       const r = new Redactor();
       const err = new Error('Something went wrong with secret_key_123');
-      const redacted = r.redact(err) as any;
+      const redacted = r.redact(err) as Record<string, unknown>;
       expect(redacted.type).toBe('Error');
       expect(redacted.message).toBeDefined();
     });

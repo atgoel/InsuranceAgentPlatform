@@ -1,8 +1,18 @@
-import { ExceptionFilter, Catch, ArgumentsHost, Inject } from '@nestjs/common';
+import { ExceptionFilter, Catch, ArgumentsHost } from '@nestjs/common';
 import { Response } from 'express';
 import { DomainError } from './domain-errors';
-import { LOGGER } from '../tokens';
 import { RequestContext } from '../observability/request-context';
+
+interface ErrorBody {
+  type: string;
+  title: string;
+  status: number;
+  code: string;
+  detail: string;
+  traceId: string;
+  [key: string]: unknown;
+  errors?: unknown;
+}
 
 /**
  * AC-M00-06 (errors): ProblemDetailsFilter
@@ -10,8 +20,6 @@ import { RequestContext } from '../observability/request-context';
  */
 @Catch()
 export class ProblemDetailsFilter implements ExceptionFilter {
-  constructor(@Inject(LOGGER) private readonly logger: any) {}
-
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -20,7 +28,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     const traceId = context?.traceId ?? 'unknown';
 
     let status = 500;
-    let body: any = {
+    const body: ErrorBody = {
       type: 'https://errors.iap.example/internal_error',
       title: 'Internal Server Error',
       status: 500,
@@ -31,18 +39,16 @@ export class ProblemDetailsFilter implements ExceptionFilter {
 
     if (exception instanceof DomainError) {
       status = exception.httpStatus;
-      body = {
-        type: `https://errors.iap.example/${exception.code}`,
-        title: 'Error',
-        status,
-        code: exception.code,
-        detail: exception.message,
-        traceId,
-        ...exception.details,
-      };
+      body.type = `https://errors.iap.example/${exception.code}`;
+      body.title = 'Error';
+      body.status = status;
+      body.code = exception.code;
+      body.detail = exception.message;
+      body.traceId = traceId;
+      Object.assign(body, exception.details);
 
-      if ((exception as any).errors) {
-        body.errors = (exception as any).errors;
+      if (typeof exception === 'object' && exception !== null && 'errors' in exception) {
+        body.errors = (exception as { errors?: unknown }).errors;
       }
     }
 

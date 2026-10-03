@@ -18,6 +18,8 @@ const DevTokenSchema = z
   })
   .strict();
 
+type DevToken = z.infer<typeof DevTokenSchema>;
+
 const DEV_TOKEN_TTL_SECONDS = 8 * 3600;
 
 /** Development-only sign-in (M00 §4.14). Disabled unless DEV_AUTH=1 outside production; then it does not exist (404). */
@@ -33,7 +35,8 @@ export class DevTokenController {
   @HttpCode(200)
   issue(@Body() raw: unknown): { token: string } {
     if (!this.config.devAuth) throw new NotFoundError('Route');
-    const body = new ZodValidationPipe(DevTokenSchema).transform(raw);
+    const pipe = new ZodValidationPipe<DevToken>(DevTokenSchema);
+    const body = pipe.transform(raw);
     const now = Math.floor(this.clock.now().getTime() / 1000);
     const token = signHs256(
       { sub: body.sub ?? 'dev_user', org: body.tenantId, roles: body.roles, mid: body.memberId, ou: body.orgUnitId, realm: 'customers', iat: now, exp: now + DEV_TOKEN_TTL_SECONDS },

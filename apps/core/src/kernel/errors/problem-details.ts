@@ -1,4 +1,4 @@
-import { z, ZodError } from 'zod';
+import { ZodError } from 'zod';
 import { HttpException } from '@nestjs/common';
 import { DomainError, ValidationError, FieldError } from './domain-errors';
 
@@ -172,11 +172,11 @@ export class HttpExceptionMapper implements ProblemMapper {
 }
 
 export class FallbackMapper implements ProblemMapper {
-  canMap(error: unknown): boolean {
+  canMap(_error: unknown): boolean {
     return true;
   }
 
-  map(error: unknown, traceId: string): ProblemDetails {
+  map(_error: unknown, traceId: string): ProblemDetails {
     return ProblemDetailsBuilder.create()
       .status(500)
       .code('internal_error')

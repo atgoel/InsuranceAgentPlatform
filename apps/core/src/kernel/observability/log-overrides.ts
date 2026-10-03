@@ -72,6 +72,7 @@ export class LogOverrideStore {
 
   isDebugEnabled(scope: LogOverrideScope): boolean {
     const now = this.clock.now();
+    // eslint-disable-next-line complexity
     return this.overrides.some((o) => {
       if (new Date(o.expiresAt) <= now) return false;
 
