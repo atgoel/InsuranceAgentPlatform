@@ -24,7 +24,7 @@ export function LeadFilterBar({ views, selectedView, onViewChange, product, onPr
           <option value="">{t('crm.leads.all_products')}</option>
           {PRODUCT_LINES.map((p) => (
             <option key={p} value={p}>
-              {p.replace('_', ' ')}
+              {t(`crm.product.${p}`)}
             </option>
           ))}
         </select>

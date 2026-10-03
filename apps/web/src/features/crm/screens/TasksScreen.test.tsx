@@ -144,11 +144,27 @@ describe('AC-M04-28 TasksScreen', () => {
       expect(screen.getByText('Call Rajesh Kumar')).toBeInTheDocument();
     });
 
-    const checkboxes = screen.getAllByRole('checkbox');
-    if (checkboxes.length > 0) {
-      await user.click(checkboxes[0]);
-      expect(mockApiClient.patch).toHaveBeenCalled();
-    }
+    await user.click(screen.getByRole('checkbox', { name: 'Complete task: Call Rajesh Kumar' }));
+    expect(mockApiClient.patch).not.toHaveBeenCalled(); // ticking asks for the outcome first
+    await user.type(screen.getByRole('textbox', { name: 'Outcome for Call Rajesh Kumar (optional)' }), 'Connected, wants a quote');
+    await user.click(screen.getByRole('button', { name: 'Mark done' }));
+    expect(mockApiClient.patch).toHaveBeenCalledWith('/api/v1/tasks/task-1', { status: 'DONE', outcome: 'Connected, wants a quote' }, { ifMatch: '"v1"' });
+  });
+
+  it('AC-M04-28 cancelling the outcome step does not complete the task', async () => {
+    const user = userEvent.setup();
+    render(
+      <ApiProvider client={mockApiClient}>
+        <I18nProvider>
+          <TasksScreen />
+        </I18nProvider>
+      </ApiProvider>
+    );
+    await screen.findByText('Call Rajesh Kumar');
+    await user.click(screen.getByRole('checkbox', { name: 'Complete task: Call Rajesh Kumar' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('button', { name: 'Mark done' })).not.toBeInTheDocument();
+    expect(mockApiClient.patch).not.toHaveBeenCalled();
   });
 
   it('AC-M04-28 opens new task form when button is clicked', async () => {
@@ -232,10 +248,10 @@ describe('AC-M04-28 TasksScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('CALL')).toBeInTheDocument();
+      expect(screen.getByText('Call', { selector: '.kind' })).toBeInTheDocument();
     });
-    expect(screen.getByText('WHATSAPP')).toBeInTheDocument();
-    expect(screen.getByText('MEETING')).toBeInTheDocument();
+    expect(screen.getByText('WhatsApp', { selector: '.kind' })).toBeInTheDocument();
+    expect(screen.getByText('Meeting', { selector: '.kind' })).toBeInTheDocument();
   });
 
   it('AC-M04-28 handles API errors gracefully', async () => {
@@ -270,7 +286,7 @@ describe('AC-M04-28 TasksScreen', () => {
     });
   });
 
-  it('AC-M04-28 sends If-Match header when completing task', async () => {
+  it('AC-M04-28 completes without an outcome when none is given, still sending If-Match', async () => {
     const user = userEvent.setup();
     render(
       <ApiProvider client={mockApiClient}>
@@ -279,22 +295,10 @@ describe('AC-M04-28 TasksScreen', () => {
         </I18nProvider>
       </ApiProvider>
     );
-
-    await waitFor(() => {
-      expect(screen.getByText('Call Rajesh Kumar')).toBeInTheDocument();
-    });
-
-    const checkboxes = screen.getAllByRole('checkbox');
-    if (checkboxes.length > 0) {
-      await user.click(checkboxes[0]);
-      expect(mockApiClient.patch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/tasks'),
-        expect.anything(),
-        expect.objectContaining({
-          ifMatch: expect.stringContaining('v'),
-        })
-      );
-    }
+    await screen.findByText('Send WhatsApp to Priya');
+    await user.click(screen.getByRole('checkbox', { name: 'Complete task: Send WhatsApp to Priya' }));
+    await user.click(screen.getByRole('button', { name: 'Mark done' }));
+    expect(mockApiClient.patch).toHaveBeenCalledWith('/api/v1/tasks/task-2', { status: 'DONE', outcome: undefined }, { ifMatch: '"v1"' });
   });
 
   it('AC-M04-28 displays empty state when no tasks', async () => {

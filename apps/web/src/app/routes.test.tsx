@@ -116,9 +116,9 @@ describe('AC-M00-32 Routes', () => {
     expect(screen.getByText('Coming in a later module')).toBeInTheDocument();
   });
 
-  it('renders mobile shell for nested routes', () => {
+  it('renders mobile shell for nested routes', async () => {
     renderWithRouter(['/m/today']);
-    expect(screen.getByText('Mobile Shell')).toBeInTheDocument();
+    expect(await screen.findByText('Mobile Shell')).toBeInTheDocument(); // lazy child: the router renders once it resolves
   });
 
   it('renders crm shell placeholder', () => {
@@ -136,9 +136,9 @@ describe('AC-M00-32 Routes', () => {
     expect(screen.getByText('Coming in a later module')).toBeInTheDocument();
   });
 
-  it('renders mobile leads nested route', () => {
+  it('renders mobile leads nested route', async () => {
     renderWithRouter(['/m/leads']);
-    expect(screen.getByText('Mobile Shell')).toBeInTheDocument();
+    expect(await screen.findByText('Mobile Shell')).toBeInTheDocument(); // lazy child: the router renders once it resolves
   });
 
   it('renders mobile customers nested route', () => {

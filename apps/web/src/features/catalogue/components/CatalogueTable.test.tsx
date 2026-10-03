@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { ApiError } from '../../../lib/api/api-error';
 import type { CatalogueRow } from '../api';
 import { CatalogueTable } from './CatalogueTable';
-import { mockClient, renderAt } from '../test/render';
+import { mockClient, renderAt } from '../../../test/render';
 
 const row = (over: Partial<CatalogueRow>): CatalogueRow => ({
   versionId: 'pv', productId: 'prd', productName: 'Plan', insurerId: 'ins', insurerName: 'Insurer', line: 'HEALTH', category: 'HEALTH_FLOATER',

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { ApiError } from '../../../lib/api/api-error';
 import type { ResearchItem } from '../api';
 import { ResearchLibraryScreen } from './ResearchLibraryScreen';
-import { mockClient, renderAt } from '../test/render';
+import { mockClient, renderAt } from '../../../test/render';
 
 const ITEMS: ResearchItem[] = [
   {

@@ -75,7 +75,7 @@ export function ActivityComposer({ leadId, onActivityLogged }: ActivityComposerP
                 className={`outcome-chip ${outcome === o ? 'selected' : ''}`}
                 onClick={() => setOutcome(o)}
               >
-                {o}
+                {t(`crm.outcome.${o}`)}
               </button>
             ))}
           </div>

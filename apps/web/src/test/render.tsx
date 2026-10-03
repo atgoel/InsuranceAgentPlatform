@@ -2,13 +2,15 @@ import { vi, type Mock } from 'vitest';
 import { render } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider, useLocation } from 'react-router-dom';
 import type { ReactElement } from 'react';
-import { ApiProvider } from '../../../lib/api';
-import { ApiClient } from '../../../lib/api/api-client';
-import { I18nProvider } from '../../../lib/i18n';
+import { ApiProvider } from '../lib/api';
+import { ApiClient } from '../lib/api/api-client';
+import { I18nProvider } from '../lib/i18n';
 
 export interface MockClient extends ApiClient {
   get: Mock;
   post: Mock;
+  put: Mock;
+  patch: Mock;
 }
 
 /** An ApiClient whose GET/POST answers come from `routes` (path → value, or a function of the call options). */
@@ -43,4 +45,30 @@ export function renderAt(element: ReactElement, client: ApiClient, path: string,
       </I18nProvider>
     </ApiProvider>,
   );
+}
+
+/** A Storage held in memory, for asserting exactly what a screen caches. */
+export class MemoryStorage implements Storage {
+  private readonly data = new Map<string, string>();
+  get length(): number {
+    return this.data.size;
+  }
+  clear(): void {
+    this.data.clear();
+  }
+  getItem(key: string): string | null {
+    return this.data.get(key) ?? null;
+  }
+  key(index: number): string | null {
+    return [...this.data.keys()][index] ?? null;
+  }
+  removeItem(key: string): void {
+    this.data.delete(key);
+  }
+  setItem(key: string, value: string): void {
+    this.data.set(key, value);
+  }
+  snapshot(): Record<string, unknown> {
+    return Object.fromEntries([...this.data].map(([k, v]) => [k, JSON.parse(v)]));
+  }
 }

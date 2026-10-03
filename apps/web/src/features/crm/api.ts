@@ -10,6 +10,18 @@ export type LostReason = 'BOUGHT_ELSEWHERE' | 'PREMIUM_TOO_HIGH' | 'DECLINED_BY_
 export type TaskKind = 'CALL' | 'WHATSAPP' | 'MEETING' | 'DOCUMENT' | 'FOLLOW_UP' | 'RENEWAL';
 export type TaskStatus = 'OPEN' | 'DONE' | 'CANCELLED';
 export type OpportunityStage = 'DISCOVERY' | 'QUOTE_SHARED' | 'PROPOSAL_COMPLETE' | 'INSURER_PENDING' | 'ISSUED' | 'LOST';
+export type MyWorkKind = 'TASK' | 'HOT_LEAD' | 'SLA_AT_RISK' | 'DUE' | 'PROPOSAL' | 'BIRTHDAY';
+
+export interface MyWorkItem {
+  kind: MyWorkKind;
+  id: string;
+  title: string;
+  subtitle?: string;
+  dueAt?: string;
+  priority: number;
+  subject: { type: string; id: string };
+  actions: Array<'CALL' | 'WHATSAPP' | 'LOG' | 'OPEN'>;
+}
 
 export interface Qualification {
   need?: 'PROTECTION' | 'TAX_SAVING' | 'CHILD_EDUCATION' | 'RETIREMENT' | 'HEALTH_COVER' | 'VEHICLE';
@@ -136,6 +148,63 @@ export interface BoardResponse {
   };
 }
 
+// Routing
+export type RoutingMethod = 'ROUND_ROBIN' | 'LEAST_LOADED' | 'TERRITORY' | 'SKILL' | 'DIRECT_OWNER';
+
+export interface RuleCondition {
+  field: 'productInterest' | 'line' | 'source' | 'pincodePrefix' | 'campaignId' | 'language';
+  op: 'eq' | 'in' | 'startsWith';
+  value: string | string[];
+}
+
+export interface RoutingRule {
+  id: string;
+  priority: number;
+  name: string;
+  active: boolean;
+  conditions: RuleCondition[];
+  method: RoutingMethod;
+  targetOrgUnitId?: string;
+  slaMinutes: number;
+  onBreach: 'NOTIFY_MANAGER' | 'NOTIFY_THEN_REASSIGN';
+  reassignAfterMinutes?: number;
+  capacityPerPerson?: number;
+}
+
+export interface RoutingDecision {
+  memberId?: string;
+  orgUnitId?: string;
+  ruleId?: string;
+  slaMinutes?: number;
+  memberName?: string;
+  reason: string;
+  skipped: Array<{ memberId: string; reason: string }>;
+}
+
+export interface CapacityRow {
+  memberId: string;
+  displayName: string;
+  salespersonType: string;
+  openLeadsToday: number;
+  capacityPerDay: number;
+  available: boolean;
+  reason?: string;
+}
+
+// Lead Import
+export interface LeadImportResult {
+  batchId: string;
+  imported: number;
+  duplicates: number;
+  rejected: number;
+  skippedAlreadyImported: number;
+}
+
+export interface RejectedRow {
+  row: number;
+  reasons: string[];
+}
+
 export interface CaptureLeadResult {
   leadId: string;
   partyId: string;
@@ -147,7 +216,8 @@ export interface CaptureLeadResult {
 
 const newIdempotencyKey = () => crypto.randomUUID();
 
-export function createCrmApi(apiClient: ApiClient) {
+/** Leads workspace: lists, record, stage and assignment. */
+function leadQueries(apiClient: ApiClient) {
   return {
     // Leads workspace
     async getLeadStats(): Promise<LeadStats> {
@@ -240,6 +310,12 @@ export function createCrmApi(apiClient: ApiClient) {
       );
     },
 
+  };
+}
+
+/** Lead activities, party link and conversion. */
+function leadActions(apiClient: ApiClient) {
+  return {
     async logLeadActivity(
       leadId: string,
       input: {
@@ -282,6 +358,12 @@ export function createCrmApi(apiClient: ApiClient) {
     },
 
     // Pipeline
+  };
+}
+
+/** Pipeline and tasks. */
+function pipelineAndTasks(apiClient: ApiClient) {
+  return {
     async getOpportunitiesBoard(filter?: {
       owner?: string;
       product?: ProductLine;
@@ -369,7 +451,80 @@ export function createCrmApi(apiClient: ApiClient) {
     ): Promise<TaskView> {
       return apiClient.patch(`/api/v1/tasks/${id}`, input, { ifMatch: `"v${version}"` });
     },
+
+    // Routing (CRM07)
   };
+}
+
+/** Routing rules, lead import and my-work. */
+function routingAndImport(apiClient: ApiClient) {
+  return {
+    async listRoutingRules(): Promise<{ rules: RoutingRule[] }> {
+      return apiClient.get('/api/v1/routing-rules');
+    },
+
+    async updateRoutingRules(rules: RoutingRule[]): Promise<{ rules: RoutingRule[] }> {
+      return apiClient.put('/api/v1/routing-rules', { rules });
+    },
+
+    async simulateRouting(input: {
+      productInterest: ProductLine;
+      source: LeadSource;
+      pincode?: string;
+      campaignId?: string;
+      language?: string;
+      micrositeMemberId?: string;
+    }): Promise<RoutingDecision> {
+      return apiClient.post('/api/v1/routing-rules/simulations', input);
+    },
+
+    async getRoutingCapacity(): Promise<{ items: CapacityRow[] }> {
+      return apiClient.get('/api/v1/routing/capacity');
+    },
+
+    // Lead Import (CRM08)
+    async previewLeadImport(input: {
+      fileChecksum: string;
+      sourceTag: string;
+      consentBasis: 'CAPTURED_AT_EVENT' | 'NONE';
+      noticeVersion?: string;
+      rows: Array<{
+        fullName: string;
+        mobile?: string;
+        email?: string;
+        productInterest?: ProductLine;
+        pincode?: string;
+      }>;
+    }): Promise<{ valid: number; duplicates: number; rejected: RejectedRow[] }> {
+      return apiClient.post('/api/v1/lead-imports/previews', input);
+    },
+
+    async commitLeadImport(input: {
+      fileChecksum: string;
+      sourceTag: string;
+      consentBasis: 'CAPTURED_AT_EVENT' | 'NONE';
+      noticeVersion?: string;
+      route?: boolean;
+      rows: Array<{
+        fullName: string;
+        mobile?: string;
+        email?: string;
+        productInterest?: ProductLine;
+        pincode?: string;
+      }>;
+    }): Promise<LeadImportResult> {
+      return apiClient.post('/api/v1/lead-imports', input, { idempotencyKey: newIdempotencyKey() });
+    },
+
+    // My work
+    async getMyWork(): Promise<{ items: MyWorkItem[]; counts: { overdue: number; today: number; hotLeads: number } }> {
+      return apiClient.get('/api/v1/my-work');
+    },
+  };
+}
+
+export function createCrmApi(apiClient: ApiClient) {
+  return { ...leadQueries(apiClient), ...leadActions(apiClient), ...pipelineAndTasks(apiClient), ...routingAndImport(apiClient) };
 }
 
 export type CrmApi = ReturnType<typeof createCrmApi>;

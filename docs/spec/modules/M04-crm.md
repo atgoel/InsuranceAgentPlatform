@@ -413,6 +413,13 @@ create table if not exists crm_public_lead_rate (tenant_id text not null, ip_has
 | `/m/leads`, `/m/leads/:id` | `MobileLeadsScreen` (M02), `MobileLeadScreen` (M16) | list/board toggle, filter chips, new-lead bottom sheet with consent; lead record with stage progress, qualify, next task, convert. |
 | `/m/tasks` | `MyTasksScreen` (M17) | grouped by urgency, type filter, tick to log outcome. |
 
+Implementation decisions (screens, 2026-10-03):
+- **One-tap Call/WhatsApp on Today** open the lead record rather than dialling: list and my-work APIs only carry masked contacts by design, so a tap-to-dial needs a click-to-call / number-reveal endpoint (audited) — proposed for a later module; nothing on the device ever holds an unmasked number.
+- **Offline**: Today caches an allow-list of my-work fields (no subtitle/contacts) in sessionStorage; queued logs hold ids and enums only, keep the clientRef assigned at queue time, are replayed on load and on `online`, dropped on 2xx/409 or a final 4xx (shown as rejected), and kept on network/408/429/5xx.
+- **Tasks**: ticking a task (desktop and mobile) asks for an optional outcome before `PATCH status=DONE` with `If-Match`.
+- **Routing editor**: priorities are renumbered from list order on save (so duplicates cannot be produced from the UI); the server's error message is shown verbatim.
+- **Import**: mapping is limited to the fields the server row schema accepts (fullName, mobile, email, productInterest, pincode), auto-mapping uses exact header synonyms, empty cells are omitted, the rejected-row download is formula-safe (CSV injection).
+
 ## 11. Acceptance criteria
 
 Domain

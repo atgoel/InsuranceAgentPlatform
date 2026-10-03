@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { ApiError } from '../../../lib/api/api-error';
 import type { ScopeResult, VersionDetail } from '../api';
 import { CompareScreen } from './CompareScreen';
-import { mockClient, renderAt } from '../test/render';
+import { mockClient, renderAt } from '../../../test/render';
 
 const DISCLOSURE = 'Showing plans from your tied insurers only: HDFC Life, Star Health. This disclosure appears on shared comparisons.';
 const SCOPE: ScopeResult = {

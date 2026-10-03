@@ -21,8 +21,22 @@ export const routes: RouteObject[] = [
     path: 'm',
     element: <div>Mobile Shell</div>, // Placeholder
     children: [
-      { path: 'today', element: <EmptyState title="Coming in a later module" /> },
-      { path: 'leads', element: <EmptyState title="Coming in a later module" /> },
+      {
+        path: 'today',
+        lazy: () => import('../features/crm/screens/TodayScreen').then(m => ({ Component: m.TodayScreen })),
+      },
+      {
+        path: 'leads',
+        lazy: () => import('../features/crm/screens/MobileLeadsScreen').then(m => ({ Component: m.MobileLeadsScreen })),
+      },
+      {
+        path: 'leads/:id',
+        lazy: () => import('../features/crm/screens/MobileLeadScreen').then(m => ({ Component: m.MobileLeadScreen })),
+      },
+      {
+        path: 'tasks',
+        lazy: () => import('../features/crm/screens/MyTasksScreen').then(m => ({ Component: m.MyTasksScreen })),
+      },
       { path: 'customers', element: <EmptyState title="Coming in a later module" /> },
       { path: 'book', element: <EmptyState title="Coming in a later module" /> },
       {
@@ -74,6 +88,14 @@ export const routes: RouteObject[] = [
       {
         path: 'customers/:id',
         lazy: () => import('../features/party/screens/CustomerRecordScreen').then(m => ({ Component: m.CustomerRecordScreen })),
+      },
+      {
+        path: 'routing',
+        lazy: () => import('../features/crm/screens/RoutingRulesScreen').then(m => ({ Component: m.RoutingRulesScreen })),
+      },
+      {
+        path: 'import',
+        lazy: () => import('../features/crm/screens/LeadImportScreen').then(m => ({ Component: m.LeadImportScreen })),
       },
       {
         path: 'import/duplicates',
