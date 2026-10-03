@@ -23,3 +23,14 @@ export function decodeCursor(cursor: string): Record<string, unknown> {
     throw new ValidationError('invalid_cursor', 'Invalid cursor');
   }
 }
+
+/**
+ * The row offset carried by an offset cursor (0 without a cursor). A forged or corrupt cursor is a 400
+ * (`invalid_cursor`), never NaN or a negative number reaching a query.
+ */
+export function cursorOffset(cursor: string | undefined): number {
+  if (!cursor) return 0;
+  const offset = decodeCursor(cursor).offset ?? 0;
+  if (typeof offset !== 'number' || !Number.isSafeInteger(offset) || offset < 0) throw new ValidationError('invalid_cursor', 'Invalid cursor');
+  return offset;
+}

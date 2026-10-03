@@ -1,7 +1,8 @@
+import { istDate } from '../../../kernel/domain/ist';
 import { Transaction } from '../../../kernel/persistence/unit-of-work';
 import { TenantBuckets } from '../../../kernel/persistence/tenant-buckets';
 import { ConflictError, PreconditionFailedError } from '../../../kernel/errors/domain-errors';
-import { decodeCursor, encodeCursor } from '../../../kernel/http/pagination';
+import { cursorOffset, encodeCursor } from '../../../kernel/http/pagination';
 import { OrgTree, OrgUnit } from '../domain/org-unit';
 import { Member, MemberProps } from '../domain/member';
 import { ChecklistItem, OnboardingChecklist } from '../domain/onboarding';
@@ -55,7 +56,7 @@ export class InMemoryMemberRepository implements MemberRepository {
       .filter((m) => (!f.orgUnitIds || f.orgUnitIds.includes(m.orgUnitId)) && (!f.memberId || m.id === f.memberId))
       .filter((m) => (!f.salespersonType || m.salespersonType === f.salespersonType) && (!q || m.displayName.toLowerCase().includes(q)))
       .sort((a, b) => a.invitedAt.localeCompare(b.invitedAt) || a.id.localeCompare(b.id));
-    const start = f.cursor ? Number(decodeCursor(f.cursor).offset ?? 0) : 0;
+    const start = cursorOffset(f.cursor);
     const items = all.slice(start, start + f.limit).map((p) => Member.restore({ ...p }));
     return { items, nextCursor: start + f.limit < all.length ? encodeCursor({ offset: start + f.limit }) : undefined };
   }
@@ -142,7 +143,7 @@ export class InMemoryLeaveRepository implements LeaveRepository {
   private readonly leaves = new TenantBuckets<Array<{ memberId: string; from: string; to: string }>>(() => []);
 
   async isOnLeave(tx: Transaction, memberId: string, at: Date): Promise<boolean> {
-    const day = at.toISOString().slice(0, 10);
+    const day = istDate(at);
     return this.leaves.of(tx).some((l) => l.memberId === memberId && l.from <= day && day <= l.to);
   }
 

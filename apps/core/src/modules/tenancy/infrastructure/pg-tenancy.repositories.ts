@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
 import { ConflictError, PreconditionFailedError } from '../../../kernel/errors/domain-errors';
-import { decodeCursor, encodeCursor } from '../../../kernel/http/pagination';
+import { cursorOffset, encodeCursor } from '../../../kernel/http/pagination';
 import { isPgTransaction, PgTransaction, Transaction } from '../../../kernel/persistence/unit-of-work';
 import { FieldCipher } from '../../../kernel/crypto/aes-gcm-field-cipher';
 import { PhoneNumber } from '../../../kernel/domain';
@@ -51,7 +51,7 @@ export class PgTenantDirectory implements TenantDirectory {
   }
 
   async list(filter: { status?: TenantStatus; kind?: TenantKind; cursor?: string; limit: number }) {
-    const offset = filter.cursor ? Number(decodeCursor(filter.cursor).offset ?? 0) : 0;
+    const offset = cursorOffset(filter.cursor);
     const { rows } = await this.reader.query<TenantRow>(
       `select * from tenant where ($1::text is null or status = $1) and ($2::text is null or kind = $2) order by created_at, id limit $3 offset $4`,
       [filter.status ?? null, filter.kind ?? null, filter.limit + 1, offset]);

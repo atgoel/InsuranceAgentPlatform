@@ -1,7 +1,7 @@
 import { Transaction } from '../../../kernel/persistence/unit-of-work';
 import { TenantBuckets } from '../../../kernel/persistence/tenant-buckets';
 import { PreconditionFailedError, RateLimitedError, ValidationError } from '../../../kernel/errors/domain-errors';
-import { decodeCursor, encodeCursor } from '../../../kernel/http/pagination';
+import { cursorOffset, encodeCursor } from '../../../kernel/http/pagination';
 import { Lead, LeadProps } from '../domain/lead';
 import { Activity } from '../domain/activity';
 import { Task, TaskProps } from '../domain/task';
@@ -17,7 +17,7 @@ const CLOSED = new Set(['CONVERTED', 'LOST']);
 const DAY_MS = 86_400_000;
 
 function page<T>(all: T[], cursor: string | undefined, limit: number): { items: T[]; nextCursor?: string } {
-  const start = cursor ? Number(decodeCursor(cursor).offset ?? 0) : 0;
+  const start = cursorOffset(cursor);
   return { items: all.slice(start, start + limit), nextCursor: start + limit < all.length ? encodeCursor({ offset: start + limit }) : undefined };
 }
 

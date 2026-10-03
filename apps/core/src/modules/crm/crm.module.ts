@@ -1,5 +1,7 @@
 import { Inject, Module, OnModuleInit, Provider } from '@nestjs/common';
-import { EVENT_BUS, PERMISSION_POLICY } from '../../kernel/tokens';
+import { Pool } from 'pg';
+import { APP_POOL, EVENT_BUS, KERNEL_OPTIONS, PERMISSION_POLICY } from '../../kernel/tokens';
+import { KernelConfig } from '../../kernel/config';
 import { EventBus } from '../../kernel/outbox/event-bus';
 import { DomainEvent } from '../../kernel/domain/domain-event';
 import { RolePermissionMatrix } from '../../kernel/tenancy/permissions';
@@ -10,8 +12,8 @@ import { CatalogueModule } from '../catalogue/catalogue.module';
 import { StageRuleSet } from './domain/stage-rules';
 import { DefaultCadencePolicy } from './domain/cadence';
 import {
-  ACTIVITY_REPOSITORY, CADENCE_POLICY, CRM_PORT_FACTORY, LEAD_IMPORT_REPOSITORY, LEAD_REPOSITORY, LeadRepository, MY_WORK_CONTRIBUTORS,
-  OPPORTUNITY_REPOSITORY, PARTY_FACADE, POS_ELIGIBILITY, PUBLIC_LEAD_GUARD, PartyFacade, ROUTING_RULE_REPOSITORY, STAGE_RULES, TASK_REPOSITORY,
+  ACTIVITY_REPOSITORY, ActivityRepository, CADENCE_POLICY, CRM_PORT_FACTORY, LEAD_IMPORT_REPOSITORY, LEAD_REPOSITORY, LeadImportRepository, LeadRepository, MY_WORK_CONTRIBUTORS,
+  OPPORTUNITY_REPOSITORY, OpportunityRepository, PARTY_FACADE, POS_ELIGIBILITY, PUBLIC_LEAD_GUARD, PartyFacade, PublicLeadGuard, ROUTING_RULE_REPOSITORY, RoutingRuleRepository, STAGE_RULES, TASK_REPOSITORY,
   TaskRepository,
 } from './application/ports';
 import { CrmContext } from './application/crm-context';
@@ -33,7 +35,7 @@ import { SyncRecordSource } from './application/sync-record.source';
 import { TwentyOwnerChange } from './application/twenty-owner-change';
 import { TwentyWebhookService } from './application/twenty-webhook.service';
 import { SYNC_REQUESTED } from './application/crm-port';
-import { CRM_SYNC_STATE_REPOSITORY, SyncObject, TWENTY_CLIENT, TWENTY_WORKSPACE_DIRECTORY } from './application/twenty-sync.ports';
+import { CRM_SYNC_STATE_REPOSITORY, CrmSyncStateRepository, SyncObject, TWENTY_CLIENT, TWENTY_WORKSPACE_DIRECTORY } from './application/twenty-sync.ports';
 import { InMemoryCrmSyncStateRepository } from './infrastructure/twenty/in-memory-sync-state.repository';
 import { DerivedTwentyWorkspaceDirectory } from './infrastructure/twenty/derived-workspace.directory';
 import { FakeTwentyClient } from './infrastructure/twenty/fake-twenty.client';
@@ -42,6 +44,9 @@ import {
   InMemoryActivityRepository, InMemoryLeadImportRepository, InMemoryLeadRepository, InMemoryOpportunityRepository, InMemoryPublicLeadGuard,
   InMemoryRoutingRuleRepository, InMemoryTaskRepository,
 } from './infrastructure/in-memory-crm.repositories';
+import {
+  PgActivityRepository, PgCrmSyncStateRepository, PgLeadImportRepository, PgLeadRepository, PgOpportunityRepository, PgPublicLeadGuard, PgRoutingRuleRepository, PgTaskRepository,
+} from './infrastructure/pg-crm.repositories';
 import { LeadsController } from './api/leads.controller';
 import { PublicLeadsController } from './api/public-leads.controller';
 import { LeadImportsController, MyWorkController, OpportunitiesController, RoutingController, TasksController } from './api/engagement.controllers';
@@ -59,15 +64,24 @@ export const CRM_PERMISSIONS: Record<string, string[]> = {
   OPS: ['crm.lead.read', 'crm.lead.assign', 'crm.import', 'crm.task.*'],
 };
 
+/** In-memory by default; PERSISTENCE=pg selects the Postgres adapters (they run in the caller's RLS-scoped transaction). */
+function pick<T>(provide: symbol, memory: () => T, pgImpl: () => T): Provider {
+  return {
+    provide,
+    useFactory: (config: KernelConfig, app?: Pool) => (config.persistence === 'pg' && app ? pgImpl() : memory()),
+    inject: [KERNEL_OPTIONS, APP_POOL],
+  };
+}
+
 const adapters: Provider[] = [
-  { provide: LEAD_REPOSITORY, useClass: InMemoryLeadRepository },
-  { provide: ACTIVITY_REPOSITORY, useClass: InMemoryActivityRepository },
-  { provide: TASK_REPOSITORY, useClass: InMemoryTaskRepository },
-  { provide: OPPORTUNITY_REPOSITORY, useClass: InMemoryOpportunityRepository },
-  { provide: ROUTING_RULE_REPOSITORY, useClass: InMemoryRoutingRuleRepository },
-  { provide: LEAD_IMPORT_REPOSITORY, useClass: InMemoryLeadImportRepository },
-  { provide: PUBLIC_LEAD_GUARD, useClass: InMemoryPublicLeadGuard },
-  { provide: CRM_SYNC_STATE_REPOSITORY, useClass: InMemoryCrmSyncStateRepository },
+  pick<LeadRepository>(LEAD_REPOSITORY, () => new InMemoryLeadRepository(), () => new PgLeadRepository()),
+  pick<ActivityRepository>(ACTIVITY_REPOSITORY, () => new InMemoryActivityRepository(), () => new PgActivityRepository()),
+  pick<TaskRepository>(TASK_REPOSITORY, () => new InMemoryTaskRepository(), () => new PgTaskRepository()),
+  pick<OpportunityRepository>(OPPORTUNITY_REPOSITORY, () => new InMemoryOpportunityRepository(), () => new PgOpportunityRepository()),
+  pick<RoutingRuleRepository>(ROUTING_RULE_REPOSITORY, () => new InMemoryRoutingRuleRepository(), () => new PgRoutingRuleRepository()),
+  pick<LeadImportRepository>(LEAD_IMPORT_REPOSITORY, () => new InMemoryLeadImportRepository(), () => new PgLeadImportRepository()),
+  pick<PublicLeadGuard>(PUBLIC_LEAD_GUARD, () => new InMemoryPublicLeadGuard(), () => new PgPublicLeadGuard()),
+  pick<CrmSyncStateRepository>(CRM_SYNC_STATE_REPOSITORY, () => new InMemoryCrmSyncStateRepository(), () => new PgCrmSyncStateRepository()),
   { provide: TWENTY_WORKSPACE_DIRECTORY, useClass: DerivedTwentyWorkspaceDirectory },
   // The HTTP client (infrastructure/twenty/http-twenty.client.ts) is wired once Twenty hosting and the secret manager exist.
   FakeTwentyClient,

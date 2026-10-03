@@ -1,3 +1,4 @@
+import { istDate } from '../../../kernel/domain/ist';
 import { Transaction } from '../../../kernel/persistence/unit-of-work';
 import { Member } from '../domain/member';
 import { Licence, LicenceKind } from '../domain/licence';
@@ -73,7 +74,7 @@ export class SellerDirectoryService implements SellerDirectory {
 }
 
 function isValidOn(licence: Licence, at: Date): boolean {
-  const day = at.toISOString().slice(0, 10);
+  const day = istDate(at);
   return licence.validFrom <= day && day <= licence.validTo;
 }
 

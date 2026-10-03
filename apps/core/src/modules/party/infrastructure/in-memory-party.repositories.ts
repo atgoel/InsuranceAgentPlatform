@@ -1,7 +1,7 @@
 import { Transaction } from '../../../kernel/persistence/unit-of-work';
 import { TenantBuckets } from '../../../kernel/persistence/tenant-buckets';
 import { PreconditionFailedError } from '../../../kernel/errors/domain-errors';
-import { decodeCursor, encodeCursor } from '../../../kernel/http/pagination';
+import { cursorOffset, encodeCursor } from '../../../kernel/http/pagination';
 import { Party, PartyProps } from '../domain/party';
 import { ConsentLedger, ConsentRecord } from '../domain/consent';
 import { Suppression, isActive } from '../domain/suppression';
@@ -16,7 +16,7 @@ import {
 import { inScope } from '../application/party-scope';
 
 function page<T>(all: T[], cursor: string | undefined, limit: number): { items: T[]; nextCursor?: string } {
-  const start = cursor ? Number(decodeCursor(cursor).offset ?? 0) : 0;
+  const start = cursorOffset(cursor);
   return { items: all.slice(start, start + limit), nextCursor: start + limit < all.length ? encodeCursor({ offset: start + limit }) : undefined };
 }
 
@@ -117,12 +117,14 @@ export class InMemoryRoleLinkRepository implements RoleLinkRepository {
     if (!all.some((x) => x.partyId === l.partyId && roleLinkKey(x) === roleLinkKey(l))) all.push({ ...l });
   }
 
+  /** Links the target already holds stay on the source and are not reported, so a reversal restores both parties exactly. */
   async repoint(tx: Transaction, fromPartyId: string, toPartyId: string, onlyKeys?: readonly string[]): Promise<string[]> {
     const all = this.links.of(tx);
+    const held = new Set(all.filter((l) => l.partyId === toPartyId).map(roleLinkKey));
     const moved: string[] = [];
     for (let i = 0; i < all.length; i++) {
       const l = all[i];
-      if (l.partyId !== fromPartyId || (onlyKeys && !onlyKeys.includes(roleLinkKey(l)))) continue;
+      if (l.partyId !== fromPartyId || (onlyKeys && !onlyKeys.includes(roleLinkKey(l))) || held.has(roleLinkKey(l))) continue;
       all[i] = { ...l, partyId: toPartyId };
       moved.push(roleLinkKey(l));
     }

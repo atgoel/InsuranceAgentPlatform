@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Tenant, TenantKind, TenantProps, TenantStatus } from '../domain/tenant';
-import { decodeCursor, encodeCursor } from '../../../kernel/http/pagination';
+import { cursorOffset, encodeCursor } from '../../../kernel/http/pagination';
 import { DistributorEntity } from '../domain/distributor-entity';
 import { TieUpSet } from '../domain/tie-up';
 import { FeatureFlagSet } from '../domain/feature-flags';
@@ -37,7 +37,7 @@ export class InMemoryTenantDirectory implements TenantDirectory {
     const all = [...this.tenants.values()]
       .filter((t) => (!filter.status || t.status === filter.status) && (!filter.kind || t.kind === filter.kind))
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
-    const start = filter.cursor ? Number(decodeCursor(filter.cursor).offset ?? 0) : 0;
+    const start = cursorOffset(filter.cursor);
     const page = all.slice(start, start + filter.limit);
     const next = start + filter.limit < all.length ? encodeCursor({ offset: start + filter.limit }) : undefined;
     return { items: page.map((p) => Tenant.restore({ ...p })), nextCursor: next };
