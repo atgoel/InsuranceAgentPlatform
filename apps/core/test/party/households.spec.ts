@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { PartyModule } from '../../src/modules/party/party.module';
 import { createTestApp, TestApp } from '../support/test-app';
 import { tokenFor } from '../support/tokens';
@@ -12,7 +12,7 @@ describe('AC-M03-12 Household endpoints', () => {
   let headPartyId: string;
   let memberPartyId: string;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     testApp = await createTestApp({
       imports: [PartyModule],
     });
@@ -51,7 +51,7 @@ describe('AC-M03-12 Household endpoints', () => {
     memberPartyId = resp2.body.party.id;
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await testApp.close();
   });
 
@@ -150,9 +150,9 @@ describe('AC-M03-12 Household endpoints', () => {
           relation: 'SPOUSE',
         });
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(200);
       expect(response.body.members).toBeDefined();
-      const member = response.body.members.find((m: any) => m.partyId === memberPartyId);
+      const member = response.body.members.find((m: { partyId: string }) => m.partyId === memberPartyId);
       expect(member).toBeDefined();
       expect(member.relation).toBe('SPOUSE');
     });

@@ -1,7 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { PartyModule } from '../../src/modules/party/party.module';
 import { createTestApp, TestApp } from '../support/test-app';
 import { tokenFor } from '../support/tokens';
+import { AUDIT_LOG, OUTBOX } from '../../src/kernel/tokens';
+import { InMemoryAuditLog } from '../../src/kernel/audit/audit-log';
+import { InMemoryOutbox } from '../../src/kernel/outbox/outbox';
 import { newIdempotencyKey } from '../support/idempotency';
 
 /**
@@ -11,13 +14,13 @@ import { newIdempotencyKey } from '../support/idempotency';
 describe('AC-M03-* Party endpoints', () => {
   let testApp: TestApp;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     testApp = await createTestApp({
       imports: [PartyModule],
     });
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await testApp.close();
   });
 
@@ -94,7 +97,7 @@ describe('AC-M03-* Party endpoints', () => {
       expect(responseStr).not.toContain('jane@example.com');
 
       // But masked values should be present
-      const mobile = contacts.find((c: any) => c.channel === 'MOBILE');
+      const mobile = contacts.find((c: { [k: string]: unknown }) => c.channel === 'MOBILE');
       expect(mobile.masked).toBeDefined();
       expect(mobile.masked).toMatch(/\+91-X{6}\d{4}/);
     });
@@ -151,7 +154,6 @@ describe('AC-M03-* Party endpoints', () => {
         });
 
       expect(first.status).toBe(201);
-      const firstPartyId = first.body.party.id;
 
       // Try to create identical party with onDuplicate: reject
       const duplicate = await testApp.http
@@ -179,56 +181,28 @@ describe('AC-M03-* Party endpoints', () => {
       expect(duplicate.body.candidates[0].score).toBeGreaterThanOrEqual(90);
     });
 
-    it('queues duplicate candidates with score ≥60', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['SALESPERSON'],
-        memberId: 'member_1',
-      });
+    it('queues a candidate for same mobile + similar name, but not for a family member sharing the number (AC-M03-07)', async () => {
+      const token = tokenFor({ tenantId: 'ten_acme', roles: ['SALESPERSON'], memberId: 'member_1' });
+      const create = (displayName: string) =>
+        testApp.http
+          .post('/api/v1/parties')
+          .set('Host', 'acme.iap.test')
+          .set('Authorization', `Bearer ${token}`)
+          .set('Idempotency-Key', newIdempotencyKey())
+          .send({ kind: 'PERSON', displayName, contacts: [{ channel: 'MOBILE', value: '+919876543210' }], onDuplicate: 'create' });
 
-      // Create first party
-      const first = await testApp.http
-        .post('/api/v1/parties')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`)
-        .set('Idempotency-Key', newIdempotencyKey())
-        .send({
-          kind: 'PERSON',
-          displayName: 'John Doe',
-          contacts: [
-            {
-              channel: 'MOBILE',
-              value: '+919876543210',
-            },
-          ],
-        });
-
+      const first = await create('Ramesh Kumar');
       expect(first.status).toBe(201);
 
-      // Create second party with shared contact and different name
-      const second = await testApp.http
-        .post('/api/v1/parties')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`)
-        .set('Idempotency-Key', newIdempotencyKey())
-        .send({
-          kind: 'PERSON',
-          displayName: 'Jane Smith', // Different name
-          contacts: [
-            {
-              channel: 'MOBILE',
-              value: '+919876543210', // Same mobile
-            },
-          ],
-          onDuplicate: 'create',
-        });
+      const family = await create('Sunita Devi'); // shared family phone, different person
+      expect(family.status).toBe(201);
+      expect(family.body.duplicateCandidates).toEqual([]);
 
-      expect(second.status).toBe(201);
-      // Should have duplicate candidates queued
-      if (second.body.duplicateCandidates) {
-        expect(second.body.duplicateCandidates.length).toBeGreaterThan(0);
-        expect(second.body.duplicateCandidates[0].score).toBeGreaterThanOrEqual(40);
-      }
+      const similar = await create('Ramesh Kumaar');
+      expect(similar.status).toBe(201);
+      expect(similar.body.duplicateCandidates).toHaveLength(1);
+      expect(similar.body.duplicateCandidates[0]).toMatchObject({ score: 90, partyAId: expect.any(String), partyBId: expect.any(String) });
+      expect([similar.body.duplicateCandidates[0].partyAId, similar.body.duplicateCandidates[0].partyBId]).toContain(first.body.party.id);
     });
 
     it('requires party.write permission', async () => {
@@ -289,7 +263,7 @@ describe('AC-M03-* Party endpoints', () => {
         memberId: 'member_1',
       });
 
-      await testApp.http
+      const created = await testApp.http
         .post('/api/v1/parties')
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
@@ -305,13 +279,16 @@ describe('AC-M03-* Party endpoints', () => {
           ],
         });
 
-      // Audit should be written (checked via logs)
-      const auditLogs = testApp.logs.byEvent('party.party.created');
-      expect(auditLogs.length).toBeGreaterThan(0);
+      expect(created.status).toBe(201);
+      const partyId = created.body.party.id;
+      const audit = testApp.app.get<InMemoryAuditLog>(AUDIT_LOG).events.filter((e) => e.action === 'party.party.created' && e.entityId === partyId);
+      const events = testApp.app.get<InMemoryOutbox>(OUTBOX).events.filter((e) => e.type === 'party.party.created' && e.subject === partyId);
+      expect(audit).toHaveLength(1);
+      expect(events).toHaveLength(1);
+      expect(events[0].data).toEqual({ id: partyId, kind: 'PERSON', source: 'MANUAL' });
 
-      // Audit should not contain PII
-      const lastAudit = auditLogs[auditLogs.length - 1];
-      const auditStr = JSON.stringify(lastAudit);
+      // Neither the audit trail, the event nor the logs carry personal values (AC-M03-11)
+      const auditStr = JSON.stringify([audit, events, testApp.logs.records]);
       expect(auditStr).not.toContain('9876543210');
       expect(auditStr).not.toContain('+919876543210');
       expect(auditStr).not.toContain('Audit Test Party');
@@ -413,12 +390,14 @@ describe('AC-M03-* Party endpoints', () => {
         .set('Authorization', `Bearer ${otherToken}`);
 
       expect(response.status).toBe(200);
-      // The list might be empty or not contain the other member's party
-      if (response.body.items.length > 0) {
-        const ownerParties = response.body.items.filter((p: any) => p.displayName === 'Owner Party');
-        // If scope is properly enforced, this should be empty for the other member
-        expect(ownerParties.length).toBe(0);
-      }
+      expect(response.body.items).toEqual([]);
+
+      // ...while the owner finds it
+      const own = await testApp.http
+        .get('/api/v1/parties?q=Owner')
+        .set('Host', 'acme.iap.test')
+        .set('Authorization', `Bearer ${ownerToken}`);
+      expect(own.body.items.map((p: { displayName: string }) => p.displayName)).toEqual(['Owner Party']);
     });
 
     it('requires party.read permission', async () => {
@@ -638,9 +617,10 @@ describe('AC-M03-* Party endpoints', () => {
         .send({
           kind: 'PERSON',
           displayName: 'Existing Party',
-          contacts: [{ channel: 'MOBILE', value: '+911111111111' }],
+          contacts: [{ channel: 'MOBILE', value: '+919811111111' }],
           pan: 'BBBBB0000B',
         });
+      // (fixture above must succeed for the reject case to be meaningful)
 
       const response = await testApp.http
         .post('/api/v1/parties')
@@ -650,7 +630,7 @@ describe('AC-M03-* Party endpoints', () => {
         .send({
           kind: 'PERSON',
           displayName: 'Existing Party',
-          contacts: [{ channel: 'MOBILE', value: '+911111111111' }],
+          contacts: [{ channel: 'MOBILE', value: '+919811111111' }],
           pan: 'BBBBB0000B',
           onDuplicate: 'reject',
         });
@@ -686,7 +666,7 @@ describe('AC-M03-* Party endpoints', () => {
         .patch(`/api/v1/parties/${partyId}`)
         .set('Host', 'acme.iap.test')
         .set('Authorization', `Bearer ${token}`)
-        .set('If-Match', `"${version}"`)
+        .set('If-Match', `"v${version}"`)
         .send({
           displayName: 'Updated Name',
         });
@@ -724,7 +704,7 @@ describe('AC-M03-* Party endpoints', () => {
           displayName: 'Updated Name',
         });
 
-      expect(response.status).toBe(409);
+      expect(response.status).toBe(412);
     });
 
     it('requires party.write permission', async () => {

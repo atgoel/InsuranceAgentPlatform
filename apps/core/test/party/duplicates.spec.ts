@@ -1,394 +1,178 @@
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { PartyModule } from '../../src/modules/party/party.module';
 import { createTestApp, TestApp } from '../support/test-app';
 import { tokenFor } from '../support/tokens';
 import { newIdempotencyKey } from '../support/idempotency';
 
 /**
- * AC-M03-07, AC-M03-08, AC-M03-09
- * HTTP component tests for duplicate detection and merge
+ * AC-M03-07 duplicate queue, AC-M03-09 reviewed merge and 30-day reversal, AC-M03-13 scope/isolation.
+ * Fixtures: two parties owned by a salesperson in ou_root sharing a PAN (score 100).
  */
-describe('AC-M03-* Duplicate queue and merge endpoints', () => {
+describe('AC-M03-07/09 Duplicate queue and merge endpoints', () => {
   let testApp: TestApp;
-  let party1Id: string;
-  let party2Id: string;
+  let johnId: string;
+  let jonId: string;
+  const seller = () => tokenFor({ tenantId: 'ten_acme', roles: ['SALESPERSON'], memberId: 'member_1', orgUnitId: 'ou_root' });
+  const manager = () => tokenFor({ tenantId: 'ten_acme', roles: ['BRANCH_MANAGER'], memberId: 'member_mgr', orgUnitId: 'ou_root' });
+  const get = (path: string, token = manager()) => testApp.http.get(path).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${token}`);
+  const post = (path: string, body?: object, token = manager()) =>
+    testApp.http.post(path).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${token}`).set('Idempotency-Key', newIdempotencyKey()).send(body);
 
-  beforeAll(async () => {
-    testApp = await createTestApp({
-      imports: [PartyModule],
+  async function createParty(body: object): Promise<string> {
+    const res = await post('/api/v1/parties', body, seller());
+    expect(res.status).toBe(201);
+    return res.body.party.id;
+  }
+
+  async function onlyCandidate(): Promise<{ id: string; a: { id: string }; b: { id: string }; score: number; rule: string; explanation: string }> {
+    const res = await get('/api/v1/duplicates');
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(1);
+    return res.body.items[0];
+  }
+
+  beforeEach(async () => {
+    testApp = await createTestApp({ imports: [PartyModule] });
+    johnId = await createParty({
+      kind: 'PERSON', displayName: 'John Doe', contacts: [{ channel: 'MOBILE', value: '+919876543210' }], pan: 'AAAAA0000A', tags: ['vip'],
+      consent: [{ purpose: 'MARKETING', channel: 'SMS', granted: true, noticeVersion: 'n1', source: 'ASSISTED' }],
     });
-
-    const token = tokenFor({
-      tenantId: 'ten_acme',
-      roles: ['SALESPERSON'],
-      memberId: 'member_1',
+    jonId = await createParty({
+      kind: 'PERSON', displayName: 'Jon Doe', contacts: [{ channel: 'EMAIL', value: 'jon@example.com' }], pan: 'aaaaa0000a', tags: ['renewal'],
     });
-
-    // Create two similar parties
-    const resp1 = await testApp.http
-      .post('/api/v1/parties')
-      .set('Host', 'acme.iap.test')
-      .set('Authorization', `Bearer ${token}`)
-      .set('Idempotency-Key', newIdempotencyKey())
-      .send({
-        kind: 'PERSON',
-        displayName: 'John Doe',
-        contacts: [{ channel: 'MOBILE', value: '+919876543210' }],
-        pan: 'AAAAA0000A',
-      });
-
-    party1Id = resp1.body.party.id;
-
-    const resp2 = await testApp.http
-      .post('/api/v1/parties')
-      .set('Host', 'acme.iap.test')
-      .set('Authorization', `Bearer ${token}`)
-      .set('Idempotency-Key', newIdempotencyKey())
-      .send({
-        kind: 'PERSON',
-        displayName: 'John D.',
-        contacts: [{ channel: 'MOBILE', value: '+919876543211' }],
-        pan: 'AAAAA0000A', // Same PAN = high score duplicate
-      });
-
-    party2Id = resp2.body.party.id;
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await testApp.close();
   });
 
-  describe('AC-M03-07 GET /api/v1/duplicates (queue list)', () => {
-    it('lists open duplicate candidates', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['BRANCH_MANAGER'],
-      });
-
-      const response = await testApp.http
-        .get('/api/v1/duplicates')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(response.status).toBe(200);
-      expect(response.body.items).toBeDefined();
-      expect(Array.isArray(response.body.items)).toBe(true);
-
-      // Should have at least one candidate if parties were flagged
-      if (response.body.items.length > 0) {
-        const candidate = response.body.items[0];
-        expect(candidate.id).toBeDefined();
-        expect(candidate.a).toBeDefined();
-        expect(candidate.b).toBeDefined();
-        expect(candidate.score).toBeDefined();
-        expect(candidate.rule).toBeDefined();
-        expect(candidate.explanation).toBeDefined();
-      }
+  describe('GET /duplicates', () => {
+    it('lists the same-PAN pair once with score 100, both sides as masked list items', async () => {
+      const c = await onlyCandidate();
+      expect(c.score).toBe(100);
+      expect(c.explanation).toMatch(/PAN/);
+      expect([c.a.id, c.b.id].sort()).toEqual([johnId, jonId].sort());
+      expect(JSON.stringify(c)).not.toContain('AAAAA0000A');
+      expect(JSON.stringify(c)).not.toContain('9876543210');
     });
 
-    it('requires party.merge permission', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['SALESPERSON'], // No merge permission
-      });
-
-      const response = await testApp.http
-        .get('/api/v1/duplicates')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(response.status).toBe(403);
+    it('requires party.merge (salespeople cannot review duplicates)', async () => {
+      const res = await get('/api/v1/duplicates', seller());
+      expect(res.status).toBe(403);
+      expect(res.body.code).toBe('permission_denied');
     });
 
-    it('supports pagination with cursor', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['BRANCH_MANAGER'],
-      });
+    it('hides pairs outside the reviewer’s record scope', async () => {
+      const otherBranchManager = tokenFor({ tenantId: 'ten_acme', roles: ['BRANCH_MANAGER'], memberId: 'member_x', orgUnitId: 'ou_elsewhere' });
+      const res = await get('/api/v1/duplicates', otherBranchManager);
+      expect(res.status).toBe(200);
+      expect(res.body.items).toEqual([]);
+    });
 
-      const response = await testApp.http
-        .get('/api/v1/duplicates?limit=1')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(response.status).toBe(200);
-      if (response.body.nextCursor) {
-        const nextPage = await testApp.http
-          .get(`/api/v1/duplicates?limit=1&cursor=${response.body.nextCursor}`)
-          .set('Host', 'acme.iap.test')
-          .set('Authorization', `Bearer ${token}`);
-
-        expect(nextPage.status).toBe(200);
-      }
+    it('never matches across tenants (F40)', async () => {
+      const zenSeller = tokenFor({ tenantId: 'ten_zen', roles: ['SALESPERSON'], memberId: 'member_z', orgUnitId: 'ou_root' });
+      const res = await testApp.http
+        .post('/api/v1/parties').set('Host', 'zen.iap.test').set('Authorization', `Bearer ${zenSeller}`).set('Idempotency-Key', newIdempotencyKey())
+        .send({ kind: 'PERSON', displayName: 'John Doe', contacts: [{ channel: 'MOBILE', value: '+919876543210' }], pan: 'AAAAA0000A' });
+      expect(res.status).toBe(201);
+      expect(res.body.duplicateCandidates).toEqual([]);
     });
   });
 
-  describe('AC-M03-07 GET /api/v1/duplicates/{id}/comparison (compare)', () => {
-    it('returns field-by-field comparison with masked sensitive fields', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['BRANCH_MANAGER'],
-      });
-
-      // First get a candidate ID
-      const listResponse = await testApp.http
-        .get('/api/v1/duplicates')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`);
-
-      if (listResponse.body.items.length > 0) {
-        const candidateId = listResponse.body.items[0].id;
-
-        const response = await testApp.http
-          .get(`/api/v1/duplicates/${candidateId}/comparison`)
-          .set('Host', 'acme.iap.test')
-          .set('Authorization', `Bearer ${token}`);
-
-        expect(response.status).toBe(200);
-        expect(response.body.fields).toBeDefined();
-        expect(Array.isArray(response.body.fields)).toBe(true);
-
-        // Check masked values in comparison
-        const contactFields = response.body.fields.filter((f: any) =>
-          ['contacts', 'primaryMobile', 'primaryEmail'].includes(f.field)
-        );
-
-        for (const field of contactFields) {
-          const responseStr = JSON.stringify(field);
-          // Should not expose raw PII
-          expect(responseStr).not.toContain('9876543210');
-          expect(responseStr).not.toContain('9876543211');
-        }
-      }
+  describe('GET /duplicates/{id}/comparison', () => {
+    it('compares field by field with masked contacts, DOB year only and PAN last four', async () => {
+      const c = await onlyCandidate();
+      const res = await get(`/api/v1/duplicates/${c.id}/comparison`);
+      expect(res.status).toBe(200);
+      const byField = Object.fromEntries(res.body.fields.map((f: { field: string; a: unknown; b: unknown }) => [f.field, [f.a, f.b]]));
+      expect(byField.pan).toEqual(['XXXXXX000A', 'XXXXXX000A']);
+      expect(byField.displayName.sort()).toEqual(['John Doe', 'Jon Doe']);
+      expect(JSON.stringify(res.body)).not.toContain('9876543210');
+      expect(JSON.stringify(res.body)).not.toContain('jon@example.com');
     });
 
-    it('requires party.merge permission', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['SALESPERSON'],
-      });
-
-      const response = await testApp.http
-        .get('/api/v1/duplicates/candidate_1/comparison')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(response.status).toBe(403);
+    it('returns 404 for an unknown candidate', async () => {
+      expect((await get('/api/v1/duplicates/dup_missing/comparison')).status).toBe(404);
     });
   });
 
-  describe('AC-M03-09 POST /api/v1/duplicates/{id}/merge (merge records)', () => {
-    it('merges two parties with survivor choice', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['BRANCH_MANAGER'],
-      });
+  describe('POST /duplicates/{id}/merge and /merges/{id}/reversal', () => {
+    it('merges with survivor choices, unions contacts and tags, carries consent, and removes the merged party from lists', async () => {
+      const c = await onlyCandidate();
+      const survivorSide = c.a.id === johnId ? 'A' : 'B';
+      const res = await post(`/api/v1/duplicates/${c.id}/merge`, { survivor: survivorSide, choices: [{ field: 'displayName', from: survivorSide }] });
+      expect(res.status).toBe(200);
+      expect(res.body.survivorId).toBe(johnId);
+      expect(res.body.mergedId).toBe(jonId);
+      expect(Date.parse(res.body.reversibleUntil) - testApp.clock.now().getTime()).toBe(30 * 86_400_000);
 
-      // Get a candidate
-      const listResponse = await testApp.http
-        .get('/api/v1/duplicates')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`);
+      const survivor = await get(`/api/v1/parties/${johnId}`, seller());
+      expect(survivor.status).toBe(200);
+      expect(survivor.body.displayName).toBe('John Doe');
+      expect(survivor.body.contacts.map((x: { channel: string }) => x.channel).sort()).toEqual(['EMAIL', 'MOBILE']);
+      expect(survivor.body.tags.sort()).toEqual(['renewal', 'vip']);
 
-      if (listResponse.body.items.length > 0) {
-        const candidateId = listResponse.body.items[0].id;
-
-        const response = await testApp.http
-          .post(`/api/v1/duplicates/${candidateId}/merge`)
-          .set('Host', 'acme.iap.test')
-          .set('Authorization', `Bearer ${token}`)
-          .set('Idempotency-Key', newIdempotencyKey())
-          .send({
-            survivor: 'A',
-            choices: [
-              { field: 'displayName', from: 'A' },
-              { field: 'dateOfBirth', from: 'A' },
-              { field: 'pan', from: 'A' },
-              { field: 'preferredLanguage', from: 'A' },
-              { field: 'preferredChannel', from: 'A' },
-              { field: 'ownerMemberId', from: 'A' },
-            ],
-          });
-
-        expect(response.status).toBe(201);
-        expect(response.body.mergeId).toBeDefined();
-        expect(response.body.survivorId).toBeDefined();
-        expect(response.body.reversibleUntil).toBeDefined();
-      }
+      const list = await get('/api/v1/parties', seller());
+      expect(list.body.items.map((p: { id: string }) => p.id)).toEqual([johnId]);
+      expect((await get('/api/v1/duplicates')).body.items).toEqual([]);
     });
 
-    it('requires party.merge permission', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['SALESPERSON'],
-      });
+    it('re-points the merged party’s consent history to the survivor with merge evidence', async () => {
+      const c = await onlyCandidate();
+      // jon gives a WhatsApp marketing grant; john survives
+      expect((await post(`/api/v1/parties/${jonId}/consents`, { purpose: 'MARKETING', channel: 'WHATSAPP', granted: true, noticeVersion: 'n2', source: 'WEB_FORM' }, seller())).status).toBe(201);
+      const merged = await post(`/api/v1/duplicates/${c.id}/merge`, { survivor: c.a.id === johnId ? 'A' : 'B', choices: [] });
+      expect(merged.status).toBe(200);
 
-      const response = await testApp.http
-        .post('/api/v1/duplicates/candidate_1/merge')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`)
-        .set('Idempotency-Key', newIdempotencyKey())
-        .send({
-          survivor: 'A',
-          choices: [
-            { field: 'displayName', from: 'A' },
-            { field: 'dateOfBirth', from: 'A' },
-            { field: 'pan', from: 'A' },
-            { field: 'preferredLanguage', from: 'A' },
-            { field: 'preferredChannel', from: 'A' },
-            { field: 'ownerMemberId', from: 'A' },
-          ],
-        });
-
-      expect(response.status).toBe(403);
+      const ledger = await get(`/api/v1/parties/${johnId}/consents`, seller());
+      const copied = ledger.body.history.filter((r: { channel: string }) => r.channel === 'WHATSAPP');
+      expect(copied).toHaveLength(1);
+      expect(copied[0].evidenceRef).toBe(`merge:${merged.body.mergeId}`);
     });
 
-    it('requires Idempotency-Key', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['BRANCH_MANAGER'],
-      });
+    it('reverses within 30 days, restoring the merged party; a second reversal is refused', async () => {
+      const c = await onlyCandidate();
+      const merged = await post(`/api/v1/duplicates/${c.id}/merge`, { survivor: c.a.id === johnId ? 'A' : 'B', choices: [] });
+      expect(merged.status).toBe(200);
 
-      const response = await testApp.http
-        .post('/api/v1/duplicates/candidate_1/merge')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`)
-        .send({
-          survivor: 'A',
-          choices: [
-            { field: 'displayName', from: 'A' },
-            { field: 'dateOfBirth', from: 'A' },
-            { field: 'pan', from: 'A' },
-            { field: 'preferredLanguage', from: 'A' },
-            { field: 'preferredChannel', from: 'A' },
-            { field: 'ownerMemberId', from: 'A' },
-          ],
-        });
+      testApp.clock.advance(29 * 86_400_000);
+      const reversal = await post(`/api/v1/merges/${merged.body.mergeId}/reversal`);
+      expect(reversal.status).toBe(200);
+      expect(reversal.body).toEqual({ restoredPartyId: jonId });
+      expect((await get(`/api/v1/parties/${jonId}`, seller())).body.status).toBe('ACTIVE');
 
-      expect(response.status).toBeGreaterThanOrEqual(400);
+      const again = await post(`/api/v1/merges/${merged.body.mergeId}/reversal`);
+      expect(again.status).toBe(409);
+      expect(again.body.code).toBe('merge_already_reversed');
+    });
+
+    it('refuses reversal after 30 days', async () => {
+      const c = await onlyCandidate();
+      const merged = await post(`/api/v1/duplicates/${c.id}/merge`, { survivor: 'A', choices: [] });
+      expect(merged.status).toBe(200);
+      testApp.clock.advance(31 * 86_400_000);
+      const res = await post(`/api/v1/merges/${merged.body.mergeId}/reversal`);
+      expect(res.status).toBe(422);
+      expect(res.body.code).toBe('merge_not_reversible');
+    });
+
+    it('requires an Idempotency-Key and party.merge', async () => {
+      const c = await onlyCandidate();
+      const noKey = await testApp.http
+        .post(`/api/v1/duplicates/${c.id}/merge`).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${manager()}`).send({ survivor: 'A', choices: [] });
+      expect(noKey.status).toBe(400);
+      expect((await post(`/api/v1/duplicates/${c.id}/merge`, { survivor: 'A', choices: [] }, seller())).status).toBe(403);
     });
   });
 
-  describe('AC-M03-09 POST /api/v1/duplicates/{id}/dismissal (mark not a duplicate)', () => {
-    it('dismisses a duplicate candidate', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['BRANCH_MANAGER'],
-      });
-
-      // Get a candidate
-      const listResponse = await testApp.http
-        .get('/api/v1/duplicates')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`);
-
-      if (listResponse.body.items.length > 0) {
-        const candidateId = listResponse.body.items[0].id;
-
-        const response = await testApp.http
-          .post(`/api/v1/duplicates/${candidateId}/dismissal`)
-          .set('Host', 'acme.iap.test')
-          .set('Authorization', `Bearer ${token}`)
-          .set('Idempotency-Key', newIdempotencyKey());
-
-        expect(response.status).toBe(204);
-      }
-    });
-
-    it('requires party.merge permission', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['SALESPERSON'],
-      });
-
-      const response = await testApp.http
-        .post('/api/v1/duplicates/candidate_1/dismissal')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`)
-        .set('Idempotency-Key', newIdempotencyKey());
-
-      expect(response.status).toBe(403);
-    });
-  });
-
-  describe('AC-M03-09 POST /api/v1/merges/{id}/reversal (reverse merge)', () => {
-    it('reverses a merge within 30 days', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['BRANCH_MANAGER'],
-      });
-
-      // This test assumes a merge has been done first
-      // In a real scenario, we would have a mergeId from the merge operation
-
-      const response = await testApp.http
-        .post('/api/v1/merges/merge_1/reversal')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`)
-        .set('Idempotency-Key', newIdempotencyKey());
-
-      // May 404 if merge doesn't exist, but shouldn't 403
-      if (response.status !== 404) {
-        expect(response.status).not.toBe(403);
-      }
-    });
-
-    it('requires party.merge permission', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['SALESPERSON'],
-      });
-
-      const response = await testApp.http
-        .post('/api/v1/merges/merge_1/reversal')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`)
-        .set('Idempotency-Key', newIdempotencyKey());
-
-      expect(response.status).toBe(403);
-    });
-  });
-
-  describe('AC-M03-08 Duplicate detection rules', () => {
-    it('detects same PAN duplicates with score 100', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['BRANCH_MANAGER'],
-      });
-
-      const response = await testApp.http
-        .get('/api/v1/duplicates')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(response.status).toBe(200);
-
-      // Look for candidates with same PAN rule
-      const samePanCandidates = response.body.items.filter(
-        (c: any) => c.rule === 'SamePanRule'
-      );
-
-      for (const candidate of samePanCandidates) {
-        expect(candidate.score).toBe(100);
-      }
-    });
-
-    it('never auto-merges (autoMergeAllowed always false)', async () => {
-      const token = tokenFor({
-        tenantId: 'ten_acme',
-        roles: ['BRANCH_MANAGER'],
-      });
-
-      const response = await testApp.http
-        .get('/api/v1/duplicates')
-        .set('Host', 'acme.iap.test')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(response.status).toBe(200);
-
-      for (const candidate of response.body.items) {
-        expect(candidate.autoMergeAllowed).toBe(false);
-      }
+  describe('POST /duplicates/{id}/dismissal', () => {
+    it('dismisses the candidate so it leaves the queue and can no longer be merged', async () => {
+      const c = await onlyCandidate();
+      expect((await post(`/api/v1/duplicates/${c.id}/dismissal`)).status).toBe(204);
+      expect((await get('/api/v1/duplicates')).body.items).toEqual([]);
+      const merge = await post(`/api/v1/duplicates/${c.id}/merge`, { survivor: 'A', choices: [] });
+      expect(merge.status).toBe(409);
+      expect(merge.body.code).toBe('candidate_closed');
     });
   });
 });

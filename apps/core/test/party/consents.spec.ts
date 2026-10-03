@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { PartyModule } from '../../src/modules/party/party.module';
 import { createTestApp, TestApp } from '../support/test-app';
 import { tokenFor } from '../support/tokens';
@@ -12,7 +12,7 @@ describe('AC-M03-* Consent endpoints', () => {
   let testApp: TestApp;
   let partyId: string;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     testApp = await createTestApp({
       imports: [PartyModule],
     });
@@ -38,10 +38,11 @@ describe('AC-M03-* Consent endpoints', () => {
         ],
       });
 
+    expect(response.status).toBe(201);
     partyId = response.body.party.id;
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await testApp.close();
   });
 
@@ -50,6 +51,7 @@ describe('AC-M03-* Consent endpoints', () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
         roles: ['SALESPERSON'],
+        memberId: 'member_1',
       });
 
       const response = await testApp.http
@@ -75,6 +77,7 @@ describe('AC-M03-* Consent endpoints', () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
         roles: ['SALESPERSON'],
+        memberId: 'member_1',
       });
 
       const response = await testApp.http
@@ -120,6 +123,7 @@ describe('AC-M03-* Consent endpoints', () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
         roles: ['SALESPERSON'],
+        memberId: 'member_1',
       });
 
       const response = await testApp.http
@@ -141,6 +145,7 @@ describe('AC-M03-* Consent endpoints', () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
         roles: ['SALESPERSON'],
+        memberId: 'member_1',
       });
 
       const response = await testApp.http
@@ -168,6 +173,7 @@ describe('AC-M03-* Consent endpoints', () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
         roles: ['SALESPERSON'],
+        memberId: 'member_1',
       });
 
       const response = await testApp.http
@@ -202,6 +208,7 @@ describe('AC-M03-* Consent endpoints', () => {
       const token = tokenFor({
         tenantId: 'ten_acme',
         roles: ['SALESPERSON'],
+        memberId: 'member_1',
       });
 
       const response = await testApp.http
