@@ -340,6 +340,7 @@ Implementation decisions (M04b build, 2026-10-03):
 - **Workspace mismatch** is asserted by `CrmSyncWorker` for every client (not only `HttpTwentyClient`), so it is testable with the fake.
 - **Owner changes from Twenty** apply only if the new owner is still eligible for the product (M02 eligibility); otherwise `ineligible_owner` and Core keeps its owner. Freshness compares the event's `updatedAt` with the lead's `updatedAt` / opportunity's `stageEnteredAt` / task's `createdAt`.
 - **Person** sync is enqueued the first time a lead for the party is saved; a Core-owned edit in Twenty emits `crm.change_request.created` with field names only and re-projects the person.
+- **Sync state storage (Postgres, 041):** a dedicated `crm_sync_state` table (tenant, object, id, state, external_ref, attempts, last_error) instead of the per-table `sync_state`/`external_ref` columns, because persons are keyed by party id and retries need attempts/last error; those columns in 040 are unused.
 - **Retry policy** is the kernel outbox's: 3 attempts then dead-letter (no separate circuit breaker at launch). The kernel now schedules the outbox relay (`OutboxRelayScheduler`, 1 s, off in tests) and excludes dead-lettered events from fetches.
 - **Dev/test wiring:** `DerivedTwentyWorkspaceDirectory` (workspace `ws_<tenantId>` as created by the M01 stub provisioner; per-workspace webhook secret derived by domain-separated HMAC) and `FakeTwentyClient`. Production needs the provisioned workspace record and a secret-manager lookup before `HttpTwentyClient` is wired.
 
