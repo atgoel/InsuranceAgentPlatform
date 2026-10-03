@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { Lead } from './lead';
+import { Lead, lineOfBusiness, ProductLine } from './lead';
 import { ValidationError, BusinessRuleError } from '../../../kernel/errors/domain-errors';
 import type { StageRuleSet, StageRuleContext } from './stage-rules';
 
@@ -518,12 +518,11 @@ describe('AC-M04-02 Lead stage transitions', () => {
     expect(lead.props.attribution.firstTouch.channel).toBe('WEB');
   });
 
-  it('lineOfBusiness maps ProductLine correctly', () => {
-    // Placeholder for lineOfBusiness mapping tests
-    // TERM_LIFE, SAVINGS_LIFE, CHILD, RETIREMENT -> LIFE
-    // HEALTH, HEALTH_FLOATER -> HEALTH
-    // MOTOR, OTHER -> GENERAL
-    // Assumes exported function lineOfBusiness exists
-    expect(true).toBe(true);
+  it('AC-M04-07 lineOfBusiness maps every ProductLine to its licence line', () => {
+    const expected: Record<ProductLine, 'LIFE' | 'HEALTH' | 'GENERAL'> = {
+      TERM_LIFE: 'LIFE', SAVINGS_LIFE: 'LIFE', CHILD: 'LIFE', RETIREMENT: 'LIFE',
+      HEALTH: 'HEALTH', HEALTH_FLOATER: 'HEALTH', MOTOR: 'GENERAL', OTHER: 'GENERAL',
+    };
+    for (const [product, line] of Object.entries(expected)) expect(lineOfBusiness(product as ProductLine)).toBe(line);
   });
 });

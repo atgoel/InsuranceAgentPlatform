@@ -304,13 +304,7 @@ describe('AC-M04-05 Opportunity aggregate', () => {
         opp.move('ISSUED', new Date('2026-10-03T13:00:00Z'));
       }).toThrow(BusinessRuleError);
 
-      try {
-        opp.move('ISSUED', new Date('2026-10-03T13:00:00Z'));
-      } catch (e) {
-        if (e instanceof BusinessRuleError) {
-          expect(e.code).toBe('issued_requires_insurer_confirmation');
-        }
-      }
+      expect(codeOf(() => opp.move('ISSUED', new Date('2026-10-03T13:00:00Z')))).toBe('issued_requires_insurer_confirmation');
     });
   });
 
@@ -508,3 +502,12 @@ describe('AC-M04-05 Opportunity aggregate', () => {
     });
   });
 });
+
+function codeOf(fn: () => unknown): string | undefined {
+  try {
+    fn();
+  } catch (e) {
+    return (e as { code?: string }).code;
+  }
+  return undefined;
+}

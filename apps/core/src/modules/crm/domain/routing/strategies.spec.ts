@@ -261,50 +261,29 @@ describe('AC-M04-06/07 Routing strategies', () => {
   });
 
   describe('TerritoryStrategy', () => {
-    it('prefers candidates whose org unit territory matches pincode prefix', () => {
-      // Assumes territory matching is done by comparing pincode prefix with orgUnit codes
-      // This is a simplified test; actual implementation depends on territory logic
-      const strategy = new TerritoryStrategy();
-      const facts: LeadRoutingFacts = {
-        productInterest: 'TERM_LIFE',
-        line: 'LIFE',
-        posEligibleProduct: false,
-        source: 'WEB_FORM',
-        pincode: '560001', // Bangalore
-      };
+    // Candidates carry their org unit's territoryCodes (pincode prefixes, M02 org_unit.territory_codes).
+    const facts: LeadRoutingFacts = { productInterest: 'TERM_LIFE', line: 'LIFE', posEligibleProduct: false, source: 'WEB_FORM', pincode: '560001' };
+    const pool: RoutingCandidate[] = [
+      { ...candidates[0], memberId: 'mem_a', territoryCodes: ['400'] },
+      { ...candidates[0], memberId: 'mem_b', territoryCodes: ['560', '561'] },
+      { ...candidates[1], memberId: 'mem_c', territoryCodes: ['5600'] },
+    ];
 
-      const pick = strategy.pick(candidates, facts, {});
-      expect(pick).toBeDefined();
-      expect([...candidates.map((c) => c.memberId)]).toContain(pick?.memberId);
+    it('AC-M04-06 prefers candidates whose territory code is a prefix of the pincode, round-robin among them', () => {
+      const strategy = new TerritoryStrategy();
+      expect(strategy.pick(pool, facts, {})?.memberId).toBe('mem_b');
+      expect(strategy.pick(pool, facts, { lastMemberId: 'mem_b' })?.memberId).toBe('mem_c');
+      expect(strategy.pick(pool, facts, { lastMemberId: 'mem_c' })?.memberId).toBe('mem_b');
     });
 
-    it('falls back to round-robin among territory-matched candidates', () => {
+    it('AC-M04-06 falls back to round-robin over all candidates when no territory matches or no pincode', () => {
       const strategy = new TerritoryStrategy();
-      const facts: LeadRoutingFacts = {
-        productInterest: 'TERM_LIFE',
-        line: 'LIFE',
-        posEligibleProduct: false,
-        source: 'WEB_FORM',
-        pincode: '560001',
-      };
-
-      const pick1 = strategy.pick(candidates, facts, { lastMemberId: undefined });
-      const pick2 = strategy.pick(candidates, facts, { lastMemberId: pick1?.memberId });
-      expect(pick1?.memberId).not.toEqual(pick2?.memberId);
+      expect(strategy.pick(pool, { ...facts, pincode: '110001' }, {})?.memberId).toBe('mem_a');
+      expect(strategy.pick(pool, { ...facts, pincode: undefined }, { lastMemberId: 'mem_a' })?.memberId).toBe('mem_b');
     });
 
-    it('returns undefined when no candidates', () => {
-      const strategy = new TerritoryStrategy();
-      const facts: LeadRoutingFacts = {
-        productInterest: 'TERM_LIFE',
-        line: 'LIFE',
-        posEligibleProduct: false,
-        source: 'WEB_FORM',
-        pincode: '560001',
-      };
-
-      const pick = strategy.pick([], facts, {});
-      expect(pick).toBeUndefined();
+    it('AC-M04-06 returns undefined when there are no candidates', () => {
+      expect(new TerritoryStrategy().pick([], facts, {})).toBeUndefined();
     });
   });
 

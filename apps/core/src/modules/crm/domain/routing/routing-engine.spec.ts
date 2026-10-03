@@ -177,7 +177,7 @@ describe('AC-M04-06/07 RoutingEngine and strategies', () => {
         cursorFor: async () => undefined,
       });
 
-      expect(decision2.memberId).toBeDefined();
+      expect(decision2.memberId).toBe('mem_1'); // round-robin with no cursor starts at the first id
     });
   });
 
@@ -284,11 +284,12 @@ describe('AC-M04-06/07 RoutingEngine and strategies', () => {
       const decision = await engine.route({
         rules,
         facts,
-        candidatesFor: async () => candidates,
+        candidatesFor: async () => [{ ...candidates[0], openLeadsToday: 20 }, ...candidates.slice(1)], // mem_1 is at its capacityPerDay (20)
         cursorFor: async () => undefined,
       });
 
-      expect(decision.memberId).toBeDefined();
+      expect(decision.memberId).toBe('mem_2');
+      expect(decision.skipped).toEqual([{ memberId: 'mem_1', reason: expect.stringMatching(/capacity/i) }]);
     });
   });
 

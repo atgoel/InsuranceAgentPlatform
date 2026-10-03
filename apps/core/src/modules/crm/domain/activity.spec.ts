@@ -28,13 +28,7 @@ describe('AC-M04-04 SensitiveContentGuard', () => {
     });
 
     it('has error code sensitive_content_not_allowed', () => {
-      try {
-        SensitiveContentGuard.check('ABCDE1234F');
-      } catch (e) {
-        if (e instanceof BusinessRuleError) {
-          expect(e.code).toBe('sensitive_content_not_allowed');
-        }
-      }
+      expect(codeOf(() => SensitiveContentGuard.check('ABCDE1234F'))).toBe('sensitive_content_not_allowed');
     });
   });
 
@@ -180,3 +174,12 @@ describe('AC-M04-04 SensitiveContentGuard', () => {
     });
   });
 });
+
+function codeOf(fn: () => unknown): string | undefined {
+  try {
+    fn();
+  } catch (e) {
+    return (e as { code?: string }).code;
+  }
+  return undefined;
+}
