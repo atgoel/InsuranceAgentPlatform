@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { NotFoundError, ValidationError } from '../../../kernel/errors/domain-errors';
+import { ConflictError, NotFoundError, ValidationError } from '../../../kernel/errors/domain-errors';
 import { Insurer, Product } from '../domain/catalogue';
 import { ProductVersion, ProductVersionProps } from '../domain/product-version';
 import { ResearchSummary } from '../domain/research';
@@ -48,7 +48,7 @@ export class CatalogueAdminService {
       const product = (await this.catalogue.products()).find((p) => p.id === input.productId);
       if (!product) throw new NotFoundError('product', input.productId);
       const clash = (await this.catalogue.versions({ productId: product.id })).some((v) => v.wordingVersion === input.wordingVersion);
-      if (clash) throw new ValidationError('duplicate_wording_version', 'This product already has a version with that wording version');
+      if (clash) throw new ConflictError('duplicate_wording_version', 'This product already has a version with that wording version');
       const version = ProductVersion.draft({ ...input, id: this.ctx.ids.next('pv'), insurerId: product.insurerId, line: product.line });
       await this.catalogue.saveVersion(version);
       await this.audit(tx, 'catalogue.version.drafted', 'product_version', version.id, undefined, version.props);

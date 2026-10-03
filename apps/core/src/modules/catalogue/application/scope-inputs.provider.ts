@@ -8,10 +8,14 @@ import { SELLER_DIRECTORY, SellerDirectory } from '../../distribution/applicatio
 import { ScopeInputsProvider, Transaction } from './ports';
 
 const LINES: LineOfBusiness[] = ['LIFE', 'HEALTH', 'GENERAL'];
+const SELLING_ROLES = new Set(['SALESPERSON', 'SOLO_OWNER']);
+
+const sells = (principal: Principal): boolean => principal.roles.some((r) => SELLING_ROLES.has(r));
 
 /**
  * Scope inputs from verified context only: entity type and tie-ups (M01) and the caller's selling scope (M02).
- * Members without a selling scope (admin, ops, compliance) browse the tenant's full permitted catalogue as EMPLOYEE.
+ * Non-selling roles (admin, ops, compliance) browse the tenant's full permitted catalogue as EMPLOYEE. A selling role
+ * without an active selling scope (unknown, inactive or exited member) is licensed for no line, so nothing is in scope.
  */
 @Injectable()
 export class DefaultScopeInputsProvider implements ScopeInputsProvider {
@@ -31,7 +35,7 @@ export class DefaultScopeInputsProvider implements ScopeInputsProvider {
       entityType: entity.entityType,
       comparisonScope: entity.entityType === 'BROKER' ? 'MARKET_WIDE' : 'TIED_INSURERS',
       tiedInsurerIds: tied,
-      salesperson: selling ? { type: selling.salespersonType, lines: selling.lines } : { type: 'EMPLOYEE', lines: LINES },
+      salesperson: selling ? { type: selling.salespersonType, lines: selling.lines } : { type: 'EMPLOYEE', lines: sells(principal) ? [] : LINES },
       date,
     };
   }
