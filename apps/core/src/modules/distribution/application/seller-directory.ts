@@ -3,7 +3,7 @@ import { Member } from '../domain/member';
 import { Licence, LicenceKind } from '../domain/licence';
 import { SellingScope } from '../domain/selling-scope';
 import {
-  EligibleSeller, InsurerCodeRepository, LeaveRepository, LicenceRepository, MemberRepository, SellerCriteria, SellerDirectory,
+  EligibleSeller, InsurerCodeRepository, LeaveRepository, LicenceRepository, MemberRepository, OrgUnitRepository, SellerCriteria, SellerDirectory,
 } from './ports';
 
 type Line = 'LIFE' | 'HEALTH' | 'GENERAL';
@@ -19,13 +19,16 @@ export class SellerDirectoryService implements SellerDirectory {
     private readonly licences: LicenceRepository,
     private readonly leaves: LeaveRepository,
     private readonly codes: InsurerCodeRepository,
+    private readonly units: OrgUnitRepository,
   ) {}
 
   async eligibleSellers(tx: Transaction, criteria: SellerCriteria): Promise<EligibleSeller[]> {
-    const { items } = await this.members.list(tx, { status: 'active', orgUnitIds: criteria.orgUnitIds, limit: 10_000 });
+    const tree = await this.units.tree(tx);
+    const orgUnitIds = criteria.withinOrgUnitId ? tree.subtreeIds(criteria.withinOrgUnitId) : criteria.orgUnitIds;
+    const { items } = await this.members.list(tx, { status: 'active', orgUnitIds, limit: 10_000 });
     const eligible: EligibleSeller[] = [];
     for (const member of items) {
-      if (await this.isEligible(tx, member, criteria)) eligible.push(toSeller(member));
+      if (await this.isEligible(tx, member, criteria)) eligible.push(toSeller(member, tree.get(member.props.orgUnitId).territoryCodes));
     }
     return eligible;
   }
@@ -65,7 +68,10 @@ function isValidOn(licence: Licence, at: Date): boolean {
   return licence.validFrom <= day && day <= licence.validTo;
 }
 
-function toSeller(m: Member): EligibleSeller {
+function toSeller(m: Member, territoryCodes: readonly string[]): EligibleSeller {
   const p = m.props;
-  return { memberId: p.id, displayName: p.displayName, orgUnitId: p.orgUnitId, salespersonType: p.salespersonType ?? 'EMPLOYEE', capacityPerDay: p.capacityPerDay, skills: p.skills, languages: p.languages };
+  return {
+    memberId: p.id, displayName: p.displayName, orgUnitId: p.orgUnitId, salespersonType: p.salespersonType ?? 'EMPLOYEE',
+    capacityPerDay: p.capacityPerDay, skills: p.skills, languages: p.languages, territoryCodes: [...territoryCodes],
+  };
 }

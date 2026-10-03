@@ -93,10 +93,14 @@ export interface EligibleSeller {
   capacityPerDay: number;
   skills: string[];
   languages: string[];
+  /** Pincode prefixes of the seller's org unit (routing territory). */
+  territoryCodes: string[];
 }
 
 export interface SellerCriteria {
   orgUnitIds?: string[];
+  /** Sellers in this unit or any unit below it (a routing pool). */
+  withinOrgUnitId?: string;
   line?: 'LIFE' | 'HEALTH' | 'GENERAL';
   posEligibleProduct?: boolean;
   language?: string;

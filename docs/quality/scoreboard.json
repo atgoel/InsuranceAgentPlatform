@@ -13,12 +13,12 @@
   },
   "M00": {
     "name": "Kernel, observability & web shell",
-    "total": 87,
+    "total": 84.2,
     "coverage": 31.5,
-    "lint": 13.5,
-    "types": 10,
+    "lint": 15,
+    "types": 0,
     "trace": 15,
-    "review": 17,
+    "review": 22.7,
     "covAvg": 80.9,
     "allPass": true,
     "date": "2026-10-03"

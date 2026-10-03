@@ -40,8 +40,8 @@ const repositories: Provider[] = [
 const collaborators: Provider[] = [
   {
     provide: SELLER_DIRECTORY,
-    useFactory: (m: MemberRepository, l: LicenceRepository, lv: LeaveRepository, c: InsurerCodeRepository) => new SellerDirectoryService(m, l, lv, c),
-    inject: [MEMBER_REPOSITORY, LICENCE_REPOSITORY, LEAVE_REPOSITORY, INSURER_CODE_REPOSITORY],
+    useFactory: (m: MemberRepository, l: LicenceRepository, lv: LeaveRepository, c: InsurerCodeRepository, u: OrgUnitRepository) => new SellerDirectoryService(m, l, lv, c, u),
+    inject: [MEMBER_REPOSITORY, LICENCE_REPOSITORY, LEAVE_REPOSITORY, INSURER_CODE_REPOSITORY, ORG_UNIT_REPOSITORY],
   },
   { provide: RECORD_SCOPE_PROVIDER, useFactory: (r: RoleRepository, u: OrgUnitRepository) => new RecordScopeResolver(r, u), inject: [ROLE_REPOSITORY, ORG_UNIT_REPOSITORY] },
 ];

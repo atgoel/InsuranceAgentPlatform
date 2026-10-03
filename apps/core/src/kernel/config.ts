@@ -79,90 +79,45 @@ const configSchema = z.object({
   logSampleRates: z.record(z.string(), z.number()),
 });
 
-// eslint-disable-next-line complexity, sonarjs/cognitive-complexity
+ 
 export function loadConfig(env: NodeJS.ProcessEnv): KernelConfig {
   const nodeEnv = env.NODE_ENV || 'development';
-  const persistence = (env.PERSISTENCE || 'memory') as 'memory' | 'pg';
-  const port = env.PORT ? parseInt(env.PORT, 10) : 3000;
-  const tokenSecret = env.AUTH_HS256_SECRET || '';
-  const actorPepper = env.ACTOR_PEPPER || '';
-  const debugTokenSecret = env.DEBUG_TOKEN_SECRET || '';
-  const devAuthEnabled = env.DEV_AUTH === '1' && nodeEnv !== 'production';
-  const trustProxy = env.TRUST_PROXY === '1';
-
-  // Parse optional JSON fields
-  let staticTenants: Record<string, ResolvedTenant> = {};
-  if (env.DEV_TENANTS) {
-    try {
-      staticTenants = JSON.parse(env.DEV_TENANTS);
-    } catch {
-      throw new Error('Invalid DEV_TENANTS JSON');
-    }
-  }
-
-  let logSampleRates: Record<string, number> = {};
-  if (env.LOG_SAMPLE_RATES) {
-    try {
-      logSampleRates = JSON.parse(env.LOG_SAMPLE_RATES);
-    } catch {
-      throw new Error('Invalid LOG_SAMPLE_RATES JSON');
-    }
-  }
-
   const config: KernelConfig = {
-    env: nodeEnv as 'development' | 'test' | 'production',
-    port,
-    persistence,
+    env: nodeEnv as KernelConfig['env'],
+    port: env.PORT ? parseInt(env.PORT, 10) : 3000,
+    persistence: (env.PERSISTENCE || 'memory') as KernelConfig['persistence'],
     databaseUrl: env.DATABASE_URL,
     platformDatabaseUrl: env.PLATFORM_DATABASE_URL ?? env.DATABASE_URL,
-    tokenSecret,
-    actorPepper,
-    debugTokenSecret,
-    devAuth: devAuthEnabled,
-    trustProxy,
-    staticTenants,
-    logSampleRates,
+    tokenSecret: env.AUTH_HS256_SECRET || '',
+    actorPepper: env.ACTOR_PEPPER || '',
+    debugTokenSecret: env.DEBUG_TOKEN_SECRET || '',
+    devAuth: env.DEV_AUTH === '1' && nodeEnv !== 'production',
+    trustProxy: env.TRUST_PROXY === '1',
+    staticTenants: parseJson<Record<string, ResolvedTenant>>(env.DEV_TENANTS, 'DEV_TENANTS'),
+    logSampleRates: parseJson<Record<string, number>>(env.LOG_SAMPLE_RATES, 'LOG_SAMPLE_RATES'),
   };
-
-  // Validate using zod
-  const validationErrors: string[] = [];
-
-  // Validate environment
-  if (!['development', 'test', 'production'].includes(nodeEnv)) {
-    validationErrors.push(`Invalid NODE_ENV: ${nodeEnv}`);
-  }
-
-  // Validate required secrets
-  if (!tokenSecret) {
-    validationErrors.push('AUTH_HS256_SECRET is required');
-  }
-  if (!actorPepper) {
-    validationErrors.push('ACTOR_PEPPER is required');
-  }
-  if (!debugTokenSecret) {
-    validationErrors.push('DEBUG_TOKEN_SECRET is required');
-  }
-
-  // Validate secret length in production
-  if (nodeEnv === 'production') {
-    if (tokenSecret.length < 32) {
-      validationErrors.push(
-        'AUTH_HS256_SECRET must be at least 32 characters in production',
-      );
-    }
-  }
-
-  // Validate persistence settings
-  if (persistence === 'pg' && !config.databaseUrl) {
-    validationErrors.push('DATABASE_URL is required when PERSISTENCE is pg');
-  }
-
-  if (validationErrors.length > 0) {
-    throw new Error(`Configuration validation failed:\n${validationErrors.join('\n')}`);
-  }
-
-  // Validate with zod
+  const errors = validationErrors(nodeEnv, config);
+  if (errors.length > 0) throw new Error(`Configuration validation failed:\n${errors.join('\n')}`);
   configSchema.parse(config);
-
   return config;
+}
+
+function parseJson<T>(raw: string | undefined, name: string): T {
+  if (!raw) return {} as T;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    throw new Error(`Invalid ${name} JSON`);
+  }
+}
+
+function validationErrors(nodeEnv: string, c: KernelConfig): string[] {
+  const errors: string[] = [];
+  if (!['development', 'test', 'production'].includes(nodeEnv)) errors.push(`Invalid NODE_ENV: ${nodeEnv}`);
+  if (!c.tokenSecret) errors.push('AUTH_HS256_SECRET is required');
+  if (!c.actorPepper) errors.push('ACTOR_PEPPER is required');
+  if (!c.debugTokenSecret) errors.push('DEBUG_TOKEN_SECRET is required');
+  if (nodeEnv === 'production' && c.tokenSecret.length < 32) errors.push('AUTH_HS256_SECRET must be at least 32 characters in production');
+  if (c.persistence === 'pg' && !c.databaseUrl) errors.push('DATABASE_URL is required when PERSISTENCE is pg');
+  return errors;
 }

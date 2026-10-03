@@ -2,7 +2,7 @@ import { PhoneNumber } from '../../src/kernel/domain';
 import { Transaction } from '../../src/kernel/persistence/unit-of-work';
 import { Member } from '../../src/modules/distribution/domain/member';
 import {
-  InMemoryInsurerCodeRepository, InMemoryLeaveRepository, InMemoryLicenceRepository, InMemoryMemberRepository,
+  InMemoryInsurerCodeRepository, InMemoryLeaveRepository, InMemoryLicenceRepository, InMemoryMemberRepository, InMemoryOrgUnitRepository,
 } from '../../src/modules/distribution/infrastructure/in-memory-distribution.repositories';
 import { SellerDirectoryService } from '../../src/modules/distribution/application/seller-directory';
 
@@ -15,6 +15,7 @@ describe('AC-M02-09 SellerDirectoryService', () => {
   let leaves: InMemoryLeaveRepository;
   let codes: InMemoryInsurerCodeRepository;
   let directory: SellerDirectoryService;
+  let units: InMemoryOrgUnitRepository;
 
   async function activeSeller(id: string, type: 'POSP' | 'EMPLOYEE', phone: string, languages: string[] = ['en']): Promise<Member> {
     const m = Member.invite({ id, displayName: `Seller ${id}`, phone: PhoneNumber.parse(phone), roles: ['SALESPERSON'], salespersonType: type, orgUnitId: 'ou_root', now });
@@ -30,7 +31,8 @@ describe('AC-M02-09 SellerDirectoryService', () => {
     licences = new InMemoryLicenceRepository();
     leaves = new InMemoryLeaveRepository();
     codes = new InMemoryInsurerCodeRepository();
-    directory = new SellerDirectoryService(members, licences, leaves, codes);
+    units = new InMemoryOrgUnitRepository();
+    directory = new SellerDirectoryService(members, licences, leaves, codes, units);
   });
 
   it('gives a POSP only the lines covered by a currently valid licence, and marks posEligibleOnly', async () => {
@@ -80,5 +82,19 @@ describe('AC-M02-09 SellerDirectoryService', () => {
   it('keeps tenants apart', async () => {
     await activeSeller('mem_e', 'EMPLOYEE', '9876500009');
     expect(await directory.sellingScope({ tenantId: 'ten_zen', kind: 'memory' }, 'mem_e', now)).toBeUndefined();
+  });
+
+  it('AC-M02-09 limits a pool to an org-unit subtree and carries the unit territory codes', async () => {
+    await units.save(tx, { id: 'ou_pune', parentId: 'ou_root', kind: 'BRANCH', name: 'Pune', territoryCodes: ['411', '412'] });
+    await units.save(tx, { id: 'ou_pune_t1', parentId: 'ou_pune', kind: 'TEAM', name: 'Pune T1', territoryCodes: ['4110'] });
+    await units.save(tx, { id: 'ou_nagpur', parentId: 'ou_root', kind: 'BRANCH', name: 'Nagpur', territoryCodes: ['440'] });
+    const place = async (id: string, phone: string, orgUnitId: string) => members.save(tx, Member.restore({ ...(await activeSeller(id, 'EMPLOYEE', phone)).props, orgUnitId }));
+    await place('mem_p', '9876500101', 'ou_pune');
+    await place('mem_t', '9876500102', 'ou_pune_t1');
+    await place('mem_n', '9876500103', 'ou_nagpur');
+
+    const pool = await directory.eligibleSellers(tx, { withinOrgUnitId: 'ou_pune', at: now });
+
+    expect(pool.map((s) => [s.memberId, s.territoryCodes])).toEqual([['mem_p', ['411', '412']], ['mem_t', ['4110']]]);
   });
 });

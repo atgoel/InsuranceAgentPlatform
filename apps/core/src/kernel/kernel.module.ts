@@ -57,7 +57,7 @@ function coreProviders(config: KernelConfig): Provider[] {
     { provide: T.LOG_OVERRIDES, useFactory: (clock: Clock, ids: IdGenerator) => new LogOverrideStore(clock, ids), inject: [T.CLOCK, T.ID_GENERATOR] },
     {
       provide: T.LOGGER,
-      // eslint-disable-next-line max-params
+       
       useFactory: (sink: LogSink, redactor: Redactor, dedup: ErrorDeduplicator, overrides: LogOverrideStore, clock: Clock, metrics: MetricsRegistry) =>
         new Logger({ sink, redactor, dedup, overrides, clock, metrics }, { module: 'kernel' }),
       inject: [T.LOG_SINK, T.REDACTOR, T.ERROR_DEDUPLICATOR, T.LOG_OVERRIDES, T.CLOCK, T.METRICS],
