@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DateInput, LoadingSkeleton, PageContainer, PageHeader } from '../../../design-system';
+import { DateInput, LoadingSkeleton, PageContainer, PageHeader, PermissionDenied } from '../../../design-system';
 import { useT } from '../../../lib/i18n';
 import type { ApiError } from '../../../lib/api/api-error';
 import type { ServicingRequest } from '../api';
@@ -44,6 +44,14 @@ export function ServicingTrackerScreen() {
   // The M07 LLD only narrows by follow-up date when asked to, so the default is every open request.
   const [before, setBefore] = useState('');
   const { items, setItems, loading, error } = useServicing(before);
+  if (error?.status === 403) {
+    return (
+      <PageContainer>
+        <PageHeader title={t('book.servicing_title')} />
+        <PermissionDenied />
+      </PageContainer>
+    );
+  }
   return (
     <PageContainer>
       <div className="book-screen">

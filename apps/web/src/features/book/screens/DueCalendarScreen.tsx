@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CountChips, formatIstDate, LoadingSkeleton, MonthInput, PageContainer, PageHeader, type CountChipOption } from '../../../design-system';
+import { CountChips, formatIstDate, LoadingSkeleton, MonthInput, PageContainer, PageHeader, PermissionDenied, type CountChipOption } from '../../../design-system';
 import { useT } from '../../../lib/i18n';
 import { useLabel } from '../../../lib/i18n/labels';
 import { usePermissions } from '../../../lib/auth/me';
@@ -93,6 +93,14 @@ export function DueCalendarScreen({ today }: { today?: string }) {
   const dues = days
     .flatMap((d) => d.dues)
     .filter((d) => matchesLine(d, line) && (policyId ? d.policyId === policyId : d.dueDate === day));
+  if (error?.status === 403) {
+    return (
+      <PageContainer>
+        <PageHeader title={t('book.dues_title')} />
+        <PermissionDenied />
+      </PageContainer>
+    );
+  }
   return (
     <PageContainer>
       <div className="book-screen">

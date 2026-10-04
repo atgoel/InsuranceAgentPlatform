@@ -82,12 +82,23 @@ describe('AC-M07-15 book screens', () => {
     expect(await screen.findByText('Service unavailable')).toBeInTheDocument();
     expect(screen.getByText('Reference trace-book')).toBeInTheDocument();
   });
-  it('shows a scoped permission state and reference without replacing filters', async () => {
+  it('AC-M00-28 shows the permission state instead of the dues controls on a 403', async () => {
     const client = mockClient({ '/api/v1/dues': ApiError.fromProblem(403, { title: 'Denied', traceId: 'trace-denied' }) });
     renderAt(<DueCalendarScreen />, client, '/m/dues');
-    expect(await screen.findByText('You do not have permission for this action.')).toBeInTheDocument();
-    expect(screen.getByText('Reference trace-denied')).toBeInTheDocument();
-    expect(screen.getByLabelText('Insurance line')).toBeInTheDocument();
+    expect(await screen.findByText('Access Denied')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Insurance line')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Month')).not.toBeInTheDocument();
+    expect(screen.queryByText('Import book')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^All/)).not.toBeInTheDocument();
+    expect(screen.queryByText('You do not have permission for this action.')).not.toBeInTheDocument();
+  });
+  it('AC-M00-28 shows the permission state instead of the servicing controls on a 403', async () => {
+    const client = mockClient({ '/api/v1/servicing-requests': ApiError.fromProblem(403, { title: 'Denied' }) });
+    renderAt(<ServicingTrackerScreen />, client, '/m/servicing');
+    expect(await screen.findByText('Access Denied')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Follow-ups through')).not.toBeInTheDocument();
+    expect(screen.queryByText('You do not have permission for this action.')).not.toBeInTheDocument();
+    expect(screen.queryByText('No open follow-ups.')).not.toBeInTheDocument();
   });
   it('shows masked motor registration, commercials, schedule and provenance in detail', async () => {
     const client = mockClient({
