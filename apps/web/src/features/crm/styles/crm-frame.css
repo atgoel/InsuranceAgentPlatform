@@ -1,0 +1,6 @@
+/* PageContainer is a size container; as a direct child of a flex row it would collapse to zero width. */
+.crm-screen-frame {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+}

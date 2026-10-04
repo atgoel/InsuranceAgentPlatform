@@ -6,6 +6,7 @@ import { ApiError } from '../../../lib/api/api-error';
 import { I18nProvider } from '../../../lib/i18n';
 import { TasksScreen } from './TasksScreen';
 import { ApiClient } from '../../../lib/api/api-client';
+import { mockClient, renderAt } from '../../../test/render';
 
 describe('AC-M04-28 TasksScreen', () => {
   const mockTasksResponse = {
@@ -107,11 +108,10 @@ describe('AC-M04-28 TasksScreen', () => {
       </ApiProvider>
     );
 
-    await waitFor(() => {
-      const allText = screen.queryAllByText(/overdue/i);
-      expect(allText.length + screen.queryAllByText(/Overdue/i).length).toBeGreaterThan(0);
-    });
-    expect(screen.getByText(/today/i) || screen.getByText(/Today/i)).toBeTruthy();
+    await screen.findByText('Call Rajesh Kumar');
+    expect(screen.getByRole('region', { name: 'Overdue' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Today' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Upcoming' })).toBeInTheDocument();
   });
 
   it('AC-M04-28 displays tasks with titles and details', async () => {
@@ -197,7 +197,7 @@ describe('AC-M04-28 TasksScreen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/cadence/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Cadence rules' })).toBeInTheDocument();
     });
   });
 
@@ -323,5 +323,43 @@ describe('AC-M04-28 TasksScreen', () => {
       const noTasksText = screen.queryAllByText(/No tasks in this group/i);
       expect(noTasksText.length).toBeGreaterThan(0);
     });
+  });
+
+  it('AC-M04-28 shows overdue, today and upcoming counts as KPI tiles', async () => {
+    renderAt(<TasksScreen />, mockClient({ '/api/v1/tasks': { ...mockTasksResponse, counts: { overdue: 4, today: 2, upcoming: 9 } } }), '/crm/tasks');
+    await screen.findByText('Call Rajesh Kumar');
+    const values = Array.from(document.querySelectorAll('.kpi-tile-value')).map((node) => node.textContent);
+    expect(values).toEqual(['4', '2', '9']);
+  });
+
+  it('AC-M04-28 BUG-16 shows due dates as IST calendar dates', async () => {
+    const tasks = { ...mockTasksResponse, groups: [{ bucket: 'TODAY', items: [{ ...mockTasksResponse.groups[0].items[0], dueAt: '2026-10-04T05:00:00.000Z' }] }] };
+    renderAt(<TasksScreen />, mockClient({ '/api/v1/tasks': tasks }), '/crm/tasks');
+    await screen.findByText('Call Rajesh Kumar');
+    expect(document.querySelector('.task-meta .due')?.textContent).toBe('4 Oct 2026');
+  });
+
+  it('AC-M04-28 the type chip filters through the kind query and marks the chip pressed', async () => {
+    const c = mockClient({ '/api/v1/tasks': mockTasksResponse });
+    renderAt(<TasksScreen />, c, '/crm/tasks');
+    const user = userEvent.setup();
+    await screen.findByText('Call Rajesh Kumar');
+    await user.click(screen.getByRole('button', { name: 'WhatsApp' }));
+    await waitFor(() =>
+      expect(c.get).toHaveBeenLastCalledWith('/api/v1/tasks', { query: { mine: true, bucket: undefined, kind: 'WHATSAPP', owner: undefined, limit: 100, cursor: undefined } }),
+    );
+    expect(screen.getByRole('button', { name: 'WhatsApp' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'All types' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('AC-M04-28 a failed completion is shown inline and the list stays on screen', async () => {
+    const c = mockClient({ '/api/v1/tasks': mockTasksResponse });
+    c.patch.mockRejectedValueOnce(new ApiError(409, 'version_conflict', 'Task changed meanwhile'));
+    renderAt(<TasksScreen />, c, '/crm/tasks');
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('checkbox', { name: 'Complete task: Call Rajesh Kumar' }));
+    await user.click(screen.getByRole('button', { name: 'Mark done' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('That did not go through: Task changed meanwhile');
+    expect(screen.getByText('Call Rajesh Kumar')).toBeInTheDocument();
   });
 });
