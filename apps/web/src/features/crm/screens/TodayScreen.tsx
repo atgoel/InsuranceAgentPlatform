@@ -10,7 +10,7 @@ import { useQueueReplay } from '../offline/use-queue-replay';
 import { LogSheet } from '../components/today/LogSheet';
 import { TodayHeader } from '../components/today/TodayHeader';
 import { WorkSections } from '../components/today/WorkSections';
-import { firstNameFromToken } from '../components/today/today-greeting';
+import { firstNameOf } from '../components/today/today-greeting';
 import '../styles/TodayScreen.css';
 
 interface TodayScreenProps {
@@ -36,7 +36,7 @@ export function TodayScreen({ storage = sessionStorage, now = () => new Date() }
   const { pending, rejected, enqueue } = useQueueReplay(crmApi, queue);
   const [logging, setLogging] = useState<MyWorkItem | undefined>();
   const [search, setSearch] = useState('');
-  const name = useMemo(() => firstNameFromToken(), []);
+  const name = useMemo(() => firstNameOf(), []);
   const query = search.trim().toLowerCase();
   const items = useMemo(() => work.items.filter((i) => i.title.toLowerCase().includes(query)), [work.items, query]);
 

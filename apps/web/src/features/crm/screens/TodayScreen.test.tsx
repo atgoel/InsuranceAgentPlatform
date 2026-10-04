@@ -31,11 +31,6 @@ const MY_WORK = { items: ITEMS, counts: { overdue: 2, today: 1, hotLeads: 1 } };
 const NOW = new Date('2026-10-03T09:30:00.000Z');
 const ACTIVITY = '/api/v1/leads/lead_1/activities';
 
-/** An unsigned JWT-shaped token carrying the one claim the screen reads (name). */
-function tokenFor(name: string): string {
-  const payload = btoa(JSON.stringify({ name })).replace(/=+$/, '');
-  return `header.${payload}.signature`;
-}
 const DUE_ITEM: MyWorkItem = {
   kind: 'DUE',
   id: 'hp1',
@@ -216,8 +211,8 @@ describe('AC-M04-29 TodayScreen (/m/today)', () => {
     ).toBeInTheDocument();
   });
 
-  it('UI-04 shows the IST date line and a greeting with the first name from the signed-in token', async () => {
-    setSession({ token: tokenFor('Priya Sharma'), tenantId: 'ten_1', roles: ['SALESPERSON'] });
+  it('UI-04 shows the IST date line and a greeting with the first name of the signed-in user', async () => {
+    setSession({ token: 'tok', tenantId: 'ten_1', roles: ['SALESPERSON'], name: 'Priya Sharma' });
     render(mockClient({ '/api/v1/my-work': MY_WORK }));
     await screen.findByText('Asha Verma');
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Good afternoon, Priya');

@@ -1,4 +1,4 @@
-import { getToken } from '../../../../lib/auth';
+import { getSession, type Session } from '../../../../lib/auth';
 
 export type GreetingPeriod = 'morning' | 'afternoon' | 'evening';
 
@@ -11,22 +11,8 @@ export function greetingPeriod(now: Date): GreetingPeriod {
   return hour < 17 ? 'afternoon' : 'evening';
 }
 
-function payloadOf(token: string): unknown {
-  const part = token.split('.')[1];
-  if (!part) return undefined;
-  const base64 = part.replace(/-/g, '+').replace(/_/g, '/');
-  const bytes = Uint8Array.from(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')), (c) => c.charCodeAt(0));
-  return JSON.parse(new TextDecoder().decode(bytes));
-}
-
-/** First name from the `name` claim of the signed-in token; undefined when the token has none (the greeting then omits it). */
-export function firstNameFromToken(token: string | undefined = getToken()): string | undefined {
-  if (!token) return undefined;
-  try {
-    const claim = (payloadOf(token) as { name?: unknown } | undefined)?.name;
-    const first = typeof claim === 'string' ? claim.trim().split(/\s+/)[0] : undefined;
-    return first || undefined;
-  } catch {
-    return undefined;
-  }
+/** First word of the signed-in user's display name (`Session.name`); undefined when there is none (the greeting then omits it). */
+export function firstNameOf(session: Session | undefined = getSession()): string | undefined {
+  const first = session?.name?.trim().split(/\s+/)[0];
+  return first || undefined;
 }
