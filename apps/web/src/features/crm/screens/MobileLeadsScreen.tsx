@@ -1,35 +1,43 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useApi } from '../../../lib/api';
-import { Button, EmptyState, ErrorState, LoadingSkeleton, PermissionDenied } from '../../../design-system';
+import { Button, PageHeader, PermissionDenied } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
-import { createCrmApi, type LeadListItem, type LeadStage, type ProductLine } from '../api';
+import { createCrmApi, type LeadListItem, type ProductLine } from '../api';
 import { leadQueryFor } from './LeadsWorkspaceScreen';
-import { LeadFilterBar } from '../components/LeadFilterBar';
 import { NewLeadForm } from '../components/NewLeadForm';
-import { LeadCard } from '../components/mobile/LeadCard';
+import { LeadsResults } from '../components/mobile/LeadsResults';
+import { MobileLeadsControls } from '../components/mobile/MobileLeadsControls';
+import { useDebounced, useLeadStats } from '../components/mobile/use-lead-stats';
 import '../styles/MobileLeadsScreen.css';
-
-const BOARD: LeadStage[] = ['NEW', 'CONTACTED', 'QUALIFIED'];
 
 /** M02 Leads on the phone (AC-M04-25): saved views as server queries, list or stage board, new lead with consent. */
 export function MobileLeadsScreen() {
   const api = useApi();
   const crmApi = useMemo(() => createCrmApi(api), [api]);
   const { t } = useT();
+  const [params] = useSearchParams();
   const [view, setView] = useState('all_open');
   const [product, setProduct] = useState<ProductLine | undefined>();
+  const [search, setSearch] = useState('');
   const [layout, setLayout] = useState<'list' | 'board'>('list');
   const [leads, setLeads] = useState<LeadListItem[] | undefined>();
   const [error, setError] = useState<ApiError | undefined>();
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState(params.get('new') === '1');
   const [reload, setReload] = useState(0);
-  const query = useMemo(() => leadQueryFor(view, product), [view, product]);
+  const q = useDebounced(search.trim(), 250);
+  const query = useMemo(() => ({ ...leadQueryFor(view, product), q: q || undefined }), [view, product, q]);
+  const stats = useLeadStats(crmApi, reload);
 
   useEffect(() => {
     let cancelled = false;
     crmApi.listLeads(query).then(
-      (result) => !cancelled && setLeads(result.items),
+      (result) => {
+        if (cancelled) return;
+        setError(undefined);
+        setLeads(result.items);
+      },
       (err: unknown) => !cancelled && err instanceof ApiError && setError(err),
     );
     return () => {
@@ -38,35 +46,26 @@ export function MobileLeadsScreen() {
   }, [crmApi, query, reload]);
 
   if (error?.status === 403) return <PermissionDenied />;
-  if (error) return <ErrorState error={error} />;
-  if (!leads) return <LoadingSkeleton />;
 
-  const views = ['all_open', 'unassigned', 'sla_breached', 'mine'].map((id) => ({ id, label: t(`crm.leads.view.${id}`) }));
   return (
     <main className="mobile-leads-screen">
-      <header className="screen-header">
-        <h1>{t('crm.leads.title')}</h1>
-        <Button onClick={() => setCreating(true)}>{t('crm.leads.new_lead')}</Button>
-      </header>
-      <div role="group" aria-label={t('crm.mobile.layout')}>
-        <button type="button" aria-pressed={layout === 'list'} onClick={() => setLayout('list')}>{t('crm.mobile.list')}</button>
-        <button type="button" aria-pressed={layout === 'board'} onClick={() => setLayout('board')}>{t('crm.mobile.board')}</button>
+      <PageHeader
+        title={t('crm.leads.title')}
+        subtitle={stats ? t('crm.mobile.open_count', { count: stats.open }) : undefined}
+        actions={
+          <>
+            <Link className="header-link" to="/m/tasks">{t('crm.mobile.tasks_link')}</Link>
+            <Button onClick={() => setCreating(true)}>{t('crm.leads.new_lead')}</Button>
+          </>
+        }
+      />
+      <div role="group" aria-label={t('crm.mobile.layout')} className="view-controls">
+        <button type="button" className="view-btn" aria-pressed={layout === 'list'} onClick={() => setLayout('list')}>{t('crm.mobile.list')}</button>
+        <button type="button" className="view-btn" aria-pressed={layout === 'board'} onClick={() => setLayout('board')}>{t('crm.mobile.board')}</button>
       </div>
-      <LeadFilterBar views={views} selectedView={view} onViewChange={setView} product={product} onProductChange={setProduct} />
-      {leads.length === 0 && <EmptyState title={t('crm.leads.empty_title')} />}
-      {leads.length > 0 && layout === 'list' && (
-        <ul className="lead-cards">{leads.map((l) => <LeadCard key={l.id} lead={l} />)}</ul>
-      )}
-      {leads.length > 0 && layout === 'board' && (
-        <div className="lead-board">
-          {BOARD.map((stage) => (
-            <section key={stage} aria-label={t(`crm.lead.stage_${stage}`)} className="board-column">
-              <h2>{t(`crm.lead.stage_${stage}`)} ({leads.filter((l) => l.stage === stage).length})</h2>
-              <ul>{leads.filter((l) => l.stage === stage).map((l) => <LeadCard key={l.id} lead={l} />)}</ul>
-            </section>
-          ))}
-        </div>
-      )}
+      <MobileLeadsControls stats={stats} view={view} onView={setView} search={search} onSearch={setSearch} product={product} onProduct={setProduct} />
+      {error && <p role="alert" className="list-error">{t('crm.mobile.list_failed', { reason: error.title })}</p>}
+      {(leads || !error) && <LeadsResults leads={leads} layout={layout} />}
       {creating && (
         <NewLeadForm
           onClose={() => setCreating(false)}

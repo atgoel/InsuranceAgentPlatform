@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '../../../lib/api/api-error';
 import type { LeadListItem } from '../api';
@@ -15,7 +15,8 @@ const LEADS = [
   lead({ id: 'lead_2', name: 'Ravi Kumar', stage: 'QUALIFIED', productInterest: 'HEALTH_FLOATER' }),
 ];
 const PATH = '/api/v1/leads';
-const queries = (get: { mock: { calls: unknown[][] } }) => get.mock.calls.map((c) => (c[1] as { query: Record<string, unknown> }).query);
+const queries = (get: { mock: { calls: unknown[][] } }) =>
+  get.mock.calls.filter((c) => c[0] === PATH).map((c) => (c[1] as { query: Record<string, unknown> }).query);
 
 describe('AC-M04-25 MobileLeadsScreen (/m/leads)', () => {
   it('AC-M04-25 lists open leads as cards with product, stage and SLA chip; a card opens the mobile record', async () => {
@@ -55,6 +56,58 @@ describe('AC-M04-25 MobileLeadsScreen (/m/leads)', () => {
     await screen.findByText('Asha Verma');
     await userEvent.click(screen.getByRole('button', { name: 'New lead' }));
     expect(screen.getByRole('checkbox', { name: /consent/i })).toBeInTheDocument();
+  });
+
+  it('BUG-10 AC-M04-25 All open and Unassigned show the /leads/stats counts; SLA breached and Mine show none', async () => {
+    const stats = { open: 5, unassigned: 3, slaMetPct7d: 75, leadToIssuedPct90d: null };
+    renderAt(<MobileLeadsScreen />, mockClient({ [PATH]: { items: LEADS }, '/api/v1/leads/stats': stats }), '/m/leads');
+    expect(await screen.findByRole('button', { name: 'All open5' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Unassigned3' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'SLA breached' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Mine' })).toBeInTheDocument();
+    expect(screen.getByText('5 open leads')).toBeInTheDocument();
+  });
+
+  it('BUG-10 a zero count is shown as 0 only when the server says 0; a failed stats call shows no counts and keeps the list', async () => {
+    const zero = renderAt(
+      <MobileLeadsScreen />,
+      mockClient({ [PATH]: { items: LEADS }, '/api/v1/leads/stats': { open: 0, unassigned: 0, slaMetPct7d: null, leadToIssuedPct90d: null } }),
+      '/m/leads',
+    );
+    expect(await screen.findByRole('button', { name: 'All open0' })).toBeInTheDocument();
+    zero.unmount();
+    renderAt(<MobileLeadsScreen />, mockClient({ [PATH]: { items: LEADS }, '/api/v1/leads/stats': new ApiError(500, 'boom', 'Down') }), '/m/leads');
+    expect(await screen.findByText('Asha Verma')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'All open' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Unassigned' })).toBeInTheDocument();
+  });
+
+  it('UI-05 search sends q to the server after typing stops, without unmounting the box', async () => {
+    const client = mockClient({ [PATH]: { items: LEADS } });
+    renderAt(<MobileLeadsScreen />, client, '/m/leads');
+    const box = await screen.findByRole('searchbox', { name: 'Search leads' });
+    await screen.findByText('Asha Verma');
+    await userEvent.type(box, 'ash');
+    await waitFor(() => expect(queries(client.get).map((q) => q.q)).toEqual([undefined, 'ash']));
+    expect(screen.getByRole('searchbox', { name: 'Search leads' })).toBe(box);
+  });
+
+  it('AC-M04-25 shows product and source as labels, never raw codes; ?new=1 opens the new-lead form', async () => {
+    renderAt(<MobileLeadsScreen />, mockClient({ [PATH]: { items: LEADS } }), '/m/leads?new=1', '/m/leads');
+    const asha = (await screen.findByText('Asha Verma')).closest('li') as HTMLElement;
+    expect(within(asha).getByText('Web form')).toBeInTheDocument();
+    expect(within(asha).queryByText('WEB_FORM')).not.toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /consent/i })).toBeInTheDocument();
+  });
+
+  it('AC-M04-25 a failed refresh is shown inline and the page stays', async () => {
+    const client = mockClient({ [PATH]: { items: LEADS } });
+    renderAt(<MobileLeadsScreen />, client, '/m/leads');
+    await screen.findByText('Asha Verma');
+    client.get.mockRejectedValueOnce(new ApiError(500, 'boom', 'Search is down'));
+    await userEvent.click(screen.getByRole('button', { name: 'Mine' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Leads could not be refreshed: Search is down');
+    expect(screen.getByRole('button', { name: 'New lead' })).toBeInTheDocument();
   });
 
   it('AC-M04-25 empty view and 403 states', async () => {

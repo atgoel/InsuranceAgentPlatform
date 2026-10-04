@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Button, StatusChip } from '../../../../design-system';
+import { Button, PageHeader, StatusChip, formatIstDate } from '../../../../design-system';
 import { useT } from '../../../../lib/i18n';
 import type { LeadDetailView, LeadStage, ProductLine, Qualification } from '../../api';
 import { StageBar } from '../StageBar';
 import { QualificationForm } from '../QualificationForm';
 import { ConvertSheet } from '../ConvertSheet';
+import { LabelText } from '../LabelText';
+import { formatIstDateTime } from '../format-due';
 
 const TEMPERATURE_TONE = { HOT: 'bad', WARM: 'warn', COLD: 'info' } as const;
 
@@ -24,21 +26,23 @@ interface Props {
 
 /** M16 lead record body: header, stage progress (entry rules), next task, qualify, convert (only once qualified). */
 export function MobileLeadBody({ lead, onStage, onQualify, onConvert }: Props) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const [panel, setPanel] = useState<'qualify' | 'convert' | undefined>();
   const qualified = lead.stage === 'QUALIFIED';
   const next = [...lead.openTasks].sort((a, b) => a.dueAt.localeCompare(b.dueAt))[0];
   return (
     <>
-      <header className="screen-header">
-        <h1>{lead.name}</h1>
-        <StatusChip tone={TEMPERATURE_TONE[lead.temperature]}>{t(`crm.temperature.${lead.temperature}`)}</StatusChip>
-      </header>
+      <PageHeader
+        title={lead.name}
+        subtitle={t('crm.mobile.created', { date: formatIstDate(lead.createdAt, lang) })}
+        back={{ to: '/m/leads', label: t('crm.mobile.back') }}
+        actions={<StatusChip tone={TEMPERATURE_TONE[lead.temperature]}>{t(`crm.temperature.${lead.temperature}`)}</StatusChip>}
+      />
       <dl className="lead-info">
         <dt>{t('crm.lead.product')}</dt>
-        <dd>{t(`crm.product.${lead.productInterest}`)}</dd>
+        <dd><LabelText kind="line" code={lead.productInterest} /></dd>
         <dt>{t('crm.lead.source')}</dt>
-        <dd>{t(`crm.source.${lead.source}`)}</dd>
+        <dd><LabelText kind="leadSource" code={lead.source} /></dd>
       </dl>
       <section aria-label={t('crm.lead.stage')}>
         <StageBar currentStage={lead.stage} stageRules={lead.stageRules} onTransition={onStage} />
@@ -47,7 +51,7 @@ export function MobileLeadBody({ lead, onStage, onQualify, onConvert }: Props) {
         <section aria-label={t('crm.lead.nextTask')} className="next-task">
           <h2>{t('crm.lead.nextTask')}</h2>
           <p>
-            {next.title} · {new Date(next.dueAt).toLocaleString()}
+            {next.title} · {formatIstDateTime(next.dueAt, lang)}
           </p>
         </section>
       )}

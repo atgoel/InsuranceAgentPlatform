@@ -28,6 +28,13 @@ describe('AC-M04-26 MobileLeadScreen (/m/leads/:id)', () => {
     expect(screen.getByRole('region', { name: 'Next task' })).toHaveTextContent('Call back');
   });
 
+  it('BUG-16 AC-M04-26 shows the created date and the next task in IST, with a back link to the list', async () => {
+    at({ ...LEAD, openTasks: [task('t1', 'Call back', '2026-10-04T10:00:00.000Z')] });
+    expect(await screen.findByText('Created 1 Oct 2026')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Next task' })).toHaveTextContent('Call back · 4 Oct 2026, 3:30 pm');
+    expect(screen.getByRole('link', { name: 'Leads' })).toHaveAttribute('href', '/m/leads');
+  });
+
   it('AC-M04-26 convert is disabled with "Qualify the lead first" until the lead is qualified', async () => {
     at(LEAD);
     const convert = await screen.findByRole('button', { name: 'Convert' });
