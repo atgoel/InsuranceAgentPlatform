@@ -65,6 +65,8 @@ export interface KernelConfig {
   devAuth: boolean;
   trustProxy: boolean;
   staticTenants: Record<string, ResolvedTenant>;
+  /** DEV_TENANT_LEGAL_NAME: legal name for dev-seeded tenants (dev/test only). */
+  devTenantLegalName?: string;
   logSampleRates: Record<string, number>;
 }
 
@@ -86,6 +88,7 @@ const configSchema = z.object({
     tenantId: z.string(),
     status: z.enum(['active', 'suspended', 'provisioning', 'offboarded']),
   })),
+  devTenantLegalName: z.string().optional(),
   logSampleRates: z.record(z.string(), z.number()),
 });
 
@@ -106,12 +109,17 @@ export function loadConfig(env: NodeJS.ProcessEnv): KernelConfig {
     devAuth: env.DEV_AUTH === '1' && nodeEnv !== 'production',
     trustProxy: env.TRUST_PROXY === '1',
     staticTenants: parseJson<Record<string, ResolvedTenant>>(env.DEV_TENANTS, 'DEV_TENANTS'),
+    ...devTenantConfig(env),
     logSampleRates: parseJson<Record<string, number>>(env.LOG_SAMPLE_RATES, 'LOG_SAMPLE_RATES'),
   };
   const errors = validationErrors(nodeEnv, config);
   if (errors.length > 0) throw new Error(`Configuration validation failed:\n${errors.join('\n')}`);
   configSchema.parse(config);
   return config;
+}
+
+function devTenantConfig(env: NodeJS.ProcessEnv): Pick<KernelConfig, 'devTenantLegalName'> {
+  return { devTenantLegalName: env.DEV_TENANT_LEGAL_NAME || undefined };
 }
 
 function oidcConfig(env: NodeJS.ProcessEnv): Pick<KernelConfig, 'jwksUrl' | 'tokenIssuer' | 'tokenAudience'> {

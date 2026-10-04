@@ -268,6 +268,7 @@ export class TenancyModule implements OnModuleInit {
         settings: this.settings,
         uow: this.uow,
         clock: this.clock,
+        legalName: this.config.devTenantLegalName,
       });
     }
     this.kernelResolver.delegateTo(this.directoryResolver);
