@@ -1,4 +1,7 @@
 const labels: Record<string, [string, string]> = {
+  dues_word: ['dues', 'देय'], legend: ['Colour key', 'रंग संकेत'], legend_lapsed: ['Lapsed', 'व्यपगत'], legend_grace: ['Grace period', 'अनुग्रह अवधि'],
+  legend_due: ['Due or renewal', 'देय या नवीनीकरण'], legend_paid: ['Paid', 'भुगतान हो चुका'], dues_on: ['Due on', 'देय तारीख'], policies_tracked: ['installments this month', 'इस महीने की किस्तें'],
+  clear_filter: ['Show all follow-ups', 'सभी फॉलो-अप दिखाएँ'], back_to_dues: ['Back to dues', 'देय सूची पर वापस'],
   referrer_confirmed: ['Referrer link confirmed', 'संदर्भदाता लिंक की पुष्टि हुई'],
   custom_field: ['Custom field', 'कस्टम फ़ील्ड'], extra_field: ['Additional field', 'अतिरिक्त फ़ील्ड'], policy_preview: ['Policy preview', 'पॉलिसी पूर्वावलोकन'], refresh_progress: ['Refresh import progress', 'आयात प्रगति ताज़ा करें'],
   permission_denied: ['You do not have permission for this action.', 'इस कार्रवाई की अनुमति नहीं है।'], reference: ['Reference', 'संदर्भ'], calendar_days: ['Calendar days', 'कैलेंडर दिन'],

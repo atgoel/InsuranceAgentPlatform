@@ -1,3 +1,4 @@
+import { DateInput, formatIstDate, Select } from '../../design-system';
 import { useT } from '../../lib/i18n';
 import type { ImportBatch, ImportResult, ImportRow } from './api';
 import { ImportReview } from './ImportReview';
@@ -34,20 +35,13 @@ export function ImportUploadStep({
         onSubmit();
       }}
     >
-      <label>
-        {t('book.format')}
-        <select value={format} onChange={(e) => onFormat(e.target.value)}>
-          {FORMATS.map((f) => (
-            <option key={f} value={f}>
-              {t(`book.enum.${f}`)}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        {t('book.as_of')}
-        <input required type="date" value={asOf} onChange={(e) => onAsOf(e.target.value)} />
-      </label>
+      <Select
+        label={t('book.format')}
+        value={format}
+        options={FORMATS.map((f) => ({ value: f, label: t(`book.enum.${f}`) }))}
+        onChange={onFormat}
+      />
+      <DateInput label={t('book.as_of')} value={asOf} onChange={onAsOf} />
       <label>
         {t('book.csv_file')}
         <input required type="file" accept=".csv,text/csv" onChange={(e) => onFile(e.target.files?.[0])} />
@@ -81,7 +75,7 @@ export function ImportReviewStep({
   onReferrer(rowNo: number, link: { memberId?: string; partyId?: string }): void;
   onCommit(): void;
 }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   return (
     <section>
       <h2>{t('book.review')}</h2>
@@ -97,7 +91,7 @@ export function ImportReviewStep({
         })}
       </p>
       <p>
-        {t('book.as_of')} {batch.asOf}
+        {t('book.as_of')} {formatIstDate(batch.asOf, lang)}
       </p>
       {batch.state === 'COMMITTED' ? (
         <>

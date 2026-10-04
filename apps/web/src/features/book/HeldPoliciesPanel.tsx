@@ -6,6 +6,7 @@ import type { ApiError } from '../../lib/api/api-error';
 import type { HeldPolicyView } from './api';
 import { asError, BookError, SourceBanner, useBookApi } from './shared';
 import { HeldPolicyDetail } from './HeldPolicyDetail';
+import { Label } from './Label';
 import './book.css';
 
 export function HeldPoliciesPanel({ partyId }: { partyId: string }) {
@@ -50,7 +51,9 @@ export function HeldPoliciesPanel({ partyId }: { partyId: string }) {
               <p>
                 {p.insurerName} · {p.policyNumber} · {formatMoney(p.premiumPaise)}
               </p>
-              <p>{t(`book.enum.${p.status}`)}</p>
+              <p>
+                <Label kind="policyStatus" code={p.status} />
+              </p>
               <SourceBanner {...p} />
               <button onClick={() => setSelected(p.id)}>{t('book.details')}</button>
             </li>

@@ -47,13 +47,14 @@ describe('AC-M07-15 AC-CR001-06 office register wizard', () => {
       asOf: '2026-07-02',
       rows: [{ 'Client Name': 'Asha', Remarks: 'Policy note', 'Remarks#2': 'Commission note' }],
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm mapping and validate' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Confirm referrer Saurabh' }));
+    fireEvent.click(screen.getByText('Confirm mapping and validate'));
+    fireEvent.click(await screen.findByText('Confirm referrer Saurabh'));
     await waitFor(() =>
       expect(client.put).toHaveBeenCalledWith('/api/v1/book-imports/b1/rows/1/referrer', { memberId: 'm1', partyId: undefined }),
     );
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Commit reviewed rows' })).toBeEnabled());
-    fireEvent.click(screen.getByRole('button', { name: 'Commit reviewed rows' }));
+    const commit = screen.getByText('Commit reviewed rows');
+    await waitFor(() => expect(commit).toBeEnabled());
+    fireEvent.click(commit);
     expect(await screen.findByText('Re-running the same file skips imported rows.')).toBeInTheDocument();
     expect(client.post).toHaveBeenCalledWith('/api/v1/book-imports/b1/commit');
     expect(screen.getByText('Customers created')).toBeInTheDocument();

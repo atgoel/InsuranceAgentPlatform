@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BottomSheet } from '../../design-system';
+import { BottomSheet, formatIstDate } from '../../design-system';
 import { useT } from '../../lib/i18n';
 import type { ApiError } from '../../lib/api/api-error';
 import type { DueItem } from './api';
@@ -7,7 +7,7 @@ import { asError, BookError, istToday, useBookApi } from './shared';
 
 export function MarkPaidSheet({ due, onClose, onSaved }: { due: DueItem; onClose(): void; onSaved(): void }) {
   const api = useBookApi();
-  const { t } = useT();
+  const { t, lang } = useT();
   const [paidOn, setPaidOn] = useState(istToday());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<ApiError>();
@@ -27,7 +27,7 @@ export function MarkPaidSheet({ due, onClose, onSaved }: { due: DueItem; onClose
   return (
     <BottomSheet open title={t('book.mark_paid')} onClose={onClose}>
       <p>
-        {due.holderName} · {due.dueDate}
+        {due.holderName} · {formatIstDate(due.dueDate, lang)}
       </p>
       <BookError error={error} />
       <form
