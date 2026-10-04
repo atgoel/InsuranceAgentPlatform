@@ -108,7 +108,7 @@ Published facade (token `INTEGRATION_GATEWAY`): `quote`, `submitProposal`, `getS
 |---|---|
 | `IntegrationGateway` | select route → assisted returns `{ route: 'ASSISTED', outcome: { kind: 'unknown', reason: 'assisted' } }` with instructions; API/FILE: bulkhead → breaker → timeout (AbortController) → retry policy → call log (latency, outcome, no payloads) → metrics; traced spans `integration.<adapter>.<operation>` |
 | `ProbeJob` | every 5 min per pinned adapter: `probe()` → breaker record + health board row `{ adapterId, lastOkAt, p95Ms, state }` |
-| `DeadLetterService` | list/inspect (payload decrypted only for `ops.integration.read`), replay, discard (audit) |
+| `DeadLetterService` | list/inspect (payload decrypted only for `integration.write`), replay, discard (audit); tenant-scoped, handled by the tenant's own TENANT_ADMIN/OPS |
 | `CallbackService` | verify → inbox → map to canonical event `integration.callback.received` `{ adapterId, kind, idempotencyKey }` for M09/M07 |
 | `CertificationService` | per tenant per adapter: checklist runs against `FakeInsurerAdapter`-style sandbox (happy path, decline, timeout, duplicate callback, schema drift) → PASSED/FAILED; only PASSED adapters are routable for that tenant |
 
@@ -118,7 +118,8 @@ Published facade (token `INTEGRATION_GATEWAY`): `quote`, `submitProposal`, `getS
 | GET | `/api/v1/integrations` | `integration.read` (TENANT_ADMIN, OPS) — adapters available, pinned version, certification, breaker state, last probe |
 | PUT | `/api/v1/integrations/{adapterId}/pin` | `integration.write` — `{ version }` |
 | POST ✱ | `/api/v1/integrations/{adapterId}/certifications` | `integration.write` — runs the checklist |
-| GET | `/api/v1/ops/dead-letters?status=` · POST ✱ `/api/v1/ops/dead-letters/{id}/replay` · POST ✱ `/discard` | operator `ops.integration.*` |
+| GET | `/api/v1/integrations/dead-letters?status=` · GET `/api/v1/integrations/dead-letters/{id}` | `integration.read` (TENANT_ADMIN, OPS); payload decrypted only with `integration.write` |
+| POST ✱ | `/api/v1/integrations/dead-letters/{id}/replay` · POST ✱ `/api/v1/integrations/dead-letters/{id}/discard` | `integration.write` (TENANT_ADMIN, OPS) |
 | POST | `/api/v1/callbacks/{adapterId}` | public, HMAC-verified; 401 on bad signature (security log), 409 on stale |
 
 ## 7. DDL — `080_integration.sql`
@@ -128,7 +129,7 @@ Published facade (token `INTEGRATION_GATEWAY`): `quote`, `submitProposal`, `getS
 Metrics `integration_calls_total{adapter,operation,route,outcome}`, `integration_call_duration_ms{adapter,operation}` (histogram), `integration_breaker_state{adapter,operation}` (gauge 0/1/2), `integration_dead_letters_open` (gauge, business monitor); logs carry adapterId, operation, idempotencyKey, latency — never request/response bodies or credentials; security logs `security.callback_rejected`.
 
 ## 9. Frontend — W12 `IntegrationsScreen`
-Adapter cards (insurer, version pin, certification badge, breaker state chip, last probe + p95), "Run certification" with checklist results, dead-letter table (operator) with inspect/replay/discard and reason.
+Adapter cards (insurer, version pin, certification badge, breaker state chip, last probe + p95), "Run certification" with checklist results, dead-letter table (TENANT_ADMIN, OPS of the tenant) with inspect/replay/discard and reason.
 
 ## 10. Acceptance criteria
 - **AC-M08-01** Manifest validation rules; route selection prefers API, then FILE, skips open breakers and uncertified adapters with reasons, and always falls back to ASSISTED.
@@ -358,7 +359,7 @@ Durable dedup key, cursor update, encrypted raw payload and outbox event commit 
 
 ### 11.6 HTTP and operations contracts
 
-All existing §6 paths stay unchanged. Add GET `/api/v1/ops/dead-letters/{id}` for inspection (`ops.integration.read`). Workforce platform.operator plus the applicable ops permission is required; tenant comes from verified context, not request parameters. No cross-tenant list/inspection is introduced. TENANT_ADMIN and tenant OPS receive integration.read/write; platform operators receive ops.integration.read/replay/discard. Mutating POST operations except signed callbacks require Idempotency-Key under §04.
+Dead letters are tenant data and are handled by the tenant itself: routes live under `/api/v1/integrations/dead-letters` (§6), tenant comes from the verified Host like every tenant route, and TENANT_ADMIN and tenant OPS receive `integration.read`/`integration.write`. Platform operators have no dead-letter route and never see payloads; they monitor the per-tenant `integration_dead_letters_open` gauge and help on request. No cross-tenant list/inspection is introduced. Platform-operator tenant access is future scope (docs/hld/FUTURE-SCOPE.md). Mutating POST operations except signed callbacks require Idempotency-Key under §04.
 
 | Endpoint | Success status/body | Additional errors |
 |---|---|---|
@@ -370,7 +371,7 @@ All existing §6 paths stay unchanged. Add GET `/api/v1/ops/dead-letters/{id}` f
 | POST replay | 202 `{ id, status: 'REPLAYED' }`, Location points to detail | 409 `dead_letter_closed`; 410 `integration_payload_expired`; 422 `adapter_not_certified` |
 | POST discard | 200 `{ id, status: 'DISCARDED' }`; body `{ reason: string }` trimmed 1..500 chars | 400 `discard_reason_required`; 409 `dead_letter_closed` |
 
-`AdapterHealth` = `{ adapterId, adapterVersion, counterparty, pin?: AdapterPin, certification?: Certification, breakers: Array<{ operation, state }>, lastProbe?: { at, outcome, latencyMs, lastOkAt?, p95Ms? } }`. p95 uses the last 20 completed probes (sorted nearest-rank); unset before any probe. Dead-letter list sorts createdAt descending then id, default limit 25/max100; never includes decrypted payload. Detail decrypts only for ops.integration.read and emits an access audit. Replay atomically schedules durable work and marks REPLAYED; worker failure creates a linked new OPEN entry, without mutating the terminal source. Health and certification diagnostics contain only safe codes, no payload fragments. All actions audit actor, target, action and safe reason codes.
+`AdapterHealth` = `{ adapterId, adapterVersion, counterparty, pin?: AdapterPin, certification?: Certification, breakers: Array<{ operation, state }>, lastProbe?: { at, outcome, latencyMs, lastOkAt?, p95Ms? } }`. p95 uses the last 20 completed probes (sorted nearest-rank); unset before any probe. Dead-letter list sorts createdAt descending then id, default limit 25/max100; never includes decrypted payload. Detail decrypts only for `integration.write` and emits an access audit. Replay atomically schedules durable work and marks REPLAYED; worker failure creates a linked new OPEN entry, without mutating the terminal source. Health and certification diagnostics contain only safe codes, no payload fragments. All actions audit actor, target, action and safe reason codes.
 
 Certification runs the §5 checklist against the adapter's sandbox double, never production calls or production breaker samples. Persist results for exact tenant+adapter+version; all five checks must pass. A separate per-tenant sandbox credential binding is future scope. The assisted adapter supplies instructions; M09 owns operator evidence capture, with no invented M08 portal-record endpoint.
 

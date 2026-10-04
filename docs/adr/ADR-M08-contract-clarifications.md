@@ -1,6 +1,6 @@
 # M08 contract clarifications
 
-Status: Draft, revised after user review on 2026-10-04 (see "User review"). Decision 5's operator tenant access is still open. Implementation is not yet authorized against these proposed contracts.
+Status: Draft, revised after user review on 2026-10-04 (see "User review"). Implementation is not yet authorized against these proposed contracts.
 
 ## Context
 
@@ -12,7 +12,7 @@ M08 was authorized to start. Its LLD conflicts on assisted timeout/outcome repre
 2. Define v1 canonical inputs/results and exact transaction+Principal facade signatures in M08 §11.2–3. Tenant identity comes from verified context. Resolve pins and certification by version and insurer. Reserve future capability vocabulary without advertising unsupported callable methods.
 3. The gateway facade takes no caller transaction; it opens its own units of work. Callers commit their own state before calling. Commit a durable send intent before external IO. Persist one SubmissionRecord per tenant+business key: the barrier, the encrypted proposal (`proposalEnc`), the encrypted result and the leased reconciliation work, with states SENDING, PENDING, COMPLETED and DEAD_LETTER. Crashes and uncertain sends become status queries against the original adapter/version/key. No automatic proposal resubmission; NOT_FOUND lets M09 terminate that attempt and create a new one, matching M09 §3.3. Discard/replay cannot bypass this barrier.
 4. Resolve public callback tenant through verified Host directory and secret binding. Authenticate exact raw bytes with timestamped HMAC; store a raw-body hash so a reused eventId with a different body is rejected; transactionally commit dedup, stale cursor, encrypted raw body and outbox. Kernel Inbox's current signature cannot join the caller transaction, so M08 uses a repository uniqueness boundary while preserving Inbox naming semantics. No kernel API change is needed.
-5. Specify operations response/status/error contracts and an inspection GET. Operations remain scoped to the verified tenant even for platform operators. Retain immutable replay/discard terminal states, durable replay jobs, safe audits and encrypted payload expiry.
+5. Specify operations response/status/error contracts and an inspection GET. Dead letters are handled by the tenant's own TENANT_ADMIN/OPS under `/api/v1/integrations/dead-letters` (`integration.read`/`integration.write`); platform operators only see per-tenant open counts through metrics. Retain immutable replay/discard terminal states, durable replay jobs, safe audits and encrypted payload expiry.
 6. Probe, reconciliation and retention jobs are invocable `runOnce()` methods with durable reconciliation leases; scheduler wiring is deferred. Bulkheads and breakers are per process (the breaker snapshot is informational). Certification runs the checklist against the adapter's sandbox double. Retry jitter uses an injected `RandomSource`.
 7. Keep the call log as a plain table and delete rows at the exact 90-day boundary (partitioning deferred). Purge encrypted payloads at 180 days, but retain minimal dedup metadata and unresolved safety barriers. All tenant data uses app-role RLS; platform breaker/partition administration uses the owner pool.
 
@@ -27,7 +27,7 @@ M08 was authorized to start. Its LLD conflicts on assisted timeout/outcome repre
 
 - Accepted: the gateway opens its own units of work and M09 commits before calling; the encrypted proposal field and the unified SubmissionRecord (including COMPLETED); `rawBodyHash` on callbacks; injected `RandomSource`.
 - Scope reduced: shared cross-process breaker (compare-and-set), scheduler/timer wiring, call-log partitioning and per-tenant sandbox credential binding move to [future scope](../hld/FUTURE-SCOPE.md).
-- Open: how a platform operator gets a tenant context for dead-letter operations. Until decided, operations act only in the tenant of the verified token (the current kernel `@OperatorOnly()` behaviour). The proposal is recorded in the future-scope register.
+- Decided: each tenant handles its own dead letters (option A). Platform operators get no dead-letter route and no payload access. Operator access to a tenant (Host-based access or a support-access grant) is recorded in the future-scope register.
 
 ## Approval and build boundary
 
