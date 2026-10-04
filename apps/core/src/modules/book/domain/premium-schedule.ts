@@ -2,10 +2,20 @@ import { ValidationError } from '../../../kernel/errors/domain-errors';
 import type { HeldPolicyProps } from './held-policy';
 
 export const PREMIUM_MODES = ['ANNUAL', 'HALF_YEARLY', 'QUARTERLY', 'MONTHLY', 'SINGLE'] as const;
-export type PremiumMode = typeof PREMIUM_MODES[number];
-export interface Installment { dueDate: string; amountPaise: number }
-export interface GracePolicy { graceDays(mode: PremiumMode): number; revivalYears: number }
-export const LIFE_GRACE: GracePolicy = { graceDays: (mode) => mode === 'MONTHLY' ? 15 : 30, revivalYears: 5 };
+export type PremiumMode = (typeof PREMIUM_MODES)[number];
+export interface Installment {
+  dueDate: string;
+  amountPaise: number;
+}
+export interface GracePolicy {
+  graceDays(mode: PremiumMode): number;
+  revivalYears: number;
+}
+export const LIFE_GRACE: GracePolicy = { graceDays: (mode) => (mode === 'MONTHLY' ? 15 : 30), revivalYears: 5 };
+/** Post-renewal grace for annual contracts: health 30 days, general none. */
+export function annualGraceDays(line: string): number {
+  return line === 'HEALTH' ? 30 : 0;
+}
 export const MODE_MONTHS: Record<PremiumMode, number> = { ANNUAL: 12, HALF_YEARLY: 6, QUARTERLY: 3, MONTHLY: 1, SINGLE: 0 };
 
 export function assertDate(date: string): void {
@@ -26,7 +36,8 @@ export function addMonthsClamped(date: string, months: number, anchorDay = Numbe
 
 export function scheduleFrom(policy: HeldPolicyProps, from: string, count: number): Installment[] {
   assertDate(from);
-  if (!Number.isInteger(count) || count < 0 || count > 1200) throw new ValidationError('invalid_schedule_count', 'Schedule count must be from 0 to 1200');
+  if (!Number.isInteger(count) || count < 0 || count > 1200)
+    throw new ValidationError('invalid_schedule_count', 'Schedule count must be from 0 to 1200');
   if (policy.mode === 'SINGLE' || count === 0) return [];
   let due = firstDue(policy, from);
   if (due === undefined) return [];
@@ -53,5 +64,7 @@ function firstDue(policy: HeldPolicyProps, from: string): string | undefined {
 }
 function pastPayingTerm(policy: HeldPolicyProps, due: string): boolean {
   if (policy.maturityDate !== undefined && due >= policy.maturityDate) return true;
-  return policy.premiumPayingTermYears !== undefined && due >= addMonthsClamped(policy.commencementDate, policy.premiumPayingTermYears * 12);
+  return (
+    policy.premiumPayingTermYears !== undefined && due >= addMonthsClamped(policy.commencementDate, policy.premiumPayingTermYears * 12)
+  );
 }

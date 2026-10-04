@@ -1,4 +1,12 @@
-import { LifecycleAlertEngine, SurvivalBenefitRule, AnniversaryRule, FreeLookEndRule, AgeChangeRule, BirthdayRule, MaturityRule } from './lifecycle-alerts';
+import {
+  LifecycleAlertEngine,
+  SurvivalBenefitRule,
+  AnniversaryRule,
+  FreeLookEndRule,
+  AgeChangeRule,
+  BirthdayRule,
+  MaturityRule,
+} from './lifecycle-alerts';
 import { ServicingRequest } from './servicing';
 import { policy } from './test-fixture';
 
@@ -22,7 +30,14 @@ describe('AC-M07-06 lifecycle rules', () => {
   });
   it('AC-M07-06 clamps leap birthdays and uses platform free-look period', () => {
     const engine = new LifecycleAlertEngine();
-    expect(engine.alertsBetween([policy({ source: 'PLATFORM_SALE' })], [{ id: 'pty_1', dobYear: 2000, birthday: '02-29' }], '2026-02-01', '2026-03-02')).toEqual([
+    expect(
+      engine.alertsBetween(
+        [policy({ source: 'PLATFORM_SALE' })],
+        [{ id: 'pty_1', dobYear: 2000, birthday: '02-29' }],
+        '2026-02-01',
+        '2026-03-02',
+      ),
+    ).toEqual([
       { policyId: 'hp_1', kind: 'BIRTHDAY', date: '2026-02-28', key: 'hp_1:BIRTHDAY:2026-02-28' },
       { policyId: 'hp_1', kind: 'FREE_LOOK_END', date: '2026-03-02', key: 'hp_1:FREE_LOOK_END:2026-03-02' },
     ]);
@@ -75,9 +90,16 @@ describe('AC-M07-12 servicing state and sensitive notes', () => {
     const request = create();
     request.update({ followUpOn: '2026-02-01', insurerRef: 'REF-1', portalUrl: 'https://insurer.example/claims' });
     request.setFollowUp(undefined);
-    request.transition('SUBMITTED_TO_INSURER'); request.transition('REJECTED'); request.transition('REJECTED');
+    request.transition('SUBMITTED_TO_INSURER');
+    request.transition('REJECTED');
+    request.transition('REJECTED');
     request.markSaved();
-    expect(ServicingRequest.restore(request.props).props).toMatchObject({ version: 2, insurerRef: 'REF-1', status: 'REJECTED', followUpOn: undefined });
+    expect(ServicingRequest.restore(request.props).props).toMatchObject({
+      version: 2,
+      insurerRef: 'REF-1',
+      status: 'REJECTED',
+      followUpOn: undefined,
+    });
     expect(() => request.update({ portalUrl: 'invalid' })).toThrow('HTTPS');
     expect(() => request.update({ insurerRef: 'x'.repeat(121) })).toThrow('too long');
     expect(() => request.setFollowUp('2026-02-30')).toThrow();

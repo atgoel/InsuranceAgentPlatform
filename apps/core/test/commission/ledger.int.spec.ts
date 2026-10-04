@@ -7,7 +7,7 @@ run('AC-M10-08 RECEIVED ledger durable idempotency and append-only RLS',()=>{
  const tenant=`ten_comm_${Date.now()}`;
  beforeAll(async()=>{await runMigrations(owner,MIGRATIONS_DIR);await owner.query("insert into tenant (id,slug,display_name,kind,status,plan_code,deployment_mode,crm_mode) values ($1,$1,$1,'ORGANISATION','active','TEAM','pooled','solo_lite')",[tenant]);});
  afterAll(async()=>{await owner.end();await app.end();});
- it('AC-M07-15 restricts ledger rows to their tenant and denies mutations',async()=>{
+ it('AC-M07-14 restricts ledger rows to their tenant and denies mutations',async()=>{
   const c=await app.connect();
   try{
    await c.query('begin');await c.query("select set_config('app.tenant_id',$1,true)",[tenant]);

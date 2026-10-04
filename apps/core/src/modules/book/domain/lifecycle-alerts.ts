@@ -3,14 +3,27 @@ import { HeldPolicyProps } from './held-policy';
 import { addMonthsClamped, assertDate } from './premium-schedule';
 
 export type LifecycleKind = 'MATURITY' | 'SURVIVAL_BENEFIT' | 'ANNIVERSARY' | 'FREE_LOOK_END' | 'AGE_CHANGE' | 'BIRTHDAY';
-export interface LifecycleParty { id: string; dobYear?: number; birthday?: string }
-export interface LifecycleAlert { policyId: string; kind: LifecycleKind; date: string; key: string }
+export interface LifecycleParty {
+  id: string;
+  dobYear?: number;
+  birthday?: string;
+}
+export interface LifecycleAlert {
+  policyId: string;
+  kind: LifecycleKind;
+  date: string;
+  key: string;
+}
 export interface LifecycleAlertRule {
   readonly kind: LifecycleKind;
   occursOn(policy: HeldPolicyProps, parties: readonly LifecycleParty[], year: number): string | undefined;
 }
-function inYear(date: string | undefined, year: number): string | undefined { return date?.startsWith(String(year)) ? date : undefined; }
-function anniversary(date: string, year: number): string { return addMonthsClamped(date, (year - Number(date.slice(0, 4))) * 12); }
+function inYear(date: string | undefined, year: number): string | undefined {
+  return date?.startsWith(String(year)) ? date : undefined;
+}
+function anniversary(date: string, year: number): string {
+  return addMonthsClamped(date, (year - Number(date.slice(0, 4))) * 12);
+}
 function birthday(party: LifecycleParty | undefined, year: number): string | undefined {
   if (!party?.birthday) return undefined;
   const date = `${year}-${party.birthday}`;
@@ -20,7 +33,9 @@ function birthday(party: LifecycleParty | undefined, year: number): string | und
 }
 export class MaturityRule implements LifecycleAlertRule {
   readonly kind = 'MATURITY' as const;
-  occursOn(policy: HeldPolicyProps, _parties: readonly LifecycleParty[], year: number): string | undefined { return inYear(policy.maturityDate, year); }
+  occursOn(policy: HeldPolicyProps, _parties: readonly LifecycleParty[], year: number): string | undefined {
+    return inYear(policy.maturityDate, year);
+  }
 }
 export class SurvivalBenefitRule implements LifecycleAlertRule {
   readonly kind = 'SURVIVAL_BENEFIT' as const;
@@ -59,12 +74,27 @@ export class AgeChangeRule implements LifecycleAlertRule {
 }
 export class BirthdayRule implements LifecycleAlertRule {
   readonly kind = 'BIRTHDAY' as const;
-  occursOn(policy: HeldPolicyProps, parties: readonly LifecycleParty[], year: number): string | undefined { return birthday(parties.find((p) => p.id === policy.proposerPartyId), year); }
+  occursOn(policy: HeldPolicyProps, parties: readonly LifecycleParty[], year: number): string | undefined {
+    return birthday(
+      parties.find((p) => p.id === policy.proposerPartyId),
+      year,
+    );
+  }
 }
 export class LifecycleAlertEngine {
-  constructor(private readonly rules: readonly LifecycleAlertRule[] = [new MaturityRule(), new SurvivalBenefitRule(), new AnniversaryRule(), new FreeLookEndRule(), new AgeChangeRule(), new BirthdayRule()]) {}
+  constructor(
+    private readonly rules: readonly LifecycleAlertRule[] = [
+      new MaturityRule(),
+      new SurvivalBenefitRule(),
+      new AnniversaryRule(),
+      new FreeLookEndRule(),
+      new AgeChangeRule(),
+      new BirthdayRule(),
+    ],
+  ) {}
   alertsBetween(policies: readonly HeldPolicyProps[], parties: readonly LifecycleParty[], from: string, to: string): LifecycleAlert[] {
-    assertDate(from); assertDate(to);
+    assertDate(from);
+    assertDate(to);
     const result = new Map<string, LifecycleAlert>();
     for (const policy of policies) {
       for (let year = Number(from.slice(0, 4)); year <= Number(to.slice(0, 4)) + 1; year++) {
@@ -73,12 +103,19 @@ export class LifecycleAlertEngine {
     }
     return [...result.values()].sort((a, b) => a.date.localeCompare(b.date) || a.key.localeCompare(b.key));
   }
-  private alertsInYear(policy: HeldPolicyProps, parties: readonly LifecycleParty[], year: number, window: { from: string; to: string }): LifecycleAlert[] {
+  private alertsInYear(
+    policy: HeldPolicyProps,
+    parties: readonly LifecycleParty[],
+    year: number,
+    window: { from: string; to: string },
+  ): LifecycleAlert[] {
     return this.rules.flatMap((rule) => {
       const date = rule.occursOn(policy, parties, year);
       if (!date) return [];
       const dates = rule.kind === 'MATURITY' ? [addDays(date, -90), addDays(date, -30)] : [date];
-      return dates.filter((day) => day >= window.from && day <= window.to).map((day) => ({ policyId: policy.id, kind: rule.kind, date: day, key: `${policy.id}:${rule.kind}:${day}` }));
+      return dates
+        .filter((day) => day >= window.from && day <= window.to)
+        .map((day) => ({ policyId: policy.id, kind: rule.kind, date: day, key: `${policy.id}:${rule.kind}:${day}` }));
     });
   }
 }

@@ -5,8 +5,14 @@ import { PolicyCommercialsProps } from '../../../kernel/insurance/policy-commerc
 const now = new Date('2026-07-02T00:00:00Z');
 const health = () => {
   const base = policy();
-  return { ...base, line: 'HEALTH' as const, mode: 'ANNUAL' as const, renewalDate: '2027-07-02', nextDueDate: undefined,
-    commercials: { ...base.commercials, line: 'HEALTH' as const, category: 'HEALTH_INDIVIDUAL' as const, expiryDate: '2027-07-01' } };
+  return {
+    ...base,
+    line: 'HEALTH' as const,
+    mode: 'ANNUAL' as const,
+    renewalDate: '2027-07-02',
+    nextDueDate: undefined,
+    commercials: { ...base.commercials, line: 'HEALTH' as const, category: 'HEALTH_INDIVIDUAL' as const, expiryDate: '2027-07-01' },
+  };
 };
 
 describe('AC-M07-01 registration and safe risk', () => {
@@ -26,19 +32,56 @@ describe('AC-M07-01 registration and safe risk', () => {
   });
   it('AC-CR001-02 validates motor schema and OD/TP against net before storing safe risk', () => {
     const base = policy();
-    const input = { ...base, line: 'GENERAL' as const, mode: 'ANNUAL' as const,
+    const input = {
+      ...base,
+      line: 'GENERAL' as const,
+      mode: 'ANNUAL' as const,
       commercials: { ...base.commercials, category: 'MOTOR' as const, line: 'GENERAL' as const },
-      risk: { schemaId: 'motor', schemaVersion: 1, details: { registrationNo: 'DL01AB1234', registrationYear: 2020, make: 'Make', model: 'Model', ncbPercent: 20, claimInPreviousYear: false, odPremiumPaise: 5000, tpPremiumPaise: 3000, addOns: [] } }, now };
+      risk: {
+        schemaId: 'motor',
+        schemaVersion: 1,
+        details: {
+          registrationNo: 'DL01AB1234',
+          registrationYear: 2020,
+          make: 'Make',
+          model: 'Model',
+          ncbPercent: 20,
+          claimInPreviousYear: false,
+          odPremiumPaise: 5000,
+          tpPremiumPaise: 3000,
+          addOns: [],
+        },
+      },
+      now,
+    };
     expect(HeldPolicy.register(input).props.risk?.schemaId).toBe('motor');
-    expect(() => HeldPolicy.register({ ...input, risk: { ...input.risk, details: { ...input.risk.details, odPremiumPaise: 11000 } } })).toThrow('exceeds the net');
+    expect(() =>
+      HeldPolicy.register({ ...input, risk: { ...input.risk, details: { ...input.risk.details, odPremiumPaise: 11000 } } }),
+    ).toThrow('exceeds the net');
     expect(() => HeldPolicy.register({ ...input, risk: { schemaId: 'health', schemaVersion: 1, details: {} } })).toThrow('Risk schema');
-    const safe = { ...input.risk.details }; delete (safe as {registrationNo?: string}).registrationNo;
-    const held = HeldPolicy.register({ ...input, risk: { ...input.risk, details: safe }, registrationNoEnc: 'cipher', registrationNoHash: 'hash', registrationNoLast4: '1234' });
+    const safe = { ...input.risk.details };
+    delete (safe as { registrationNo?: string }).registrationNo;
+    const held = HeldPolicy.register({
+      ...input,
+      risk: { ...input.risk, details: safe },
+      registrationNoEnc: 'cipher',
+      registrationNoHash: 'hash',
+      registrationNoLast4: '1234',
+    });
     expect(held.props.risk?.details).toEqual(safe);
   });
   it('AC-M07-01 rejects risk without required encrypted registration fields', () => {
     const base = policy();
-    expect(() => HeldPolicy.register({ ...base, line: 'GENERAL', mode: 'ANNUAL', commercials: { ...base.commercials, category: 'MOTOR', line: 'GENERAL' }, risk: { schemaId: 'motor', schemaVersion: 1, details: {} }, now })).toThrow('Payload does not match');
+    expect(() =>
+      HeldPolicy.register({
+        ...base,
+        line: 'GENERAL',
+        mode: 'ANNUAL',
+        commercials: { ...base.commercials, category: 'MOTOR', line: 'GENERAL' },
+        risk: { schemaId: 'motor', schemaVersion: 1, details: {} },
+        now,
+      }),
+    ).toThrow('Payload does not match');
   });
 });
 
@@ -66,7 +109,11 @@ describe('AC-M07-02 AC-M07-05 policy mutation invariants', () => {
     held.recordPayment('2027-07-02', '2027-07-02', new Date('2027-07-02Z'));
     expect(held.props).toMatchObject({ renewalDate: '2028-07-02', commercials: { expiryDate: '2028-07-01' } });
     held.renew('2029-07-02', 20000, new Date('2028-07-02Z'));
-    expect(held.props).toMatchObject({ renewalDate: '2029-07-02', premiumPaise: 20000, commercials: { premiumNetPaise: 20000, expiryDate: '2029-07-01' } });
+    expect(held.props).toMatchObject({
+      renewalDate: '2029-07-02',
+      premiumPaise: 20000,
+      commercials: { premiumNetPaise: 20000, expiryDate: '2029-07-01' },
+    });
   });
   it.each(['CANCELLED', 'MATURED', 'EXPIRED'] as const)('AC-M07-02 refuses renewal from terminal %s', (status) => {
     expect(() => HeldPolicy.restore({ ...health(), status }).renew('2028-07-02', 10000, now)).toThrow('Closed policies');
@@ -76,18 +123,33 @@ describe('AC-M07-02 AC-M07-05 policy mutation invariants', () => {
     expect(() => HeldPolicy.restore(health()).renew('2026-07-02', 10000, now)).toThrow('advance');
     expect(() => HeldPolicy.restore(health()).renew('2028-07-02', 1.5, now)).toThrow('integer paise');
     const h = health();
-    expect(() => HeldPolicy.restore({ ...h, commercials: { ...h.commercials, premiumTaxPaise: 1000, premiumNetPaise: 9000 } }).renew('2028-07-02', 500, now)).toThrow('less than tax');
+    expect(() =>
+      HeldPolicy.restore({ ...h, commercials: { ...h.commercials, premiumTaxPaise: 1000, premiumNetPaise: 9000 } }).renew(
+        '2028-07-02',
+        500,
+        now,
+      ),
+    ).toThrow('less than tax');
   });
   it('AC-CR001-04 updates descriptive fields without mutating the caller', () => {
     const held = HeldPolicy.restore(policy());
-    held.assignServicing('mem_2', 'org_2'); held.relinkProposer('other', 'pty_2'); held.relinkProposer('pty_1', 'pty_2');
+    held.assignServicing('mem_2', 'org_2');
+    held.relinkProposer('other', 'pty_2');
+    held.relinkProposer('pty_1', 'pty_2');
     held.replaceCustomFields({ branch_code: 'DEL' });
     const commercials: PolicyCommercialsProps = { ...held.props.commercials, premiumNetPaise: 20000, premiumGrossPaise: 20000 };
     held.replaceCommercials(commercials);
     held.replaceRisk(undefined);
-    expect(held.props).toMatchObject({ servicingMemberId: 'mem_2', orgUnitId: 'org_2', proposerPartyId: 'pty_2', premiumPaise: 20000, customFields: { branch_code: 'DEL' } });
+    expect(held.props).toMatchObject({
+      servicingMemberId: 'mem_2',
+      orgUnitId: 'org_2',
+      proposerPartyId: 'pty_2',
+      premiumPaise: 20000,
+      customFields: { branch_code: 'DEL' },
+    });
     expect(() => held.replaceCommercials({ ...commercials, line: 'GENERAL', category: 'MOTOR' })).toThrow('line cannot change');
-    const snapshot = held.props; snapshot.customFields.branch_code = 'BAD';
+    const snapshot = held.props;
+    snapshot.customFields.branch_code = 'BAD';
     expect(held.props.customFields).toEqual({ branch_code: 'DEL' });
   });
 });

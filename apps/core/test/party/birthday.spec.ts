@@ -6,7 +6,7 @@ import { createTestApp, TestApp } from '../support/test-app';
 import { tokenFor } from '../support/tokens';
 import { newIdempotencyKey } from '../support/idempotency';
 
-describe('AC-M07-11 internal birthday projection', () => {
+describe('AC-M07-06 internal birthday projection', () => {
   let app: TestApp;
   beforeEach(async () => { app = await createTestApp({ imports: [PartyModule] }); });
   afterEach(async () => { await app.close(); });
@@ -24,7 +24,7 @@ import { MergePlan } from '../../src/modules/party/domain/merge';
 import { partySummary } from '../../src/modules/party/application/party-views';
 const now = new Date('2026-10-03T00:00:00Z');
 const person = (id: string) => Party.create({ id, kind: 'PERSON', displayName: 'Party Person', contactPoints: [{channel:'MOBILE',valueEnc:'enc',valueHash:id,masked:'masked',isPrimary:true}],source:{kind:'MANUAL'},now });
-describe('AC-M07-11 birthday privacy lifecycle', () => {
+describe('AC-M07-06 birthday privacy lifecycle', () => {
   it('erasure clears all birthday and year projections', () => {
     const p=person('p1');p.setSensitive({dateOfBirthEnc:'enc',dobYear:1992,birthday:'02-29'});p.erase(now);
     expect(partySummary(p).birthday).toBeUndefined();expect(partySummary(p).dobYear).toBeUndefined();

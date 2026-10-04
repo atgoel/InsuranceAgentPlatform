@@ -7,11 +7,17 @@ import { policy } from './test-fixture';
 describe('AC-M07-03 premium schedules', () => {
   it('AC-M07-03 clamps February but preserves the commencement day in March', () => {
     expect(scheduleFrom(policy(), '2026-02-01', 3)).toEqual([
-      { dueDate: '2026-02-28', amountPaise: 10000 }, { dueDate: '2026-03-31', amountPaise: 10000 }, { dueDate: '2026-04-30', amountPaise: 10000 },
+      { dueDate: '2026-02-28', amountPaise: 10000 },
+      { dueDate: '2026-03-31', amountPaise: 10000 },
+      { dueDate: '2026-04-30', amountPaise: 10000 },
     ]);
     expect(addMonthsClamped('2024-01-31', 1)).toBe('2024-02-29');
   });
-  it.each([['ANNUAL', '2027-01-31'], ['HALF_YEARLY', '2026-07-31'], ['QUARTERLY', '2026-04-30']] as const)('AC-M07-03 generates %s installments', (mode, next) => {
+  it.each([
+    ['ANNUAL', '2027-01-31'],
+    ['HALF_YEARLY', '2026-07-31'],
+    ['QUARTERLY', '2026-04-30'],
+  ] as const)('AC-M07-03 generates %s installments', (mode, next) => {
     expect(scheduleFrom(policy({ mode, nextDueDate: '2026-01-31' }), '2026-02-01', 1)).toEqual([{ dueDate: next, amountPaise: 10000 }]);
   });
   it('AC-M07-03 SINGLE has no dues after commencement', () => {
@@ -29,7 +35,14 @@ describe('AC-M07-03 premium schedules', () => {
 
 describe('AC-M07-04 due boundaries', () => {
   const engine = new DueEngine(LIFE_GRACE);
-  it.each([['2026-02-27', 'UPCOMING'], ['2026-02-28', 'DUE_TODAY'], ['2026-03-15', 'IN_GRACE'], ['2026-03-16', 'REVIVABLE'], ['2031-02-28', 'REVIVABLE'], ['2031-03-01', 'LAPSED']] as const)('AC-M07-04 classifies monthly due on %s as %s', (today, status) => {
+  it.each([
+    ['2026-02-27', 'UPCOMING'],
+    ['2026-02-28', 'DUE_TODAY'],
+    ['2026-03-15', 'IN_GRACE'],
+    ['2026-03-16', 'REVIVABLE'],
+    ['2031-02-28', 'REVIVABLE'],
+    ['2031-03-01', 'LAPSED'],
+  ] as const)('AC-M07-04 classifies monthly due on %s as %s', (today, status) => {
     expect(engine.classify(policy(), today).status).toBe(status);
   });
   it('AC-M07-04 annual life has thirty grace days', () => {
@@ -48,12 +61,25 @@ describe('AC-M07-04 due boundaries', () => {
     expect(engine.classify(policy({ status: 'PAID_UP' }), '2026-03-01')).toEqual({ status: 'PAID' });
     expect(engine.classify(policy({ mode: 'SINGLE' }), '2026-03-01')).toEqual({ status: 'PAID' });
     expect(engine.classify(policy({ nextDueDate: undefined }), '2026-03-01')).toEqual({ status: 'PAID' });
-    expect(engine.window([policy({ status: 'MATURED' }), policy({ id: 'hp_2', nextDueDate: '2026-01-31' })], '2026-02-01', '2026-04-01')).toEqual([
-      { policyId: 'hp_2', dueDate: '2026-02-28', status: 'DUE_TODAY', amountPaise: 10000 },
-      { policyId: 'hp_2', dueDate: '2026-03-31', status: 'DUE_TODAY', amountPaise: 10000 },
+    expect(
+      engine.window([policy({ status: 'MATURED' }), policy({ id: 'hp_2', nextDueDate: '2026-01-31' })], '2026-02-01', '2026-04-01'),
+    ).toEqual([
+      { policyId: 'hp_2', dueDate: '2026-02-28', status: 'UPCOMING', amountPaise: 10000 },
+      { policyId: 'hp_2', dueDate: '2026-03-31', status: 'UPCOMING', amountPaise: 10000 },
     ]);
     const h = policy({ line: 'HEALTH', mode: 'ANNUAL', renewalDate: '2026-07-02' });
-    expect(engine.window([h], '2026-07-01', '2026-07-31')).toEqual([{ policyId: 'hp_1', dueDate: '2026-07-02', status: 'RENEWAL_DUE', amountPaise: 10000 }]);
+    expect(engine.window([h], '2026-07-01', '2026-07-31')).toEqual([
+      { policyId: 'hp_1', dueDate: '2026-07-02', status: 'UPCOMING', amountPaise: 10000 },
+    ]);
+  });
+  it('AC-M07-04 classifies each calendar installment against the business date', () => {
+    const p = policy({ nextDueDate: '2026-02-28' });
+    expect(engine.classifyInstallment(p, '2026-02-28', '2026-03-05').status).toBe('IN_GRACE');
+    expect(engine.classifyInstallment(p, '2026-03-31', '2026-03-05')).toMatchObject({ status: 'UPCOMING', daysToDue: 26 });
+    expect(engine.classifyInstallment(p, '2026-03-05', '2026-03-05').status).toBe('DUE_TODAY');
+    const g = policy({ line: 'GENERAL', mode: 'ANNUAL', renewalDate: '2026-07-02' });
+    expect(engine.classifyInstallment(g, '2027-07-02', '2026-07-01').status).toBe('UPCOMING');
+    expect(engine.classifyInstallment(g, '2026-07-02', '2026-07-01').status).toBe('RENEWAL_DUE');
   });
 });
 
@@ -62,7 +88,9 @@ describe('AC-M07-01 AC-M07-02 AC-M07-05 held policy state', () => {
     expect(() => HeldPolicy.register({ ...policy({ line: 'HEALTH' }), now: new Date('2026-01-31Z') })).toThrow();
     expect(() => HeldPolicy.register({ ...policy({ maturityDate: '2025-12-31' }), now: new Date('2026-01-31Z') })).toThrow();
     const p = policy();
-    expect(() => HeldPolicy.register({ ...p, commercials: { ...p.commercials, premiumGrossPaise: 0.5 }, now: new Date('2026-01-31Z') })).toThrow();
+    expect(() =>
+      HeldPolicy.register({ ...p, commercials: { ...p.commercials, premiumGrossPaise: 0.5 }, now: new Date('2026-01-31Z') }),
+    ).toThrow();
   });
   it('AC-M07-02 ignores older source status and enforces payment transitions', () => {
     const held = HeldPolicy.restore(policy());
@@ -78,5 +106,34 @@ describe('AC-M07-01 AC-M07-02 AC-M07-05 held policy state', () => {
     held.recordPayment('2026-02-28', '2026-03-20', new Date('2026-03-20Z'));
     expect(held.props).toMatchObject({ nextDueDate: '2026-03-31', status: 'IN_FORCE', statusAsOf: '2026-03-20' });
     expect(() => held.recordPayment('2026-02-28', '2026-03-20', new Date('2026-03-20Z'))).toThrow();
+  });
+  it('AC-M07-05 keeps a policy in GRACE or LAPSED while later installments remain unpaid', () => {
+    const lapsed = HeldPolicy.restore(policy({ status: 'LAPSED' }));
+    lapsed.recordPayment('2026-02-28', '2026-06-01', new Date('2026-06-01Z'));
+    expect(lapsed.props).toMatchObject({ nextDueDate: '2026-03-31', status: 'LAPSED' });
+    const grace = HeldPolicy.restore(policy({ status: 'LAPSED' }));
+    grace.recordPayment('2026-02-28', '2026-04-10', new Date('2026-04-10Z'));
+    expect(grace.props).toMatchObject({ nextDueDate: '2026-03-31', status: 'GRACE' });
+  });
+  it('AC-M07-05 accepts annual payments only within the renewal grace', () => {
+    const annual = (line: 'HEALTH' | 'GENERAL') => {
+      const base = policy();
+      return HeldPolicy.restore(
+        policy({ line, mode: 'ANNUAL', nextDueDate: undefined, renewalDate: '2026-07-02', commercials: { ...base.commercials, line } }),
+      );
+    };
+    const health = annual('HEALTH');
+    health.recordPayment('2026-07-02', '2026-08-01', new Date('2026-08-01Z'));
+    expect(health.props).toMatchObject({ renewalDate: '2027-07-02', status: 'IN_FORCE' });
+    expect(() => annual('HEALTH').recordPayment('2026-07-02', '2026-08-02', new Date('2026-08-02Z'))).toThrow('renewal grace');
+    expect(() => annual('GENERAL').recordPayment('2026-07-02', '2026-07-03', new Date('2026-07-03Z'))).toThrow('renewal grace');
+  });
+  it('AC-M07-02 allows a claim or surrender reported during grace', () => {
+    const held = HeldPolicy.restore(policy({ status: 'GRACE' }));
+    held.updateStatusFromSource('CLAIMED', '2026-03-02', 'IMPORT');
+    expect(held.props.status).toBe('CLAIMED');
+    expect(() => HeldPolicy.restore(policy({ status: 'GRACE' })).updateStatusFromSource('PAID_UP', '2026-03-02', 'IMPORT')).toThrow(
+      'Illegal policy status transition',
+    );
   });
 });

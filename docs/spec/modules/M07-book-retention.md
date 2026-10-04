@@ -1,16 +1,6 @@
 # M07 · Book & Retention — low-level design
 
-Approved integration/API clarifications (2026-10-03, ADR-M07-cross-module-contracts):
-- `GET /servicing-requests?followUpBefore=YYYY-MM-DD` (`book.servicing`) returns `{ items }` scoped through the held policies, sorted by follow-up date. `GET /book-imports/{id}` (`book.import`) returns batch progress and provenance. All import routes enforce the uploading member's scope; tenant administrators/managers may operate within their resolved record scope.
-- Internal `IssuedPolicyReader.read(tx, policySaleId)` returns an optional insurer-confirmed snapshot `{ insurerConfirmed, policySaleId, policyNumber, policy }`. `policy` has HeldPolicyProps excluding encryption fields, timestamps, version and source. Missing production M09 reader yields `dependency_unavailable` for outbox retry. Test readers prove exactly-once consumption; M09 supplies the real producer later.
-- API manual registration uses `{ proposerPartyId, policyNumber, line, insurerId?, insurerName, productVersionId?, productName, mode, commercials, sumAssuredPaise?, nextDueDate?, maturityDate?, premiumPayingTermYears?, policyTermYears?, status?, statusAsOf?, asOf, confidence?, servicingMemberId?, orgUnitId?, risk?, customFields? }`. Source is MANUAL, never caller-provided PLATFORM_SALE. Read views expose `policyNumber: XXXX<last4>`, gross `premiumPaise` alias, provenance and version; never encryption/hash fields. PATCH requires If-Match and may change status+asOf, servicing assignment, renewal, commercials, risk, custom fields. Missing If-Match follows kernel precondition behavior.
-- Duplicate CSV headers use positional suffixes (`Remarks`, `Remarks#2`) in row raw keys and column mappings; no silently overwritten columns. Both gross-premium columns must agree. Warnings are separate from blocking problems. Import batches store the uploading member/org scope and commit progress; each transaction covers at most 200 rows, with stable batch+row progress and commission keys. Successful commit/discard purges raw and parsed PII, retaining summary only.
-- Health grace includes renewal+30; general has no post-expiry grace. Life revival includes due+5 calendar years. SINGLE produces no subsequent installments. Schedule month-end clamping preserves commencement-day anchoring.
-- Explicit annual renewal or annual payment updates commercials.expiryDate to the advanced renewal date minus one day, preserving the renewal-date alias. Terminal policies cannot be renewed or paid until a newer source status reopens them.
-- HeldPolicyProps/manual registration gain optional `distanceSale: boolean` to explicitly represent the §3.3 distance-sale free-look condition; it defaults false and is never inferred from a marketing channel.
-- M02 insurer codes have a composite member+insurer identity. `bookingChannel.insurerCodeId` encodes that existing key as `memberId:insurerId` only for an exact code+insurer match belonging to the servicing member; unmatched external codes remain text-only.
-- Lifecycle date rules use all insured/LIFE_ASSURED roles when available (otherwise proposer); survival benefit dates come from catalogue key facts. Daily jobs are explicit invocable tenant methods, matching existing modules' job-runner seam; deployment scheduler remains an infrastructure follow-up.
-- M05 `VersionDetail.keyFacts?: Array<{ label: string; value: string }>` is published through CATALOGUE_QUERY. A `survivalBenefitYears` fact is a comma-separated list of positive integer policy anniversary years; absent/invalid facts yield no survival benefit alert.
+Amended 2026-10-04 per [ADR-M07-cross-module-contracts](../../adr/ADR-M07-cross-module-contracts.md); changes are folded into the sections below.
 
 Status: Ready for build · Depends on: M00–M05 · Requirements: Rev 3.0 F09 (held policies/dues on Customer 360), F20 (a sale creates a held policy), F21 (renewal opportunities), F71, F72, F73, F74; §6 data model ("Held policy", "Premium schedule") · HLD §7 (Book & Retention), §8 (insurer policy system stays authoritative; imported data labelled with source and as-of date) · Screens: M04 `DueCalendar`, M05 `BookImport`, M01 `Main` (Today — dues), CRM09 customer record "Policies" tab, `ServicingTracker` (W-lite)
 
@@ -64,20 +54,27 @@ export interface HeldPolicyProps {
   status: PolicyStatus; statusAsOf: string;     // last known, from source
   source: PolicySource; sourceRef?: string; asOf: string; confidence: 'HIGH' | 'MEDIUM' | 'LOW';
   servicingMemberId?: string; orgUnitId?: string;                     // record scope (M02)
+  distanceSale?: boolean;                       // §3.3 free-look condition; default false, never inferred from a marketing channel
   proposerPartyId: string;                                             // roles beyond proposer via M03 role links (HELD_POLICY subject)
   saleRef?: { policySaleId: string; opportunityId?: string };          // PLATFORM_SALE only
   createdAt: string; updatedAt: string; version: number;
 }
 export class HeldPolicy {
   static register(input): HeldPolicy        // validates dates (commencement ≤ maturity), premium ≥ 0, mode/line compatibility (HEALTH/GENERAL → ANNUAL or SINGLE)
-  recordPayment(installmentDue: string, paidOn: string, now: Date): void   // advances nextDueDate by mode; GRACE/LAPSED within revival → IN_FORCE
+  recordPayment(installmentDue: string, paidOn: string, now: Date): void   // pays the next unpaid due only; advances nextDueDate (LIFE) or renewalDate (annual) by mode
   updateStatusFromSource(status: PolicyStatus, asOf: string, source: PolicySource): void   // never overwrites a newer asOf
   renew(newRenewalDate: string, premiumPaise: number, now: Date): void       // HEALTH/GENERAL
   assignServicing(memberId: string, orgUnitId: string): void
   restore / markSaved / props
 }
 ```
-Allowed status changes (State): IN_FORCE ↔ GRACE → LAPSED → IN_FORCE (revival) | PAID_UP; IN_FORCE → MATURED | SURRENDERED | CLAIMED | EXPIRED | CANCELLED; terminal states accept only `updateStatusFromSource` with a newer `asOf`.
+Allowed status changes (State): IN_FORCE ↔ GRACE → LAPSED → IN_FORCE (revival) | PAID_UP; IN_FORCE → MATURED | SURRENDERED | CLAIMED | EXPIRED | CANCELLED; GRACE → SURRENDERED | CLAIMED; PAID_UP → MATURED | SURRENDERED | CLAIMED; terminal states accept only `updateStatusFromSource` with a newer `asOf`.
+
+Payment rules:
+- PAID_UP and terminal policies reject payments and renewals (`policy_closed`) until a newer source status reopens them; SINGLE mode rejects payments (`installment_not_due`).
+- LIFE: a payment later than due + `revivalYears` → `revival_window_expired`. After payment the status is IN_FORCE when the new next due is today or later; if it is still overdue (arrears remain) the status is GRACE within its grace period, otherwise LAPSED.
+- HEALTH/GENERAL: a payment later than renewalDate + annual grace (HEALTH 30 days, GENERAL 0) → `renewal_window_expired`; a lapsed general contract is renewed from a newer source status instead.
+- Annual payment and `renew` set `commercials.expiryDate` to the advanced renewal date − 1 day, so `renewalDate` stays equal to `commercials.renewalDate()`.
 
 ### 3.2 Premium schedule and due engine (F72)
 ```ts
@@ -90,13 +87,15 @@ export class DueEngine {
   constructor(grace: GracePolicy)
   classify(policy: HeldPolicyProps, today: string): { status: DueStatus; dueDate?: string; graceEndsOn?: string; revivalEndsOn?: string; daysToDue?: number }
   // LIFE: today < due → UPCOMING (daysToDue); = due → DUE_TODAY; ≤ due + grace → IN_GRACE; ≤ due + revivalYears → REVIVABLE (status LAPSED); beyond → LAPSED
-  // HEALTH/GENERAL: renewalDate − 45 days … renewalDate → RENEWAL_DUE; past renewalDate + 30 days (health grace) → LAPSED
-  window(policies: HeldPolicyProps[], from: string, to: string): Array<{ policyId: string; dueDate: string; status: DueStatus; amountPaise: number }>
+  // HEALTH/GENERAL: renewalDate − 45 days … renewalDate → RENEWAL_DUE; HEALTH: ≤ renewalDate + 30 days → IN_GRACE, beyond → LAPSED; GENERAL has no grace: after renewalDate → LAPSED
+  classifyInstallment(policy: HeldPolicyProps, dueDate: string, today: string): DueClassification   // classify() with dueDate treated as the next unpaid due (calendar rows)
+  window(policies: HeldPolicyProps[], from: string, to: string): Array<{ policyId: string; dueDate: string; status: DueStatus; amountPaise: number }>   // scheduled installments, status UPCOMING; callers classify per installment
 }
 ```
+Revival ends on due + `revivalYears` calendar years. Schedule month-end clamping keeps the commencement-day anchor (31 Jan → 28 Feb → 31 Mar).
 
 ### 3.3 Lifecycle alerts (F73, Strategy)
-`LifecycleAlertRule { kind; occursOn(policy, parties, year): string | undefined }` — `MaturityRule` (maturityDate, alert 90/30 days ahead), `SurvivalBenefitRule` (product key facts `survivalBenefitYears`), `AnniversaryRule` (commencement anniversary), `FreeLookEndRule` (commencement + 30 days for PLATFORM_SALE and distance sales; + 15 days otherwise), `AgeChangeRule` (insured's insurance-age change date: next birthday − 6 months, needs M03 `dobYear` and `birthday` month/day — never decrypts DOB; skipped when either is unknown), `BirthdayRule` (requires `birthday` month/day from M03 internal summary; otherwise skipped). `LifecycleAlertEngine.alertsBetween(from, to)` → sorted alerts; each alert has a stable key `${policyId}:${kind}:${date}` so the daily job emits once. Feb 29 clamps to Feb 28 in non-leap years. See ADR-M07-cross-module-contracts.
+`LifecycleAlertRule { kind; occursOn(policy, parties, year): string | undefined }` — `MaturityRule` (maturityDate, alert 90/30 days ahead), `SurvivalBenefitRule` (product key facts `survivalBenefitYears`), `AnniversaryRule` (commencement anniversary), `FreeLookEndRule` (commencement + 30 days for PLATFORM_SALE and distance sales; + 15 days otherwise), `AgeChangeRule` (insured's insurance-age change date: next birthday − 6 months, needs M03 `dobYear` and `birthday` month/day — never decrypts DOB; skipped when either is unknown), `BirthdayRule` (requires `birthday` month/day from M03 internal summary; otherwise skipped). `LifecycleAlertEngine.alertsBetween(policies, parties, from, to)` → sorted alerts; each alert has a stable key `${policyId}:${kind}:${date}` so the daily job emits once. Feb 29 clamps to Feb 28 in non-leap years. Date rules use each INSURED/LIFE_ASSURED role party when present, otherwise the proposer; policies in a terminal status (MATURED, SURRENDERED, CLAIMED, EXPIRED, CANCELLED) get no alerts. `survivalBenefitYears` comes from M05 `VersionDetail.keyFacts` (comma-separated positive integer anniversary years; absent or invalid → no alert).
 
 ### 3.4 Book import (F71)
 ```ts
@@ -113,6 +112,8 @@ export class ImportBatch {   // states: UPLOADED → MAPPED → VALIDATED → (R
 export interface RowValidator { validate(row): string[] }       // chain: required fields, dates (dd/mm/yyyy, yyyy-mm-dd, dd-MMM-yyyy), money (₹, commas, lakh/crore words rejected), mode synonyms (Yly/Hly/Qly/Mly/SSS), mobile/email via kernel VOs
 export interface BookMatcher { match(row: ParsedPolicy): Promise<ImportRow['match']> }   // by policyNumberHash within tenant; within-file duplicates by hash
 ```
+Duplicate CSV headers get positional suffixes (`Remarks`, `Remarks#2`) in raw keys and mappings; no column is silently overwritten. Both gross-premium columns must agree. Warnings are kept separate from blocking problems. A batch stores the uploading member/org scope and its commit progress; each transaction covers at most 200 rows with stable batch+row progress and commission keys. A successful commit or discard purges raw and parsed PII and keeps only the summary. All import routes enforce the uploader's record scope.
+
 Holders are resolved through M03 `PartyFacade.findOrCreate({ onDuplicate: 'link', source: { kind: 'BOOK' } })`; role link PROPOSER on subject HELD_POLICY.
 
 ### 3.5 Servicing request (F74)
@@ -124,6 +125,7 @@ export interface HeldPolicyRepository { get; save; findByNumberHash(tx, hash): P
 export interface ImportBatchRepository { get; save; findByChecksum(tx, checksum): Promise<ImportBatch | undefined> }
 export interface ServicingRepository { get; save; forPolicy(tx, policyId): Promise<ServicingRequest[]>; openFollowUpsBefore(tx, date, memberId?): Promise<ServicingRequest[]> }
 export interface AlertLedger { emittedKeys(tx, keys: string[]): Promise<Set<string>>; record(tx, keys: string[]): Promise<void> }   // once-only lifecycle alerts
+export interface IssuedPolicyReader { read(tx, policySaleId): Promise<{ insurerConfirmed: boolean; policySaleId: string; policyNumber: string; policy: HeldPolicyInput } | undefined> }   // M09 producer; until M09 exists the default reader throws dependency_unavailable so the outbox event is retried
 // From other modules: PARTY_FACADE + FIELD_CIPHER hash (M03), RECORD_SCOPE_PROVIDER (M02), CATALOGUE lookup (M05), OPPORTUNITY creation via CRM (M04 `RenewalOpportunityPort`), MY_WORK_CONTRIBUTORS (M04 multi-provider)
 ```
 
@@ -132,10 +134,11 @@ export interface AlertLedger { emittedKeys(tx, keys: string[]): Promise<Set<stri
 | Service | Behaviour |
 |---|---|
 | `HeldPolicyService` | register (manual), get/list (scoped, masked policy number `XXXX1234`), record payment, status update with asOf rule, assign servicing member; events `book.policy.registered`, `book.policy.payment_recorded`, `book.policy.status_changed` (ids/enums only) |
-| `DueService` | `calendar(principal, from, to)` → days with dues `{ policyId, holderName, dueDate, status, amountPaise }`; `today(principal)` → due today, in grace, lapsing within 7 days; `DueContributor` adds DUE items to M04 my-work (priority 1 due today, 0 for grace ending ≤ 3 days) |
+| `DueService` | `calendar(principal, from, to)` → days with dues `{ policyId, holderName, dueDate, status, amountPaise }`; `today(principal)` → due today, in grace, lapsing within 7 days; `DueContributor` adds DUE items to M04 my-work (priority 0 for IN_GRACE items whose grace ends ≤ 3 days, otherwise 1); the calendar classifies each installment with `classifyInstallment` |
 | `LifecycleService` | daily job per tenant: alerts for the next 30 days not yet emitted → event `book.lifecycle.alert` `{ policyId, kind, date }` (M12 reminders subscribe) |
 | `BookImportService` | upload → map (suggested mapping by header synonyms, also per known insurer export) → validate → review decisions → commit (one unit of work per 200 rows, idempotent by fileChecksum + row hash) → summary; events `book.import.committed` |
 | `ServicingService` | create, transition, add note, follow-up list; follow-ups due today appear in my-work |
+| Jobs | `LifecycleService.run(tenantId)` and `RenewalOpportunityJob.run(tenantId)` are invocable per-tenant methods; the deployment scheduler is an infrastructure follow-up |
 | `RenewalOpportunityJob` | HEALTH/GENERAL policies with renewalDate in 45 days and no open renewal opportunity → M04 opportunity (DISCOVERY, title "Renewal — <product>", owner = servicing member) |
 | `BookSubscribers` | `crm.opportunity.issued` / `proposal.policy.issued` → held policy with source PLATFORM_SALE (F20); `party.party.merged` → relink proposer |
 
@@ -143,17 +146,21 @@ export interface AlertLedger { emittedKeys(tx, keys: string[]): Promise<Set<stri
 | Method | Path | Permission | Notes |
 |---|---|---|---|
 | GET | `/held-policies?partyId=&line=&status=&q=&limit=&cursor=` | `book.read` | masked policy numbers; `q` = last 4 digits or holder name |
-| POST ✱ | `/held-policies` | `book.write` | manual register → 201 |
+| POST ✱ | `/held-policies` | `book.write` | manual register → 201. Body `{ proposerPartyId, policyNumber, line, insurerId?, insurerName, productVersionId?, productName, mode, commercials, sumAssuredPaise?, nextDueDate?, maturityDate?, premiumPayingTermYears?, policyTermYears?, status?, statusAsOf?, asOf, confidence?, distanceSale?, servicingMemberId?, orgUnitId?, risk?, customFields? }`; source is always MANUAL |
 | GET | `/held-policies/{id}` | `book.read` | detail + schedule (next 12 installments) + due status + servicing requests + source/as-of banner |
 | POST ✱ | `/held-policies/{id}/payments` | `book.write` | `{ installmentDue, paidOn }` |
-| PATCH | `/held-policies/{id}` (`If-Match`) | `book.write` | status (with asOf), servicing member, renewal |
+| PATCH | `/held-policies/{id}` (`If-Match`) | `book.write` | status (with asOf), servicing member, renewal, commercials, risk, custom fields; stale version → 412 |
 | GET | `/dues?from=&to=` / `/dues/today` | `book.read` | calendar / today buckets |
 | POST ✱ | `/book-imports` | `book.import` | `{ format, fileChecksum, asOf, rows }` → 201 batch with suggested mapping |
 | PUT | `/book-imports/{id}/mapping` | `book.import` | → validated rows summary |
+| GET | `/book-imports/{id}` | `book.import` | batch state, progress and provenance |
 | GET | `/book-imports/{id}/rows?filter=problems|duplicates|all` | `book.import` | review queue |
 | PUT | `/book-imports/{id}/rows/{rowNo}/decision` | `book.import` | `{ decision }` |
 | POST ✱ | `/book-imports/{id}/commit` | `book.import` | → `{ imported, updated, skipped, parties: { created, linked } }` |
+| GET | `/servicing-requests?followUpBefore=YYYY-MM-DD` | `book.servicing` | `{ items }` scoped through held policies, sorted by follow-up date |
 | POST ✱ | `/held-policies/{id}/servicing-requests` · PATCH `/servicing-requests/{id}` · POST ✱ `/servicing-requests/{id}/notes` | `book.servicing` | |
+
+Read views show `policyNumber` as `XXXX<last4>`, the gross `premiumPaise` alias, source/as-of/confidence and version; encryption and hash fields are never returned.
 
 Permissions: `SALESPERSON, SOLO_OWNER → book.read, book.write, book.servicing` (+ `book.import` for SOLO_OWNER); managers + `book.import`; `OPS → book.*`; `TENANT_ADMIN → book.*`; `COMPLIANCE → book.read`.
 
