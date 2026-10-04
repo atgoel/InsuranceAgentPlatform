@@ -5,6 +5,8 @@ export interface Session {
   token: string;
   tenantId: string;
   roles: string[];
+  /** Display name from the token claims `name` or `preferred_username`; absent when the token carries neither. */
+  name?: string;
 }
 
 const SESSION_KEY = 'iap_session';
