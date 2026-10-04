@@ -260,7 +260,8 @@ describe('AC-M07 HTTP behavior', () => {
     expect(stored).toHaveLength(201);
     expect(app.app.get<InMemoryAuditLog>(AUDIT_LOG).events.filter((e) => e.action === 'book.import.committed')).toHaveLength(1);
     expect(app.metrics.render()).toContain('book_import_rows_total{outcome="imported"} 201');
-  }, 30000);
+    // 201 rows through the full HTTP stack takes ~25 s alone and more under full-suite load.
+  }, 90000);
   it('AC-CR001-03 rejects commission invoice problems before any held policy writes', async () => {
     const row = {
       ...importRow,

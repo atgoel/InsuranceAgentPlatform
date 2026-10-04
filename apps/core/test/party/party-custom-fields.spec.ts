@@ -15,11 +15,19 @@ describe('AC-CR001-08 party custom fields', () => {
   let app: TestApp;
   const owner = () => tokenFor({ tenantId: 'ten_acme', roles: ['SALESPERSON'], memberId: 'member_1' });
 
-  beforeEach(async () => { app = await createTestApp({ imports: [PartyModule], overrides: customFieldOverrides() }); });
-  afterEach(async () => { await app.close(); });
+  beforeEach(async () => {
+    app = await createTestApp({ imports: [PartyModule], overrides: customFieldOverrides() });
+  });
+  afterEach(async () => {
+    await app.close();
+  });
 
   const create = (token: string, body: Record<string, unknown>) =>
-    app.http.post('/api/v1/parties').set('Host', 'acme.iap.test').set('Authorization', `Bearer ${token}`).set('Idempotency-Key', newIdempotencyKey())
+    app.http
+      .post('/api/v1/parties')
+      .set('Host', 'acme.iap.test')
+      .set('Authorization', `Bearer ${token}`)
+      .set('Idempotency-Key', newIdempotencyKey())
       .send({ kind: 'PERSON', displayName: 'Meera Nair', contacts: [{ channel: 'MOBILE', value: '+919876500001' }], ...body });
   const putOn = (host: string, token: string, id: string, ifMatch: string | undefined) => {
     const r = app.http.put(`/api/v1/parties/${id}/custom-fields`).set('Host', host).set('Authorization', `Bearer ${token}`);
@@ -29,7 +37,8 @@ describe('AC-CR001-08 party custom fields', () => {
     const r = putOn('acme.iap.test', token, id, ifMatch);
     return r.send({ customFields });
   };
-  const detail = (token: string, id: string, host = 'acme.iap.test') => app.http.get(`/api/v1/parties/${id}`).set('Host', host).set('Authorization', `Bearer ${token}`);
+  const detail = (token: string, id: string, host = 'acme.iap.test') =>
+    app.http.get(`/api/v1/parties/${id}`).set('Host', host).set('Authorization', `Bearer ${token}`);
 
   it('AC-CR001-08 POST /parties with customFields stores them; detail shows them unmasked', async () => {
     const created = await create(owner(), { customFields: VALUES });
@@ -114,14 +123,18 @@ describe('AC-CR001-08 party custom fields', () => {
     const created = await create(owner(), { customFields: VALUES });
     const zen = tokenFor({ tenantId: 'ten_zen', roles: ['SALESPERSON'], memberId: 'member_1' });
     expect((await detail(zen, created.body.party.id, 'zen.iap.test')).status).toBe(404);
-    expect((await putOn('zen.iap.test', zen, created.body.party.id, '"v2"').send({ customFields: { segment: 'RETAIL' } })).status).toBe(404);
+    expect((await putOn('zen.iap.test', zen, created.body.party.id, '"v2"').send({ customFields: { segment: 'RETAIL' } })).status).toBe(
+      404,
+    );
   });
 
   it('AC-CR001-08 PUT audits keys only (party.custom_fields.replaced), never values, and emits no event', async () => {
     const created = await create(owner(), { customFields: VALUES });
     const id = created.body.party.id;
     await put(owner(), id, '"v2"', { segment: 'RETAIL', occupation: 'Doctor' });
-    const audit = app.app.get<InMemoryAuditLog>(AUDIT_LOG).events.filter((e) => e.action === 'party.custom_fields.replaced' && e.entityId === id);
+    const audit = app.app
+      .get<InMemoryAuditLog>(AUDIT_LOG)
+      .events.filter((e) => e.action === 'party.custom_fields.replaced' && e.entityId === id);
     expect(audit).toHaveLength(1);
     expect(audit[0].metadata).toEqual({ keys: ['segment', 'occupation'] });
     expect(app.app.get<InMemoryOutbox>(OUTBOX).events.filter((e) => e.subject === id && e.type.includes('custom_fields'))).toEqual([]);

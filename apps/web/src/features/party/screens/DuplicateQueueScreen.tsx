@@ -1,19 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useApi } from '../../../lib/api';
-import {
-  LoadingSkeleton,
-  ErrorState,
-  PermissionDenied,
-  EmptyState,
-} from '../../../design-system';
+import { LoadingSkeleton, ErrorState, PermissionDenied, EmptyState } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
-import {
-  createPartyApi,
-  DuplicateCandidateView,
-  ComparisonResponse,
-  SurvivorChoice,
-} from '../api';
+import { createPartyApi, DuplicateCandidateView, ComparisonResponse, SurvivorChoice } from '../api';
 import { DuplicateQueueList } from '../components/DuplicateQueueList';
 import { DuplicateComparison } from '../components/DuplicateComparison';
 import '../styles/DuplicateQueueScreen.css';
@@ -61,7 +51,9 @@ export function DuplicateQueueScreen() {
     try {
       const comp = await partyApi.getDuplicateComparison(item.id);
       const choices: Record<string, 'A' | 'B'> = {};
-      comp.fields.forEach((f) => { choices[f.field] = 'A'; });
+      comp.fields.forEach((f) => {
+        choices[f.field] = 'A';
+      });
       setComparison({ candidateId: item.id, comparison: comp, selectedSurvivor: 'A', fieldChoices: choices });
     } catch {
       // Silently handle comparison load failure

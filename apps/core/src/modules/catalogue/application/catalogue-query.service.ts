@@ -10,19 +10,46 @@ import { CatalogueContext } from './catalogue-context';
 import { ComparisonScopeService } from './comparison-scope.service';
 
 export interface CatalogueRow {
-  versionId: string; productId: string; productName: string; insurerId: string; insurerName: string; line: LineOfBusiness;
-  category: Product['category']; uin: string; wordingVersion: string; ispEligible: boolean; posEligible: boolean;
-  status: ProductVersionProps['status']; inScope: boolean; exclusion?: ScopeExclusion;
+  versionId: string;
+  productId: string;
+  productName: string;
+  insurerId: string;
+  insurerName: string;
+  line: LineOfBusiness;
+  category: Product['category'];
+  uin: string;
+  wordingVersion: string;
+  ispEligible: boolean;
+  posEligible: boolean;
+  status: ProductVersionProps['status'];
+  inScope: boolean;
+  exclusion?: ScopeExclusion;
 }
 
 export interface ResearchItem {
-  versionId: string; productName: string; insurerName: string; line: LineOfBusiness; posEligible: boolean; summary: string; points: string[];
-  sourceRef: string; sourceDate: string; stale: boolean; staleReason?: 'wording_changed' | 'older_than_365_days';
+  versionId: string;
+  productName: string;
+  insurerName: string;
+  line: LineOfBusiness;
+  posEligible: boolean;
+  summary: string;
+  points: string[];
+  sourceRef: string;
+  sourceDate: string;
+  stale: boolean;
+  staleReason?: 'wording_changed' | 'older_than_365_days';
 }
 
-export interface CatalogueFilters { line?: LineOfBusiness; category?: Product['category']; insurerId?: string }
+export interface CatalogueFilters {
+  line?: LineOfBusiness;
+  category?: Product['category'];
+  insurerId?: string;
+}
 
-interface Names { insurers: Map<string, Insurer>; products: Map<string, Product> }
+interface Names {
+  insurers: Map<string, Insurer>;
+  products: Map<string, Product>;
+}
 
 /** Tenant-facing catalogue reads (W07 table, M07 research library, compare). Everything is scoped by the engine. */
 @Injectable()
@@ -61,7 +88,9 @@ export class CatalogueQueryService {
   /** M07 library: only in-scope versions that have a summary; stale when the wording changed or the review is over a year old. */
   async research(principal: Principal, filters: { line?: LineOfBusiness; q?: string }): Promise<{ items: ResearchItem[] }> {
     const today = this.ctx.clock.now();
-    const result = await this.ctx.uow.run(principal.tenantId, (tx) => this.scope.scopeFor(tx, principal, { line: filters.line, date: this.ctx.today() }));
+    const result = await this.ctx.uow.run(principal.tenantId, (tx) =>
+      this.scope.scopeFor(tx, principal, { line: filters.line, date: this.ctx.today() }),
+    );
     const names = await this.names();
     const versions = new Map((await this.catalogue.versions()).map((v) => [v.id, v]));
     const summaries = await this.catalogue.research(result.versions.map((v) => v.versionId));
@@ -73,8 +102,21 @@ export class CatalogueQueryService {
       const insurerName = names.insurers.get(v.insurerId)?.name ?? v.insurerId;
       if (needle && ![productName, insurerName, r.summary].some((s) => s.toLowerCase().includes(needle))) return [];
       const stale = isStale(r, v, today);
-      return [{ versionId: v.id, productName, insurerName, line: v.line, posEligible: v.posEligible, summary: r.summary, points: r.points,
-        sourceRef: r.sourceRef, sourceDate: r.sourceDate, stale: stale.stale, ...(stale.reason ? { staleReason: stale.reason } : {}) }];
+      return [
+        {
+          versionId: v.id,
+          productName,
+          insurerName,
+          line: v.line,
+          posEligible: v.posEligible,
+          summary: r.summary,
+          points: r.points,
+          sourceRef: r.sourceRef,
+          sourceDate: r.sourceDate,
+          stale: stale.stale,
+          ...(stale.reason ? { staleReason: stale.reason } : {}),
+        },
+      ];
     });
     return { items: items.sort((a, b) => a.insurerName.localeCompare(b.insurerName) || a.productName.localeCompare(b.productName)) };
   }
@@ -87,8 +129,14 @@ export class CatalogueQueryService {
     if (!version) throw new NotFoundError('productVersion', versionId);
     const names = await this.names();
     const v = version.props;
-    return { ...toRow(v, names, true, undefined), wordingUrl: v.wordingUrl, keyFacts: v.keyFacts, quoteRequirements: v.quoteRequirements,
-      effectiveFrom: v.effectiveFrom, ...(v.effectiveTo ? { effectiveTo: v.effectiveTo } : {}) };
+    return {
+      ...toRow(v, names, true, undefined),
+      wordingUrl: v.wordingUrl,
+      keyFacts: v.keyFacts,
+      quoteRequirements: v.quoteRequirements,
+      effectiveFrom: v.effectiveFrom,
+      ...(v.effectiveTo ? { effectiveTo: v.effectiveTo } : {}),
+    };
   }
 
   private async names(): Promise<Names> {
@@ -99,7 +147,11 @@ export class CatalogueQueryService {
   private withNames(result: ScopeResult, names: Names) {
     return {
       ...result,
-      versions: result.versions.map((v) => ({ ...v, productName: names.products.get(v.productId)?.name ?? v.productId, insurerName: names.insurers.get(v.insurerId)?.name ?? v.insurerId })),
+      versions: result.versions.map((v) => ({
+        ...v,
+        productName: names.products.get(v.productId)?.name ?? v.productId,
+        insurerName: names.insurers.get(v.insurerId)?.name ?? v.insurerId,
+      })),
       insurers: result.insurerIds.map((id) => ({ id, name: names.insurers.get(id)?.name ?? id })),
     };
   }
@@ -114,13 +166,27 @@ function matches(v: ProductVersionProps, f: CatalogueFilters, names: Names): boo
 function toRow(v: ProductVersionProps, names: Names, inScope: boolean, exclusion: ScopeExclusion | undefined): CatalogueRow {
   const product = names.products.get(v.productId);
   return {
-    versionId: v.id, productId: v.productId, productName: product?.name ?? v.productId, insurerId: v.insurerId,
-    insurerName: names.insurers.get(v.insurerId)?.name ?? v.insurerId, line: v.line, category: product?.category ?? 'OTHER', uin: v.uin,
-    wordingVersion: v.wordingVersion, ispEligible: true, posEligible: v.posEligible, status: v.status, inScope,
+    versionId: v.id,
+    productId: v.productId,
+    productName: product?.name ?? v.productId,
+    insurerId: v.insurerId,
+    insurerName: names.insurers.get(v.insurerId)?.name ?? v.insurerId,
+    line: v.line,
+    category: product?.category ?? 'OTHER',
+    uin: v.uin,
+    wordingVersion: v.wordingVersion,
+    ispEligible: true,
+    posEligible: v.posEligible,
+    status: v.status,
+    inScope,
     ...(inScope || !exclusion ? {} : { exclusion }),
   };
 }
 
 function byInsurerThenProduct(a: CatalogueRow, b: CatalogueRow): number {
-  return a.insurerName.localeCompare(b.insurerName) || a.productName.localeCompare(b.productName) || a.wordingVersion.localeCompare(b.wordingVersion);
+  return (
+    a.insurerName.localeCompare(b.insurerName) ||
+    a.productName.localeCompare(b.productName) ||
+    a.wordingVersion.localeCompare(b.wordingVersion)
+  );
 }

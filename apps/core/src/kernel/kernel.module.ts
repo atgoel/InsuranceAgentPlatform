@@ -58,12 +58,22 @@ function coreProviders(config: KernelConfig): Provider[] {
     { provide: T.REDACTOR, useValue: new Redactor() },
     { provide: T.TRACER, useFactory: (clock: Clock, m: MetricsRegistry) => new Tracer(clock, m), inject: [T.CLOCK, T.METRICS] },
     { provide: T.ERROR_DEDUPLICATOR, useFactory: (clock: Clock) => new ErrorDeduplicator(clock), inject: [T.CLOCK] },
-    { provide: T.LOG_OVERRIDES, useFactory: (clock: Clock, ids: IdGenerator) => new LogOverrideStore(clock, ids), inject: [T.CLOCK, T.ID_GENERATOR] },
+    {
+      provide: T.LOG_OVERRIDES,
+      useFactory: (clock: Clock, ids: IdGenerator) => new LogOverrideStore(clock, ids),
+      inject: [T.CLOCK, T.ID_GENERATOR],
+    },
     {
       provide: T.LOGGER,
-       
-      useFactory: (sink: LogSink, redactor: Redactor, dedup: ErrorDeduplicator, overrides: LogOverrideStore, clock: Clock, metrics: MetricsRegistry) =>
-        new Logger({ sink, redactor, dedup, overrides, clock, metrics }, { module: 'kernel' }),
+
+      useFactory: (
+        sink: LogSink,
+        redactor: Redactor,
+        dedup: ErrorDeduplicator,
+        overrides: LogOverrideStore,
+        clock: Clock,
+        metrics: MetricsRegistry,
+      ) => new Logger({ sink, redactor, dedup, overrides, clock, metrics }, { module: 'kernel' }),
       inject: [T.LOG_SINK, T.REDACTOR, T.ERROR_DEDUPLICATOR, T.LOG_OVERRIDES, T.CLOCK, T.METRICS],
     },
     { provide: T.DEBUG_TOKENS, useFactory: (clock: Clock) => new DebugTokenService(config.debugTokenSecret, clock), inject: [T.CLOCK] },
@@ -72,7 +82,11 @@ function coreProviders(config: KernelConfig): Provider[] {
     { provide: T.TOKEN_VERIFIER, useFactory: (clock: Clock) => new HmacJwtVerifier(config.tokenSecret, clock), inject: [T.CLOCK] },
     { provide: T.TENANT_RESOLVER, useValue: new DelegatingTenantResolver(new StaticTenantResolver(config.staticTenants)) },
     { provide: T.PERMISSION_POLICY, useValue: new RolePermissionMatrix() },
-    { provide: T.TENANT_PERMISSION_POLICY, useFactory: (m: RolePermissionMatrix) => new DelegatingPermissionPolicy(new StaticTenantPermissionPolicy(m)), inject: [T.PERMISSION_POLICY] },
+    {
+      provide: T.TENANT_PERMISSION_POLICY,
+      useFactory: (m: RolePermissionMatrix) => new DelegatingPermissionPolicy(new StaticTenantPermissionPolicy(m)),
+      inject: [T.PERMISSION_POLICY],
+    },
     { provide: T.MFA_POLICY, useValue: new DelegatingMfaPolicy() },
     { provide: T.EVENT_BUS, useValue: new InProcessEventBus() },
     IdempotencyInterceptor,
@@ -86,7 +100,11 @@ function memoryPersistence(): Provider[] {
     { provide: T.UNIT_OF_WORK, useValue: new InMemoryUnitOfWork() },
     { provide: T.OUTBOX, useValue: new InMemoryOutbox() },
     { provide: T.INBOX, useValue: new InMemoryInbox() },
-    { provide: T.AUDIT_LOG, useFactory: (c: Clock, i: IdGenerator, r: Redactor) => new InMemoryAuditLog(c, i, r), inject: [T.CLOCK, T.ID_GENERATOR, T.REDACTOR] },
+    {
+      provide: T.AUDIT_LOG,
+      useFactory: (c: Clock, i: IdGenerator, r: Redactor) => new InMemoryAuditLog(c, i, r),
+      inject: [T.CLOCK, T.ID_GENERATOR, T.REDACTOR],
+    },
     { provide: T.IDEMPOTENCY_STORE, useFactory: (c: Clock) => new InMemoryIdempotencyStore(c), inject: [T.CLOCK] },
   ];
 }
@@ -100,7 +118,11 @@ function pgPersistence(config: KernelConfig): Provider[] {
     { provide: T.UNIT_OF_WORK, useFactory: (pool: Pool, tracer: Tracer) => new PgUnitOfWork(pool, tracer), inject: [T.APP_POOL, T.TRACER] },
     { provide: T.OUTBOX, useFactory: (platform: Pool) => new PgOutbox(platform), inject: [T.PLATFORM_POOL] },
     { provide: T.INBOX, useFactory: (platform: Pool) => new PgInbox(platform), inject: [T.PLATFORM_POOL] },
-    { provide: T.AUDIT_LOG, useFactory: (c: Clock, i: IdGenerator, r: Redactor) => new PgAuditLog(c, i, r), inject: [T.CLOCK, T.ID_GENERATOR, T.REDACTOR] },
+    {
+      provide: T.AUDIT_LOG,
+      useFactory: (c: Clock, i: IdGenerator, r: Redactor) => new PgAuditLog(c, i, r),
+      inject: [T.CLOCK, T.ID_GENERATOR, T.REDACTOR],
+    },
     { provide: T.IDEMPOTENCY_STORE, useFactory: (p: Pool, c: Clock) => new PgIdempotencyStore(p, c), inject: [T.APP_POOL, T.CLOCK] },
   ];
 }
@@ -111,10 +133,34 @@ function requireUrl(url: string | undefined, name: string): string {
 }
 
 const EXPORTED = [
-  T.KERNEL_OPTIONS, T.CLOCK, T.ID_GENERATOR, T.LOG_SINK, T.METRICS, T.REDACTOR, T.TRACER, T.ERROR_DEDUPLICATOR,
-  T.LOG_OVERRIDES, T.LOGGER, T.DEBUG_TOKENS, T.FLUSH_POLICY, T.HEAD_SAMPLER, T.TOKEN_VERIFIER, T.TENANT_RESOLVER,
-  T.PERMISSION_POLICY, T.TENANT_PERMISSION_POLICY, T.MFA_POLICY, T.EVENT_BUS, T.APP_POOL, T.PLATFORM_POOL, T.UNIT_OF_WORK, T.OUTBOX, T.INBOX, T.AUDIT_LOG,
-  T.IDEMPOTENCY_STORE, T.OUTBOX_RELAY, IdempotencyInterceptor,
+  T.KERNEL_OPTIONS,
+  T.CLOCK,
+  T.ID_GENERATOR,
+  T.LOG_SINK,
+  T.METRICS,
+  T.REDACTOR,
+  T.TRACER,
+  T.ERROR_DEDUPLICATOR,
+  T.LOG_OVERRIDES,
+  T.LOGGER,
+  T.DEBUG_TOKENS,
+  T.FLUSH_POLICY,
+  T.HEAD_SAMPLER,
+  T.TOKEN_VERIFIER,
+  T.TENANT_RESOLVER,
+  T.PERMISSION_POLICY,
+  T.TENANT_PERMISSION_POLICY,
+  T.MFA_POLICY,
+  T.EVENT_BUS,
+  T.APP_POOL,
+  T.PLATFORM_POOL,
+  T.UNIT_OF_WORK,
+  T.OUTBOX,
+  T.INBOX,
+  T.AUDIT_LOG,
+  T.IDEMPOTENCY_STORE,
+  T.OUTBOX_RELAY,
+  IdempotencyInterceptor,
 ];
 
 /**
@@ -133,7 +179,8 @@ export class KernelModule implements NestModule {
         ...(config.persistence === 'pg' ? pgPersistence(config) : memoryPersistence()),
         {
           provide: T.OUTBOX_RELAY,
-          useFactory: (source: OutboxSource, bus: EventBus, logger: Logger, metrics: MetricsRegistry) => new OutboxRelay({ source, bus, logger, metrics }),
+          useFactory: (source: OutboxSource, bus: EventBus, logger: Logger, metrics: MetricsRegistry) =>
+            new OutboxRelay({ source, bus, logger, metrics }),
           inject: [T.OUTBOX, T.EVENT_BUS, T.LOGGER, T.METRICS],
         },
         OutboxRelayScheduler,

@@ -17,7 +17,12 @@ describe('AC-CR001-08 party merge and custom fields', () => {
   const manager = () => tokenFor({ tenantId: 'ten_acme', roles: ['BRANCH_MANAGER'], memberId: 'member_mgr', orgUnitId: 'ou_root' });
   const get = (path: string) => app.http.get(path).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${manager()}`);
   const post = (path: string, body?: object, token = manager()) =>
-    app.http.post(path).set('Host', 'acme.iap.test').set('Authorization', `Bearer ${token}`).set('Idempotency-Key', newIdempotencyKey()).send(body);
+    app.http
+      .post(path)
+      .set('Host', 'acme.iap.test')
+      .set('Authorization', `Bearer ${token}`)
+      .set('Idempotency-Key', newIdempotencyKey())
+      .send(body);
   const create = async (body: object): Promise<string> => {
     const res = await post('/api/v1/parties', body, seller());
     expect(res.status).toBe(201);
@@ -26,10 +31,24 @@ describe('AC-CR001-08 party merge and custom fields', () => {
 
   beforeEach(async () => {
     app = await createTestApp({ imports: [PartyModule], overrides: customFieldOverrides() });
-    johnId = await create({ kind: 'PERSON', displayName: 'John Doe', contacts: [{ channel: 'MOBILE', value: '+919876543210' }], pan: 'AAAAA0000A', customFields: JOHN });
-    jonId = await create({ kind: 'PERSON', displayName: 'Jon Doe', contacts: [{ channel: 'EMAIL', value: 'jon@example.com' }], pan: 'aaaaa0000a', customFields: JON });
+    johnId = await create({
+      kind: 'PERSON',
+      displayName: 'John Doe',
+      contacts: [{ channel: 'MOBILE', value: '+919876543210' }],
+      pan: 'AAAAA0000A',
+      customFields: JOHN,
+    });
+    jonId = await create({
+      kind: 'PERSON',
+      displayName: 'Jon Doe',
+      contacts: [{ channel: 'EMAIL', value: 'jon@example.com' }],
+      pan: 'aaaaa0000a',
+      customFields: JON,
+    });
   });
-  afterEach(async () => { await app.close(); });
+  afterEach(async () => {
+    await app.close();
+  });
 
   it('AC-CR001-08 the survivor keeps its values, gains the missing keys, and reversal restores both sets', async () => {
     const queue = await get('/api/v1/duplicates');
@@ -39,7 +58,11 @@ describe('AC-CR001-08 party merge and custom fields', () => {
     expect(merged.status).toBe(200);
     expect(merged.body.survivorId).toBe(johnId);
 
-    expect((await get(`/api/v1/parties/${johnId}`)).body.customFields).toEqual({ segment: 'RETAIL', occupation: 'Architect', income_paise: 5_000_000 });
+    expect((await get(`/api/v1/parties/${johnId}`)).body.customFields).toEqual({
+      segment: 'RETAIL',
+      occupation: 'Architect',
+      income_paise: 5_000_000,
+    });
     expect((await get(`/api/v1/parties/${jonId}`)).body.customFields).toEqual(JON);
 
     const reversal = await post(`/api/v1/merges/${merged.body.mergeId}/reversal`);

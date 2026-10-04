@@ -1,7 +1,10 @@
 import { DependencyUnavailableError } from '../../../../kernel/errors/domain-errors';
 import { TwentyClient, TwentyObject, WorkspaceRef } from '../../application/twenty-sync.ports';
 
-export type FetchLike = (url: string, init: { method: string; headers: Record<string, string>; body: string; signal: AbortSignal }) => Promise<{ ok: boolean; status: number; json(): Promise<unknown> }>;
+export type FetchLike = (
+  url: string,
+  init: { method: string; headers: Record<string, string>; body: string; signal: AbortSignal },
+) => Promise<{ ok: boolean; status: number; json(): Promise<unknown> }>;
 
 const TIMEOUT_MS = 5000;
 const PATHS: Record<TwentyObject, string> = { person: 'people', lead: 'leads', opportunity: 'opportunities', task: 'tasks', note: 'notes' };
@@ -18,7 +21,12 @@ export class HttpTwentyClient implements TwentyClient {
     private readonly fetchFn: FetchLike,
   ) {}
 
-  async upsert(workspace: WorkspaceRef, object: TwentyObject, externalRef: string | undefined, fields: Record<string, unknown>): Promise<{ id: string; workspaceId: string }> {
+  async upsert(
+    workspace: WorkspaceRef,
+    object: TwentyObject,
+    externalRef: string | undefined,
+    fields: Record<string, unknown>,
+  ): Promise<{ id: string; workspaceId: string }> {
     const key = await this.resolveApiKey(workspace.apiKeySecretRef);
     const path = `${this.baseUrl}/rest/${PATHS[object]}${externalRef ? `/${encodeURIComponent(externalRef)}` : ''}`;
     const res = await this.fetchFn(path, {

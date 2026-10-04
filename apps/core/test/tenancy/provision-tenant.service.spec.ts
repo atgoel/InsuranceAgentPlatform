@@ -9,9 +9,20 @@ import { MemoryLogSink } from '../../src/kernel/observability/log-sink';
 import { ErrorDeduplicator } from '../../src/kernel/observability/error-deduplicator';
 import { LogOverrideStore } from '../../src/kernel/observability/log-overrides';
 import { ConflictError } from '../../src/kernel/errors/domain-errors';
-import { InMemoryProvisioningStateRepository, InMemoryTenantDirectory, InMemoryTenantSettingsRepository } from '../../src/modules/tenancy/infrastructure/in-memory-tenancy.repositories';
+import {
+  InMemoryProvisioningStateRepository,
+  InMemoryTenantDirectory,
+  InMemoryTenantSettingsRepository,
+} from '../../src/modules/tenancy/infrastructure/in-memory-tenancy.repositories';
 import { StubContentProvisioner, StubIdentityProvisioner } from '../../src/modules/tenancy/infrastructure/stub-provisioners';
-import { ContentScopeStep, CrmWorkspaceStep, IdentityAdminStep, IdentityOrganisationStep, ProvisioningSaga, SmokeCheckStep } from '../../src/modules/tenancy/application/provisioning-saga';
+import {
+  ContentScopeStep,
+  CrmWorkspaceStep,
+  IdentityAdminStep,
+  IdentityOrganisationStep,
+  ProvisioningSaga,
+  SmokeCheckStep,
+} from '../../src/modules/tenancy/application/provisioning-saga';
 import { ProvisionTenantInput, ProvisionTenantService } from '../../src/modules/tenancy/application/provision-tenant.service';
 import { TenancyRecorder } from '../../src/modules/tenancy/application/tenancy-recorder';
 import { CrmProvisioner } from '../../src/modules/tenancy/application/ports';
@@ -32,7 +43,13 @@ function build() {
   const clock = new FixedClock(new Date('2026-10-03T00:00:00Z'));
   const ids = new SequentialIdGenerator();
   const sink = new MemoryLogSink();
-  const logger = new Logger({ sink, redactor: new Redactor(), dedup: new ErrorDeduplicator(clock), overrides: new LogOverrideStore(clock, ids), clock });
+  const logger = new Logger({
+    sink,
+    redactor: new Redactor(),
+    dedup: new ErrorDeduplicator(clock),
+    overrides: new LogOverrideStore(clock, ids),
+    clock,
+  });
   const directory = new InMemoryTenantDirectory();
   const settings = new InMemoryTenantSettingsRepository();
   const state = new InMemoryProvisioningStateRepository();
@@ -40,17 +57,38 @@ function build() {
   const identity = new StubIdentityProvisioner(logger);
   const identityCalls: string[] = [];
   const spyIdentity = {
-    ensureOrganisation: async (t: string, s: string) => { identityCalls.push('org'); return identity.ensureOrganisation(t, s); },
-    ensureAdmin: async (t: string) => { identityCalls.push('admin'); return identity.ensureAdmin(t); },
+    ensureOrganisation: async (t: string, s: string) => {
+      identityCalls.push('org');
+      return identity.ensureOrganisation(t, s);
+    },
+    ensureAdmin: async (t: string) => {
+      identityCalls.push('admin');
+      return identity.ensureAdmin(t);
+    },
   };
   const crm = new FlakyCrm();
   const saga = new ProvisioningSaga(
-    [new IdentityOrganisationStep(spyIdentity), new IdentityAdminStep(spyIdentity), new CrmWorkspaceStep(crm), new ContentScopeStep(new StubContentProvisioner(logger)), new SmokeCheckStep(directory)],
+    [
+      new IdentityOrganisationStep(spyIdentity),
+      new IdentityAdminStep(spyIdentity),
+      new CrmWorkspaceStep(crm),
+      new ContentScopeStep(new StubContentProvisioner(logger)),
+      new SmokeCheckStep(directory),
+    ],
     state,
     logger,
   );
   const recorder = new TenancyRecorder(outbox, new InMemoryAuditLog(clock, ids, new Redactor()), clock, ids);
-  const service = new ProvisionTenantService(directory, settings, saga, new InMemoryUnitOfWork(), clock, ids, { platformDomain: 'iap.test', otpPepper: 'p', cacheTtlMs: 1000 }, recorder);
+  const service = new ProvisionTenantService(
+    directory,
+    settings,
+    saga,
+    new InMemoryUnitOfWork(),
+    clock,
+    ids,
+    { platformDomain: 'iap.test', otpPepper: 'p', cacheTtlMs: 1000 },
+    recorder,
+  );
   return { service, crm, identityCalls, outbox, sink, directory, state };
 }
 
@@ -59,7 +97,13 @@ const input: ProvisionTenantInput = {
   displayName: 'Sunrise IMF',
   kind: 'ORGANISATION',
   planCode: 'TEAM',
-  entity: { entityType: 'IMF', legalName: 'Sunrise IMF Pvt Ltd', registrationNo: 'IMF-123', registrationValidTo: '2028-03-31', principalOfficerName: 'A. Rao' },
+  entity: {
+    entityType: 'IMF',
+    legalName: 'Sunrise IMF Pvt Ltd',
+    registrationNo: 'IMF-123',
+    registrationValidTo: '2028-03-31',
+    principalOfficerName: 'A. Rao',
+  },
   admin: { name: 'Admin' },
 };
 

@@ -24,7 +24,12 @@ async function copyToClipboard(text: string): Promise<void> {
 }
 
 /** In-scope products for the quote's line, from the M05 catalogue. */
-function useInScopeProducts(catalogueApi: CatalogueApi, quoteId: string | undefined, line: LineOfBusiness | undefined, onError: (title: string) => void): ProductChoice[] {
+function useInScopeProducts(
+  catalogueApi: CatalogueApi,
+  quoteId: string | undefined,
+  line: LineOfBusiness | undefined,
+  onError: (title: string) => void,
+): ProductChoice[] {
   const [products, setProducts] = useState<ProductChoice[]>([]);
   useEffect(() => {
     if (!quoteId) return;
@@ -117,12 +122,22 @@ export function QuoteWorkspaceScreen() {
 
   const refresh = () => adviceApi.getQuote(quote.id).then(setQuote);
   const addOption = (option: OptionInput) => act(async () => setQuote(await adviceApi.addOption(quote.id, option)));
-  const remove = (optionId: string) => act(async () => { await adviceApi.removeOption(quote.id, optionId); await refresh(); });
+  const remove = (optionId: string) =>
+    act(async () => {
+      await adviceApi.removeOption(quote.id, optionId);
+      await refresh();
+    });
   const select = (optionId: string) => act(async () => setQuote(await adviceApi.select(quote.id, optionId)));
   const attach = (optionId: string, documentRef: string, version: string) =>
-    act(async () => { await adviceApi.attachBi(optionId, documentRef, version); await refresh(); });
+    act(async () => {
+      await adviceApi.attachBi(optionId, documentRef, version);
+      await refresh();
+    });
   const acknowledge = (biId: string, method: BiMethod, evidence?: string) =>
-    act(async () => { await adviceApi.acknowledgeBi(biId, method, evidence); await refresh(); });
+    act(async () => {
+      await adviceApi.acknowledgeBi(biId, method, evidence);
+      await refresh();
+    });
   const doShare = () =>
     act(async () => {
       const issued = await adviceApi.share(quote.id);
@@ -143,11 +158,7 @@ export function QuoteWorkspaceScreen() {
           {t('advice.quote.share')}
         </Button>
       </div>
-      {share && (
-        <p role="status">
-          {t('advice.quote.share_link', { url: share.url, date: formatDate(new Date(share.expiresAt)) })}
-        </p>
-      )}
+      {share && <p role="status">{t('advice.quote.share_link', { url: share.url, date: formatDate(new Date(share.expiresAt)) })}</p>}
       {quote.options.map((o) => (
         <OptionCard
           key={o.id}

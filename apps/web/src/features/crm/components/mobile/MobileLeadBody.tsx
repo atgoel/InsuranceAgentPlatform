@@ -35,8 +35,10 @@ export function MobileLeadBody({ lead, onStage, onQualify, onConvert }: Props) {
         <StatusChip tone={TEMPERATURE_TONE[lead.temperature]}>{t(`crm.temperature.${lead.temperature}`)}</StatusChip>
       </header>
       <dl className="lead-info">
-        <dt>{t('crm.lead.product')}</dt><dd>{t(`crm.product.${lead.productInterest}`)}</dd>
-        <dt>{t('crm.lead.source')}</dt><dd>{t(`crm.source.${lead.source}`)}</dd>
+        <dt>{t('crm.lead.product')}</dt>
+        <dd>{t(`crm.product.${lead.productInterest}`)}</dd>
+        <dt>{t('crm.lead.source')}</dt>
+        <dd>{t(`crm.source.${lead.source}`)}</dd>
       </dl>
       <section aria-label={t('crm.lead.stage')}>
         <StageBar currentStage={lead.stage} stageRules={lead.stageRules} onTransition={onStage} />
@@ -44,12 +46,34 @@ export function MobileLeadBody({ lead, onStage, onQualify, onConvert }: Props) {
       {next && (
         <section aria-label={t('crm.lead.nextTask')} className="next-task">
           <h2>{t('crm.lead.nextTask')}</h2>
-          <p>{next.title} · {new Date(next.dueAt).toLocaleString()}</p>
+          <p>
+            {next.title} · {new Date(next.dueAt).toLocaleString()}
+          </p>
         </section>
       )}
-      <LeadActions stage={lead.stage} onQualify={() => setPanel(panel === 'qualify' ? undefined : 'qualify')} onConvert={() => setPanel('convert')} />
-      {panel === 'qualify' && <QualificationForm qualification={lead.qualification} onSaved={(q) => { setPanel(undefined); onQualify(q); }} />}
-      {panel === 'convert' && qualified && <ConvertSheet lead={lead} onConvert={(input) => { setPanel(undefined); onConvert(input); }} />}
+      <LeadActions
+        stage={lead.stage}
+        onQualify={() => setPanel(panel === 'qualify' ? undefined : 'qualify')}
+        onConvert={() => setPanel('convert')}
+      />
+      {panel === 'qualify' && (
+        <QualificationForm
+          qualification={lead.qualification}
+          onSaved={(q) => {
+            setPanel(undefined);
+            onQualify(q);
+          }}
+        />
+      )}
+      {panel === 'convert' && qualified && (
+        <ConvertSheet
+          lead={lead}
+          onConvert={(input) => {
+            setPanel(undefined);
+            onConvert(input);
+          }}
+        />
+      )}
     </>
   );
 }
@@ -61,9 +85,19 @@ function LeadActions({ stage, onQualify, onConvert }: { stage: LeadStage; onQual
   const qualified = stage === 'QUALIFIED';
   return (
     <div className="actions">
-      {stage !== 'LOST' && <Button variant="secondary" onClick={onQualify}>{t('crm.lead.qualify')}</Button>}
-      <Button disabled={!qualified} aria-describedby={qualified ? undefined : 'convert-hint'} onClick={onConvert}>{t('crm.lead.convert')}</Button>
-      {!qualified && <p id="convert-hint" className="hint">{t('crm.lead.convert_disabled')}</p>}
+      {stage !== 'LOST' && (
+        <Button variant="secondary" onClick={onQualify}>
+          {t('crm.lead.qualify')}
+        </Button>
+      )}
+      <Button disabled={!qualified} aria-describedby={qualified ? undefined : 'convert-hint'} onClick={onConvert}>
+        {t('crm.lead.convert')}
+      </Button>
+      {!qualified && (
+        <p id="convert-hint" className="hint">
+          {t('crm.lead.convert_disabled')}
+        </p>
+      )}
     </div>
   );
 }

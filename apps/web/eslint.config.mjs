@@ -12,6 +12,9 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       'no-console': 'error',
       complexity: ['error', 12],
+      // No packed code: one statement per line, readable line length (AGENTS.md "Lessons from the M07 review")
+      'max-statements-per-line': ['error', { max: 1 }],
+      'max-len': ['error', { code: 180, ignoreStrings: true, ignoreTemplateLiterals: true, ignoreUrls: true, ignoreComments: true, ignoreRegExpLiterals: true }],
       'max-lines-per-function': ['warn', { max: 120, skipBlankLines: true, skipComments: true }],
       '@typescript-eslint/no-explicit-any': 'error',
     },

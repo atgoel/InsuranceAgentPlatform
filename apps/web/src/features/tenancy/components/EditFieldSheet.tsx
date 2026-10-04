@@ -52,7 +52,13 @@ function EditForm({ definition, onClose, onRevise }: { definition: CustomFieldDe
   };
 
   return (
-    <form className="cf-form" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
+    <form
+      className="cf-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void submit();
+      }}
+    >
       <ProblemBanner problem={problem} />
       <p className="cf-note">{definition.key}</p>
       <label>
@@ -78,7 +84,9 @@ function EditForm({ definition, onClose, onRevise }: { definition: CustomFieldDe
         <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
         <span>{t('tenancy.cf.active')}</span>
       </label>
-      <Button type="submit" loading={saving}>{t('common.save')}</Button>
+      <Button type="submit" loading={saving}>
+        {t('common.save')}
+      </Button>
     </form>
   );
 }

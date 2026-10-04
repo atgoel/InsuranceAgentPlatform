@@ -2,14 +2,17 @@ import { z } from 'zod';
 import { APPROVED_TYPEFACES } from '../domain/brand-kit';
 import { PhoneNumber } from '../../../kernel/domain/phone-number';
 
-const IndianMobile = z.string().refine((v) => {
-  try {
-    PhoneNumber.parse(v);
-    return true;
-  } catch {
-    return false;
-  }
-}, { message: 'Enter a valid Indian mobile number' });
+const IndianMobile = z.string().refine(
+  (v) => {
+    try {
+      PhoneNumber.parse(v);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  { message: 'Enter a valid Indian mobile number' },
+);
 
 const PlanCode = z.enum(['SOLO', 'SOLO_PRO', 'TEAM', 'BUSINESS', 'WHITE_LABEL', 'DEDICATED']);
 const Line = z.enum(['LIFE', 'HEALTH', 'GENERAL']);
@@ -32,7 +35,9 @@ export const ProvisionTenantSchema = z
         principalOfficerName: z.string().trim().min(2).max(120).optional(),
       })
       .strict(),
-    admin: z.object({ name: z.string().trim().min(1).max(120), phone: z.string().optional(), email: z.string().email().optional() }).strict(),
+    admin: z
+      .object({ name: z.string().trim().min(1).max(120), phone: z.string().optional(), email: z.string().email().optional() })
+      .strict(),
   })
   .strict();
 
@@ -43,12 +48,18 @@ export const ListTenantsQuery = z.object({
   cursor: z.string().optional(),
 });
 
-export const StatusTransitionSchema = z.object({ to: z.enum(['suspended', 'active', 'offboarded']), reason: z.string().trim().min(3).max(200) }).strict();
+export const StatusTransitionSchema = z
+  .object({ to: z.enum(['suspended', 'active', 'offboarded']), reason: z.string().trim().min(3).max(200) })
+  .strict();
 export const ChangePlanSchema = z.object({ planCode: PlanCode }).strict();
 
 export const TieUpsSchema = z
   .object({
-    tieUps: z.array(z.object({ insurerId: z.string().min(1).max(64), line: Line, effectiveFrom: IsoDate, effectiveTo: IsoDate.optional() }).strict()).max(60),
+    tieUps: z
+      .array(
+        z.object({ insurerId: z.string().min(1).max(64), line: Line, effectiveFrom: IsoDate, effectiveTo: IsoDate.optional() }).strict(),
+      )
+      .max(60),
   })
   .strict();
 
@@ -100,5 +111,11 @@ export const DefineCustomFieldSchema = z
   .strict();
 
 export const ReviseCustomFieldSchema = z
-  .object({ label: LocalisedLabel.optional(), enumOptions: EnumOptions.optional(), required: z.boolean().optional(), reportable: z.boolean().optional(), active: z.boolean().optional() })
+  .object({
+    label: LocalisedLabel.optional(),
+    enumOptions: EnumOptions.optional(),
+    required: z.boolean().optional(),
+    reportable: z.boolean().optional(),
+    active: z.boolean().optional(),
+  })
   .strict();

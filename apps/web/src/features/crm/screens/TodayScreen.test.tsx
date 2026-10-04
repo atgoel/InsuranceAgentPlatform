@@ -7,8 +7,24 @@ import { TodayScreen } from './TodayScreen';
 import { MemoryStorage, mockClient, renderAt, type MockClient } from '../../../test/render';
 
 const ITEMS: MyWorkItem[] = [
-  { kind: 'HOT_LEAD', id: 'lead_1', title: 'Asha Verma', subtitle: 'TERM_LIFE · +91 98•••••01', priority: 2, subject: { type: 'LEAD', id: 'lead_1' }, actions: ['CALL', 'WHATSAPP', 'OPEN'] },
-  { kind: 'BIRTHDAY', id: 'pty_9', title: 'Ravi Kumar', subtitle: 'Turns 40 today', priority: 3, subject: { type: 'PARTY', id: 'pty_9' }, actions: ['OPEN'] },
+  {
+    kind: 'HOT_LEAD',
+    id: 'lead_1',
+    title: 'Asha Verma',
+    subtitle: 'TERM_LIFE · +91 98•••••01',
+    priority: 2,
+    subject: { type: 'LEAD', id: 'lead_1' },
+    actions: ['CALL', 'WHATSAPP', 'OPEN'],
+  },
+  {
+    kind: 'BIRTHDAY',
+    id: 'pty_9',
+    title: 'Ravi Kumar',
+    subtitle: 'Turns 40 today',
+    priority: 3,
+    subject: { type: 'PARTY', id: 'pty_9' },
+    actions: ['OPEN'],
+  },
 ];
 const MY_WORK = { items: ITEMS, counts: { overdue: 2, today: 1, hotLeads: 1 } };
 const NOW = new Date('2026-10-03T09:30:00.000Z');
@@ -35,7 +51,9 @@ describe('AC-M04-29 TodayScreen (/m/today)', () => {
     storage = new MemoryStorage();
     vi.spyOn(navigator, 'onLine', 'get').mockImplementation(() => online);
     let n = 0;
-    vi.spyOn(crypto, 'randomUUID').mockImplementation(() => `00000000-0000-4000-8000-00000000000${(n += 1)}` as `${string}-${string}-${string}-${string}-${string}`);
+    vi.spyOn(crypto, 'randomUUID').mockImplementation(
+      () => `00000000-0000-4000-8000-00000000000${(n += 1)}` as `${string}-${string}-${string}-${string}-${string}`,
+    );
   });
   afterEach(() => vi.restoreAllMocks());
 
@@ -55,10 +73,26 @@ describe('AC-M04-29 TodayScreen (/m/today)', () => {
     expect(birthday.queryByRole('button', { name: 'Log activity' })).not.toBeInTheDocument();
   });
   it('AC-M07-09 AC-M07-15 opens due policies in the due calendar and translates book labels', async () => {
-    const due: MyWorkItem = { kind: 'DUE', id: 'hp1', title: 'Life cover', subtitle: 'DUE_TODAY', priority: 1, subject: { type: 'HELD_POLICY', id: 'hp1' }, actions: ['OPEN'] };
-    const servicing: MyWorkItem = { kind: 'TASK', id: 'srv1', title: 'Servicing — ADDRESS_CHANGE', priority: 1, subject: { type: 'SERVICING_REQUEST', id: 'srv1' }, actions: ['OPEN'] };
+    const due: MyWorkItem = {
+      kind: 'DUE',
+      id: 'hp1',
+      title: 'Life cover',
+      subtitle: 'DUE_TODAY',
+      priority: 1,
+      subject: { type: 'HELD_POLICY', id: 'hp1' },
+      actions: ['OPEN'],
+    };
+    const servicing: MyWorkItem = {
+      kind: 'TASK',
+      id: 'srv1',
+      title: 'Servicing — ADDRESS_CHANGE',
+      priority: 1,
+      subject: { type: 'SERVICING_REQUEST', id: 'srv1' },
+      actions: ['OPEN'],
+    };
     render(mockClient({ '/api/v1/my-work': { ...MY_WORK, items: [due, servicing] } }));
-    expect(await screen.findByText('Due today')).toBeInTheDocument(); expect(screen.getByText('Servicing tracker · Address change')).toBeInTheDocument();
+    expect(await screen.findByText('Due today')).toBeInTheDocument();
+    expect(screen.getByText('Servicing tracker · Address change')).toBeInTheDocument();
     await userEvent.click(within(screen.getByRole('listitem', { name: 'Life cover' })).getByRole('button', { name: 'Open' }));
     expect(await screen.findByTestId('location')).toHaveTextContent('/m/dues?policyId=hp1');
   });
@@ -78,7 +112,9 @@ describe('AC-M04-29 TodayScreen (/m/today)', () => {
   it('AC-M04-29 a network failure serves the cached list with the offline banner', async () => {
     storage.setItem('crm:today-cache:v1', JSON.stringify({ items: [{ ...ITEMS[0], subtitle: undefined }], counts: MY_WORK.counts }));
     render(mockClient({ '/api/v1/my-work': ApiError.network(new Error('offline')) }));
-    expect(await screen.findByText('You are offline. Showing your last saved list; logs will sync when you reconnect.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('You are offline. Showing your last saved list; logs will sync when you reconnect.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Asha Verma')).toBeInTheDocument();
   });
 
@@ -97,9 +133,16 @@ describe('AC-M04-29 TodayScreen (/m/today)', () => {
     render(client);
     await screen.findByText('Asha Verma');
     await logCall('No answer');
-    expect(client.post).toHaveBeenCalledWith(ACTIVITY, {
-      kind: 'CALL', outcome: 'NO_ANSWER', occurredAt: NOW.toISOString(), clientRef: '00000000-0000-4000-8000-000000000001',
-    }, expect.objectContaining({ idempotencyKey: expect.any(String) }));
+    expect(client.post).toHaveBeenCalledWith(
+      ACTIVITY,
+      {
+        kind: 'CALL',
+        outcome: 'NO_ANSWER',
+        occurredAt: NOW.toISOString(),
+        clientRef: '00000000-0000-4000-8000-000000000001',
+      },
+      expect.objectContaining({ idempotencyKey: expect.any(String) }),
+    );
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(storage.getItem('crm:log-queue:v1')).toBeNull();
   });
@@ -120,13 +163,19 @@ describe('AC-M04-29 TodayScreen (/m/today)', () => {
 
   it('AC-M04-29 a server outage keeps the log queued (same clientRef next time); a 400 drops it and says so', async () => {
     const client = mockClient({ '/api/v1/my-work': MY_WORK });
-    client.post.mockRejectedValueOnce(new ApiError(503, 'unavailable', 'Down')).mockResolvedValueOnce({ id: 'act_1' }).mockRejectedValueOnce(new ApiError(400, 'invalid', 'Bad'));
+    client.post
+      .mockRejectedValueOnce(new ApiError(503, 'unavailable', 'Down'))
+      .mockResolvedValueOnce({ id: 'act_1' })
+      .mockRejectedValueOnce(new ApiError(400, 'invalid', 'Bad'));
     render(client);
     await screen.findByText('Asha Verma');
     await logCall('Call back');
     expect(screen.getByText('1 log waiting to sync')).toBeInTheDocument();
     await goOnline();
-    expect(client.post.mock.calls.map((c) => (c[1] as { clientRef: string }).clientRef)).toEqual(['00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000001']);
+    expect(client.post.mock.calls.map((c) => (c[1] as { clientRef: string }).clientRef)).toEqual([
+      '00000000-0000-4000-8000-000000000001',
+      '00000000-0000-4000-8000-000000000001',
+    ]);
     await logCall('Wrong number');
     expect(await screen.findByText('1 log was rejected by the server and not saved')).toBeInTheDocument();
     expect(storage.getItem('crm:log-queue:v1')).toBeNull();
@@ -138,6 +187,8 @@ describe('AC-M04-29 TodayScreen (/m/today)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'हि' }));
     expect(screen.getByRole('button', { name: 'हि' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('शुभ दिन! आज का काम तैयार है।');
-    expect(within(screen.getByRole('listitem', { name: 'Asha Verma' })).getByRole('button', { name: 'गतिविधि लॉग करें' })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('listitem', { name: 'Asha Verma' })).getByRole('button', { name: 'गतिविधि लॉग करें' }),
+    ).toBeInTheDocument();
   });
 });

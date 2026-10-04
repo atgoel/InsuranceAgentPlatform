@@ -11,8 +11,17 @@ import { LeadService } from '../application/lead.service';
 import { ActivityService } from '../application/activity.service';
 import { ConversionService } from '../application/conversion.service';
 import {
-  ActivitySchema, AssignSchema, BulkAssignSchema, CaptureLeadSchema, ConversionSchema, ListLeadsQuery, PartyLinkSchema, QualificationSchema, ReplaceCustomFieldsSchema,
-  StageTransitionSchema, TemperatureSchema,
+  ActivitySchema,
+  AssignSchema,
+  BulkAssignSchema,
+  CaptureLeadSchema,
+  ConversionSchema,
+  ListLeadsQuery,
+  PartyLinkSchema,
+  QualificationSchema,
+  ReplaceCustomFieldsSchema,
+  StageTransitionSchema,
+  TemperatureSchema,
 } from './schemas';
 
 /** Leads workspace and record (CRM01, CRM02, M02/M16). */
@@ -29,7 +38,11 @@ export class LeadsController {
   @Post()
   @Idempotent()
   @RequirePermission('crm.lead.write')
-  async create(@CurrentPrincipal() p: Principal, @Body(new ZodValidationPipe(CaptureLeadSchema)) body: z.infer<typeof CaptureLeadSchema>, @Res({ passthrough: true }) res: Response) {
+  async create(
+    @CurrentPrincipal() p: Principal,
+    @Body(new ZodValidationPipe(CaptureLeadSchema)) body: z.infer<typeof CaptureLeadSchema>,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const result = await this.capture.capture(body, { kind: 'STAFF', principal: p });
     res.status(result.deduplicated ? 200 : 201);
     return result;
@@ -39,8 +52,15 @@ export class LeadsController {
   @RequirePermission('crm.lead.read')
   list(@CurrentPrincipal() p: Principal, @Query(new ZodValidationPipe(ListLeadsQuery)) q: z.infer<typeof ListLeadsQuery>) {
     return this.leads.list(p, {
-      stage: q.stage, ownerMemberId: q.owner === 'me' ? p.memberId : q.owner, productInterest: q.product, source: q.source,
-      slaState: q.sla, sort: q.sort, q: q.q, cursor: q.cursor, limit: q.limit,
+      stage: q.stage,
+      ownerMemberId: q.owner === 'me' ? p.memberId : q.owner,
+      productInterest: q.product,
+      source: q.source,
+      slaState: q.sla,
+      sort: q.sort,
+      q: q.q,
+      cursor: q.cursor,
+      limit: q.limit,
     });
   }
 
@@ -68,21 +88,32 @@ export class LeadsController {
   @HttpCode(200)
   @Idempotent()
   @RequirePermission('crm.lead.write')
-  transition(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Body(new ZodValidationPipe(StageTransitionSchema)) body: z.infer<typeof StageTransitionSchema>) {
+  transition(
+    @CurrentPrincipal() p: Principal,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(StageTransitionSchema)) body: z.infer<typeof StageTransitionSchema>,
+  ) {
     return this.leads.transition(p, id, body);
   }
 
   @Put(':id/qualification')
   @RequirePermission('crm.lead.write')
-  qualify(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Body(new ZodValidationPipe(QualificationSchema)) body: z.infer<typeof QualificationSchema>) {
+  qualify(
+    @CurrentPrincipal() p: Principal,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(QualificationSchema)) body: z.infer<typeof QualificationSchema>,
+  ) {
     return this.leads.qualify(p, id, body);
   }
 
   @Put(':id/custom-fields')
   @RequirePermission('crm.lead.write')
   async replaceCustomFields(
-    @CurrentPrincipal() p: Principal, @Param('id') id: string, @Headers('if-match') ifMatch: string | undefined,
-    @Body(new ZodValidationPipe(ReplaceCustomFieldsSchema)) body: z.infer<typeof ReplaceCustomFieldsSchema>, @Res({ passthrough: true }) res: Response,
+    @CurrentPrincipal() p: Principal,
+    @Param('id') id: string,
+    @Headers('if-match') ifMatch: string | undefined,
+    @Body(new ZodValidationPipe(ReplaceCustomFieldsSchema)) body: z.infer<typeof ReplaceCustomFieldsSchema>,
+    @Res({ passthrough: true }) res: Response,
   ) {
     const view = await this.leads.replaceCustomFields(p, id, body.customFields, parseIfMatch(ifMatch));
     res.setHeader('ETag', etagFor(view.version));
@@ -91,7 +122,11 @@ export class LeadsController {
 
   @Put(':id/temperature')
   @RequirePermission('crm.lead.write')
-  temperature(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Body(new ZodValidationPipe(TemperatureSchema)) body: z.infer<typeof TemperatureSchema>) {
+  temperature(
+    @CurrentPrincipal() p: Principal,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(TemperatureSchema)) body: z.infer<typeof TemperatureSchema>,
+  ) {
     return this.leads.setTemperature(p, id, body.temperature);
   }
 
@@ -99,7 +134,11 @@ export class LeadsController {
   @HttpCode(200)
   @Idempotent()
   @RequirePermission('crm.lead.assign')
-  assign(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Body(new ZodValidationPipe(AssignSchema)) body: z.infer<typeof AssignSchema>) {
+  assign(
+    @CurrentPrincipal() p: Principal,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(AssignSchema)) body: z.infer<typeof AssignSchema>,
+  ) {
     return this.leads.assign(p, id, body.memberId);
   }
 
@@ -107,7 +146,12 @@ export class LeadsController {
   @Post(':id/activities')
   @Idempotent()
   @RequirePermission('crm.activity.write')
-  async logActivity(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Body(new ZodValidationPipe(ActivitySchema)) body: z.infer<typeof ActivitySchema>, @Res({ passthrough: true }) res: Response) {
+  async logActivity(
+    @CurrentPrincipal() p: Principal,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(ActivitySchema)) body: z.infer<typeof ActivitySchema>,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const { activity, duplicate } = await this.activities.logForLead(p, id, body);
     res.status(duplicate ? 200 : 201);
     return activity;
@@ -117,14 +161,22 @@ export class LeadsController {
   @HttpCode(200)
   @Idempotent()
   @RequirePermission('crm.lead.write')
-  linkParty(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Body(new ZodValidationPipe(PartyLinkSchema)) body: z.infer<typeof PartyLinkSchema>) {
+  linkParty(
+    @CurrentPrincipal() p: Principal,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(PartyLinkSchema)) body: z.infer<typeof PartyLinkSchema>,
+  ) {
     return this.leads.linkToCustomer(p, id, body.partyId);
   }
 
   @Post(':id/conversion')
   @Idempotent()
   @RequirePermission('crm.lead.convert')
-  convert(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Body(new ZodValidationPipe(ConversionSchema)) body: z.infer<typeof ConversionSchema>) {
+  convert(
+    @CurrentPrincipal() p: Principal,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(ConversionSchema)) body: z.infer<typeof ConversionSchema>,
+  ) {
     return this.conversion.convert(p, id, body);
   }
 }

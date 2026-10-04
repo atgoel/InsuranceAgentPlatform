@@ -32,7 +32,19 @@ export class PgAuditLog implements AuditLog {
     await tx.query(
       `insert into audit_event (id, tenant_id, actor, action, entity_type, entity_id, occurred_at, trace_id, before_hash, after_hash, metadata)
        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-      [event.id, event.tenantId, event.actor, event.action, event.entityType, event.entityId, event.occurredAt, event.traceId ?? null, event.beforeHash ?? null, event.afterHash ?? null, JSON.stringify(event.metadata)],
+      [
+        event.id,
+        event.tenantId,
+        event.actor,
+        event.action,
+        event.entityType,
+        event.entityId,
+        event.occurredAt,
+        event.traceId ?? null,
+        event.beforeHash ?? null,
+        event.afterHash ?? null,
+        JSON.stringify(event.metadata),
+      ],
     );
     return event;
   }

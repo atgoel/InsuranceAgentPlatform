@@ -16,7 +16,16 @@ export function periodOf(date: Date): string {
 }
 
 export interface TenantSummary {
-  id: string; slug: string; displayName: string; kind: TenantKind; status: TenantStatus; planCode: string; cell: string; entityType?: string; createdAt: string; version: number;
+  id: string;
+  slug: string;
+  displayName: string;
+  kind: TenantKind;
+  status: TenantStatus;
+  planCode: string;
+  cell: string;
+  entityType?: string;
+  createdAt: string;
+  version: number;
 }
 
 /** Read side for tenant profile, entitlements and the operator list (M01 §5.2). */
@@ -44,7 +53,13 @@ export class TenantQueryService {
       ...pickTenant(tenant),
       trialEndsAt: tenant.props.trialEndsAt,
       crmMode: tenant.props.crmMode,
-      entity: entity && { entityType: entity.entityType, legalName: entity.legalName, registrationNo: entity.registrationNo, registrationValidTo: entity.registrationValidTo, principalOfficerName: entity.principalOfficerName },
+      entity: entity && {
+        entityType: entity.entityType,
+        legalName: entity.legalName,
+        registrationNo: entity.registrationNo,
+        registrationValidTo: entity.registrationValidTo,
+        principalOfficerName: entity.principalOfficerName,
+      },
       registrationStatus: entity?.registrationStatus(this.clock.now()),
       comparisonScope: entity?.comparisonScope(),
       hosts: hosts.map((h) => ({ host: h.host, kind: h.kind, verified: Boolean(h.verifiedAt) })),
@@ -60,7 +75,13 @@ export class TenantQueryService {
       flags: (await this.settings.getFlags(tx)).list(),
     }));
     return {
-      plan: { code: plan.code, name: plan.name, capabilities: [...plan.capabilities].sort(), limits: plan.limits, alertThresholdPct: plan.alertThresholdPct },
+      plan: {
+        code: plan.code,
+        name: plan.name,
+        capabilities: [...plan.capabilities].sort(),
+        limits: plan.limits,
+        alertThresholdPct: plan.alertThresholdPct,
+      },
       usage: USAGE_METRICS.map((metric, i) => usageView(counters[i] ?? { metric, period, used: 0, limit: plan.limits[metric] })),
       flags: flags as FeatureFlag[],
     };
@@ -78,7 +99,13 @@ export class TenantQueryService {
 
   private async toSummary(tenant: Tenant): Promise<TenantSummary> {
     const entity = await this.uow.run(tenant.props.id, (tx) => this.settings.getEntity(tx));
-    return { ...pickTenant(tenant), cell: tenant.props.cell, entityType: entity?.entityType, createdAt: tenant.props.createdAt, version: tenant.props.version };
+    return {
+      ...pickTenant(tenant),
+      cell: tenant.props.cell,
+      entityType: entity?.entityType,
+      createdAt: tenant.props.createdAt,
+      version: tenant.props.version,
+    };
   }
 }
 

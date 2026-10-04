@@ -12,6 +12,9 @@ export default tseslint.config(
       // Clean-code guard rails (docs/spec/01-engineering-standards.md)
       'no-console': 'error', // all output goes through the kernel Logger
       complexity: ['error', 10],
+      // No packed code: one statement per line, readable line length (AGENTS.md "Lessons from the M07 review")
+      'max-statements-per-line': ['error', { max: 1 }],
+      'max-len': ['error', { code: 180, ignoreStrings: true, ignoreTemplateLiterals: true, ignoreUrls: true, ignoreComments: true, ignoreRegExpLiterals: true }],
       'max-lines-per-function': ['warn', { max: 60, skipBlankLines: true, skipComments: true }],
       'max-params': ['error', 4],
       'max-depth': ['error', 3],

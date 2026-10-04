@@ -23,7 +23,16 @@ export function LogSheet({ title, onClose, onLog }: LogSheetProps) {
     <BottomSheet open title={t('today.log_title', { name: title })} onClose={onClose}>
       <div role="group" aria-label={t('today.log_kind')} className="chip-row">
         {KINDS.map((k) => (
-          <button key={k} type="button" className="chip" aria-pressed={kind === k} onClick={() => { setKind(k); setOutcome(undefined); }}>
+          <button
+            key={k}
+            type="button"
+            className="chip"
+            aria-pressed={kind === k}
+            onClick={() => {
+              setKind(k);
+              setOutcome(undefined);
+            }}
+          >
             {t(`today.kind.${k}`)}
           </button>
         ))}
@@ -37,7 +46,9 @@ export function LogSheet({ title, onClose, onLog }: LogSheetProps) {
           ))}
         </div>
       )}
-      <Button disabled={!ready} onClick={() => onLog({ kind, outcome })}>{t('today.log_save')}</Button>
+      <Button disabled={!ready} onClick={() => onLog({ kind, outcome })}>
+        {t('today.log_save')}
+      </Button>
     </BottomSheet>
   );
 }

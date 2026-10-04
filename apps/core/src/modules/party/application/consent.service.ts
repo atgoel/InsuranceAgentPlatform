@@ -8,8 +8,16 @@ import { Suppression, SuppressionReason } from '../domain/suppression';
 import { ContactabilityDecision, ContactabilityPolicy } from '../domain/contactability';
 import { CONSENT_RECORDED, SUPPRESSION_ADDED } from '../domain/events';
 import {
-  CONSENT_REPOSITORY, ConsentInput, ConsentRepository, FIELD_CIPHER, FieldCipher, PARTY_REPOSITORY, PartyRepository, SUPPRESSION_REPOSITORY,
-  SuppressionRepository, Transaction,
+  CONSENT_REPOSITORY,
+  ConsentInput,
+  ConsentRepository,
+  FIELD_CIPHER,
+  FieldCipher,
+  PARTY_REPOSITORY,
+  PartyRepository,
+  SUPPRESSION_REPOSITORY,
+  SuppressionRepository,
+  Transaction,
 } from './ports';
 import { PartyContext } from './party-context';
 import { PartyService } from './party.service';
@@ -21,7 +29,9 @@ export function contactChannelFor(channel: ContactChannel): Channel {
   return channel === 'EMAIL' ? 'EMAIL' : 'MOBILE';
 }
 
-export type SuppressInput = { channel: ConsentChannel; reason: SuppressionReason; to?: string } & ({ value: string } | { contactHash: string });
+export type SuppressInput = { channel: ConsentChannel; reason: SuppressionReason; to?: string } & (
+  { value: string } | { contactHash: string }
+);
 
 /** Consent ledger, suppression and contactability decisions (F37, DPDP — M03 §3.4–3.6). */
 @Injectable()
@@ -53,9 +63,16 @@ export class ConsentService {
     const record: ConsentRecord = { ...input, id: this.ctx.ids.next('cns'), occurredAt: now.toISOString() };
     await this.consents.append(tx, record);
     if (input.purpose === 'MARKETING' && !input.granted) {
-      for (const hash of this.hashesFor(party, input.channel)) await this.addSuppression(tx, { contactHash: hash, channel: input.channel, reason: 'OPT_OUT' }, input.capturedBy, now);
+      for (const hash of this.hashesFor(party, input.channel))
+        await this.addSuppression(tx, { contactHash: hash, channel: input.channel, reason: 'OPT_OUT' }, input.capturedBy, now);
     }
-    const data = { partyId: party.props.id, purpose: input.purpose, channel: input.channel, granted: input.granted, noticeVersion: input.noticeVersion };
+    const data = {
+      partyId: party.props.id,
+      purpose: input.purpose,
+      channel: input.channel,
+      granted: input.granted,
+      noticeVersion: input.noticeVersion,
+    };
     await this.ctx.recorder.record(tx, {
       event: { type: CONSENT_RECORDED, subject: party.props.id, data },
       audit: { action: CONSENT_RECORDED, entityType: 'party', entityId: party.props.id, metadata: { ...data, source: input.source } },
@@ -82,7 +99,13 @@ export class ConsentService {
     });
   }
 
-  async decideIn(tx: Transaction, party: Party, channel: ContactChannel, purpose: ConsentPurpose, at: Date): Promise<ContactabilityDecision> {
+  async decideIn(
+    tx: Transaction,
+    party: Party,
+    channel: ContactChannel,
+    purpose: ConsentPurpose,
+    at: Date,
+  ): Promise<ContactabilityDecision> {
     const primary = party.primary(contactChannelFor(channel));
     const [ledger, suppressions] = await Promise.all([
       this.consents.ledger(tx, party.props.id),
@@ -99,16 +122,31 @@ export class ConsentService {
   suppress(principal: Principal, input: SuppressInput): Promise<Suppression> {
     return this.ctx.uow.run(principal.tenantId, async (tx) => {
       const contactHash = 'contactHash' in input ? input.contactHash : await this.hashOfValue(tx, input.channel, input.value);
-      return this.addSuppression(tx, { contactHash, channel: input.channel, reason: input.reason, to: input.to }, principal.memberId ?? principal.userRef, this.ctx.clock.now());
+      return this.addSuppression(
+        tx,
+        { contactHash, channel: input.channel, reason: input.reason, to: input.to },
+        principal.memberId ?? principal.userRef,
+        this.ctx.clock.now(),
+      );
     });
   }
 
-  private async addSuppression(tx: Transaction, s: { contactHash: string; channel: ConsentChannel; reason: SuppressionReason; to?: string }, createdBy: string, now: Date): Promise<Suppression> {
+  private async addSuppression(
+    tx: Transaction,
+    s: { contactHash: string; channel: ConsentChannel; reason: SuppressionReason; to?: string },
+    createdBy: string,
+    now: Date,
+  ): Promise<Suppression> {
     const suppression: Suppression = { id: this.ctx.ids.next('sup'), ...s, from: now.toISOString(), createdBy };
     await this.suppressions.add(tx, suppression);
     await this.ctx.recorder.record(tx, {
       event: { type: SUPPRESSION_ADDED, subject: suppression.id, data: { id: suppression.id, channel: s.channel, reason: s.reason } },
-      audit: { action: SUPPRESSION_ADDED, entityType: 'suppression', entityId: suppression.id, metadata: { channel: s.channel, reason: s.reason } },
+      audit: {
+        action: SUPPRESSION_ADDED,
+        entityType: 'suppression',
+        entityId: suppression.id,
+        metadata: { channel: s.channel, reason: s.reason },
+      },
     });
     return suppression;
   }

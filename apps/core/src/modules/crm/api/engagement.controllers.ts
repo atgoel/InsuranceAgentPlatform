@@ -12,7 +12,16 @@ import { RoutingService } from '../application/routing.service';
 import { MyWorkService } from '../application/my-work.service';
 import { LeadImportService } from '../application/lead-import.service';
 import {
-  BoardQuery, CreateTaskSchema, LeadImportSchema, ListTasksQuery, LossSchema, OpportunityMoveSchema, PatchTaskSchema, ReplaceCustomFieldsSchema, RoutingRulesSchema, SimulationSchema,
+  BoardQuery,
+  CreateTaskSchema,
+  LeadImportSchema,
+  ListTasksQuery,
+  LossSchema,
+  OpportunityMoveSchema,
+  PatchTaskSchema,
+  ReplaceCustomFieldsSchema,
+  RoutingRulesSchema,
+  SimulationSchema,
 } from './schemas';
 
 /** Pipeline (CRM03). There is deliberately no way to set ISSUED over HTTP. */
@@ -38,8 +47,11 @@ export class OpportunitiesController {
   @Put(':id/custom-fields')
   @RequirePermission('crm.opportunity.write')
   async replaceCustomFields(
-    @CurrentPrincipal() p: Principal, @Param('id') id: string, @Headers('if-match') ifMatch: string | undefined,
-    @Body(new ZodValidationPipe(ReplaceCustomFieldsSchema)) body: z.infer<typeof ReplaceCustomFieldsSchema>, @Res({ passthrough: true }) res: Response,
+    @CurrentPrincipal() p: Principal,
+    @Param('id') id: string,
+    @Headers('if-match') ifMatch: string | undefined,
+    @Body(new ZodValidationPipe(ReplaceCustomFieldsSchema)) body: z.infer<typeof ReplaceCustomFieldsSchema>,
+    @Res({ passthrough: true }) res: Response,
   ) {
     const view = await this.opportunities.replaceCustomFields(p, id, body.customFields, parseIfMatch(ifMatch));
     res.setHeader('ETag', etagFor(view.version));
@@ -50,7 +62,11 @@ export class OpportunitiesController {
   @HttpCode(200)
   @Idempotent()
   @RequirePermission('crm.opportunity.write')
-  move(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Body(new ZodValidationPipe(OpportunityMoveSchema)) body: z.infer<typeof OpportunityMoveSchema>) {
+  move(
+    @CurrentPrincipal() p: Principal,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(OpportunityMoveSchema)) body: z.infer<typeof OpportunityMoveSchema>,
+  ) {
     return this.opportunities.move(p, id, body.to);
   }
 
@@ -58,7 +74,11 @@ export class OpportunitiesController {
   @HttpCode(200)
   @Idempotent()
   @RequirePermission('crm.opportunity.write')
-  lose(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Body(new ZodValidationPipe(LossSchema)) body: z.infer<typeof LossSchema>) {
+  lose(
+    @CurrentPrincipal() p: Principal,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(LossSchema)) body: z.infer<typeof LossSchema>,
+  ) {
     return this.opportunities.markLost(p, id, body.reason);
   }
 }
@@ -83,7 +103,12 @@ export class TasksController {
 
   @Patch(':id')
   @RequirePermission('crm.task.write')
-  update(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Headers('if-match') ifMatch: string | undefined, @Body(new ZodValidationPipe(PatchTaskSchema)) body: z.infer<typeof PatchTaskSchema>) {
+  update(
+    @CurrentPrincipal() p: Principal,
+    @Param('id') id: string,
+    @Headers('if-match') ifMatch: string | undefined,
+    @Body(new ZodValidationPipe(PatchTaskSchema)) body: z.infer<typeof PatchTaskSchema>,
+  ) {
     return this.tasks.update(p, id, body, parseIfMatch(ifMatch));
   }
 }
@@ -101,7 +126,10 @@ export class RoutingController {
 
   @Put('routing-rules')
   @RequirePermission('crm.routing.write')
-  async replace(@CurrentPrincipal() p: Principal, @Body(new ZodValidationPipe(RoutingRulesSchema)) body: z.infer<typeof RoutingRulesSchema>) {
+  async replace(
+    @CurrentPrincipal() p: Principal,
+    @Body(new ZodValidationPipe(RoutingRulesSchema)) body: z.infer<typeof RoutingRulesSchema>,
+  ) {
     return { rules: await this.routing.replaceRules(p, body.rules) };
   }
 

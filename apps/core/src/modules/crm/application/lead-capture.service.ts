@@ -5,8 +5,18 @@ import { Principal } from '../../../kernel/tenancy/principal';
 import { Attribution, Lead, LeadSource, ProductLine } from '../domain/lead';
 import { CRM_EVENTS } from '../domain/events';
 import {
-  ACTIVITY_REPOSITORY, ActivityRepository, CRM_PORT_FACTORY, ENTITLEMENT_CHECKER, EntitlementChecker, LEAD_REPOSITORY, LeadRepository,
-  PARTY_FACADE, PUBLIC_LEAD_GUARD, PartyFacade, PublicLeadGuard, Transaction,
+  ACTIVITY_REPOSITORY,
+  ActivityRepository,
+  CRM_PORT_FACTORY,
+  ENTITLEMENT_CHECKER,
+  EntitlementChecker,
+  LEAD_REPOSITORY,
+  LeadRepository,
+  PARTY_FACADE,
+  PUBLIC_LEAD_GUARD,
+  PartyFacade,
+  PublicLeadGuard,
+  Transaction,
 } from './ports';
 import { DefaultCrmPortFactory } from './crm-port';
 import { CrmContext } from './crm-context';
@@ -30,10 +40,17 @@ export interface CaptureLeadInput {
   touchRef?: string;
   /** CR-001: authenticated POST /leads only; /public/leads and imports never set it. Validated before any write. */
   customFields?: Record<string, string | number | boolean | null>;
-  consent: { granted: boolean; noticeVersion: string; channels: ConsentChannel[]; purposes: Array<'SERVICE' | 'MARKETING'>; evidenceRef?: string };
+  consent: {
+    granted: boolean;
+    noticeVersion: string;
+    channels: ConsentChannel[];
+    purposes: Array<'SERVICE' | 'MARKETING'>;
+    evidenceRef?: string;
+  };
 }
 
-export type CaptureOrigin = { kind: 'STAFF'; principal: Principal } | { kind: 'PUBLIC'; tenantId: string; ipHash: string; honeypot?: string };
+export type CaptureOrigin =
+  { kind: 'STAFF'; principal: Principal } | { kind: 'PUBLIC'; tenantId: string; ipHash: string; honeypot?: string };
 
 export interface CaptureLeadResult {
   leadId: string;
@@ -68,13 +85,18 @@ export class LeadCaptureService {
     const now = this.ctx.clock.now();
     await this.screen(tx, input, origin, now);
     // Staff capture only; validated before the party or lead is written (AC-CR001-08). Public forms and imports start as {}.
-    const customFields = origin.kind === 'STAFF' && input.customFields !== undefined
-      ? CustomFieldValidator.validate(await this.ctx.defs.activeFor(tx, 'lead'), input.customFields)
-      : undefined;
+    const customFields =
+      origin.kind === 'STAFF' && input.customFields !== undefined
+        ? CustomFieldValidator.validate(await this.ctx.defs.activeFor(tx, 'lead'), input.customFields)
+        : undefined;
     const by = origin.kind === 'STAFF' ? (origin.principal.memberId ?? 'staff') : 'customer';
     const party = await this.parties.findOrCreate(tx, {
-      kind: 'PERSON', displayName: input.fullName, contacts: contactsOf(input), preferredLanguage: input.language,
-      source: { kind: input.source === 'IMPORT' ? 'IMPORT' : 'LEAD' }, onDuplicate: 'link',
+      kind: 'PERSON',
+      displayName: input.fullName,
+      contacts: contactsOf(input),
+      preferredLanguage: input.language,
+      source: { kind: input.source === 'IMPORT' ? 'IMPORT' : 'LEAD' },
+      onDuplicate: 'link',
     });
     const existing = await this.leads.findOpenByParties(tx, relatedParties(party), new Date(now.getTime() - DEDUP_WINDOW_MS));
     const result = existing
@@ -95,15 +117,35 @@ export class LeadCaptureService {
     if (!input.consent.granted) throw new ValidationError('consent_required', 'Consent to be contacted is required');
   }
 
-  private async newLead(tx: Transaction, a: { input: CaptureLeadInput; partyId: string; now: Date; by: string; solo: boolean; customFields?: CustomFieldValues }): Promise<Omit<CaptureLeadResult, 'possibleMatches'>> {
+  private async newLead(
+    tx: Transaction,
+    a: { input: CaptureLeadInput; partyId: string; now: Date; by: string; solo: boolean; customFields?: CustomFieldValues },
+  ): Promise<Omit<CaptureLeadResult, 'possibleMatches'>> {
     const port = await this.ports.forTenant(tx.tenantId);
     const lead = Lead.capture({
-      id: this.ctx.ids.next('lead'), partyId: a.partyId, productInterest: a.input.productInterest, attribution: attributionOf(a.input, a.now),
-      pincode: a.input.pincode, language: a.input.language, customFields: a.customFields, now: a.now, by: a.by,
+      id: this.ctx.ids.next('lead'),
+      partyId: a.partyId,
+      productInterest: a.input.productInterest,
+      attribution: attributionOf(a.input, a.now),
+      pincode: a.input.pincode,
+      language: a.input.language,
+      customFields: a.customFields,
+      now: a.now,
+      by: a.by,
     });
     const p = lead.props;
     await this.ctx.recorder.record(tx, {
-      event: { type: CRM_EVENTS.LEAD_CREATED, subject: p.id, data: { leadId: p.id, partyId: p.partyId, source: p.attribution.source, campaignId: p.attribution.campaignId ?? null, productInterest: p.productInterest } },
+      event: {
+        type: CRM_EVENTS.LEAD_CREATED,
+        subject: p.id,
+        data: {
+          leadId: p.id,
+          partyId: p.partyId,
+          source: p.attribution.source,
+          campaignId: p.attribution.campaignId ?? null,
+          productInterest: p.productInterest,
+        },
+      },
       audit: { action: CRM_EVENTS.LEAD_CREATED, entityType: 'lead', entityId: p.id, metadata: { source: p.attribution.source } },
     });
     const decision = await this.assignment.route(tx, lead, port, { solo: a.solo });
@@ -111,25 +153,54 @@ export class LeadCaptureService {
   }
 
   /** Same person within 30 days: a RE_ENQUIRY on the open lead — no new lead, no re-routing (AC-M04-12). */
-  private async reEnquiry(tx: Transaction, lead: Lead, input: CaptureLeadInput, now: Date, by: string): Promise<Omit<CaptureLeadResult, 'possibleMatches'>> {
+  private async reEnquiry(
+    tx: Transaction,
+    lead: Lead,
+    input: CaptureLeadInput,
+    now: Date,
+    by: string,
+  ): Promise<Omit<CaptureLeadResult, 'possibleMatches'>> {
     lead.touch({ channel: input.source, ref: input.touchRef, at: now.toISOString() });
     await (await this.ports.forTenant(tx.tenantId)).saveLead(tx, lead);
     await this.activities.add(tx, {
-      id: this.ctx.ids.next('act'), subjectType: 'LEAD', subjectId: lead.props.id, kind: 'RE_ENQUIRY', occurredAt: now.toISOString(),
-      actorMemberId: by === 'customer' ? undefined : by, summary: `Re-enquiry via ${input.source}${input.campaignId ? ` (${input.campaignId})` : ''}`,
+      id: this.ctx.ids.next('act'),
+      subjectType: 'LEAD',
+      subjectId: lead.props.id,
+      kind: 'RE_ENQUIRY',
+      occurredAt: now.toISOString(),
+      actorMemberId: by === 'customer' ? undefined : by,
+      summary: `Re-enquiry via ${input.source}${input.campaignId ? ` (${input.campaignId})` : ''}`,
     });
-    return { leadId: lead.props.id, partyId: lead.props.partyId, deduplicated: true, ownerMemberId: lead.props.ownerMemberId, routingReason: 'Existing open lead' };
+    return {
+      leadId: lead.props.id,
+      partyId: lead.props.partyId,
+      deduplicated: true,
+      ownerMemberId: lead.props.ownerMemberId,
+      routingReason: 'Existing open lead',
+    };
   }
 
   /** One ledger record per purpose × channel; staff capture without consent records a marketing withdrawal. */
-  private async recordConsents(tx: Transaction, partyId: string, input: CaptureLeadInput, origin: CaptureOrigin, by: string): Promise<void> {
+  private async recordConsents(
+    tx: Transaction,
+    partyId: string,
+    input: CaptureLeadInput,
+    origin: CaptureOrigin,
+    by: string,
+  ): Promise<void> {
     const c = input.consent;
     const purposes = c.granted ? c.purposes : (['MARKETING'] as const);
     for (const purpose of purposes) {
       for (const channel of c.channels) {
         await this.parties.recordConsent(tx, {
-          partyId, purpose, channel, granted: c.granted, noticeVersion: c.noticeVersion, evidenceRef: c.evidenceRef,
-          source: origin.kind === 'PUBLIC' ? 'WEB_FORM' : input.source === 'IMPORT' ? 'IMPORT' : 'ASSISTED', capturedBy: by,
+          partyId,
+          purpose,
+          channel,
+          granted: c.granted,
+          noticeVersion: c.noticeVersion,
+          evidenceRef: c.evidenceRef,
+          source: origin.kind === 'PUBLIC' ? 'WEB_FORM' : input.source === 'IMPORT' ? 'IMPORT' : 'ASSISTED',
+          capturedBy: by,
         });
       }
     }
@@ -150,7 +221,11 @@ function relatedParties(party: { partyId: string; candidates: Array<{ partyAId: 
 function attributionOf(input: CaptureLeadInput, now: Date): Attribution {
   const touch = { channel: input.source, ref: input.touchRef, at: now.toISOString() };
   return {
-    source: input.source, campaignId: input.campaignId, firstTouch: touch, lastTouch: touch,
-    referrerPartyId: input.referrerPartyId, micrositeMemberId: input.micrositeMemberId,
+    source: input.source,
+    campaignId: input.campaignId,
+    firstTouch: touch,
+    lastTouch: touch,
+    referrerPartyId: input.referrerPartyId,
+    micrositeMemberId: input.micrositeMemberId,
   };
 }

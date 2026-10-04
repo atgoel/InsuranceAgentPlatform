@@ -14,8 +14,27 @@ import { CatalogueModule } from '../catalogue/catalogue.module';
 import { StageRuleSet } from './domain/stage-rules';
 import { DefaultCadencePolicy } from './domain/cadence';
 import {
-  ACTIVITY_REPOSITORY, ActivityRepository, CADENCE_POLICY, CRM_PORT_FACTORY, LEAD_IMPORT_REPOSITORY, LEAD_REPOSITORY, LeadImportRepository, LeadRepository, MY_WORK_CONTRIBUTORS,
-  OPPORTUNITY_LOOKUP, OPPORTUNITY_REPOSITORY, OpportunityRepository, PARTY_FACADE, POS_ELIGIBILITY, PUBLIC_LEAD_GUARD, PartyFacade, PublicLeadGuard, ROUTING_RULE_REPOSITORY, RoutingRuleRepository, STAGE_RULES, TASK_REPOSITORY,
+  ACTIVITY_REPOSITORY,
+  ActivityRepository,
+  CADENCE_POLICY,
+  CRM_PORT_FACTORY,
+  LEAD_IMPORT_REPOSITORY,
+  LEAD_REPOSITORY,
+  LeadImportRepository,
+  LeadRepository,
+  MY_WORK_CONTRIBUTORS,
+  OPPORTUNITY_LOOKUP,
+  OPPORTUNITY_REPOSITORY,
+  OpportunityRepository,
+  PARTY_FACADE,
+  POS_ELIGIBILITY,
+  PUBLIC_LEAD_GUARD,
+  PartyFacade,
+  PublicLeadGuard,
+  ROUTING_RULE_REPOSITORY,
+  RoutingRuleRepository,
+  STAGE_RULES,
+  TASK_REPOSITORY,
   TaskRepository,
 } from './application/ports';
 import { CrmContext } from './application/crm-context';
@@ -37,23 +56,55 @@ import { SyncRecordSource } from './application/sync-record.source';
 import { TwentyOwnerChange } from './application/twenty-owner-change';
 import { TwentyWebhookService } from './application/twenty-webhook.service';
 import { SYNC_REQUESTED } from './application/crm-port';
-import { CRM_SYNC_STATE_REPOSITORY, CrmSyncStateRepository, SyncObject, TWENTY_CLIENT, TWENTY_WORKSPACE_DIRECTORY } from './application/twenty-sync.ports';
+import {
+  CRM_SYNC_STATE_REPOSITORY,
+  CrmSyncStateRepository,
+  SyncObject,
+  TWENTY_CLIENT,
+  TWENTY_WORKSPACE_DIRECTORY,
+} from './application/twenty-sync.ports';
 import { InMemoryCrmSyncStateRepository } from './infrastructure/twenty/in-memory-sync-state.repository';
 import { DerivedTwentyWorkspaceDirectory } from './infrastructure/twenty/derived-workspace.directory';
 import { FakeTwentyClient } from './infrastructure/twenty/fake-twenty.client';
 import { TwentyWebhookController } from './api/twenty-webhook.controller';
 import {
-  InMemoryActivityRepository, InMemoryLeadImportRepository, InMemoryLeadRepository, InMemoryOpportunityRepository, InMemoryPublicLeadGuard,
-  InMemoryRoutingRuleRepository, InMemoryTaskRepository,
+  InMemoryActivityRepository,
+  InMemoryLeadImportRepository,
+  InMemoryLeadRepository,
+  InMemoryOpportunityRepository,
+  InMemoryPublicLeadGuard,
+  InMemoryRoutingRuleRepository,
+  InMemoryTaskRepository,
 } from './infrastructure/in-memory-crm.repositories';
 import {
-  PgActivityRepository, PgCrmSyncStateRepository, PgLeadImportRepository, PgLeadRepository, PgOpportunityRepository, PgPublicLeadGuard, PgRoutingRuleRepository, PgTaskRepository,
+  PgActivityRepository,
+  PgCrmSyncStateRepository,
+  PgLeadImportRepository,
+  PgLeadRepository,
+  PgOpportunityRepository,
+  PgPublicLeadGuard,
+  PgRoutingRuleRepository,
+  PgTaskRepository,
 } from './infrastructure/pg-crm.repositories';
 import { LeadsController } from './api/leads.controller';
 import { PublicLeadsController } from './api/public-leads.controller';
-import { LeadImportsController, MyWorkController, OpportunitiesController, RoutingController, TasksController } from './api/engagement.controllers';
+import {
+  LeadImportsController,
+  MyWorkController,
+  OpportunitiesController,
+  RoutingController,
+  TasksController,
+} from './api/engagement.controllers';
 
-const SELLER = ['crm.lead.read', 'crm.lead.write', 'crm.lead.convert', 'crm.activity.write', 'crm.task.*', 'crm.opportunity.read', 'crm.opportunity.write'];
+const SELLER = [
+  'crm.lead.read',
+  'crm.lead.write',
+  'crm.lead.convert',
+  'crm.activity.write',
+  'crm.task.*',
+  'crm.opportunity.read',
+  'crm.opportunity.write',
+];
 const MANAGER = [...SELLER, 'crm.lead.assign', 'crm.routing.read', 'crm.import'];
 
 /** Role → permission rows contributed by M04 (M04 §6). */
@@ -76,14 +127,46 @@ function pick<T>(provide: symbol, memory: () => T, pgImpl: () => T): Provider {
 }
 
 const adapters: Provider[] = [
-  pick<LeadRepository>(LEAD_REPOSITORY, () => new InMemoryLeadRepository(), () => new PgLeadRepository()),
-  pick<ActivityRepository>(ACTIVITY_REPOSITORY, () => new InMemoryActivityRepository(), () => new PgActivityRepository()),
-  pick<TaskRepository>(TASK_REPOSITORY, () => new InMemoryTaskRepository(), () => new PgTaskRepository()),
-  pick<OpportunityRepository>(OPPORTUNITY_REPOSITORY, () => new InMemoryOpportunityRepository(), () => new PgOpportunityRepository()),
-  pick<RoutingRuleRepository>(ROUTING_RULE_REPOSITORY, () => new InMemoryRoutingRuleRepository(), () => new PgRoutingRuleRepository()),
-  pick<LeadImportRepository>(LEAD_IMPORT_REPOSITORY, () => new InMemoryLeadImportRepository(), () => new PgLeadImportRepository()),
-  pick<PublicLeadGuard>(PUBLIC_LEAD_GUARD, () => new InMemoryPublicLeadGuard(), () => new PgPublicLeadGuard()),
-  pick<CrmSyncStateRepository>(CRM_SYNC_STATE_REPOSITORY, () => new InMemoryCrmSyncStateRepository(), () => new PgCrmSyncStateRepository()),
+  pick<LeadRepository>(
+    LEAD_REPOSITORY,
+    () => new InMemoryLeadRepository(),
+    () => new PgLeadRepository(),
+  ),
+  pick<ActivityRepository>(
+    ACTIVITY_REPOSITORY,
+    () => new InMemoryActivityRepository(),
+    () => new PgActivityRepository(),
+  ),
+  pick<TaskRepository>(
+    TASK_REPOSITORY,
+    () => new InMemoryTaskRepository(),
+    () => new PgTaskRepository(),
+  ),
+  pick<OpportunityRepository>(
+    OPPORTUNITY_REPOSITORY,
+    () => new InMemoryOpportunityRepository(),
+    () => new PgOpportunityRepository(),
+  ),
+  pick<RoutingRuleRepository>(
+    ROUTING_RULE_REPOSITORY,
+    () => new InMemoryRoutingRuleRepository(),
+    () => new PgRoutingRuleRepository(),
+  ),
+  pick<LeadImportRepository>(
+    LEAD_IMPORT_REPOSITORY,
+    () => new InMemoryLeadImportRepository(),
+    () => new PgLeadImportRepository(),
+  ),
+  pick<PublicLeadGuard>(
+    PUBLIC_LEAD_GUARD,
+    () => new InMemoryPublicLeadGuard(),
+    () => new PgPublicLeadGuard(),
+  ),
+  pick<CrmSyncStateRepository>(
+    CRM_SYNC_STATE_REPOSITORY,
+    () => new InMemoryCrmSyncStateRepository(),
+    () => new PgCrmSyncStateRepository(),
+  ),
   { provide: TWENTY_WORKSPACE_DIRECTORY, useClass: DerivedTwentyWorkspaceDirectory },
   // The HTTP client (infrastructure/twenty/http-twenty.client.ts) is wired once Twenty hosting and the secret manager exist.
   FakeTwentyClient,
@@ -103,8 +186,28 @@ const policies: Provider[] = [
 ];
 
 const services: Provider[] = [
-  RenewalOpportunityService, {provide:RENEWAL_OPPORTUNITY_PORT,useExisting:RenewalOpportunityService}, CrmContext, RoutingService, LeadAssignment, LeadCaptureService, LeadViews, LeadDeps, LeadService, ActivityService, TaskService,
-  ConversionService, OpportunityService, { provide: OPPORTUNITY_LOOKUP, useExisting: OpportunityService }, MyWorkService, LeadImportService, CrmSubscribers, SlaSweepJob, CrmSyncWorker, SyncRecordSource, TwentyWebhookService, TwentyOwnerChange,
+  RenewalOpportunityService,
+  { provide: RENEWAL_OPPORTUNITY_PORT, useExisting: RenewalOpportunityService },
+  CrmContext,
+  RoutingService,
+  LeadAssignment,
+  LeadCaptureService,
+  LeadViews,
+  LeadDeps,
+  LeadService,
+  ActivityService,
+  TaskService,
+  ConversionService,
+  OpportunityService,
+  { provide: OPPORTUNITY_LOOKUP, useExisting: OpportunityService },
+  MyWorkService,
+  LeadImportService,
+  CrmSubscribers,
+  SlaSweepJob,
+  CrmSyncWorker,
+  SyncRecordSource,
+  TwentyWebhookService,
+  TwentyOwnerChange,
 ];
 
 /**
@@ -113,7 +216,16 @@ const services: Provider[] = [
  */
 @Module({
   imports: [TenancyModule, DistributionModule, PartyModule, CatalogueModule],
-  controllers: [LeadsController, PublicLeadsController, OpportunitiesController, TasksController, RoutingController, MyWorkController, LeadImportsController, TwentyWebhookController],
+  controllers: [
+    LeadsController,
+    PublicLeadsController,
+    OpportunitiesController,
+    TasksController,
+    RoutingController,
+    MyWorkController,
+    LeadImportsController,
+    TwentyWebhookController,
+  ],
   providers: [...adapters, ...policies, ...services],
   exports: [SlaSweepJob, TaskService, OPPORTUNITY_LOOKUP, RENEWAL_OPPORTUNITY_PORT, MyWorkService],
 })
@@ -129,11 +241,15 @@ export class CrmModule implements OnModuleInit {
     for (const [role, perms] of Object.entries(CRM_PERMISSIONS)) this.permissions.grant(role, perms);
     const on = <T>(type: string, handler: (e: DomainEvent<T>) => Promise<boolean>) =>
       this.bus.subscribe(type, async (e) => void (await handler(e as DomainEvent<T>)), `crm:${type}`);
-    on('distribution.member.exited', (e) => this.subscribers.onMemberExited(e as DomainEvent<{ memberId?: string; transferToMemberId?: string | null }>));
+    on('distribution.member.exited', (e) =>
+      this.subscribers.onMemberExited(e as DomainEvent<{ memberId?: string; transferToMemberId?: string | null }>),
+    );
     on('party.party.merged', (e) => this.subscribers.onPartyMerged(e as DomainEvent<{ survivorId: string; mergedId: string }>));
     // Rethrows on failure so the outbox relay retries the sync (dead-letter after 3 attempts).
     on(SYNC_REQUESTED, (e) => this.syncWorker.handle(e as DomainEvent<{ object: SyncObject; id: string }>));
     on('quote.request.shared', (e) => this.subscribers.onQuoteShared(e as DomainEvent<{ opportunityId?: string }>));
-    on('proposal.policy.issued', (e) => this.subscribers.onPolicyIssued(e as DomainEvent<{ proposalId: string; opportunityId?: string; policySaleId: string }>));
+    on('proposal.policy.issued', (e) =>
+      this.subscribers.onPolicyIssued(e as DomainEvent<{ proposalId: string; opportunityId?: string; policySaleId: string }>),
+    );
   }
 }

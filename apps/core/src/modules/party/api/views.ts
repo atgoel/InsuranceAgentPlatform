@@ -7,5 +7,15 @@ export function householdView(h: Household) {
 
 /** Consent evidence: ids, enums, versions and the capturing actor (member id or 'customer'). */
 export function consentView(r: ConsentRecord) {
-  return { id: r.id, purpose: r.purpose, channel: r.channel, granted: r.granted, noticeVersion: r.noticeVersion, source: r.source, evidenceRef: r.evidenceRef, capturedBy: r.capturedBy, occurredAt: r.occurredAt };
+  return {
+    id: r.id,
+    purpose: r.purpose,
+    channel: r.channel,
+    granted: r.granted,
+    noticeVersion: r.noticeVersion,
+    source: r.source,
+    evidenceRef: r.evidenceRef,
+    capturedBy: r.capturedBy,
+    occurredAt: r.occurredAt,
+  };
 }

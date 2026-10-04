@@ -1,10 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext, Inject } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import {
-  UnauthenticatedError,
-  ForbiddenError,
-  NotFoundError,
-} from '../errors/domain-errors';
+import { UnauthenticatedError, ForbiddenError, NotFoundError } from '../errors/domain-errors';
 import { IS_PUBLIC_KEY, IS_OPERATOR_ONLY_KEY } from './decorators';
 import { TOKEN_VERIFIER, TENANT_RESOLVER } from '../tokens';
 import { TokenVerifier, Principal } from './jwt';
@@ -40,10 +36,7 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest() as Record<string, unknown> & { get: (name: string) => string | undefined };
     const req = request as Record<string, unknown> & { principal?: Principal };
 
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [context.getHandler(), context.getClass()]);
 
     if (isPublic) {
       await this.handlePublicEndpoint(request);
@@ -52,10 +45,7 @@ export class AuthGuard implements CanActivate {
 
     const principal = await this.verifyAuthorization(request);
 
-    const isOperatorOnly = this.reflector.getAllAndOverride<boolean>(IS_OPERATOR_ONLY_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const isOperatorOnly = this.reflector.getAllAndOverride<boolean>(IS_OPERATOR_ONLY_KEY, [context.getHandler(), context.getClass()]);
 
     if (isOperatorOnly) {
       return this.handleOperatorOnly(req, principal);
@@ -99,7 +89,11 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  private async handleTenantValidation(req: Record<string, unknown> & { principal?: Principal }, principal: Principal, request: Record<string, unknown> & { get: (name: string) => string | undefined }): Promise<boolean> {
+  private async handleTenantValidation(
+    req: Record<string, unknown> & { principal?: Principal },
+    principal: Principal,
+    request: Record<string, unknown> & { get: (name: string) => string | undefined },
+  ): Promise<boolean> {
     const host = request.get('Host') as string | undefined;
     if (!host) {
       throw new UnauthenticatedError();

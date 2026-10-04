@@ -28,7 +28,9 @@ describe('AC-M00-15 Tracer', () => {
   it('records outcome ok', async () => {
     const ctx = RequestContext.create({ startedAtMs: 0 });
     await RequestContext.run(ctx, async () => {
-      await tracer.span('test', async () => { return; });
+      await tracer.span('test', async () => {
+        return;
+      });
       const entry = ctx.buffer.entries()[0];
       expect(entry.ctx?.outcome).toBe('ok');
     });
@@ -50,8 +52,10 @@ describe('AC-M00-15 Tracer', () => {
   });
 
   it('rethrows errors', async () => {
-    await expect(tracer.span('test', async () => {
-      throw new Error('test');
-    })).rejects.toThrow('test');
+    await expect(
+      tracer.span('test', async () => {
+        throw new Error('test');
+      }),
+    ).rejects.toThrow('test');
   });
 });

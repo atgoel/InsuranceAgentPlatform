@@ -11,7 +11,8 @@ function pg(tx: Transaction): PgTransaction {
 }
 
 const iso = (d: Date | null): string | undefined => (d ? d.toISOString() : undefined);
-const opt = <K extends string, V>(key: K, value: V | null | undefined): { [P in K]?: V } => (value === null || value === undefined ? {} : ({ [key]: value } as { [P in K]?: V }));
+const opt = <K extends string, V>(key: K, value: V | null | undefined): { [P in K]?: V } =>
+  value === null || value === undefined ? {} : ({ [key]: value } as { [P in K]?: V });
 const nul = <T>(v: T | undefined): T | null => v ?? null;
 const json = (v: unknown): string => JSON.stringify(v);
 
@@ -22,19 +23,41 @@ function paise(value: string | number, column: string): number {
   return n;
 }
 
-const mismatch = (entity: string): PreconditionFailedError => new PreconditionFailedError('version_mismatch', `The ${entity} was changed by someone else; reload and retry`);
+const mismatch = (entity: string): PreconditionFailedError =>
+  new PreconditionFailedError('version_mismatch', `The ${entity} was changed by someone else; reload and retry`);
 
 interface AdviceRow {
-  id: string; party_id: string; opportunity_id: string | null; advisor_member_id: string; status: AdviceRecordProps['status']; scope: AdviceRecordProps['scope'];
-  calculator_runs: AdviceRecordProps['calculatorRuns']; recommended: AdviceRecordProps['recommended']; customer_choice: AdviceRecordProps['customerChoice'] | null;
-  suitability_notes: string; finalised_at: Date | null; created_at: Date; version: number;
+  id: string;
+  party_id: string;
+  opportunity_id: string | null;
+  advisor_member_id: string;
+  status: AdviceRecordProps['status'];
+  scope: AdviceRecordProps['scope'];
+  calculator_runs: AdviceRecordProps['calculatorRuns'];
+  recommended: AdviceRecordProps['recommended'];
+  customer_choice: AdviceRecordProps['customerChoice'] | null;
+  suitability_notes: string;
+  finalised_at: Date | null;
+  created_at: Date;
+  version: number;
 }
 
-const toAdvice = (r: AdviceRow): AdviceRecord => AdviceRecord.restore({
-  id: r.id, partyId: r.party_id, ...opt('opportunityId', r.opportunity_id), advisorMemberId: r.advisor_member_id, calculatorRuns: r.calculator_runs, scope: r.scope,
-  recommended: r.recommended, ...opt('customerChoice', r.customer_choice), suitabilityNotes: r.suitability_notes, status: r.status, ...opt('finalisedAt', iso(r.finalised_at)),
-  version: r.version, createdAt: r.created_at.toISOString(),
-});
+const toAdvice = (r: AdviceRow): AdviceRecord =>
+  AdviceRecord.restore({
+    id: r.id,
+    partyId: r.party_id,
+    ...opt('opportunityId', r.opportunity_id),
+    advisorMemberId: r.advisor_member_id,
+    calculatorRuns: r.calculator_runs,
+    scope: r.scope,
+    recommended: r.recommended,
+    ...opt('customerChoice', r.customer_choice),
+    suitabilityNotes: r.suitability_notes,
+    status: r.status,
+    ...opt('finalisedAt', iso(r.finalised_at)),
+    version: r.version,
+    createdAt: r.created_at.toISOString(),
+  });
 
 export class PgAdviceRepository implements AdviceRepository {
   async get(tx: Transaction, id: string): Promise<AdviceRecord | undefined> {
@@ -56,54 +79,128 @@ export class PgAdviceRepository implements AdviceRepository {
          recommended = excluded.recommended, customer_choice = excluded.customer_choice, suitability_notes = excluded.suitability_notes, finalised_at = excluded.finalised_at,
          updated_at = excluded.updated_at, version = excluded.version
        where advice_record.version = excluded.version - 1`,
-      [p.id, tx.tenantId, p.partyId, nul(p.opportunityId), p.advisorMemberId, p.status, json(p.scope), json(p.calculatorRuns), json(p.recommended),
-        p.customerChoice ? json(p.customerChoice) : null, p.suitabilityNotes, nul(p.finalisedAt), p.createdAt, p.version + 1]);
+      [
+        p.id,
+        tx.tenantId,
+        p.partyId,
+        nul(p.opportunityId),
+        p.advisorMemberId,
+        p.status,
+        json(p.scope),
+        json(p.calculatorRuns),
+        json(p.recommended),
+        p.customerChoice ? json(p.customerChoice) : null,
+        p.suitabilityNotes,
+        nul(p.finalisedAt),
+        p.createdAt,
+        p.version + 1,
+      ],
+    );
     if (rowCount === 0) throw mismatch('advice record');
     a.markSaved();
   }
 
   async forParty(tx: Transaction, partyId: string): Promise<AdviceRecord[]> {
-    const { rows } = await pg(tx).query<AdviceRow>('select * from advice_record where party_id = $1 order by created_at desc, id desc', [partyId]);
+    const { rows } = await pg(tx).query<AdviceRow>('select * from advice_record where party_id = $1 order by created_at desc, id desc', [
+      partyId,
+    ]);
     return rows.map(toAdvice);
   }
 }
 
 interface RequestRow {
-  id: string; opportunity_id: string; party_id: string; line: QuoteRequestProps['line']; insured_party_ids: string[]; requirements: Record<string, string>;
-  advice_record_id: string | null; status: QuoteRequestProps['status']; selected_option_id: string | null; shared_at: Date | null; selected_at: Date | null; created_at: Date; version: number;
+  id: string;
+  opportunity_id: string;
+  party_id: string;
+  line: QuoteRequestProps['line'];
+  insured_party_ids: string[];
+  requirements: Record<string, string>;
+  advice_record_id: string | null;
+  status: QuoteRequestProps['status'];
+  selected_option_id: string | null;
+  shared_at: Date | null;
+  selected_at: Date | null;
+  created_at: Date;
+  version: number;
 }
 
 interface OptionRow {
-  id: string; quote_request_id: string; version_id: string; insurer_id: string; source: QuoteOptionProps['source']; insurer_quote_ref: string | null; sum_assured_paise: string;
-  policy_term_years: number | null; premium_paying_term_years: number | null; premium_base_paise: string; premium_riders_paise: string; premium_tax_paise: string; premium_total_paise: string;
-  premium_frequency: QuoteOptionProps['premium']['frequency']; coverage: QuoteOptionProps['coverage']; exclusions: string[]; waiting_periods: QuoteOptionProps['waitingPeriods'];
-  assumptions: Record<string, string>; valid_until: string; captured_by: string; captured_at: Date;
+  id: string;
+  quote_request_id: string;
+  version_id: string;
+  insurer_id: string;
+  source: QuoteOptionProps['source'];
+  insurer_quote_ref: string | null;
+  sum_assured_paise: string;
+  policy_term_years: number | null;
+  premium_paying_term_years: number | null;
+  premium_base_paise: string;
+  premium_riders_paise: string;
+  premium_tax_paise: string;
+  premium_total_paise: string;
+  premium_frequency: QuoteOptionProps['premium']['frequency'];
+  coverage: QuoteOptionProps['coverage'];
+  exclusions: string[];
+  waiting_periods: QuoteOptionProps['waitingPeriods'];
+  assumptions: Record<string, string>;
+  valid_until: string;
+  captured_by: string;
+  captured_at: Date;
 }
 
 const OPTION_COLUMNS = `id, quote_request_id, version_id, insurer_id, source, insurer_quote_ref, sum_assured_paise, policy_term_years, premium_paying_term_years, premium_base_paise,
   premium_riders_paise, premium_tax_paise, premium_total_paise, premium_frequency, coverage, exclusions, waiting_periods, assumptions, valid_until::text as valid_until, captured_by, captured_at`;
 
 const toOption = (r: OptionRow): QuoteOptionProps => ({
-  id: r.id, versionId: r.version_id, insurerId: r.insurer_id, source: r.source, ...opt('insurerQuoteRef', r.insurer_quote_ref), sumAssuredPaise: paise(r.sum_assured_paise, 'sum_assured_paise'),
-  ...opt('policyTermYears', r.policy_term_years), ...opt('premiumPayingTermYears', r.premium_paying_term_years),
+  id: r.id,
+  versionId: r.version_id,
+  insurerId: r.insurer_id,
+  source: r.source,
+  ...opt('insurerQuoteRef', r.insurer_quote_ref),
+  sumAssuredPaise: paise(r.sum_assured_paise, 'sum_assured_paise'),
+  ...opt('policyTermYears', r.policy_term_years),
+  ...opt('premiumPayingTermYears', r.premium_paying_term_years),
   premium: {
-    basePaise: paise(r.premium_base_paise, 'premium_base_paise'), ridersPaise: paise(r.premium_riders_paise, 'premium_riders_paise'), taxPaise: paise(r.premium_tax_paise, 'premium_tax_paise'),
-    totalPaise: paise(r.premium_total_paise, 'premium_total_paise'), frequency: r.premium_frequency,
+    basePaise: paise(r.premium_base_paise, 'premium_base_paise'),
+    ridersPaise: paise(r.premium_riders_paise, 'premium_riders_paise'),
+    taxPaise: paise(r.premium_tax_paise, 'premium_tax_paise'),
+    totalPaise: paise(r.premium_total_paise, 'premium_total_paise'),
+    frequency: r.premium_frequency,
   },
-  coverage: r.coverage, exclusions: r.exclusions, waitingPeriods: r.waiting_periods, assumptions: r.assumptions, validUntil: r.valid_until, capturedBy: r.captured_by, capturedAt: r.captured_at.toISOString(),
+  coverage: r.coverage,
+  exclusions: r.exclusions,
+  waitingPeriods: r.waiting_periods,
+  assumptions: r.assumptions,
+  validUntil: r.valid_until,
+  capturedBy: r.captured_by,
+  capturedAt: r.captured_at.toISOString(),
 });
 
-const toRequest = (r: RequestRow, options: QuoteOptionProps[]): QuoteRequest => QuoteRequest.restore({
-  id: r.id, opportunityId: r.opportunity_id, partyId: r.party_id, line: r.line, insuredPartyIds: r.insured_party_ids, requirements: r.requirements,
-  ...opt('adviceRecordId', r.advice_record_id), options, status: r.status, ...opt('selectedOptionId', r.selected_option_id), ...opt('sharedAt', iso(r.shared_at)),
-  ...opt('selectedAt', iso(r.selected_at)), createdAt: r.created_at.toISOString(), version: r.version,
-});
+const toRequest = (r: RequestRow, options: QuoteOptionProps[]): QuoteRequest =>
+  QuoteRequest.restore({
+    id: r.id,
+    opportunityId: r.opportunity_id,
+    partyId: r.party_id,
+    line: r.line,
+    insuredPartyIds: r.insured_party_ids,
+    requirements: r.requirements,
+    ...opt('adviceRecordId', r.advice_record_id),
+    options,
+    status: r.status,
+    ...opt('selectedOptionId', r.selected_option_id),
+    ...opt('sharedAt', iso(r.shared_at)),
+    ...opt('selectedAt', iso(r.selected_at)),
+    createdAt: r.created_at.toISOString(),
+    version: r.version,
+  });
 
 export class PgQuoteRepository implements QuoteRepository {
   private async hydrate(q: PgTransaction, rows: RequestRow[]): Promise<QuoteRequest[]> {
     if (rows.length === 0) return [];
     const { rows: optionRows } = await q.query<OptionRow>(
-      `select ${OPTION_COLUMNS} from quote_option where quote_request_id = any($1::text[]) order by quote_request_id, position`, [rows.map((r) => r.id)]);
+      `select ${OPTION_COLUMNS} from quote_option where quote_request_id = any($1::text[]) order by quote_request_id, position`,
+      [rows.map((r) => r.id)],
+    );
     return rows.map((r) => toRequest(r, optionRows.filter((o) => o.quote_request_id === r.id).map(toOption)));
   }
 
@@ -125,8 +222,24 @@ export class PgQuoteRepository implements QuoteRepository {
          selected_at = excluded.selected_at, insured_party_ids = excluded.insured_party_ids, requirements = excluded.requirements, latest_valid_until = excluded.latest_valid_until,
          updated_at = excluded.updated_at, version = excluded.version
        where quote_request.version = excluded.version - 1`,
-      [p.id, tx.tenantId, p.opportunityId, p.partyId, p.line, json(p.insuredPartyIds), json(p.requirements), nul(p.adviceRecordId), p.status, nul(p.selectedOptionId),
-        nul(p.sharedAt), nul(p.selectedAt), latest, p.createdAt, p.version + 1]);
+      [
+        p.id,
+        tx.tenantId,
+        p.opportunityId,
+        p.partyId,
+        p.line,
+        json(p.insuredPartyIds),
+        json(p.requirements),
+        nul(p.adviceRecordId),
+        p.status,
+        nul(p.selectedOptionId),
+        nul(p.sharedAt),
+        nul(p.selectedAt),
+        latest,
+        p.createdAt,
+        p.version + 1,
+      ],
+    );
     if (rowCount === 0) throw mismatch('quote');
     await q.query('delete from quote_option where quote_request_id = $1 and id <> all($2::text[])', [p.id, p.options.map((o) => o.id)]);
     for (const [position, o] of p.options.entries()) {
@@ -140,16 +253,41 @@ export class PgQuoteRepository implements QuoteRepository {
            premium_tax_paise = excluded.premium_tax_paise, premium_total_paise = excluded.premium_total_paise, premium_frequency = excluded.premium_frequency, coverage = excluded.coverage,
            exclusions = excluded.exclusions, waiting_periods = excluded.waiting_periods, assumptions = excluded.assumptions, valid_until = excluded.valid_until,
            captured_by = excluded.captured_by, captured_at = excluded.captured_at`,
-        [o.id, tx.tenantId, p.id, position, o.versionId, o.insurerId, o.source, nul(o.insurerQuoteRef), o.sumAssuredPaise, nul(o.policyTermYears), nul(o.premiumPayingTermYears),
-          o.premium.basePaise, o.premium.ridersPaise, o.premium.taxPaise, o.premium.totalPaise, o.premium.frequency, json(o.coverage), json(o.exclusions), json(o.waitingPeriods),
-          json(o.assumptions), o.validUntil, o.capturedBy, o.capturedAt]);
+        [
+          o.id,
+          tx.tenantId,
+          p.id,
+          position,
+          o.versionId,
+          o.insurerId,
+          o.source,
+          nul(o.insurerQuoteRef),
+          o.sumAssuredPaise,
+          nul(o.policyTermYears),
+          nul(o.premiumPayingTermYears),
+          o.premium.basePaise,
+          o.premium.ridersPaise,
+          o.premium.taxPaise,
+          o.premium.totalPaise,
+          o.premium.frequency,
+          json(o.coverage),
+          json(o.exclusions),
+          json(o.waitingPeriods),
+          json(o.assumptions),
+          o.validUntil,
+          o.capturedBy,
+          o.capturedAt,
+        ],
+      );
     }
     quote.markSaved();
   }
 
   async forOpportunity(tx: Transaction, opportunityId: string): Promise<QuoteRequest[]> {
     const q = pg(tx);
-    const { rows } = await q.query<RequestRow>('select * from quote_request where opportunity_id = $1 order by created_at desc, id desc', [opportunityId]);
+    const { rows } = await q.query<RequestRow>('select * from quote_request where opportunity_id = $1 order by created_at desc, id desc', [
+      opportunityId,
+    ]);
     return this.hydrate(q, rows);
   }
 
@@ -165,19 +303,35 @@ export class PgQuoteRepository implements QuoteRepository {
   async openWithValidityBefore(tx: Transaction, date: string, limit: number): Promise<QuoteRequest[]> {
     const q = pg(tx);
     const { rows } = await q.query<RequestRow>(
-      `select * from quote_request where status in ('OPEN','SHARED') and latest_valid_until < $1::date order by latest_valid_until, id limit $2`, [date, limit]);
+      `select * from quote_request where status in ('OPEN','SHARED') and latest_valid_until < $1::date order by latest_valid_until, id limit $2`,
+      [date, limit],
+    );
     return this.hydrate(q, rows);
   }
 }
 
 interface BiRow {
-  id: string; quote_option_id: string; document_ref: string; insurer_bi_version: string; uploaded_by: string; uploaded_at: Date; acknowledgement: BiRecordProps['acknowledgement'] | null; version: number;
+  id: string;
+  quote_option_id: string;
+  document_ref: string;
+  insurer_bi_version: string;
+  uploaded_by: string;
+  uploaded_at: Date;
+  acknowledgement: BiRecordProps['acknowledgement'] | null;
+  version: number;
 }
 
-const toBi = (r: BiRow): BiRecord => BiRecord.restore({
-  id: r.id, quoteOptionId: r.quote_option_id, documentRef: r.document_ref, insurerBiVersion: r.insurer_bi_version, uploadedBy: r.uploaded_by, uploadedAt: r.uploaded_at.toISOString(),
-  ...opt('acknowledgement', r.acknowledgement), version: r.version,
-});
+const toBi = (r: BiRow): BiRecord =>
+  BiRecord.restore({
+    id: r.id,
+    quoteOptionId: r.quote_option_id,
+    documentRef: r.document_ref,
+    insurerBiVersion: r.insurer_bi_version,
+    uploadedBy: r.uploaded_by,
+    uploadedAt: r.uploaded_at.toISOString(),
+    ...opt('acknowledgement', r.acknowledgement),
+    version: r.version,
+  });
 
 export class PgBiRepository implements BiRepository {
   async get(tx: Transaction, id: string): Promise<BiRecord | undefined> {
@@ -192,7 +346,18 @@ export class PgBiRepository implements BiRepository {
        values ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9)
        on conflict (id) do update set document_ref = excluded.document_ref, insurer_bi_version = excluded.insurer_bi_version, acknowledgement = excluded.acknowledgement, version = excluded.version
        where bi_record.version = excluded.version - 1`,
-      [p.id, tx.tenantId, p.quoteOptionId, p.documentRef, p.insurerBiVersion, p.uploadedBy, p.uploadedAt, p.acknowledgement ? json(p.acknowledgement) : null, p.version + 1]);
+      [
+        p.id,
+        tx.tenantId,
+        p.quoteOptionId,
+        p.documentRef,
+        p.insurerBiVersion,
+        p.uploadedBy,
+        p.uploadedAt,
+        p.acknowledgement ? json(p.acknowledgement) : null,
+        p.version + 1,
+      ],
+    );
     if (rowCount === 0) throw mismatch('benefit illustration');
     b.markSaved();
   }
@@ -204,7 +369,14 @@ export class PgBiRepository implements BiRepository {
 }
 
 interface RunRow {
-  id: string; party_id: string; calculator: string; inputs: Record<string, unknown>; outputs: Record<string, unknown>; assumptions_version: string; ran_by: string; ran_at: Date;
+  id: string;
+  party_id: string;
+  calculator: string;
+  inputs: Record<string, unknown>;
+  outputs: Record<string, unknown>;
+  assumptions_version: string;
+  ran_by: string;
+  ran_at: Date;
 }
 
 /** Append-only: the app role holds no UPDATE/DELETE on calculator_run. */
@@ -212,13 +384,24 @@ export class PgCalculatorRunRepository implements CalculatorRunRepository {
   async add(tx: Transaction, run: CalculatorRun): Promise<void> {
     await pg(tx).query(
       `insert into calculator_run (id, tenant_id, party_id, calculator, inputs, outputs, assumptions_version, ran_by, ran_at) values ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7,$8,$9)`,
-      [run.id, tx.tenantId, run.partyId, run.calculator, json(run.inputs), json(run.outputs), run.assumptionsVersion, run.ranBy, run.ranAt]);
+      [run.id, tx.tenantId, run.partyId, run.calculator, json(run.inputs), json(run.outputs), run.assumptionsVersion, run.ranBy, run.ranAt],
+    );
   }
 
   async forParty(tx: Transaction, partyId: string, limit: number): Promise<CalculatorRun[]> {
-    const { rows } = await pg(tx).query<RunRow>('select * from calculator_run where party_id = $1 order by ran_at desc, id desc limit $2', [partyId, limit]);
+    const { rows } = await pg(tx).query<RunRow>('select * from calculator_run where party_id = $1 order by ran_at desc, id desc limit $2', [
+      partyId,
+      limit,
+    ]);
     return rows.map((r) => ({
-      id: r.id, partyId: r.party_id, calculator: r.calculator, inputs: r.inputs, outputs: r.outputs, assumptionsVersion: r.assumptions_version, ranBy: r.ran_by, ranAt: r.ran_at.toISOString(),
+      id: r.id,
+      partyId: r.party_id,
+      calculator: r.calculator,
+      inputs: r.inputs,
+      outputs: r.outputs,
+      assumptionsVersion: r.assumptions_version,
+      ranBy: r.ran_by,
+      ranAt: r.ran_at.toISOString(),
     }));
   }
 }

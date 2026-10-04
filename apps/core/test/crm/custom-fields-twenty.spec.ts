@@ -16,7 +16,16 @@ const WS = 'ws_ten_acme';
 const LEAD_VALUES = { campaign_code: 'ZXQ-CAMPAIGN-77', source_note: 'zxq met at the expo stall', budget_paise: 2_571_309 };
 const OPP_VALUES = { rider_note: 'zxq critical illness rider', sum_assured_paise: 10_482_117, review_flag: true };
 const PARTY_VALUES = { segment: 'HNI', occupation: 'zxq architect', income_paise: 91_337_551 };
-const NEEDLES = ['ZXQ-CAMPAIGN-77', 'zxq met at the expo stall', '2571309', 'zxq critical illness rider', '10482117', 'zxq architect', '91337551', 'zxq'];
+const NEEDLES = [
+  'ZXQ-CAMPAIGN-77',
+  'zxq met at the expo stall',
+  '2571309',
+  'zxq critical illness rider',
+  '10482117',
+  'zxq architect',
+  '91337551',
+  'zxq',
+];
 
 /** AC-CR001-05 (M04 part): P0/P1/P2 custom-field values never reach Twenty projections or logs. */
 describe('AC-CR001-05 custom fields never leave Core', () => {
@@ -27,33 +36,54 @@ describe('AC-CR001-05 custom fields never leave Core', () => {
   const relay = () => t.app.get<OutboxRelay>(OUTBOX_RELAY).relayOnce();
   const call = (method: 'post' | 'put' | 'get', path: string) => auth(t.http[method](path)).set('Idempotency-Key', newIdempotencyKey());
 
-  beforeEach(async () => { t = await createTestApp({ imports: [CrmModule, DistributionModule], overrides: customFieldOverrides() }); });
+  beforeEach(async () => {
+    t = await createTestApp({ imports: [CrmModule, DistributionModule], overrides: customFieldOverrides() });
+  });
   afterEach(async () => t.close());
 
   it('AC-CR001-05 lead, opportunity and party values are stored, yet no Twenty payload or log line contains any of them', async () => {
     const captured = await call('post', '/api/v1/leads').send({
-      fullName: 'Asha Verma', mobile: '+919876500041', productInterest: 'TERM_LIFE', source: 'WEB_FORM', customFields: LEAD_VALUES,
+      fullName: 'Asha Verma',
+      mobile: '+919876500041',
+      productInterest: 'TERM_LIFE',
+      source: 'WEB_FORM',
+      customFields: LEAD_VALUES,
       consent: { granted: true, noticeVersion: 'v2', channels: ['CALL'], purposes: ['SERVICE'] },
     });
     expect(captured.status).toBe(201);
     const { leadId, partyId } = captured.body as { leadId: string; partyId: string };
 
-    await call('post', `/api/v1/leads/${leadId}/activities`).send({ kind: 'CALL', outcome: 'CONNECTED', occurredAt: new Date().toISOString() });
+    await call('post', `/api/v1/leads/${leadId}/activities`).send({
+      kind: 'CALL',
+      outcome: 'CONNECTED',
+      occurredAt: new Date().toISOString(),
+    });
     expect((await call('post', `/api/v1/leads/${leadId}/stage-transitions`).send({ to: 'CONTACTED' })).status).toBe(200);
     await call('put', `/api/v1/leads/${leadId}/qualification`).send({ need: 'PROTECTION', budgetBand: 'LT_15K', timeline: 'THIS_MONTH' });
     expect((await call('post', `/api/v1/leads/${leadId}/stage-transitions`).send({ to: 'QUALIFIED' })).status).toBe(200);
-    const conv = await call('post', `/api/v1/leads/${leadId}/conversion`).send({ partyChoice: 'LEAD_PARTY', productInterest: 'TERM_LIFE', expectedPremiumPaise: 50000, startStage: 'DISCOVERY' });
+    const conv = await call('post', `/api/v1/leads/${leadId}/conversion`).send({
+      partyChoice: 'LEAD_PARTY',
+      productInterest: 'TERM_LIFE',
+      expectedPremiumPaise: 50000,
+      startStage: 'DISCOVERY',
+    });
     expect(conv.status).toBe(201);
     const oppId = conv.body.opportunityId as string;
 
     const oppVersion = (await call('get', `/api/v1/opportunities/${oppId}`)).body.version;
-    const oppPut = await call('put', `/api/v1/opportunities/${oppId}/custom-fields`).set('If-Match', `"v${oppVersion}"`).send({ customFields: OPP_VALUES });
+    const oppPut = await call('put', `/api/v1/opportunities/${oppId}/custom-fields`)
+      .set('If-Match', `"v${oppVersion}"`)
+      .send({ customFields: OPP_VALUES });
     expect(oppPut.status).toBe(200);
     const party = await call('get', `/api/v1/parties/${partyId}`);
-    const partyPut = await call('put', `/api/v1/parties/${partyId}/custom-fields`).set('If-Match', `"v${party.body.version}"`).send({ customFields: PARTY_VALUES });
+    const partyPut = await call('put', `/api/v1/parties/${partyId}/custom-fields`)
+      .set('If-Match', `"v${party.body.version}"`)
+      .send({ customFields: PARTY_VALUES });
     expect(partyPut.status).toBe(200);
     const leadVersion = (await call('get', `/api/v1/leads/${leadId}`)).body.version;
-    const leadPut = await call('put', `/api/v1/leads/${leadId}/custom-fields`).set('If-Match', `"v${leadVersion}"`).send({ customFields: LEAD_VALUES });
+    const leadPut = await call('put', `/api/v1/leads/${leadId}/custom-fields`)
+      .set('If-Match', `"v${leadVersion}"`)
+      .send({ customFields: LEAD_VALUES });
     expect(leadPut.status).toBe(200);
 
     // The values are really stored (so the absence below is not vacuous).
@@ -73,8 +103,16 @@ describe('AC-CR001-05 custom fields never leave Core', () => {
       expect(payloads).not.toContain(needle);
       expect(logs).not.toContain(needle);
     }
-    expect(Object.keys(twenty().find('lead', leadId)?.fields ?? {}).sort()).toEqual(
-      ['core_id', 'core_party_id', 'created_at', 'owner_core_member_id', 'product_interest', 'sla_due_at', 'source', 'stage', 'temperature'],
-    );
+    expect(Object.keys(twenty().find('lead', leadId)?.fields ?? {}).sort()).toEqual([
+      'core_id',
+      'core_party_id',
+      'created_at',
+      'owner_core_member_id',
+      'product_interest',
+      'sla_due_at',
+      'source',
+      'stage',
+      'temperature',
+    ]);
   });
 });

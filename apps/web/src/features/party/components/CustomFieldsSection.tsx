@@ -43,7 +43,11 @@ function toDraft(defs: CustomFieldDefinition[], values: CustomFieldValues): Reco
 }
 
 /** Converts the text draft to typed values; money becomes integer paise. Empty entries are omitted. */
-function fromDraft(defs: CustomFieldDefinition[], draft: Record<string, string>, t: Translate): { values: CustomFieldValues; errors: Record<string, string> } {
+function fromDraft(
+  defs: CustomFieldDefinition[],
+  draft: Record<string, string>,
+  t: Translate,
+): { values: CustomFieldValues; errors: Record<string, string> } {
   const values: CustomFieldValues = {};
   const errors: Record<string, string> = {};
   for (const def of defs) {
@@ -84,7 +88,11 @@ export function CustomFieldsSection({ entity, definitions, values, version, canE
     <section className="custom-fields-section" aria-labelledby="cf-section-title">
       <div className="cf-section-head">
         <h2 id="cf-section-title">{t('party.cf.title')}</h2>
-        {canEdit && <Button variant="secondary" onClick={() => setEditing(true)}>{t('party.cf.edit')}</Button>}
+        {canEdit && (
+          <Button variant="secondary" onClick={() => setEditing(true)}>
+            {t('party.cf.edit')}
+          </Button>
+        )}
       </div>
       <dl className="cf-values">
         {active.map((d) => (
@@ -135,12 +143,30 @@ function EditForm({ definitions, values, version, onSave, onClose }: EditFormPro
   };
 
   return (
-    <form className="cf-edit-form" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
-      {general && <p role="alert" className="cf-field-error">{general}</p>}
+    <form
+      className="cf-edit-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void submit();
+      }}
+    >
+      {general && (
+        <p role="alert" className="cf-field-error">
+          {general}
+        </p>
+      )}
       {definitions.map((d) => (
-        <CustomFieldInput key={d.key} definition={d} value={draft[d.key] ?? ''} error={errors[d.key]} onChange={(v) => setDraft((prev) => ({ ...prev, [d.key]: v }))} />
+        <CustomFieldInput
+          key={d.key}
+          definition={d}
+          value={draft[d.key] ?? ''}
+          error={errors[d.key]}
+          onChange={(v) => setDraft((prev) => ({ ...prev, [d.key]: v }))}
+        />
       ))}
-      <Button type="submit" loading={saving}>{t('common.save')}</Button>
+      <Button type="submit" loading={saving}>
+        {t('common.save')}
+      </Button>
     </form>
   );
 }

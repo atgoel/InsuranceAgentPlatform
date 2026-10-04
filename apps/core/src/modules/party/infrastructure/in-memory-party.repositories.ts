@@ -10,17 +10,33 @@ import { PartyRoleLink, roleLinkKey } from '../domain/party-role';
 import { MergeRecord } from '../domain/merge';
 import { normaliseName } from '../domain/name-matching';
 import {
-  ConsentRepository, DuplicateCandidate, DuplicateRepository, HouseholdRepository, PartyListFilter, PartyRepository, PolicyNumberLookup,
-  RoleLinkRepository, SuppressionRepository,
+  ConsentRepository,
+  DuplicateCandidate,
+  DuplicateRepository,
+  HouseholdRepository,
+  PartyListFilter,
+  PartyRepository,
+  PolicyNumberLookup,
+  RoleLinkRepository,
+  SuppressionRepository,
 } from '../application/ports';
 import { inScope } from '../application/party-scope';
 
 function page<T>(all: T[], cursor: string | undefined, limit: number): { items: T[]; nextCursor?: string } {
   const start = cursorOffset(cursor);
-  return { items: all.slice(start, start + limit), nextCursor: start + limit < all.length ? encodeCursor({ offset: start + limit }) : undefined };
+  return {
+    items: all.slice(start, start + limit),
+    nextCursor: start + limit < all.length ? encodeCursor({ offset: start + limit }) : undefined,
+  };
 }
 
-const clone = (p: PartyProps): PartyProps => ({ ...p, tags: [...p.tags], customFields: { ...p.customFields }, contactPoints: p.contactPoints.map((c) => ({ ...c })), source: { ...p.source } });
+const clone = (p: PartyProps): PartyProps => ({
+  ...p,
+  tags: [...p.tags],
+  customFields: { ...p.customFields },
+  contactPoints: p.contactPoints.map((c) => ({ ...c })),
+  source: { ...p.source },
+});
 
 export class InMemoryPartyRepository implements PartyRepository {
   private readonly parties = new TenantBuckets<Map<string, PartyProps>>(() => new Map());
@@ -33,21 +49,29 @@ export class InMemoryPartyRepository implements PartyRepository {
   async save(tx: Transaction, party: Party): Promise<void> {
     const bucket = this.parties.of(tx);
     const stored = bucket.get(party.props.id);
-    if (stored && stored.version !== party.props.version) throw new PreconditionFailedError('version_mismatch', 'The customer was changed by someone else; reload and retry');
+    if (stored && stored.version !== party.props.version)
+      throw new PreconditionFailedError('version_mismatch', 'The customer was changed by someone else; reload and retry');
     bucket.set(party.props.id, clone({ ...party.props, version: party.props.version + 1 }));
     party.markSaved();
   }
 
   async findByContactHash(tx: Transaction, hash: string): Promise<Party[]> {
-    return this.active(tx).filter((p) => p.contactPoints.some((c) => c.valueHash === hash)).map((p) => Party.restore(clone(p)));
+    return this.active(tx)
+      .filter((p) => p.contactPoints.some((c) => c.valueHash === hash))
+      .map((p) => Party.restore(clone(p)));
   }
 
   async findByPanHash(tx: Transaction, hash: string): Promise<Party[]> {
-    return this.active(tx).filter((p) => p.panHash === hash).map((p) => Party.restore(clone(p)));
+    return this.active(tx)
+      .filter((p) => p.panHash === hash)
+      .map((p) => Party.restore(clone(p)));
   }
 
   async searchByName(tx: Transaction, prefix: string, limit: number): Promise<Party[]> {
-    return this.active(tx).filter((p) => normaliseName(p.displayName).startsWith(prefix)).slice(0, limit).map((p) => Party.restore(clone(p)));
+    return this.active(tx)
+      .filter((p) => normaliseName(p.displayName).startsWith(prefix))
+      .slice(0, limit)
+      .map((p) => Party.restore(clone(p)));
   }
 
   async list(tx: Transaction, f: PartyListFilter): Promise<{ items: Party[]; nextCursor?: string }> {
@@ -107,13 +131,19 @@ export class InMemoryHouseholdRepository implements HouseholdRepository {
 
 export class InMemoryRoleLinkRepository implements RoleLinkRepository {
   async forSubject(tx: Transaction, subjectType: PartyRoleLink['subjectType'], subjectId: string): Promise<PartyRoleLink[]> {
-    return this.links.of(tx).filter(l => l.subjectType === subjectType && l.subjectId === subjectId).map(l => ({...l}));
+    return this.links
+      .of(tx)
+      .filter((l) => l.subjectType === subjectType && l.subjectId === subjectId)
+      .map((l) => ({ ...l }));
   }
 
   private readonly links = new TenantBuckets<PartyRoleLink[]>(() => []);
 
   async forParty(tx: Transaction, partyId: string): Promise<PartyRoleLink[]> {
-    return this.links.of(tx).filter((l) => l.partyId === partyId).map((l) => ({ ...l }));
+    return this.links
+      .of(tx)
+      .filter((l) => l.partyId === partyId)
+      .map((l) => ({ ...l }));
   }
 
   async add(tx: Transaction, l: PartyRoleLink): Promise<void> {
@@ -144,7 +174,8 @@ export class InMemoryDuplicateRepository implements DuplicateRepository {
     const bucket = this.candidates.of(tx);
     const existing = [...bucket.values()].find((x) => x.partyAId === c.partyAId && x.partyBId === c.partyBId);
     if (!existing) bucket.set(c.id, { ...c });
-    else if (existing.status === 'open' && c.score > existing.score) bucket.set(existing.id, { ...existing, score: c.score, rule: c.rule, explanation: c.explanation });
+    else if (existing.status === 'open' && c.score > existing.score)
+      bucket.set(existing.id, { ...existing, score: c.score, rule: c.rule, explanation: c.explanation });
   }
 
   async list(tx: Transaction, f: { status: 'open'; partyId?: string; cursor?: string; limit: number }) {

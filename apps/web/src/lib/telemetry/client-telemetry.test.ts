@@ -49,12 +49,22 @@ describe('AC-M00-30 ClientTelemetry', () => {
 
   it('flushes in batches of at most 20 and swallows send failures', async () => {
     let calls = 0;
-    const telemetry = new ClientTelemetry({ send: async (e) => { calls += 1; expect(e.length).toBeLessThanOrEqual(20); }, maxPerMinute: 100 });
+    const telemetry = new ClientTelemetry({
+      send: async (e) => {
+        calls += 1;
+        expect(e.length).toBeLessThanOrEqual(20);
+      },
+      maxPerMinute: 100,
+    });
     for (let i = 0; i < 45; i++) telemetry.reportError(new Error(`e-${'z'.repeat(i)}`));
     await telemetry.flush();
     expect(calls).toBe(3);
 
-    const failing = new ClientTelemetry({ send: async () => { throw new Error('offline'); } });
+    const failing = new ClientTelemetry({
+      send: async () => {
+        throw new Error('offline');
+      },
+    });
     failing.reportError(new Error('boom'));
     await expect(failing.flush()).resolves.toBeUndefined();
   });

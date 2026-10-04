@@ -6,8 +6,21 @@ import { RolePermissionMatrix } from '../../kernel/tenancy/permissions';
 import { DistributionModule } from '../distribution/distribution.module';
 import { TenancyModule } from '../tenancy/tenancy.module';
 import {
-  CONSENT_REPOSITORY, ConsentRepository, DUPLICATE_REPOSITORY, DuplicateRepository, FIELD_CIPHER, HouseholdRepository, PartyRepository, RoleLinkRepository, SuppressionRepository, HOUSEHOLD_REPOSITORY, PARTY_FACADE, PARTY_REPOSITORY, POLICY_NUMBER_LOOKUP,
-  ROLE_LINK_REPOSITORY, SUPPRESSION_REPOSITORY,
+  CONSENT_REPOSITORY,
+  ConsentRepository,
+  DUPLICATE_REPOSITORY,
+  DuplicateRepository,
+  FIELD_CIPHER,
+  HouseholdRepository,
+  PartyRepository,
+  RoleLinkRepository,
+  SuppressionRepository,
+  HOUSEHOLD_REPOSITORY,
+  PARTY_FACADE,
+  PARTY_REPOSITORY,
+  POLICY_NUMBER_LOOKUP,
+  ROLE_LINK_REPOSITORY,
+  SUPPRESSION_REPOSITORY,
 } from './application/ports';
 import { PartyContext } from './application/party-context';
 import { DuplicateDetector } from './application/duplicate-detector';
@@ -22,11 +35,21 @@ import { PartyFacadeService } from './application/party.facade';
 import { AesGcmFieldCipher, fieldMasterKey } from '../../kernel/crypto/aes-gcm-field-cipher';
 export { fieldMasterKey };
 import {
-  InMemoryConsentRepository, InMemoryDuplicateRepository, InMemoryHouseholdRepository, InMemoryPartyRepository, InMemoryRoleLinkRepository,
-  InMemorySuppressionRepository, NoPolicyNumberLookup,
+  InMemoryConsentRepository,
+  InMemoryDuplicateRepository,
+  InMemoryHouseholdRepository,
+  InMemoryPartyRepository,
+  InMemoryRoleLinkRepository,
+  InMemorySuppressionRepository,
+  NoPolicyNumberLookup,
 } from './infrastructure/in-memory-party.repositories';
 import {
-  PgConsentRepository, PgDuplicateRepository, PgHouseholdRepository, PgPartyRepository, PgRoleLinkRepository, PgSuppressionRepository,
+  PgConsentRepository,
+  PgDuplicateRepository,
+  PgHouseholdRepository,
+  PgPartyRepository,
+  PgRoleLinkRepository,
+  PgSuppressionRepository,
 } from './infrastructure/pg-party.repositories';
 import { PartiesController } from './api/parties.controller';
 import { ConsentsController } from './api/consents.controller';
@@ -57,12 +80,36 @@ function byPersistence(): Provider[] {
     inject: [KERNEL_OPTIONS, APP_POOL],
   });
   return [
-    pick<PartyRepository>(PARTY_REPOSITORY, () => new InMemoryPartyRepository(), () => new PgPartyRepository()),
-    pick<ConsentRepository>(CONSENT_REPOSITORY, () => new InMemoryConsentRepository(), () => new PgConsentRepository()),
-    pick<SuppressionRepository>(SUPPRESSION_REPOSITORY, () => new InMemorySuppressionRepository(), () => new PgSuppressionRepository()),
-    pick<HouseholdRepository>(HOUSEHOLD_REPOSITORY, () => new InMemoryHouseholdRepository(), () => new PgHouseholdRepository()),
-    pick<RoleLinkRepository>(ROLE_LINK_REPOSITORY, () => new InMemoryRoleLinkRepository(), () => new PgRoleLinkRepository()),
-    pick<DuplicateRepository>(DUPLICATE_REPOSITORY, () => new InMemoryDuplicateRepository(), () => new PgDuplicateRepository()),
+    pick<PartyRepository>(
+      PARTY_REPOSITORY,
+      () => new InMemoryPartyRepository(),
+      () => new PgPartyRepository(),
+    ),
+    pick<ConsentRepository>(
+      CONSENT_REPOSITORY,
+      () => new InMemoryConsentRepository(),
+      () => new PgConsentRepository(),
+    ),
+    pick<SuppressionRepository>(
+      SUPPRESSION_REPOSITORY,
+      () => new InMemorySuppressionRepository(),
+      () => new PgSuppressionRepository(),
+    ),
+    pick<HouseholdRepository>(
+      HOUSEHOLD_REPOSITORY,
+      () => new InMemoryHouseholdRepository(),
+      () => new PgHouseholdRepository(),
+    ),
+    pick<RoleLinkRepository>(
+      ROLE_LINK_REPOSITORY,
+      () => new InMemoryRoleLinkRepository(),
+      () => new PgRoleLinkRepository(),
+    ),
+    pick<DuplicateRepository>(
+      DUPLICATE_REPOSITORY,
+      () => new InMemoryDuplicateRepository(),
+      () => new PgDuplicateRepository(),
+    ),
   ];
 }
 
@@ -73,8 +120,17 @@ const adapters: Provider[] = [
 ];
 
 const services: Provider[] = [
-  PartyContext, DuplicateDetector, PartyWriter, PartyService, PartyQueryService, ConsentService, SensitivePartyAccessor, DuplicateService,
-  HouseholdService, PartyFacadeService, { provide: PARTY_FACADE, useExisting: PartyFacadeService },
+  PartyContext,
+  DuplicateDetector,
+  PartyWriter,
+  PartyService,
+  PartyQueryService,
+  ConsentService,
+  SensitivePartyAccessor,
+  DuplicateService,
+  HouseholdService,
+  PartyFacadeService,
+  { provide: PARTY_FACADE, useExisting: PartyFacadeService },
 ];
 
 /** M03 Party & Consent — system of record for customers, consent ledger and reviewed merges. */

@@ -39,7 +39,12 @@ describe('AC-M00-15 traced()', () => {
     const tracer = new Tracer(clock, metrics);
     const ctx = RequestContext.create({ startedAtMs: 0 });
 
-    const slowRepo = { findById: async (id: string) => { clock.advance(50); return { id }; } };
+    const slowRepo = {
+      findById: async (id: string) => {
+        clock.advance(50);
+        return { id };
+      },
+    };
     const slow = traced(slowRepo, 'db', tracer);
     await RequestContext.run(ctx, async () => {
       await slow.findById('123');

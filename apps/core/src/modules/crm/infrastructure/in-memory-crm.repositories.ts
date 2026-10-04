@@ -8,8 +8,18 @@ import { Task, TaskProps } from '../domain/task';
 import { Opportunity, OpportunityProps } from '../domain/opportunity';
 import { RoutingRule } from '../domain/routing/routing-rule';
 import {
-  ActivityRepository, LeadFilter, LeadImportBatch, LeadImportRepository, LeadRepository, LeadStats, OpportunityRepository, PublicLeadGuard,
-  RecordScope, RoutingRuleRepository, TaskListFilter, TaskRepository,
+  ActivityRepository,
+  LeadFilter,
+  LeadImportBatch,
+  LeadImportRepository,
+  LeadRepository,
+  LeadStats,
+  OpportunityRepository,
+  PublicLeadGuard,
+  RecordScope,
+  RoutingRuleRepository,
+  TaskListFilter,
+  TaskRepository,
 } from '../application/ports';
 import { inScope } from '../application/crm-scope';
 
@@ -18,15 +28,24 @@ const DAY_MS = 86_400_000;
 
 function page<T>(all: T[], cursor: string | undefined, limit: number): { items: T[]; nextCursor?: string } {
   const start = cursorOffset(cursor);
-  return { items: all.slice(start, start + limit), nextCursor: start + limit < all.length ? encodeCursor({ offset: start + limit }) : undefined };
+  return {
+    items: all.slice(start, start + limit),
+    nextCursor: start + limit < all.length ? encodeCursor({ offset: start + limit }) : undefined,
+  };
 }
 
 const cloneLead = (p: LeadProps): LeadProps => structuredClone(p);
 
 /** Optimistic save shared by the aggregate stores: stored version must equal the aggregate's. */
-function saveVersioned<P extends { id: string; version: number }>(bucket: Map<string, P>, props: P, entity: string, clone: (p: P) => P): void {
+function saveVersioned<P extends { id: string; version: number }>(
+  bucket: Map<string, P>,
+  props: P,
+  entity: string,
+  clone: (p: P) => P,
+): void {
   const stored = bucket.get(props.id);
-  if (stored && stored.version !== props.version) throw new PreconditionFailedError('version_mismatch', `The ${entity} was changed by someone else; reload and retry`);
+  if (stored && stored.version !== props.version)
+    throw new PreconditionFailedError('version_mismatch', `The ${entity} was changed by someone else; reload and retry`);
   bucket.set(props.id, clone({ ...props, version: props.version + 1 }));
 }
 
@@ -69,9 +88,13 @@ export class InMemoryLeadRepository implements LeadRepository {
   }
 
   async stats(tx: Transaction, scope: RecordScope, now: Date): Promise<LeadStats> {
-    const leads = this.all(tx).map((p) => Lead.restore(cloneLead(p))).filter((l) => inScope(l.props, scope));
+    const leads = this.all(tx)
+      .map((p) => Lead.restore(cloneLead(p)))
+      .filter((l) => inScope(l.props, scope));
     const open = leads.filter((l) => !CLOSED.has(l.props.stage));
-    const recent = leads.filter((l) => Date.parse(l.props.createdAt) >= now.getTime() - 7 * DAY_MS && ['met', 'breached'].includes(l.slaState(now)));
+    const recent = leads.filter(
+      (l) => Date.parse(l.props.createdAt) >= now.getTime() - 7 * DAY_MS && ['met', 'breached'].includes(l.slaState(now)),
+    );
     return {
       open: open.length,
       unassigned: open.filter((l) => !l.props.ownerMemberId).length,
@@ -81,11 +104,15 @@ export class InMemoryLeadRepository implements LeadRepository {
   }
 
   async openForOwner(tx: Transaction, memberId: string): Promise<Lead[]> {
-    return this.all(tx).filter((p) => p.ownerMemberId === memberId && !CLOSED.has(p.stage)).map((p) => Lead.restore(cloneLead(p)));
+    return this.all(tx)
+      .filter((p) => p.ownerMemberId === memberId && !CLOSED.has(p.stage))
+      .map((p) => Lead.restore(cloneLead(p)));
   }
 
   async forParty(tx: Transaction, partyId: string): Promise<Lead[]> {
-    return this.all(tx).filter((p) => p.partyId === partyId).map((p) => Lead.restore(cloneLead(p)));
+    return this.all(tx)
+      .filter((p) => p.partyId === partyId)
+      .map((p) => Lead.restore(cloneLead(p)));
   }
 
   async slaBreachCandidates(tx: Transaction, now: Date, limit: number): Promise<Lead[]> {
@@ -114,7 +141,8 @@ function matches(l: Lead, f: LeadFilter): boolean {
 
 function sorter(sort: LeadFilter['sort']) {
   if (sort === 'slaDueAt') return (a: Lead, b: Lead) => (a.props.slaDueAt ?? '9999').localeCompare(b.props.slaDueAt ?? '9999');
-  if (sort === 'createdAt') return (a: Lead, b: Lead) => a.props.createdAt.localeCompare(b.props.createdAt) || a.props.id.localeCompare(b.props.id);
+  if (sort === 'createdAt')
+    return (a: Lead, b: Lead) => a.props.createdAt.localeCompare(b.props.createdAt) || a.props.id.localeCompare(b.props.id);
   return (a: Lead, b: Lead) => b.props.createdAt.localeCompare(a.props.createdAt) || b.props.id.localeCompare(a.props.id);
 }
 
@@ -130,7 +158,12 @@ export class InMemoryActivityRepository implements ActivityRepository {
   }
 
   async forSubject(tx: Transaction, type: Activity['subjectType'], id: string, limit: number): Promise<Activity[]> {
-    return this.items.of(tx).filter((a) => a.subjectType === type && a.subjectId === id).sort((a, b) => b.occurredAt.localeCompare(a.occurredAt)).slice(0, limit).map((a) => ({ ...a }));
+    return this.items
+      .of(tx)
+      .filter((a) => a.subjectType === type && a.subjectId === id)
+      .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))
+      .slice(0, limit)
+      .map((a) => ({ ...a }));
   }
 
   async countCallAttempts(tx: Transaction, leadId: string): Promise<number> {
@@ -153,18 +186,27 @@ export class InMemoryTaskRepository implements TaskRepository {
 
   async list(tx: Transaction, f: TaskListFilter): Promise<{ items: Task[]; nextCursor?: string }> {
     const items = this.all(tx)
-      .filter((p) => (!f.ownerMemberIds || f.ownerMemberIds.includes(p.ownerMemberId)) && (!f.status || p.status === f.status) && (!f.kind || p.kind === f.kind))
+      .filter(
+        (p) =>
+          (!f.ownerMemberIds || f.ownerMemberIds.includes(p.ownerMemberId)) &&
+          (!f.status || p.status === f.status) &&
+          (!f.kind || p.kind === f.kind),
+      )
       .sort((a, b) => a.dueAt.localeCompare(b.dueAt) || a.id.localeCompare(b.id))
       .map((p) => Task.restore({ ...p }));
     return page(items, f.cursor, f.limit);
   }
 
   async openForSubject(tx: Transaction, type: TaskProps['subjectType'], id: string): Promise<Task[]> {
-    return this.all(tx).filter((p) => p.subjectType === type && p.subjectId === id && p.status === 'OPEN').map((p) => Task.restore({ ...p }));
+    return this.all(tx)
+      .filter((p) => p.subjectType === type && p.subjectId === id && p.status === 'OPEN')
+      .map((p) => Task.restore({ ...p }));
   }
 
   async openForOwner(tx: Transaction, memberId: string): Promise<Task[]> {
-    return this.all(tx).filter((p) => p.ownerMemberId === memberId && p.status === 'OPEN').map((p) => Task.restore({ ...p }));
+    return this.all(tx)
+      .filter((p) => p.ownerMemberId === memberId && p.status === 'OPEN')
+      .map((p) => Task.restore({ ...p }));
   }
 
   async escalationCandidates(tx: Transaction, now: Date, limit: number): Promise<Task[]> {
@@ -194,7 +236,12 @@ export class InMemoryOpportunityRepository implements OpportunityRepository {
 
   async board(tx: Transaction, f: { scope: RecordScope; ownerMemberId?: string; productInterest?: string }): Promise<Opportunity[]> {
     return this.all(tx)
-      .filter((p) => inScope(p, f.scope) && (!f.ownerMemberId || p.ownerMemberId === f.ownerMemberId) && (!f.productInterest || p.productInterest === f.productInterest))
+      .filter(
+        (p) =>
+          inScope(p, f.scope) &&
+          (!f.ownerMemberId || p.ownerMemberId === f.ownerMemberId) &&
+          (!f.productInterest || p.productInterest === f.productInterest),
+      )
       .sort((a, b) => a.stageEnteredAt.localeCompare(b.stageEnteredAt))
       .map((p) => Opportunity.restore({ ...p, customFields: { ...p.customFields } }));
   }
@@ -204,11 +251,15 @@ export class InMemoryOpportunityRepository implements OpportunityRepository {
   }
 
   async openForOwner(tx: Transaction, memberId: string): Promise<Opportunity[]> {
-    return this.all(tx).filter((p) => p.ownerMemberId === memberId && !['ISSUED', 'LOST'].includes(p.stage)).map((p) => Opportunity.restore({ ...p, customFields: { ...p.customFields } }));
+    return this.all(tx)
+      .filter((p) => p.ownerMemberId === memberId && !['ISSUED', 'LOST'].includes(p.stage))
+      .map((p) => Opportunity.restore({ ...p, customFields: { ...p.customFields } }));
   }
 
   async forParty(tx: Transaction, partyId: string): Promise<Opportunity[]> {
-    return this.all(tx).filter((p) => p.partyId === partyId).map((p) => Opportunity.restore({ ...p, customFields: { ...p.customFields } }));
+    return this.all(tx)
+      .filter((p) => p.partyId === partyId)
+      .map((p) => Opportunity.restore({ ...p, customFields: { ...p.customFields } }));
   }
 
   private all(tx: Transaction): OpportunityProps[] {
@@ -270,7 +321,8 @@ export class InMemoryPublicLeadGuard implements PublicLeadGuard {
     if (input.honeypot) throw new ValidationError('spam_detected', 'Submission rejected');
     const bucket = this.hits.of(tx);
     const recent = (bucket.get(input.ipHash) ?? []).filter((t) => t > input.at.getTime() - WINDOW_MS);
-    if (recent.length >= MAX_PER_WINDOW) throw new RateLimitedError('public_lead_rate_limited', 'Too many submissions; try again later', { retryAfterSeconds: 600 });
+    if (recent.length >= MAX_PER_WINDOW)
+      throw new RateLimitedError('public_lead_rate_limited', 'Too many submissions; try again later', { retryAfterSeconds: 600 });
     bucket.set(input.ipHash, [...recent, input.at.getTime()]);
   }
 }

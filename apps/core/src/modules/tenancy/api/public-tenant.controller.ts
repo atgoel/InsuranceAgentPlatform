@@ -29,14 +29,26 @@ export class PublicTenantController {
     const resolved = host ? await this.resolver.resolveByHost(host) : undefined;
     if (!resolved || resolved.status !== 'active') throw new NotFoundError('Tenant');
     const [summary, kit] = await Promise.all([this.queries.summary(resolved.tenantId), this.brand.get(resolved.tenantId)]);
-    const brand = { brandName: kit.brandName, primary: kit.primary, secondary: kit.secondary, typeface: kit.typeface, logoRef: kit.logoRef, poweredByVisible: kit.poweredByVisible };
+    const brand = {
+      brandName: kit.brandName,
+      primary: kit.primary,
+      secondary: kit.secondary,
+      typeface: kit.typeface,
+      logoRef: kit.logoRef,
+      poweredByVisible: kit.poweredByVisible,
+    };
     return { displayName: summary.displayName, brand, languages: LANGUAGES };
   }
 
   @Post('solo-signups')
   @Idempotent()
   start(@Body(new ZodValidationPipe(StartSignupSchema)) body: z.infer<typeof StartSignupSchema>) {
-    return this.signups.start({ phone: body.phone, displayName: body.displayName, licence: body.licence, consentNoticeVersion: body.consent.noticeVersion });
+    return this.signups.start({
+      phone: body.phone,
+      displayName: body.displayName,
+      licence: body.licence,
+      consentNoticeVersion: body.consent.noticeVersion,
+    });
   }
 
   @Post('solo-signups/:id/verifications')

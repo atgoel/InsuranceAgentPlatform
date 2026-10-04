@@ -33,22 +33,22 @@ export class DistributorEntity {
   }
 
   get props(): DistributorEntityProps {
-    return { entityType: this.entityType, legalName: this.legalName, registrationNo: this.registrationNo, registrationValidTo: this.registrationValidTo, principalOfficerName: this.principalOfficerName };
+    return {
+      entityType: this.entityType,
+      legalName: this.legalName,
+      registrationNo: this.registrationNo,
+      registrationValidTo: this.registrationValidTo,
+      principalOfficerName: this.principalOfficerName,
+    };
   }
 
   private static validateEntityTypeForKind(tenantKind: TenantKind, entityType: EntityType): void {
     if (tenantKind === 'SOLO' && entityType !== 'INDIVIDUAL_AGENT') {
-      throw new BusinessRuleError(
-        'entity_type_not_allowed_for_kind',
-        'SOLO tenants must have INDIVIDUAL_AGENT entity type'
-      );
+      throw new BusinessRuleError('entity_type_not_allowed_for_kind', 'SOLO tenants must have INDIVIDUAL_AGENT entity type');
     }
 
     if (tenantKind === 'ORGANISATION' && entityType === 'INDIVIDUAL_AGENT') {
-      throw new BusinessRuleError(
-        'entity_type_not_allowed_for_kind',
-        'ORGANISATION tenants cannot have INDIVIDUAL_AGENT entity type'
-      );
+      throw new BusinessRuleError('entity_type_not_allowed_for_kind', 'ORGANISATION tenants cannot have INDIVIDUAL_AGENT entity type');
     }
   }
 
@@ -70,10 +70,7 @@ export class DistributorEntity {
 
   private static validatePrincipalOfficer(entityType: EntityType, principalOfficerName: string | undefined): void {
     if ((entityType === 'IMF' || entityType === 'BROKER') && !principalOfficerName) {
-      throw new ValidationError(
-        'principal_officer_required',
-        'Principal officer name is required for IMF and BROKER entity types'
-      );
+      throw new ValidationError('principal_officer_required', 'Principal officer name is required for IMF and BROKER entity types');
     }
   }
 
@@ -105,7 +102,6 @@ export class DistributorEntity {
     if (left < 0) return 'expired';
     return left <= 60 ? 'expiring' : 'valid';
   }
-
 
   comparisonScope(): 'MARKET_WIDE' | 'TIED_INSURERS' {
     return this.entityType === 'BROKER' ? 'MARKET_WIDE' : 'TIED_INSURERS';

@@ -32,12 +32,16 @@ export class AdviceService {
     private readonly ctx: AdviceContext,
   ) {}
 
-  start(principal: Principal, input: { partyId: string; opportunityId?: string; line?: LineOfBusiness; category?: AdviceCategory }): Promise<AdviceView> {
+  start(
+    principal: Principal,
+    input: { partyId: string; opportunityId?: string; line?: LineOfBusiness; category?: AdviceCategory },
+  ): Promise<AdviceView> {
     return this.ctx.uow.run(principal.tenantId, async (tx) => {
       // Same rule as reading the record: through the opportunity when there is one, otherwise through the party.
       if (input.opportunityId) {
         const opportunity = await this.scope.opportunity(tx, principal, input.opportunityId);
-        if (opportunity.partyId !== input.partyId) throw new ValidationError('party_mismatch', 'The opportunity belongs to a different party');
+        if (opportunity.partyId !== input.partyId)
+          throw new ValidationError('party_mismatch', 'The opportunity belongs to a different party');
       } else {
         await this.scope.party(tx, principal, input.partyId);
       }
@@ -45,11 +49,23 @@ export class AdviceService {
       const date = istDate(now);
       const result = await this.scopes.scopeFor(tx, principal, { line: input.line, category: input.category, date });
       const record = AdviceRecord.start({
-        id: this.ctx.ids.next('adv'), partyId: input.partyId, opportunityId: input.opportunityId, advisorMemberId: actorOf(principal), now,
-        scope: { disclosure: result.disclosure, entityType: result.entityType, versionIdsShown: result.versions.map((v) => v.versionId), excludedCount: result.excluded.length, evaluatedOn: date },
+        id: this.ctx.ids.next('adv'),
+        partyId: input.partyId,
+        opportunityId: input.opportunityId,
+        advisorMemberId: actorOf(principal),
+        now,
+        scope: {
+          disclosure: result.disclosure,
+          entityType: result.entityType,
+          versionIdsShown: result.versions.map((v) => v.versionId),
+          excludedCount: result.excluded.length,
+          evaluatedOn: date,
+        },
       });
       await this.records.save(tx, record);
-      await this.ctx.recorder.record(tx, { audit: { action: 'advice.record.started', entityType: 'advice_record', entityId: record.props.id } });
+      await this.ctx.recorder.record(tx, {
+        audit: { action: 'advice.record.started', entityType: 'advice_record', entityId: record.props.id },
+      });
       return this.views.build(record);
     });
   }
@@ -64,18 +80,36 @@ export class AdviceService {
       audit: 'advice.record.calculator_run_added',
       apply: async (record, now, tx) => {
         const output = this.calculators.compute(name, input.input);
-        record.addCalculatorRun({ calculator: name, inputs: input.input, outputs: { ...output }, assumptionsVersion: output.assumptionsVersion, ranAt: now.toISOString() });
+        record.addCalculatorRun({
+          calculator: name,
+          inputs: input.input,
+          outputs: { ...output },
+          assumptionsVersion: output.assumptionsVersion,
+          ranAt: now.toISOString(),
+        });
         await this.calculators.store(tx, principal, record.props.partyId, name, input.input, output);
       },
     });
   }
 
   recommend(principal: Principal, id: string, input: { versionId: string; rationale: string }): Promise<AdviceView> {
-    return this.mutate(principal, id, { audit: 'advice.record.recommended', apply: (record) => record.recommend(input.versionId, input.rationale) });
+    return this.mutate(principal, id, {
+      audit: 'advice.record.recommended',
+      apply: (record) => record.recommend(input.versionId, input.rationale),
+    });
   }
 
-  recordChoice(principal: Principal, id: string, input: { versionId: string; reasonIfDifferent?: string }, expectedVersion: number): Promise<AdviceView> {
-    return this.mutate(principal, id, { audit: 'advice.record.choice_recorded', expectedVersion, apply: (record) => record.recordChoice(input.versionId, input.reasonIfDifferent) });
+  recordChoice(
+    principal: Principal,
+    id: string,
+    input: { versionId: string; reasonIfDifferent?: string },
+    expectedVersion: number,
+  ): Promise<AdviceView> {
+    return this.mutate(principal, id, {
+      audit: 'advice.record.choice_recorded',
+      expectedVersion,
+      apply: (record) => record.recordChoice(input.versionId, input.reasonIfDifferent),
+    });
   }
 
   setNotes(principal: Principal, id: string, text: string, expectedVersion: number): Promise<AdviceView> {

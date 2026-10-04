@@ -1,6 +1,17 @@
 import { Inject, Module, OnModuleInit, Provider } from '@nestjs/common';
 import { Pool } from 'pg';
-import { APP_POOL, CLOCK, KERNEL_OPTIONS, LOGGER, METRICS, CUSTOM_FIELD_DEFINITIONS, PERMISSION_POLICY, PLATFORM_POOL, TENANT_RESOLVER, UNIT_OF_WORK } from '../../kernel/tokens';
+import {
+  APP_POOL,
+  CLOCK,
+  KERNEL_OPTIONS,
+  LOGGER,
+  METRICS,
+  CUSTOM_FIELD_DEFINITIONS,
+  PERMISSION_POLICY,
+  PLATFORM_POOL,
+  TENANT_RESOLVER,
+  UNIT_OF_WORK,
+} from '../../kernel/tokens';
 import { AesGcmFieldCipher, fieldMasterKey } from '../../kernel/crypto/aes-gcm-field-cipher';
 import { KernelConfig } from '../../kernel/config';
 import { Clock } from '../../kernel/domain/clock';
@@ -10,14 +21,41 @@ import { UnitOfWork } from '../../kernel/persistence/unit-of-work';
 import { RolePermissionMatrix } from '../../kernel/tenancy/permissions';
 import { DelegatingTenantResolver } from '../../kernel/tenancy/tenant-resolver';
 import {
-  CONTENT_PROVISIONER, CRM_PROVISIONER, CUSTOM_FIELD_REPOSITORY, ContentProvisioner, CustomFieldRepository, CrmProvisioner, ENTITLEMENT_CHECKER, IDENTITY_PROVISIONER, IdentityProvisioner,
-  OTP_GENERATOR, OTP_SENDER, PLAN_CATALOGUE, PROVISIONING_SAGA, PROVISIONING_STATE_REPOSITORY, ProvisioningStateRepository, SIGNUP_REPOSITORY, SignupRepository,
-  TENANCY_OPTIONS, TENANT_DIRECTORY, TENANT_SETTINGS_REPOSITORY, TIE_UP_LIMIT_POLICY, TIE_UP_READER, TenancyOptions, TenantDirectory, TenantSettingsRepository,
+  CONTENT_PROVISIONER,
+  CRM_PROVISIONER,
+  CUSTOM_FIELD_REPOSITORY,
+  ContentProvisioner,
+  CustomFieldRepository,
+  CrmProvisioner,
+  ENTITLEMENT_CHECKER,
+  IDENTITY_PROVISIONER,
+  IdentityProvisioner,
+  OTP_GENERATOR,
+  OTP_SENDER,
+  PLAN_CATALOGUE,
+  PROVISIONING_SAGA,
+  PROVISIONING_STATE_REPOSITORY,
+  ProvisioningStateRepository,
+  SIGNUP_REPOSITORY,
+  SignupRepository,
+  TENANCY_OPTIONS,
+  TENANT_DIRECTORY,
+  TENANT_SETTINGS_REPOSITORY,
+  TIE_UP_LIMIT_POLICY,
+  TIE_UP_READER,
+  TenancyOptions,
+  TenantDirectory,
+  TenantSettingsRepository,
 } from './application/ports';
 import { PlanCatalogue } from './domain/plan';
 import { TieUpLimitPolicy } from './domain/tie-up';
 import {
-  ContentScopeStep, CrmWorkspaceStep, IdentityAdminStep, IdentityOrganisationStep, ProvisioningSaga, SmokeCheckStep,
+  ContentScopeStep,
+  CrmWorkspaceStep,
+  IdentityAdminStep,
+  IdentityOrganisationStep,
+  ProvisioningSaga,
+  SmokeCheckStep,
 } from './application/provisioning-saga';
 import { CachingTenantResolver, DirectoryTenantResolver } from './application/directory-tenant-resolver';
 import { TenancyRecorder } from './application/tenancy-recorder';
@@ -34,20 +72,40 @@ import { CustomFieldService } from './application/custom-field.service';
 import { InMemoryCustomFieldRepository } from './infrastructure/in-memory-custom-field.repository';
 import { PgCustomFieldRepository } from './infrastructure/pg-custom-field.repository';
 import {
-  InMemoryProvisioningStateRepository, InMemorySignupRepository, InMemoryTenantDirectory, InMemoryTenantSettingsRepository,
+  InMemoryProvisioningStateRepository,
+  InMemorySignupRepository,
+  InMemoryTenantDirectory,
+  InMemoryTenantSettingsRepository,
 } from './infrastructure/in-memory-tenancy.repositories';
 import {
-  FixedOtpGenerator, LoggingOtpSender, RandomOtpGenerator, StubContentProvisioner, StubCrmProvisioner, StubIdentityProvisioner,
+  FixedOtpGenerator,
+  LoggingOtpSender,
+  RandomOtpGenerator,
+  StubContentProvisioner,
+  StubCrmProvisioner,
+  StubIdentityProvisioner,
 } from './infrastructure/stub-provisioners';
 import { seedStaticTenants } from './infrastructure/static-tenant-seeder';
-import { PgProvisioningStateRepository, PgSignupRepository, PgTenantDirectory, PgTenantSettingsRepository } from './infrastructure/pg-tenancy.repositories';
+import {
+  PgProvisioningStateRepository,
+  PgSignupRepository,
+  PgTenantDirectory,
+  PgTenantSettingsRepository,
+} from './infrastructure/pg-tenancy.repositories';
 import { OperatorTenantsController } from './api/operator-tenants.controller';
 import { TenantController } from './api/tenant.controller';
 import { PublicTenantController } from './api/public-tenant.controller';
 
 /** Role → permission rows this module contributes to the policy (M01 §6.4). */
 export const TENANCY_PERMISSIONS: Record<string, string[]> = {
-  TENANT_ADMIN: ['tenant.read', 'tenant.tie_up.write', 'tenant.flag.write', 'tenant.brand.write', 'tenant.plan.write', 'tenant.custom_field.write'],
+  TENANT_ADMIN: [
+    'tenant.read',
+    'tenant.tie_up.write',
+    'tenant.flag.write',
+    'tenant.brand.write',
+    'tenant.plan.write',
+    'tenant.custom_field.write',
+  ],
   PRINCIPAL_OFFICER: ['tenant.read', 'tenant.tie_up.write', 'tenant.flag.write'],
   SOLO_OWNER: ['tenant.read', 'tenant.brand.write', 'tenant.plan.write', 'tenant.custom_field.write'],
   BRANCH_MANAGER: ['tenant.read'],
@@ -72,15 +130,36 @@ function tenancyOptions(config: KernelConfig): TenancyOptions {
 function byPersistence(): Provider[] {
   const pick = <T>(provide: symbol, memory: () => T, pgFactory: (app: Pool, owner: Pool, config: KernelConfig) => T): Provider => ({
     provide,
-    useFactory: (config: KernelConfig, app?: Pool, owner?: Pool) => (config.persistence === 'pg' && app && owner ? pgFactory(app, owner, config) : memory()),
+    useFactory: (config: KernelConfig, app?: Pool, owner?: Pool) =>
+      config.persistence === 'pg' && app && owner ? pgFactory(app, owner, config) : memory(),
     inject: [KERNEL_OPTIONS, APP_POOL, PLATFORM_POOL],
   });
   return [
-    pick<TenantDirectory>(TENANT_DIRECTORY, () => new InMemoryTenantDirectory(), (app, owner) => new PgTenantDirectory(app, owner)),
-    pick<TenantSettingsRepository>(TENANT_SETTINGS_REPOSITORY, () => new InMemoryTenantSettingsRepository(), () => new PgTenantSettingsRepository()),
-    pick<CustomFieldRepository>(CUSTOM_FIELD_REPOSITORY, () => new InMemoryCustomFieldRepository(), () => new PgCustomFieldRepository()),
-    pick<ProvisioningStateRepository>(PROVISIONING_STATE_REPOSITORY, () => new InMemoryProvisioningStateRepository(), (_app, owner) => new PgProvisioningStateRepository(owner)),
-    pick<SignupRepository>(SIGNUP_REPOSITORY, () => new InMemorySignupRepository(), (_app, owner, config) => new PgSignupRepository(owner, new AesGcmFieldCipher(fieldMasterKey(config)))),
+    pick<TenantDirectory>(
+      TENANT_DIRECTORY,
+      () => new InMemoryTenantDirectory(),
+      (app, owner) => new PgTenantDirectory(app, owner),
+    ),
+    pick<TenantSettingsRepository>(
+      TENANT_SETTINGS_REPOSITORY,
+      () => new InMemoryTenantSettingsRepository(),
+      () => new PgTenantSettingsRepository(),
+    ),
+    pick<CustomFieldRepository>(
+      CUSTOM_FIELD_REPOSITORY,
+      () => new InMemoryCustomFieldRepository(),
+      () => new PgCustomFieldRepository(),
+    ),
+    pick<ProvisioningStateRepository>(
+      PROVISIONING_STATE_REPOSITORY,
+      () => new InMemoryProvisioningStateRepository(),
+      (_app, owner) => new PgProvisioningStateRepository(owner),
+    ),
+    pick<SignupRepository>(
+      SIGNUP_REPOSITORY,
+      () => new InMemorySignupRepository(),
+      (_app, owner, config) => new PgSignupRepository(owner, new AesGcmFieldCipher(fieldMasterKey(config))),
+    ),
   ];
 }
 
@@ -89,18 +168,39 @@ const adapters: Provider[] = [
   ...byPersistence(),
   { provide: PLAN_CATALOGUE, useValue: PlanCatalogue.default() },
   { provide: TIE_UP_LIMIT_POLICY, useValue: TieUpLimitPolicy.default() },
-  { provide: IDENTITY_PROVISIONER, useFactory: (l: Logger) => new StubIdentityProvisioner(l.child({ module: 'tenancy' })), inject: [LOGGER] },
+  {
+    provide: IDENTITY_PROVISIONER,
+    useFactory: (l: Logger) => new StubIdentityProvisioner(l.child({ module: 'tenancy' })),
+    inject: [LOGGER],
+  },
   { provide: CRM_PROVISIONER, useFactory: (l: Logger) => new StubCrmProvisioner(l.child({ module: 'tenancy' })), inject: [LOGGER] },
   { provide: CONTENT_PROVISIONER, useFactory: (l: Logger) => new StubContentProvisioner(l.child({ module: 'tenancy' })), inject: [LOGGER] },
   { provide: OTP_SENDER, useFactory: (l: Logger) => new LoggingOtpSender(l.child({ module: 'tenancy' })), inject: [LOGGER] },
-  { provide: OTP_GENERATOR, useFactory: (c: KernelConfig) => (c.env === 'production' ? new RandomOtpGenerator() : new FixedOtpGenerator()), inject: [KERNEL_OPTIONS] },
+  {
+    provide: OTP_GENERATOR,
+    useFactory: (c: KernelConfig) => (c.env === 'production' ? new RandomOtpGenerator() : new FixedOtpGenerator()),
+    inject: [KERNEL_OPTIONS],
+  },
 ];
 
 const saga: Provider = {
   provide: PROVISIONING_SAGA,
-  useFactory: (identity: IdentityProvisioner, crm: CrmProvisioner, content: ContentProvisioner, directory: TenantDirectory, state: ProvisioningStateRepository, logger: Logger) =>
+  useFactory: (
+    identity: IdentityProvisioner,
+    crm: CrmProvisioner,
+    content: ContentProvisioner,
+    directory: TenantDirectory,
+    state: ProvisioningStateRepository,
+    logger: Logger,
+  ) =>
     new ProvisioningSaga(
-      [new IdentityOrganisationStep(identity), new IdentityAdminStep(identity), new CrmWorkspaceStep(crm), new ContentScopeStep(content), new SmokeCheckStep(directory)],
+      [
+        new IdentityOrganisationStep(identity),
+        new IdentityAdminStep(identity),
+        new CrmWorkspaceStep(crm),
+        new ContentScopeStep(content),
+        new SmokeCheckStep(directory),
+      ],
       state,
       logger.child({ module: 'tenancy' }),
     ),
@@ -115,8 +215,17 @@ const resolverCache: Provider = {
 };
 
 const services: Provider[] = [
-  TenancyRecorder, ProvisionTenantService, TenantQueryService, TieUpService, FeatureFlagService, BrandKitService,
-  UsageService, OperatorTenantService, SoloSignupService, TrialService, CustomFieldService,
+  TenancyRecorder,
+  ProvisionTenantService,
+  TenantQueryService,
+  TieUpService,
+  FeatureFlagService,
+  BrandKitService,
+  UsageService,
+  OperatorTenantService,
+  SoloSignupService,
+  TrialService,
+  CustomFieldService,
   { provide: CUSTOM_FIELD_DEFINITIONS, useExisting: CUSTOM_FIELD_REPOSITORY },
   { provide: ENTITLEMENT_CHECKER, useExisting: UsageService },
   { provide: TIE_UP_READER, useExisting: TieUpService },
@@ -129,7 +238,15 @@ const services: Provider[] = [
 @Module({
   controllers: [OperatorTenantsController, TenantController, PublicTenantController],
   providers: [...adapters, saga, resolverCache, ...services],
-  exports: [CUSTOM_FIELD_DEFINITIONS, ENTITLEMENT_CHECKER, TIE_UP_READER, TENANT_DIRECTORY, TENANT_SETTINGS_REPOSITORY, PLAN_CATALOGUE, TENANT_RESOLVER_CACHE],
+  exports: [
+    CUSTOM_FIELD_DEFINITIONS,
+    ENTITLEMENT_CHECKER,
+    TIE_UP_READER,
+    TENANT_DIRECTORY,
+    TENANT_SETTINGS_REPOSITORY,
+    PLAN_CATALOGUE,
+    TENANT_RESOLVER_CACHE,
+  ],
 })
 export class TenancyModule implements OnModuleInit {
   constructor(
@@ -146,7 +263,12 @@ export class TenancyModule implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     for (const [role, perms] of Object.entries(TENANCY_PERMISSIONS)) this.permissions.grant(role, perms);
     if (this.config.env !== 'production') {
-      await seedStaticTenants(this.config.staticTenants, { directory: this.directory, settings: this.settings, uow: this.uow, clock: this.clock });
+      await seedStaticTenants(this.config.staticTenants, {
+        directory: this.directory,
+        settings: this.settings,
+        uow: this.uow,
+        clock: this.clock,
+      });
     }
     this.kernelResolver.delegateTo(this.directoryResolver);
   }
