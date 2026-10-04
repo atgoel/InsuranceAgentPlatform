@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useT } from '../../../lib/i18n';
-import { Button } from '../../../design-system';
+import { Button, formatIstDate } from '../../../design-system';
 import { type TaskView } from '../api';
 
 interface TaskGroup {
@@ -17,7 +17,7 @@ const BUCKET_KEYS: Record<string, string> = { OVERDUE: 'crm.tasks.bucket_overdue
 
 /** Overdue / Today / Upcoming groups (server-computed buckets). Ticking a task asks for its outcome before completing (AC-M04-28). */
 export function TasksGrid({ groups, onTaskCompleted }: TasksGridProps) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const [completing, setCompleting] = useState<string | undefined>();
 
   return (
@@ -42,7 +42,7 @@ export function TasksGrid({ groups, onTaskCompleted }: TasksGridProps) {
                       <h4>{task.title}</h4>
                       <div className="task-meta">
                         <span className="kind">{t(`crm.taskKind.${task.kind.toLowerCase()}`)}</span>
-                        <span className="due">{new Date(task.dueAt).toLocaleDateString()}</span>
+                        <span className="due">{formatIstDate(task.dueAt, lang)}</span>
                       </div>
                     </div>
                   </div>

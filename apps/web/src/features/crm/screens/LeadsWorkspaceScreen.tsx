@@ -1,25 +1,54 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useApi } from '../../../lib/api';
-import {
-  LoadingSkeleton,
-  ErrorState,
-  EmptyState,
-  PermissionDenied,
-  type FilterOption,
-} from '../../../design-system';
+import { PageContainer, PageHeader, LoadingSkeleton, ErrorState, EmptyState, PermissionDenied } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
-import { createCrmApi, type LeadListItem, type LeadStage, type LeadStats, type ProductLine, type Temperature } from '../api';
+import { createCrmApi, type LeadListItem, type ProductLine } from '../api';
 import { LeadsGrid } from '../components/LeadsGrid';
-import { LeadFilterBar } from '../components/LeadFilterBar';
+import { LeadsWorkspaceFilters } from '../components/LeadsWorkspaceFilters';
+import { LeadsKpis } from '../components/LeadsKpis';
 import { NewLeadForm } from '../components/NewLeadForm';
 import { BulkAssignForm } from '../components/BulkAssignForm';
+import { useLeadsList } from '../components/useLeadsList';
+import '../styles/crm-frame.css';
 import '../styles/LeadsWorkspaceScreen.css';
 
-interface KpiTile {
-  label: string;
-  value: string | number;
-  note?: string;
+export { leadQueryFor } from '../components/useLeadsList';
+
+const SEARCH_DEBOUNCE_MS = 250;
+
+/** The committed search text follows the typed text after a short pause, so typing never reloads per key. */
+function useDebounced(value: string): string {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [value]);
+  return debounced;
+}
+
+interface LeadsBodyProps {
+  loading: boolean;
+  error?: ApiError;
+  leads: LeadListItem[];
+  selectedIds: string[];
+  onSelectionChange: (ids: string[]) => void;
+  onRetry: () => void;
+}
+
+function LeadsBody({ loading, error, leads, selectedIds, onSelectionChange, onRetry }: LeadsBodyProps) {
+  const { t } = useT();
+  if (error) {
+    return <ErrorState error={error} onRetry={onRetry} />;
+  }
+  if (loading) {
+    return <LoadingSkeleton />;
+  }
+  if (leads.length === 0) {
+    return <EmptyState title={t('crm.leads.empty_title')} body={t('crm.leads.empty_description')} />;
+  }
+  return <LeadsGrid items={leads} selectedIds={selectedIds} onSelectionChange={onSelectionChange} />;
 }
 
 export function LeadsWorkspaceScreen() {
@@ -27,226 +56,106 @@ export function LeadsWorkspaceScreen() {
   const crmApi = useMemo(() => createCrmApi(api), [api]);
   const { t } = useT();
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<ApiError | undefined>();
-  const [stats, setStats] = useState<LeadStats | undefined>();
-  const [leads, setLeads] = useState<LeadListItem[]>([]);
-  const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
+  const [pickedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
   const [selectedView, setSelectedView] = useState<string>('all_open');
   const [productFilter, setProductFilter] = useState<ProductLine | undefined>();
+  const [ownerFilter, setOwnerFilter] = useState('');
+  const [search, setSearch] = useState('');
   const [showNewLeadForm, setShowNewLeadForm] = useState(false);
   const [showBulkAssignForm, setShowBulkAssignForm] = useState(false);
+  /** A failed action is shown inline; the workspace stays on screen. */
+  const [actionError, setActionError] = useState<string | undefined>();
 
-  // Saved views and the product filter are API queries (server-side scope and paging), never client-side filters.
-  const query = useMemo(() => leadQueryFor(selectedView, productFilter), [selectedView, productFilter]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(undefined);
-        const [statsResult, leadsResult] = await Promise.all([crmApi.getLeadStats(), crmApi.listLeads(query)]);
-        if (cancelled) return;
-        setStats(statsResult);
-        setLeads(leadsResult.items);
-        setSelectedLeadIds([]);
-      } catch (err) {
-        if (!cancelled && err instanceof ApiError) setError(err);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    loadData();
-    return () => {
-      cancelled = true;
-    };
-  }, [crmApi, query]);
-
-  const filteredLeads = leads;
-
-  const handleNewLeadCreated = useCallback(
-    async (leadId: string) => {
-      try {
-        const updated = await crmApi.getLead(leadId);
-        const asListItem = {
-          id: updated.id,
-          partyId: updated.partyId,
-          name: updated.name,
-          mobileMasked: updated.mobileMasked,
-          productInterest: updated.productInterest,
-          source: updated.source,
-          campaignId: updated.campaignId,
-          ownerMemberId: updated.ownerMemberId,
-          ownerName: updated.ownerName,
-          stage: updated.stage,
-          temperature: updated.temperature as Temperature,
-          slaState: updated.slaState,
-          slaDueAt: updated.slaDueAt,
-          consent: updated.consent,
-          createdAt: updated.createdAt,
-        } as LeadListItem;
-        setLeads((prev) => [asListItem, ...prev]);
-        setShowNewLeadForm(false);
-        // Reload stats
-        const newStats = await crmApi.getLeadStats();
-        setStats(newStats);
-      } catch (err) {
-        if (err instanceof ApiError) {
-          setError(err);
-        }
-      }
-    },
-    [crmApi]
+  const q = useDebounced(search);
+  const filters = useMemo(
+    () => ({ view: selectedView, product: productFilter, owner: ownerFilter, q }),
+    [selectedView, productFilter, ownerFilter, q],
   );
+  const { loading, error, stats, leads, owners, reload } = useLeadsList(crmApi, filters);
+
+  // A selection only counts for leads still on screen after a reload or a filter change.
+  const selectedLeadIds = useMemo(() => pickedLeadIds.filter((id) => leads.some((lead) => lead.id === id)), [pickedLeadIds, leads]);
+
+  const handleNewLeadCreated = useCallback(() => {
+    setShowNewLeadForm(false);
+    reload();
+  }, [reload]);
 
   const handleBulkAssignSubmitted = useCallback(
     async (leadIds: string[], memberId: string) => {
       try {
-        const result = await crmApi.bulkAssignLeads(leadIds, memberId);
-        // Update leads with newly assigned ones
-        setLeads((prev) =>
-          prev.map((l) => (result.assigned.includes(l.id) ? { ...l, ownerMemberId: memberId } : l))
-        );
-        setSelectedLeadIds([]);
+        setActionError(undefined);
+        await crmApi.bulkAssignLeads(leadIds, memberId);
         setShowBulkAssignForm(false);
+        reload();
       } catch (err) {
-        if (err instanceof ApiError) {
-          setError(err);
-        }
+        setShowBulkAssignForm(false);
+        setActionError(err instanceof ApiError ? err.title : t('common.error'));
       }
     },
-    [crmApi]
+    [crmApi, reload, t],
   );
 
-  const kpiTiles: KpiTile[] = stats
-    ? [
-        {
-          label: t('crm.leads.kpi.open'),
-          value: stats.open,
-        },
-        {
-          label: t('crm.leads.kpi.unassigned'),
-          value: stats.unassigned,
-        },
-        {
-          label: t('crm.leads.kpi.sla_met_7d'),
-          value: stats.slaMetPct7d !== null ? `${stats.slaMetPct7d}%` : '—',
-        },
-        {
-          label: t('crm.leads.kpi.lead_to_issued_90d'),
-          value: stats.leadToIssuedPct90d !== null ? `${stats.leadToIssuedPct90d}%` : '—',
-          note: t('crm.leads.kpi.insurer_confirmed_only'),
-        },
-      ]
-    : [];
-
-  const viewOptions: FilterOption[] = [
-    { id: 'all_open', label: t('crm.leads.view.all_open'), count: 0 },
-    { id: 'unassigned', label: t('crm.leads.view.unassigned'), count: 0 },
-    { id: 'sla_breached', label: t('crm.leads.view.sla_breached'), count: 0 },
-    { id: 'mine', label: t('crm.leads.view.mine'), count: 0 },
-  ];
-
-  if (loading && leads.length === 0) {
-    return <LoadingSkeleton />;
-  }
-
-  if (error) {
-    if (error.status === 403) {
-      return <PermissionDenied />;
-    }
-    return <ErrorState error={error} onRetry={() => window.location.reload()} />;
+  if (error?.status === 403) {
+    return <PermissionDenied />;
   }
 
   return (
-    <main className="leads-workspace-screen" role="main">
-      <div className="screen-header">
-        <div>
-          <h1>{t('crm.leads.title')}</h1>
-        </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => setShowNewLeadForm(true)}
-          aria-label={t('crm.leads.new_lead')}
-        >
-          {t('crm.leads.new_lead')}
-        </button>
-      </div>
-
-      {/* KPI Tiles */}
-      <div className="kpi-tiles">
-        {kpiTiles.map((tile) => (
-          <div key={tile.label} className="kpi-tile">
-            <div className="kpi-label">{tile.label}</div>
-            <div className="kpi-value">{tile.value}</div>
-            {tile.note && <div className="kpi-note">{tile.note}</div>}
-          </div>
-        ))}
-      </div>
-
-      {/* View Filters */}
-      <LeadFilterBar
-        views={viewOptions}
-        selectedView={selectedView}
-        onViewChange={setSelectedView}
-        product={productFilter}
-        onProductChange={setProductFilter}
-      />
-
-      {/* Action Bar */}
-      {selectedLeadIds.length > 0 && (
-        <div className="action-bar">
-          <div className="selection-info">
-            {t('crm.leads.selected_count', { count: selectedLeadIds.length })}
-          </div>
-          <button className="btn btn-secondary" onClick={() => setShowBulkAssignForm(true)}>
-            {t('crm.leads.bulk_assign')}
-          </button>
-        </div>
-      )}
-
-      {/* Grid */}
-      {filteredLeads.length === 0 ? (
-        <EmptyState
-          title={t('crm.leads.empty_title')}
-          body={t('crm.leads.empty_description')}
+    <div className="crm-screen-frame">
+      <PageContainer width="wide">
+        <PageHeader
+          title={t('crm.leads.title')}
+          subtitle={t('crm.leads.subtitle')}
+          actions={
+            <>
+              <Link className="btn btn-secondary lead-import-link" to="/crm/import">
+                {t('crm.leads.import_csv')}
+              </Link>
+              <button type="button" className="btn btn-primary" onClick={() => setShowNewLeadForm(true)}>
+                {t('crm.leads.new_lead')}
+              </button>
+            </>
+          }
         />
-      ) : (
-        <LeadsGrid
-          items={filteredLeads}
+        {actionError && (
+          <p role="alert" className="action-error">
+            {t('crm.lead.action_failed', { reason: actionError })}
+          </p>
+        )}
+        <LeadsKpis stats={stats} />
+        <LeadsWorkspaceFilters
+          stats={stats}
+          selectedView={selectedView}
+          onViewChange={setSelectedView}
+          search={search}
+          onSearchChange={setSearch}
+          product={productFilter}
+          onProductChange={setProductFilter}
+          owner={ownerFilter}
+          onOwnerChange={setOwnerFilter}
+          owners={owners}
+        />
+        {selectedLeadIds.length > 0 && (
+          <div className="action-bar">
+            <div className="selection-info">{t('crm.leads.selected_count', { count: selectedLeadIds.length })}</div>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowBulkAssignForm(true)}>
+              {t('crm.leads.bulk_assign')}
+            </button>
+          </div>
+        )}
+        <LeadsBody
+          loading={loading}
+          error={error}
+          leads={leads}
           selectedIds={selectedLeadIds}
           onSelectionChange={setSelectedLeadIds}
+          onRetry={reload}
         />
-      )}
-
-      {/* New Lead Form */}
-      {showNewLeadForm && (
-        <NewLeadForm
-          onClose={() => setShowNewLeadForm(false)}
-          onSubmitted={handleNewLeadCreated}
-        />
-      )}
-
-      {/* Bulk Assign Form */}
-      {showBulkAssignForm && (
-        <BulkAssignForm
-          leadIds={selectedLeadIds}
-          onClose={() => setShowBulkAssignForm(false)}
-          onSubmitted={handleBulkAssignSubmitted}
-        />
-      )}
-    </main>
+        {showNewLeadForm && <NewLeadForm onClose={() => setShowNewLeadForm(false)} onSubmitted={handleNewLeadCreated} />}
+        {showBulkAssignForm && (
+          <BulkAssignForm leadIds={selectedLeadIds} onClose={() => setShowBulkAssignForm(false)} onSubmitted={handleBulkAssignSubmitted} />
+        )}
+      </PageContainer>
+    </div>
   );
-}
-
-
-/** Saved view → API filter (M04 §10: All open, Unassigned, SLA breached, Mine). */
-export function leadQueryFor(view: string, product?: ProductLine): Parameters<ReturnType<typeof createCrmApi>['listLeads']>[0] {
-  const open: LeadStage[] = ['NEW', 'CONTACTED', 'QUALIFIED'];
-  const base = { stage: open, product };
-  if (view === 'unassigned') return { ...base, owner: 'unassigned' };
-  if (view === 'sla_breached') return { ...base, sla: 'breached' };
-  if (view === 'mine') return { ...base, owner: 'me' };
-  return base;
 }

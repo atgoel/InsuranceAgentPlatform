@@ -1,5 +1,6 @@
 import { useT } from '../../../lib/i18n';
 import { type LeadListItem } from '../api';
+import { LeadRow } from './LeadRow';
 
 interface LeadsGridProps {
   items: LeadListItem[];
@@ -9,38 +10,25 @@ interface LeadsGridProps {
 
 export function LeadsGrid({ items, selectedIds, onSelectionChange }: LeadsGridProps) {
   const { t } = useT();
+  const allSelected = items.length > 0 && selectedIds.length === items.length;
 
-  const handleToggleAll = (checked: boolean) => {
-    if (checked) {
-      onSelectionChange(items.map((i) => i.id));
-    } else {
-      onSelectionChange([]);
-    }
+  const toggleAll = (checked: boolean) => {
+    onSelectionChange(checked ? items.map((i) => i.id) : []);
   };
 
-  const handleToggleItem = (id: string, checked: boolean) => {
-    if (checked) {
-      onSelectionChange([...selectedIds, id]);
-    } else {
-      onSelectionChange(selectedIds.filter((sid) => sid !== id));
-    }
+  const toggleItem = (id: string, checked: boolean) => {
+    onSelectionChange(checked ? [...selectedIds, id] : selectedIds.filter((sid) => sid !== id));
   };
 
   return (
     <div className="leads-grid">
-      <table role="grid" aria-label={t('crm.leads.grid_label')}>
+      <table aria-label={t('crm.leads.grid_label')}>
         <thead>
           <tr>
             <th>
-              <input
-                type="checkbox"
-                checked={selectedIds.length === items.length && items.length > 0}
-                onChange={(e) => handleToggleAll(e.target.checked)}
-                aria-label={t('crm.leads.select_all')}
-              />
+              <input type="checkbox" checked={allSelected} onChange={(e) => toggleAll(e.target.checked)} aria-label={t('crm.leads.select_all')} />
             </th>
             <th>{t('crm.leads.name')}</th>
-            <th>{t('crm.leads.mobile')}</th>
             <th>{t('crm.leads.product')}</th>
             <th>{t('crm.leads.source')}</th>
             <th>{t('crm.leads.owner')}</th>
@@ -51,32 +39,7 @@ export function LeadsGrid({ items, selectedIds, onSelectionChange }: LeadsGridPr
         </thead>
         <tbody>
           {items.map((item) => (
-            <tr key={item.id} className="lead-row">
-              <td>
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(item.id)}
-                  onChange={(e) => handleToggleItem(item.id, e.target.checked)}
-                  aria-label={t('crm.leads.select_item')}
-                />
-              </td>
-              <td>
-                <a href={`#/crm/leads/${item.id}`}>{item.name}</a>
-              </td>
-              <td>{item.mobileMasked || '—'}</td>
-              <td>{item.productInterest}</td>
-              <td>{item.source}</td>
-              <td>{item.ownerName || '—'}</td>
-              <td>
-                <span className={`stage-badge stage-${item.stage}`}>{item.stage}</span>
-              </td>
-              <td>
-                <span className={`sla-badge sla-${item.slaState}`}>{item.slaState}</span>
-              </td>
-              <td>
-                <span className={`consent-badge consent-${item.consent}`}>{item.consent}</span>
-              </td>
-            </tr>
+            <LeadRow key={item.id} item={item} selected={selectedIds.includes(item.id)} onToggle={(checked) => toggleItem(item.id, checked)} />
           ))}
         </tbody>
       </table>

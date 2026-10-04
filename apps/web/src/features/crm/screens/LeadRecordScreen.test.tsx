@@ -8,6 +8,7 @@ import { I18nProvider } from '../../../lib/i18n';
 import { LeadRecordScreen } from './LeadRecordScreen';
 import { ApiClient } from '../../../lib/api/api-client';
 import { type LeadDetailView } from '../api';
+import { mockClient, renderAt } from '../../../test/render';
 
 describe('AC-M04-26 LeadRecordScreen', () => {
   const mockLead: LeadDetailView = {
@@ -79,7 +80,7 @@ describe('AC-M04-26 LeadRecordScreen', () => {
     await waitFor(() => {
       expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
     });
-    expect(screen.getByText('HOT')).toBeInTheDocument();
+    expect(screen.getByText('Hot')).toBeInTheDocument();
   });
 
   it('AC-M04-26 displays stage bar with current stage active', async () => {
@@ -328,5 +329,55 @@ describe('AC-M04-26 LeadRecordScreen', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Contacted' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('That did not go through: Consent must be recorded first');
     expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
+  });
+
+  it('AC-M04-26 BUG-09 BUG-16 header shows labelled codes, an IST date and a back link', async () => {
+    const lead = { ...mockLead, productInterest: 'SAVINGS_LIFE', source: 'WALK_IN', createdAt: '2026-10-04T05:00:00.000Z', stage: 'NEW' } as LeadDetailView;
+    renderAt(<LeadRecordScreen />, mockClient({ '/api/v1/leads/lead-1': lead }), '/crm/leads/lead-1', '/crm/leads/:id');
+    await screen.findByRole('heading', { name: 'Rajesh Kumar' });
+    const meta = document.querySelector('.lead-meta') as HTMLElement;
+    expect(meta.textContent).toBe('ProductSavings lifeSourceWalk-inCreated4 Oct 2026Mobile+91 98XXX XXXXX');
+    expect(screen.getByRole('link', { name: 'Leads' }).getAttribute('href')).toBe('/crm/leads');
+  });
+
+  it('AC-M04-26 shows contact, consent and attribution cards with translated values', async () => {
+    const lead = {
+      ...mockLead,
+      consentSummary: [
+        { purpose: 'SERVICE', channel: 'CALL', granted: true },
+        { purpose: 'MARKETING', channel: 'SMS', granted: false },
+      ],
+      attribution: {
+        source: 'WEB_FORM',
+        firstTouch: { channel: 'WEB_FORM', at: '2026-10-01T05:00:00.000Z' },
+        lastTouch: { channel: 'REFERRAL', at: '2026-10-02T05:00:00.000Z' },
+      },
+    } as LeadDetailView;
+    renderAt(<LeadRecordScreen />, mockClient({ '/api/v1/leads/lead-1': lead }), '/crm/leads/lead-1', '/crm/leads/:id');
+    await screen.findByRole('heading', { name: 'Rajesh Kumar' });
+    const contact = screen.getByRole('region', { name: 'Contact' });
+    expect(contact.textContent).toBe('ContactMobile+91 98XXX XXXXXEmail+91 98*****@example.comPincode400001');
+    const consent = screen.getByRole('region', { name: 'Consent' });
+    expect(consent.textContent).toBe('ConsentService messages · CallsGrantedMarketing · SMSNot given');
+    const attribution = screen.getByRole('region', { name: 'Attribution' });
+    expect(attribution.textContent).toBe(
+      'AttributionFirst touchWeb form · 1 Oct 2026Last touchReferral · 2 Oct 2026Credited to source only when the insurer confirms issuance.',
+    );
+  });
+
+  it('AC-M04-26 possible match banner links the lead to the customer with the exact request', async () => {
+    const lead = { ...mockLead, possibleMatches: [{ id: 'party-9', displayName: 'Priya N.' }] } as LeadDetailView;
+    const c = mockClient({ '/api/v1/leads/lead-1': lead, '/api/v1/leads/lead-1/party-link': lead });
+    renderAt(<LeadRecordScreen />, c, '/crm/leads/lead-1', '/crm/leads/:id');
+    expect(await screen.findByText('Possible match: Priya N.')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Link to Priya N.' }));
+    expect(c.post).toHaveBeenCalledWith('/api/v1/leads/lead-1/party-link', { partyId: 'party-9' }, { idempotencyKey: expect.any(String) });
+  });
+
+  it('AC-M04-26 a stage blocked message names the target stage in words', async () => {
+    renderAt(<LeadRecordScreen />, mockClient({ '/api/v1/leads/lead-1': { ...mockLead, stageRules: { CONTACTED: { met: false, missing: ['Log a call'] } } } }), '/crm/leads/lead-1', '/crm/leads/:id');
+    await userEvent.click(await screen.findByRole('button', { name: 'Contacted' }));
+    expect(screen.getByText('To move to Contacted, complete:')).toBeInTheDocument();
+    expect(screen.getByText('Log a call')).toBeInTheDocument();
   });
 });

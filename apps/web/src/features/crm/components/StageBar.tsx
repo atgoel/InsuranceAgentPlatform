@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useT } from '../../../lib/i18n';
 import { type LeadStage } from '../api';
+import { LOST_REASONS } from './lost-reasons';
 
 interface StageBarProps {
   currentStage: LeadStage;
@@ -60,7 +61,7 @@ export function StageBar({ currentStage, stageRules, onTransition }: StageBarPro
 
       {showBlockedMsg && (
         <div className="blocked-message">
-          <p>{t('crm.lead.stage_blocked', { stage: showBlockedMsg })}</p>
+          <p>{t('crm.lead.stage_blocked', { stage: t(`crm.lead.stage_${showBlockedMsg}`) })}</p>
           <ul>
             {stageRules[showBlockedMsg]?.missing.map((rule) => (
               <li key={rule}>{rule}</li>
@@ -86,13 +87,11 @@ export function StageBar({ currentStage, stageRules, onTransition }: StageBarPro
               onChange={(e) => setLostReason(e.target.value)}
             >
               <option value="">{t('crm.lead.select_reason')}</option>
-              <option value="BOUGHT_ELSEWHERE">Bought Elsewhere</option>
-              <option value="PREMIUM_TOO_HIGH">Premium Too High</option>
-              <option value="DECLINED_BY_UNDERWRITING">Declined by Underwriting</option>
-              <option value="NOT_REACHABLE">Not Reachable</option>
-              <option value="POSTPONED">Postponed</option>
-              <option value="NOT_INTERESTED">Not Interested</option>
-              <option value="OTHER">Other</option>
+              {LOST_REASONS.map((reason) => (
+                <option key={reason} value={reason}>
+                  {t(`crm.lostReason.${reason}`)}
+                </option>
+              ))}
             </select>
           </div>
           <div className="form-actions">
