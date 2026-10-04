@@ -1,4 +1,5 @@
-import { Button, StatusChip } from '../../../design-system';
+import { Button, StatusChip, formatIstDate } from '../../../design-system';
+import { useLabel } from '../../../lib/i18n/labels';
 import { useT } from '../../../lib/i18n';
 import type { LineOfBusiness, ResearchItem } from '../api';
 
@@ -9,14 +10,16 @@ interface ResearchCardProps {
 
 /** One approved research summary (M07 library): stale banner, POSP chip, points, source and date. */
 export function ResearchCard({ item, onCompare }: ResearchCardProps) {
-  const { t } = useT();
+  const { t, lang } = useT();
+  const line = useLabel('line', item.line);
   return (
     <article className="research-card" aria-label={item.productName}>
       {item.stale && <div className="stale-banner">{t('catalogue.research.stale_banner')}</div>}
-      <div className="card-header">
-        <div className="card-title">
+      <div className="plan-card-header">
+        <div className="plan-card-title">
           <h3>{item.productName}</h3>
           <p className="insurer-name">{item.insurerName}</p>
+          <p className="insurer-name">{line}</p>
         </div>
         {item.posEligible && <StatusChip tone="ok">{t('catalogue.research.posp_eligible')}</StatusChip>}
       </div>
@@ -30,7 +33,7 @@ export function ResearchCard({ item, onCompare }: ResearchCardProps) {
       )}
       <div className="card-footer">
         <p className="card-source">
-          {t('catalogue.research.source')}: {item.sourceRef} · {item.sourceDate}
+          {t('catalogue.research.source')}: {item.sourceRef} · {formatIstDate(item.sourceDate, lang)}
         </p>
         <Button variant="secondary" onClick={() => onCompare(item.line)}>
           {t('catalogue.research.compare_button')}

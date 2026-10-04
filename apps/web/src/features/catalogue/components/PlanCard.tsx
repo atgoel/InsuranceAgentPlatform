@@ -1,4 +1,5 @@
-import { Button } from '../../../design-system';
+import { Button, StatusChip } from '../../../design-system';
+import { useLabel } from '../../../lib/i18n/labels';
 import { useT } from '../../../lib/i18n';
 import type { ScopedVersion, VersionDetail } from '../api';
 
@@ -13,13 +14,15 @@ interface PlanCardProps {
 /** One in-scope plan on the compare screen. Plans come only from the API's scope evaluation. */
 export function PlanCard({ version, selected, detail, onToggle }: PlanCardProps) {
   const { t } = useT();
+  const line = useLabel('line', version.line);
   return (
     <article className={`compare-card ${selected ? 'selected' : ''}`} aria-label={version.productName}>
-      <div className="card-header">
-        <div className="card-title">
+      <div className="plan-card-header">
+        <div className="plan-card-title">
           <h3>{version.productName}</h3>
           <p className="insurer-name">{version.insurerName}</p>
         </div>
+        <StatusChip tone="info">{line}</StatusChip>
       </div>
       {detail && detail.keyFacts.length > 0 && (
         <div className="card-details key-facts">

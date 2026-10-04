@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useApi } from '../../../lib/api';
-import { Tabs } from '../../../design-system';
+import { PageContainer, PageHeader, Tabs } from '../../../design-system';
 import { ApiError, type FieldError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
 import { createAdviceApi, type CalcOutput, type CalculatorId } from '../api';
@@ -72,8 +72,8 @@ export function CalculatorsScreen() {
     setValues((prev) => ({ ...prev, [calculator]: { ...prev[calculator], [name]: value } }));
 
   return (
-    <div className="advice-screen">
-      <h1>{t('advice.calc.title')}</h1>
+    <PageContainer>
+      <PageHeader title={t('advice.calc.title')} subtitle={t('advice.calc.subtitle')} />
       <Tabs tabs={CALCULATOR_IDS.map((id) => ({ id, label: t(`advice.calc.tab.${id}`) }))} value={calculator} onChange={switchTab} />
       <InlineError message={error} />
       <CalculatorForm
@@ -84,7 +84,7 @@ export function CalculatorsScreen() {
         onChange={onChange}
         onSubmit={run}
       />
-      {output && <CalculatorResult output={output} canSave={Boolean(partyId)} saved={saved} saving={saving} onSave={save} />}
-    </div>
+      {output && <CalculatorResult calculator={calculator} output={output} canSave={Boolean(partyId)} saved={saved} saving={saving} onSave={save} />}
+    </PageContainer>
   );
 }

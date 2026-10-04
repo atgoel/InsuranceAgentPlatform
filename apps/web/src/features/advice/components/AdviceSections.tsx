@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Button } from '../../../design-system';
+import { Button, formatIstDate } from '../../../design-system';
 import { useT } from '../../../lib/i18n';
-import { formatDate } from '../../../lib/format';
 import type { AdviceView, MissingItem } from '../api';
 import { FieldRow } from './FieldRow';
 import { ProductSelect } from './ProductSelect';
@@ -28,7 +27,7 @@ export function MissingChecklist({ missing }: { missing: MissingItem[] }) {
 }
 
 export function RunsSection({ view }: { view: AdviceView }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   return (
     <section className="advice-card" aria-label={t('advice.record.runs')}>
       <h2>{t('advice.record.runs')}</h2>
@@ -36,7 +35,7 @@ export function RunsSection({ view }: { view: AdviceView }) {
       <ul>
         {view.calculatorRuns.map((r) => (
           <li key={`${r.calculator}-${r.ranAt}`}>
-            {t(`advice.calc.tab.${r.calculator}`)} - {formatDate(new Date(r.ranAt))} - {t('advice.calc.assumptions', { version: r.assumptionsVersion })}
+            {t(`advice.calc.tab.${r.calculator}`)} - {formatIstDate(r.ranAt, lang)} - {t('advice.calc.assumptions', { version: r.assumptionsVersion })}
           </li>
         ))}
       </ul>

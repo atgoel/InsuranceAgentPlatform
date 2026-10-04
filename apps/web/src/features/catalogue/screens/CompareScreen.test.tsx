@@ -6,6 +6,8 @@ import type { ScopeResult, VersionDetail } from '../api';
 import { CompareScreen } from './CompareScreen';
 import { mockClient, renderAt } from '../../../test/render';
 
+const user = userEvent.setup({ delay: null });
+
 const DISCLOSURE = 'Showing plans from your tied insurers only: HDFC Life, Star Health. This disclosure appears on shared comparisons.';
 const SCOPE: ScopeResult = {
   versions: [
@@ -30,7 +32,7 @@ describe('AC-M05-10 CompareScreen (/m/compare)', () => {
     const client = mockClient(routes());
     renderAt(<CompareScreen />, client, '/m/compare?line=LIFE');
     expect(await screen.findByText('Click 2 Protect Supreme')).toBeInTheDocument();
-    expect(screen.getAllByRole('article').map((a) => a.getAttribute('aria-label'))).toEqual(['Click 2 Protect Supreme', 'Saral Jeevan Bima']);
+    expect([...document.querySelectorAll('article')].map((a) => a.getAttribute('aria-label'))).toEqual(['Click 2 Protect Supreme', 'Saral Jeevan Bima']);
     expect(client.post).toHaveBeenCalledWith(EVAL, { line: 'LIFE', category: undefined, date: undefined });
   });
 
@@ -52,21 +54,21 @@ describe('AC-M05-10 CompareScreen (/m/compare)', () => {
   it('AC-M05-10 selecting a plan marks it pressed, loads its key facts and says quotes arrive later; selecting again clears it', async () => {
     renderAt(<CompareScreen />, mockClient(routes()), '/m/compare?line=LIFE');
     const term = await screen.findByRole('article', { name: 'Click 2 Protect Supreme' });
-    await userEvent.click(within(term).getByRole('button', { name: 'Select plan' }));
+    await user.click(within(term).getByRole('button', { name: 'Select plan' }));
     expect(within(term).getByRole('button', { name: 'Selected' })).toHaveAttribute('aria-pressed', 'true');
     expect(await within(term).findByText('Cover up to age')).toBeInTheDocument();
     expect(within(term).getByText('85')).toBeInTheDocument();
     expect(within(term).getByText('Quotes arrive in a later module')).toBeInTheDocument();
     const saral = screen.getByRole('article', { name: 'Saral Jeevan Bima' });
     expect(within(saral).getByRole('button', { name: 'Select plan' })).toHaveAttribute('aria-pressed', 'false');
-    await userEvent.click(within(term).getByRole('button', { name: 'Selected' }));
+    await user.click(within(term).getByRole('button', { name: 'Selected' }));
     expect(within(term).getByRole('button', { name: 'Select plan' })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('AC-M05-10 a plan stays selectable when its key facts cannot be loaded', async () => {
     renderAt(<CompareScreen />, mockClient({ [EVAL]: SCOPE }), '/m/compare?line=LIFE');
     const saral = await screen.findByRole('article', { name: 'Saral Jeevan Bima' });
-    await userEvent.click(within(saral).getByRole('button', { name: 'Select plan' }));
+    await user.click(within(saral).getByRole('button', { name: 'Select plan' }));
     expect(within(saral).getByText('Quotes arrive in a later module')).toBeInTheDocument();
   });
 
@@ -79,5 +81,12 @@ describe('AC-M05-10 CompareScreen (/m/compare)', () => {
     failed.unmount();
     renderAt(<CompareScreen />, mockClient(routes(new ApiError(403, 'forbidden', 'No'))), '/m/compare');
     expect(await screen.findByText(/access denied/i)).toBeInTheDocument();
+  });
+
+  it('AC-M05-10 shows each plan’s line as a translated label, never the code', async () => {
+    renderAt(<CompareScreen />, mockClient(routes()), '/m/compare?line=LIFE');
+    const term = await screen.findByRole('article', { name: 'Click 2 Protect Supreme' });
+    expect(within(term).getByText('Life insurance')).toBeInTheDocument();
+    expect(within(term).queryByText('LIFE')).not.toBeInTheDocument();
   });
 });

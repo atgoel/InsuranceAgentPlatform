@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Button } from '../../../design-system';
+import { Button, formatIstDate } from '../../../design-system';
 import { useT } from '../../../lib/i18n';
-import { formatDate } from '../../../lib/format';
 import type { BiMethod, QuoteOption } from '../api';
 import { FieldRow } from './FieldRow';
 
@@ -79,7 +78,7 @@ function AckForm({ option, biId, busy, onAcknowledge }: { option: QuoteOption; b
 
 /** Benefit-illustration state for one option: records, attach form and acknowledgement form. */
 export function BiPanel({ option, busy, onAttach, onAcknowledge }: Props) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { bi } = option;
   if (!bi.required) return null;
   const pending = bi.records.find((r) => !r.acknowledgement);
@@ -94,7 +93,7 @@ export function BiPanel({ option, busy, onAttach, onAcknowledge }: Props) {
         {bi.records.map((r) => (
           <li key={r.id}>
             {t('advice.bi.record', { ref: r.documentRef, version: r.insurerBiVersion })}
-            {r.acknowledgement ? ` - ${t('advice.bi.acknowledged_on', { date: formatDate(new Date(r.acknowledgement.at)), method: t(`advice.bi.method.${r.acknowledgement.method}`) })}` : ''}
+            {r.acknowledgement ? ` - ${t('advice.bi.acknowledged_on', { date: formatIstDate(r.acknowledgement.at, lang), method: t(`advice.bi.method.${r.acknowledgement.method}`) })}` : ''}
           </li>
         ))}
       </ul>

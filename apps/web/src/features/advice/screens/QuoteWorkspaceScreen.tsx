@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useApi } from '../../../lib/api';
-import { Button, ErrorState, LoadingSkeleton, PermissionDenied } from '../../../design-system';
+import { Button, ErrorState, LoadingSkeleton, PageContainer, PermissionDenied, formatIstDate } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
-import { formatDate } from '../../../lib/format';
 import { createCatalogueApi, type CatalogueApi, type LineOfBusiness } from '../../catalogue/api';
 import { asLine } from '../../catalogue/lines';
 import { createAdviceApi, type BiMethod, type OptionInput, type QuoteView } from '../api';
@@ -12,6 +11,7 @@ import { AddOptionForm } from '../components/AddOptionForm';
 import { ComparisonGrid } from '../components/ComparisonGrid';
 import { InlineError } from '../components/InlineError';
 import { OptionCard } from '../components/OptionCard';
+import { QuoteHeader } from '../components/QuoteHeader';
 import type { ProductChoice } from '../components/ProductSelect';
 import '../styles/advice.css';
 
@@ -53,7 +53,7 @@ export function QuoteWorkspaceScreen() {
   const api = useApi();
   const adviceApi = useMemo(() => createAdviceApi(api), [api]);
   const catalogueApi = useMemo(() => createCatalogueApi(api), [api]);
-  const { t } = useT();
+  const { t, lang } = useT();
   const { id: opportunityId } = useParams<{ id: string }>();
 
   const [loading, setLoading] = useState(true);
@@ -109,14 +109,14 @@ export function QuoteWorkspaceScreen() {
 
   if (!quote) {
     return (
-      <div className="advice-screen">
-        <h1>{t('advice.quote.title')}</h1>
+      <PageContainer>
+        <QuoteHeader />
         <InlineError message={actionError} />
         <p>{t('advice.quote.none')}</p>
         <Button loading={busy} onClick={start}>
           {t('advice.quote.start')}
         </Button>
-      </div>
+      </PageContainer>
     );
   }
 
@@ -146,8 +146,8 @@ export function QuoteWorkspaceScreen() {
     });
 
   return (
-    <div className="advice-screen">
-      <h1>{t('advice.quote.title')}</h1>
+    <PageContainer>
+      <QuoteHeader quote={quote} />
       <p className="advice-banner" role="note">
         {quote.disclosure}
       </p>
@@ -158,7 +158,7 @@ export function QuoteWorkspaceScreen() {
           {t('advice.quote.share')}
         </Button>
       </div>
-      {share && <p role="status">{t('advice.quote.share_link', { url: share.url, date: formatDate(new Date(share.expiresAt)) })}</p>}
+      {share && <p role="status">{t('advice.quote.share_link', { url: share.url, date: formatIstDate(share.expiresAt, lang) })}</p>}
       {quote.options.map((o) => (
         <OptionCard
           key={o.id}
@@ -172,6 +172,6 @@ export function QuoteWorkspaceScreen() {
         />
       ))}
       <AddOptionForm products={products} busy={busy} onAdd={addOption} />
-    </div>
+    </PageContainer>
   );
 }

@@ -1,9 +1,12 @@
-import { Button } from '../../../design-system';
+import { Link } from 'react-router-dom';
+import { Button, KpiRow, KpiTile } from '../../../design-system';
 import { useT } from '../../../lib/i18n';
 import { formatMoney } from '../../../lib/format';
-import type { CalcOutput } from '../api';
+import type { CalcOutput, CalculatorId } from '../api';
+import { NEXT_STEP } from '../calculators';
 
 interface Props {
+  calculator: CalculatorId;
   output: CalcOutput;
   canSave: boolean;
   saved: boolean;
@@ -17,19 +20,17 @@ function formatValue(key: string, value: unknown, t: (k: string) => string): str
   return String(value);
 }
 
-export function CalculatorResult({ output, canSave, saved, saving, onSave }: Props) {
+export function CalculatorResult({ calculator, output, canSave, saved, saving, onSave }: Props) {
   const { t } = useT();
+  const next = NEXT_STEP[calculator];
   return (
     <section className="advice-card" aria-label={t('advice.calc.result')}>
       <h2>{t('advice.calc.result')}</h2>
-      <dl className="advice-result">
+      <KpiRow>
         {Object.entries(output.result).map(([key, value]) => (
-          <div key={key}>
-            <dt>{t(`advice.calc.result.${key}`)}</dt>
-            <dd>{formatValue(key, value, t)}</dd>
-          </div>
+          <KpiTile key={key} label={t(`advice.calc.result.${key}`)} value={formatValue(key, value, t)} />
         ))}
-      </dl>
+      </KpiRow>
       <h3>{t('advice.calc.workings')}</h3>
       <ul className="advice-workings">
         {output.workings.map((w) => (
@@ -39,11 +40,19 @@ export function CalculatorResult({ output, canSave, saved, saving, onSave }: Pro
         ))}
       </ul>
       <p className="advice-hint">{t('advice.calc.assumptions', { version: output.assumptionsVersion })}</p>
-      {canSave && !saved && (
-        <Button variant="secondary" loading={saving} onClick={onSave}>
-          {t('advice.calc.save')}
-        </Button>
-      )}
+      <p className="advice-hint">{t('advice.calc.educational')}</p>
+      <div className="advice-row">
+        {canSave && !saved && (
+          <Button variant="secondary" loading={saving} onClick={onSave}>
+            {t('advice.calc.save')}
+          </Button>
+        )}
+        {next && (
+          <Link className="advice-link" to={next}>
+            {t(`advice.calc.next.${calculator}`)}
+          </Link>
+        )}
+      </div>
       {saved && <p role="status">{t('advice.calc.saved')}</p>}
     </section>
   );

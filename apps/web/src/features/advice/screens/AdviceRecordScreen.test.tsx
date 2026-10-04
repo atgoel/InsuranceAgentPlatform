@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '../../../lib/api/api-error';
 import type { AdviceView } from '../api';
 import { AdviceRecordScreen } from './AdviceRecordScreen';
 import { mockClient, renderAt, type MockClient } from '../../../test/render';
+
+const user = userEvent.setup({ delay: null });
+const enter = (element: HTMLElement, value: string) => fireEvent.change(element, { target: { value } });
 
 const PATH = '/crm/advice/adv_1';
 const ROUTE = '/crm/advice/:id';
@@ -19,7 +22,7 @@ const VIEW: AdviceView = {
   version: 3,
   createdAt: '2026-10-01T09:00:00Z',
   scope: { disclosure: DISCLOSURE, entityType: 'ISP', versionIdsShown: ['pv_term', 'pv_saral'], excludedCount: 1, evaluatedOn: '2026-10-01' },
-  calculatorRuns: [{ calculator: 'protection-gap', inputs: {}, outputs: {}, assumptionsVersion: '2026.1', ranAt: '2026-10-01T09:30:00Z' }],
+  calculatorRuns: [{ calculator: 'protection-gap', inputs: {}, outputs: {}, assumptionsVersion: '2026.1', ranAt: '2026-10-01T20:00:00Z' }],
   suitabilityNotes: 'Customer prefers a long term',
   shownProducts: [
     { versionId: 'pv_term', productName: 'Click 2 Protect', insurerName: 'HDFC Life', line: 'LIFE', category: 'TERM' },
@@ -61,7 +64,7 @@ describe('AC-M06-14 AdviceRecordScreen (/crm/advice/:id)', () => {
     // Same shape the API sends: extensions are top-level problem members.
     const incomplete = ApiError.fromProblem(422, { status: 422, code: 'advice_incomplete', title: 'Advice is incomplete', missing: ['recommendation', 'customerChoice'] });
     const client = open({ [ADVICE]: { ...VIEW, missing: [] }, [`${ADVICE}/finalisation`]: incomplete });
-    await userEvent.click(await screen.findByRole('button', { name: 'Finalise advice' }));
+    await user.click(await screen.findByRole('button', { name: 'Finalise advice' }));
     expect(await screen.findByText('Advice is incomplete')).toBeInTheDocument();
     const missing = screen.getByRole('region', { name: 'Still needed before finalising' });
     expect(within(missing).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Add at least one recommendation', 'Record the customer choice']);
@@ -71,7 +74,7 @@ describe('AC-M06-14 AdviceRecordScreen (/crm/advice/:id)', () => {
 
   it('AC-M06-14 after finalisation everything is read-only and the finalised date is shown', async () => {
     open({ [ADVICE]: VIEW, [`${ADVICE}/finalisation`]: FINALISED });
-    await userEvent.click(await screen.findByRole('button', { name: 'Finalise advice' }));
+    await user.click(await screen.findByRole('button', { name: 'Finalise advice' }));
     expect(await screen.findByText('Finalised on 2 Oct 2026')).toBeInTheDocument();
     expect(screen.queryAllByRole('button')).toEqual([]);
     expect(screen.queryAllByRole('textbox')).toEqual([]);
@@ -93,12 +96,12 @@ describe('AC-M06-14 AdviceRecordScreen (/crm/advice/:id)', () => {
     client.put.mockResolvedValue({ ...VIEW, version: 4 });
     const choice = await screen.findByRole('region', { name: 'Customer choice' });
     const save = within(choice).getByRole('button', { name: 'Save customer choice' });
-    await userEvent.selectOptions(within(choice).getByLabelText('Product chosen by the customer'), 'pv_saral');
+    await user.selectOptions(within(choice).getByLabelText('Product chosen by the customer'), 'pv_saral');
     expect(within(choice).getByText('A reason is required when the choice differs from the recommendation')).toBeInTheDocument();
     expect(save).toBeDisabled();
-    await userEvent.type(within(choice).getByLabelText('Reason for choosing a product we did not recommend'), 'Lower premium');
+    await user.type(within(choice).getByLabelText('Reason for choosing a product we did not recommend'), 'Lower premium');
     expect(save).toBeEnabled();
-    await userEvent.click(save);
+    await user.click(save);
     await screen.findByRole('region', { name: 'Customer choice' });
     expect(client.put).toHaveBeenCalledWith(`${ADVICE}/customer-choice`, { versionId: 'pv_saral', reasonIfDifferent: 'Lower premium' }, { ifMatch: '"v3"' });
   });
@@ -107,9 +110,9 @@ describe('AC-M06-14 AdviceRecordScreen (/crm/advice/:id)', () => {
     const client = open();
     client.put.mockResolvedValue({ ...VIEW, version: 4 });
     const choice = await screen.findByRole('region', { name: 'Customer choice' });
-    await userEvent.selectOptions(within(choice).getByLabelText('Product chosen by the customer'), 'pv_term');
+    await user.selectOptions(within(choice).getByLabelText('Product chosen by the customer'), 'pv_term');
     expect(within(choice).queryByLabelText('Reason for choosing a product we did not recommend')).not.toBeInTheDocument();
-    await userEvent.click(within(choice).getByRole('button', { name: 'Save customer choice' }));
+    await user.click(within(choice).getByRole('button', { name: 'Save customer choice' }));
     expect(client.put).toHaveBeenCalledWith(`${ADVICE}/customer-choice`, { versionId: 'pv_term' }, { ifMatch: '"v3"' });
   });
 
@@ -123,14 +126,13 @@ describe('AC-M06-14 AdviceRecordScreen (/crm/advice/:id)', () => {
     const recs = await screen.findByRole('region', { name: 'Recommendations' });
     const add = within(recs).getByRole('button', { name: 'Add recommendation' });
     expect(within(recs).getByLabelText('Product to recommend').querySelectorAll('option')).toHaveLength(3);
-    await userEvent.selectOptions(within(recs).getByLabelText('Product to recommend'), 'pv_saral');
-    await userEvent.type(within(recs).getByLabelText('Rationale'), 'too short');
+    await user.selectOptions(within(recs).getByLabelText('Product to recommend'), 'pv_saral');
+    enter(within(recs).getByLabelText('Rationale'), 'too short');
     expect(add).toBeDisabled();
-    await userEvent.type(within(recs).getByLabelText('Rationale'), '!!');
+    enter(within(recs).getByLabelText('Rationale'), 'too short!!');
     expect(add).toBeEnabled();
-    await userEvent.clear(within(recs).getByLabelText('Rationale'));
-    await userEvent.type(within(recs).getByLabelText('Rationale'), 'Simple and affordable');
-    await userEvent.click(add);
+    enter(within(recs).getByLabelText('Rationale'), 'Simple and affordable');
+    await user.click(add);
     expect(await within(recs).findByText('Saral Jeevan Bima (HDFC Life)', { selector: 'strong' })).toBeInTheDocument();
     expect(client.post).toHaveBeenCalledWith(`${ADVICE}/recommendations`, { versionId: 'pv_saral', rationale: 'Simple and affordable' });
     expect(within(recs).getByLabelText('Rationale')).toHaveValue('');
@@ -139,9 +141,9 @@ describe('AC-M06-14 AdviceRecordScreen (/crm/advice/:id)', () => {
   it('AC-M06-14 an out-of-scope recommendation shows the server title inline and keeps the record', async () => {
     const client = open({ [ADVICE]: VIEW, [`${ADVICE}/recommendations`]: new ApiError(403, 'product_out_of_scope', 'Product is outside your scope') });
     const recs = await screen.findByRole('region', { name: 'Recommendations' });
-    await userEvent.selectOptions(within(recs).getByLabelText('Product to recommend'), 'pv_saral');
-    await userEvent.type(within(recs).getByLabelText('Rationale'), 'Simple and affordable');
-    await userEvent.click(within(recs).getByRole('button', { name: 'Add recommendation' }));
+    await user.selectOptions(within(recs).getByLabelText('Product to recommend'), 'pv_saral');
+    enter(within(recs).getByLabelText('Rationale'), 'Simple and affordable');
+    await user.click(within(recs).getByRole('button', { name: 'Add recommendation' }));
     expect(await screen.findByText('Product is outside your scope')).toBeInTheDocument();
     expect(client.post).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('note')).toHaveTextContent(DISCLOSURE);
@@ -151,9 +153,8 @@ describe('AC-M06-14 AdviceRecordScreen (/crm/advice/:id)', () => {
     const client = open();
     client.put.mockResolvedValue({ ...VIEW, version: 4, suitabilityNotes: 'Updated notes' });
     const notes = await screen.findByRole('textbox', { name: 'Suitability notes' });
-    await userEvent.clear(notes);
-    await userEvent.type(notes, 'Updated notes');
-    await userEvent.click(screen.getByRole('button', { name: 'Save notes' }));
+    enter(notes, 'Updated notes');
+    await user.click(screen.getByRole('button', { name: 'Save notes' }));
     await screen.findByRole('button', { name: 'Save notes' });
     expect(client.put).toHaveBeenCalledWith(`${ADVICE}/notes`, { text: 'Updated notes' }, { ifMatch: '"v3"' });
   });

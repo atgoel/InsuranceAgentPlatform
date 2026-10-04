@@ -7,6 +7,12 @@ import type { QuoteOption, QuoteView } from '../api';
 import { QuoteWorkspaceScreen } from './QuoteWorkspaceScreen';
 import { mockClient, renderAt } from '../../../test/render';
 
+// No per-keystroke typing: the behaviour under test is the request, so values are set in one change event.
+const user = userEvent.setup({ delay: null });
+function enter(element: HTMLElement, value: string) {
+  fireEvent.change(element, { target: { value } });
+}
+
 const PATH = '/crm/opportunities/opp_1/quote';
 const ROUTE = '/crm/opportunities/:id/quote';
 const QUOTES = '/api/v1/quotes';
@@ -60,6 +66,7 @@ function quote(options: QuoteOption[], over: Partial<QuoteView> = {}): QuoteView
       { key: 'premium_frequency', label: 'Premium frequency', values: options.map((o) => o.premium.frequency) },
       { key: 'sum_assured', label: 'Sum assured', values: options.map((o) => o.sumAssuredPaise) },
       { key: 'policy_term', label: 'Policy term (years)', values: options.map((o) => o.policyTermYears ?? null) },
+      { key: 'valid_until', label: 'Valid until', values: options.map((o) => o.validUntil) },
     ],
     ...over,
   };
@@ -81,14 +88,14 @@ const open = (client = mockClient({ [QUOTES]: { items: [quote([TERM, ULIP])] }, 
   return client;
 };
 
-async function fillOption(total: string) {
-  await userEvent.selectOptions(screen.getByLabelText('Product'), 'pv_saral');
-  await userEvent.type(screen.getByLabelText('Sum assured (₹)'), '10000000');
-  await userEvent.type(screen.getByLabelText('Policy term (years)'), '30');
-  await userEvent.type(screen.getByLabelText('Base premium (₹)'), '10000');
-  await userEvent.type(screen.getByLabelText('Riders premium (₹)'), '2000');
-  await userEvent.type(screen.getByLabelText('Tax (₹)'), '1800');
-  await userEvent.type(screen.getByLabelText('Total premium (₹)'), total);
+function fillOption(total: string) {
+  enter(screen.getByLabelText('Product'), 'pv_saral');
+  enter(screen.getByLabelText('Sum assured (₹)'), '10000000');
+  enter(screen.getByLabelText('Policy term (years)'), '30');
+  enter(screen.getByLabelText('Base premium (₹)'), '10000');
+  enter(screen.getByLabelText('Riders premium (₹)'), '2000');
+  enter(screen.getByLabelText('Tax (₹)'), '1800');
+  enter(screen.getByLabelText('Total premium (₹)'), total);
   fireEvent.change(screen.getByLabelText('Valid until'), { target: { value: '2026-12-31' } });
 }
 
@@ -102,7 +109,7 @@ describe('AC-M06-13 QuoteWorkspaceScreen (/crm/opportunities/:id/quote)', () => 
   it('AC-M06-13 offers Start quote when none exists and creates it with empty insured parties and requirements', async () => {
     const client = mockClient({ [QUOTES]: (opts: unknown) => (opts && (opts as { query?: unknown }).query ? { items: [] } : quote([])), [PRODUCTS]: CATALOGUE });
     open(client);
-    await userEvent.click(await screen.findByRole('button', { name: 'Start quote' }));
+    await user.click(await screen.findByRole('button', { name: 'Start quote' }));
     expect(await screen.findByRole('note')).toHaveTextContent(DISCLOSURE);
     expect(client.post).toHaveBeenCalledWith(QUOTES, { opportunityId: 'opp_1', insuredPartyIds: [], requirements: {} });
   });
@@ -118,15 +125,14 @@ describe('AC-M06-13 QuoteWorkspaceScreen (/crm/opportunities/:id/quote)', () => 
 
   it('AC-M06-13 a premium total that is not base + riders + tax shows a mismatch and disables submit', async () => {
     open();
-    await screen.findByRole('note');
-    await within(screen.getByLabelText('Product')).findByRole('option', { name: 'Saral Jeevan Bima (HDFC Life)' });
-    await fillOption('13000');
+    await screen.findByText(DISCLOSURE);
+    await within(screen.getByLabelText('Product')).findByText('Saral Jeevan Bima (HDFC Life)');
+    fillOption('13000');
     expect(screen.getByText('Total premium must equal base + riders + tax (₹13,800.00)')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Add option to quote' })).toBeDisabled();
-    await userEvent.clear(screen.getByLabelText('Total premium (₹)'));
-    await userEvent.type(screen.getByLabelText('Total premium (₹)'), '13800');
+    expect(screen.getByText('Add option to quote')).toBeDisabled();
+    enter(screen.getByLabelText('Total premium (₹)'), '13800');
     expect(screen.queryByText(/Total premium must equal/)).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Add option to quote' })).toBeEnabled();
+    expect(screen.getByText('Add option to quote')).toBeEnabled();
   });
 
   it('AC-M06-13 submits the option in paise and shows the new column in the comparison grid', async () => {
@@ -137,10 +143,10 @@ describe('AC-M06-13 QuoteWorkspaceScreen (/crm/opportunities/:id/quote)', () => 
       [`${QUOTE_URL}/options`]: quote([TERM, added]),
     });
     open(client);
-    await screen.findByRole('note');
-    await within(screen.getByLabelText('Product')).findByRole('option', { name: 'Saral Jeevan Bima (HDFC Life)' });
-    await fillOption('13800');
-    await userEvent.click(screen.getByRole('button', { name: 'Add option to quote' }));
+    await screen.findByText(DISCLOSURE);
+    await within(screen.getByLabelText('Product')).findByText('Saral Jeevan Bima (HDFC Life)');
+    fillOption('13800');
+    fireEvent.click(screen.getByText('Add option to quote'));
     expect(await screen.findByRole('columnheader', { name: 'Saral Jeevan Bima (HDFC Life)' })).toBeInTheDocument();
     expect(client.post).toHaveBeenCalledWith(`${QUOTE_URL}/options`, {
       versionId: 'pv_saral',
@@ -166,8 +172,8 @@ describe('AC-M06-13 QuoteWorkspaceScreen (/crm/opportunities/:id/quote)', () => 
     open(client);
     await screen.findByRole('note');
     await within(screen.getByLabelText('Product')).findByRole('option', { name: 'Saral Jeevan Bima (HDFC Life)' });
-    await fillOption('13800');
-    await userEvent.click(screen.getByRole('button', { name: 'Add option to quote' }));
+    fillOption('13800');
+    await user.click(screen.getByRole('button', { name: 'Add option to quote' }));
     expect(await screen.findByText('Product is outside your scope')).toBeInTheDocument();
     expect(screen.getByLabelText('Total premium (₹)')).toHaveValue('13800');
     expect(screen.getByRole('note')).toHaveTextContent(DISCLOSURE);
@@ -182,6 +188,17 @@ describe('AC-M06-13 QuoteWorkspaceScreen (/crm/opportunities/:id/quote)', () => 
     expect(rowCells('Sum assured')).toEqual(['₹1,00,00,000.00', '₹1,00,00,000.00']);
     expect(rowCells('Premium frequency')).toEqual(['Annual', 'Monthly']);
     expect(rowCells('Policy term')).toEqual(['30', 'Not available']);
+    expect(rowCells('Valid until')).toEqual(['31 Dec 2026', '31 Dec 2026']);
+  });
+
+  it('AC-M06-13 shows the line and status as labels, and each option’s category label and validity date', async () => {
+    open();
+    const term = await screen.findByRole('article', { name: 'Click 2 Protect' });
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Quote workspace');
+    expect(screen.getByText('Life insurance · Open')).toBeInTheDocument();
+    expect(within(term).getByText('Term insurance')).toBeInTheDocument();
+    expect(within(term).getByText('Valid until 31 Dec 2026')).toBeInTheDocument();
+    expect(within(screen.getByRole('article', { name: 'Wealth Plus' })).getByText('Unit linked insurance')).toBeInTheDocument();
   });
 
   it('AC-M06-13 Share copies the returned link and shows its expiry', async () => {
@@ -193,7 +210,7 @@ describe('AC-M06-13 QuoteWorkspaceScreen (/crm/opportunities/:id/quote)', () => 
       [`${QUOTE_URL}/shares`]: { url: 'https://app.example/q/tok123', expiresAt: '2026-10-10T12:00:00.000Z' },
     });
     open(client);
-    await userEvent.click(await screen.findByRole('button', { name: 'Share' }));
+    await user.click(await screen.findByRole('button', { name: 'Share' }));
     expect(await screen.findByText('Share link https://app.example/q/tok123 (expires 10 Oct 2026)')).toBeInTheDocument();
     expect(client.post).toHaveBeenCalledWith(`${QUOTE_URL}/shares`);
     expect(writeText).toHaveBeenCalledWith('https://app.example/q/tok123');
@@ -217,7 +234,7 @@ describe('AC-M06-13 QuoteWorkspaceScreen (/crm/opportunities/:id/quote)', () => 
     });
     open(client);
     const term = await screen.findByRole('article', { name: 'Click 2 Protect' });
-    await userEvent.click(within(term).getByRole('button', { name: 'Select Click 2 Protect' }));
+    await user.click(within(term).getByRole('button', { name: 'Select Click 2 Protect' }));
     expect(await within(term).findByText('Selected option')).toBeInTheDocument();
     expect(client.post).toHaveBeenCalledWith(`${QUOTE_URL}/selection`, { optionId: 'qo_term' });
     expect(within(screen.getByRole('article', { name: 'Wealth Plus' })).queryByText('Selected option')).not.toBeInTheDocument();
@@ -233,10 +250,10 @@ describe('AC-M06-13 QuoteWorkspaceScreen (/crm/opportunities/:id/quote)', () => 
       },
     });
     open(client);
-    await userEvent.click(await screen.findByRole('button', { name: 'Select Click 2 Protect' }));
+    await user.click(await screen.findByRole('button', { name: 'Select Click 2 Protect' }));
     expect(await screen.findByText('This option has expired')).toBeInTheDocument();
     answer = new ApiError(422, 'bi_acknowledgement_required', 'Acknowledge the benefit illustration first');
-    await userEvent.click(screen.getByRole('button', { name: 'Select Click 2 Protect' }));
+    await user.click(screen.getByRole('button', { name: 'Select Click 2 Protect' }));
     expect(await screen.findByText('Acknowledge the benefit illustration first')).toBeInTheDocument();
     expect(screen.queryByText('This option has expired')).not.toBeInTheDocument();
     expect(screen.getByRole('table', { name: 'Comparison' })).toBeInTheDocument();
@@ -257,13 +274,13 @@ describe('AC-M06-13 QuoteWorkspaceScreen (/crm/opportunities/:id/quote)', () => 
     });
     open(client);
     const ulip = await screen.findByRole('article', { name: 'Wealth Plus' });
-    await userEvent.type(within(ulip).getByLabelText('Document reference'), 'doc_lower');
+    enter(within(ulip).getByLabelText('Document reference'), 'doc_lower');
     expect(within(ulip).getByText(/Document reference must look like doc_/)).toBeInTheDocument();
-    await userEvent.type(within(ulip).getByLabelText('Insurer illustration version'), 'v3');
+    enter(within(ulip).getByLabelText('Insurer illustration version'), 'v3');
     expect(within(ulip).getByRole('button', { name: 'Attach illustration' })).toBeDisabled();
-    await userEvent.clear(within(ulip).getByLabelText('Document reference'));
-    await userEvent.type(within(ulip).getByLabelText('Document reference'), DOC_REF);
-    await userEvent.click(within(ulip).getByRole('button', { name: 'Attach illustration' }));
+    await user.clear(within(ulip).getByLabelText('Document reference'));
+    enter(within(ulip).getByLabelText('Document reference'), DOC_REF);
+    await user.click(within(ulip).getByRole('button', { name: 'Attach illustration' }));
     expect(await within(ulip).findByText(`Illustration ${DOC_REF}, insurer version v3`)).toBeInTheDocument();
     expect(client.post).toHaveBeenCalledWith('/api/v1/quote-options/qo_ulip/benefit-illustrations', { documentRef: DOC_REF, insurerBiVersion: 'v3' });
     expect(within(ulip).getByRole('button', { name: 'Record acknowledgement' })).toBeInTheDocument();
@@ -285,11 +302,11 @@ describe('AC-M06-13 QuoteWorkspaceScreen (/crm/opportunities/:id/quote)', () => 
     });
     open(client);
     const card = await screen.findByRole('article', { name: 'Wealth Plus' });
-    await userEvent.selectOptions(within(card).getByLabelText('Acknowledgement method'), 'ASSISTED');
+    await user.selectOptions(within(card).getByLabelText('Acknowledgement method'), 'ASSISTED');
     expect(within(card).getByText('Evidence is required for assisted acknowledgement')).toBeInTheDocument();
     expect(within(card).getByRole('button', { name: 'Record acknowledgement' })).toBeDisabled();
-    await userEvent.type(within(card).getByLabelText('Evidence reference'), 'EV-1');
-    await userEvent.click(within(card).getByRole('button', { name: 'Record acknowledgement' }));
+    enter(within(card).getByLabelText('Evidence reference'), 'EV-1');
+    await user.click(within(card).getByRole('button', { name: 'Record acknowledgement' }));
     expect(await within(card).findByText('Benefit illustration acknowledged')).toBeInTheDocument();
     expect(client.post).toHaveBeenCalledWith('/api/v1/benefit-illustrations/bi_1/acknowledgement', { method: 'ASSISTED', evidenceRef: 'EV-1' });
     expect(within(card).getByRole('button', { name: 'Select Wealth Plus' })).toBeEnabled();
