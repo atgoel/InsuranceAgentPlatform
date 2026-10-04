@@ -28,7 +28,7 @@ function pageOf<T>(rows: T[], offset: number, limit: number): { items: T[]; next
 const offsetOf = (cursor: string | undefined): number => (cursorOffset(cursor));
 
 interface PartyRow {
-  id: string; kind: PartyProps['kind']; display_name: string; dob_enc: string | null; dob_year: number | null; gender: 'F' | 'M' | 'X' | null;
+  id: string; kind: PartyProps['kind']; display_name: string; dob_enc: string | null; dob_year: number | null; birthday: string | null; gender: 'F' | 'M' | 'X' | null;
   pan_enc: string | null; pan_hash: string | null; pan_last4: string | null; preferred_language: string; preferred_channel: string | null;
   owner_member_id: string | null; org_unit_id: string | null; tags: string[]; source_kind: PartyProps['source']['kind']; source_ref: string | null;
   status: PartyProps['status']; merged_into_id: string | null; created_at: Date; updated_at: Date; version: number; custom_fields: PartyProps['customFields'];
@@ -41,7 +41,7 @@ const toContact = (r: ContactRow): ContactPoint => ({
 
 const toParty = (r: PartyRow, contacts: ContactPoint[]): Party => Party.restore({
   id: r.id, kind: r.kind, displayName: r.display_name,
-  ...opt('dateOfBirthEnc', r.dob_enc), ...opt('dobYear', r.dob_year), ...opt('gender', r.gender),
+  ...opt('dateOfBirthEnc', r.dob_enc), ...opt('dobYear', r.dob_year), ...opt('birthday', r.birthday), ...opt('gender', r.gender),
   ...opt('panEnc', r.pan_enc), ...opt('panHash', r.pan_hash), ...opt('panLast4', r.pan_last4),
   preferredLanguage: r.preferred_language, ...opt('preferredChannel', r.preferred_channel),
   ...opt('ownerMemberId', r.owner_member_id), ...opt('orgUnitId', r.org_unit_id),
@@ -65,19 +65,19 @@ export class PgPartyRepository implements PartyRepository {
     const values = [
       p.id, c.tenantId, p.kind, p.displayName, normaliseName(p.displayName), n(p.dateOfBirthEnc), n(p.dobYear), n(p.gender),
       n(p.panEnc), n(p.panHash), n(p.panLast4), p.preferredLanguage, n(p.preferredChannel), n(p.ownerMemberId), n(p.orgUnitId),
-      [...p.tags], p.source.kind, n(p.source.ref), p.status, n(p.mergedIntoId), p.createdAt, p.updatedAt, p.version + 1, JSON.stringify(p.customFields),
+      [...p.tags], p.source.kind, n(p.source.ref), p.status, n(p.mergedIntoId), p.createdAt, p.updatedAt, p.version + 1, JSON.stringify(p.customFields), n(p.birthday),
     ];
     if (existing.rows[0]) {
       await c.query(
         `update party set kind=$3, display_name=$4, display_name_norm=$5, dob_enc=$6, dob_year=$7, gender=$8, pan_enc=$9, pan_hash=$10, pan_last4=$11,
            preferred_language=$12, preferred_channel=$13, owner_member_id=$14, org_unit_id=$15, tags=$16, source_kind=$17, source_ref=$18, status=$19,
-           merged_into_id=$20, created_at=$21, updated_at=$22, version=$23, custom_fields=$24::jsonb
+           merged_into_id=$20, created_at=$21, updated_at=$22, version=$23, custom_fields=$24::jsonb, birthday=$25
          where id = $1 and tenant_id = $2`, values);
     } else {
       await c.query(
         `insert into party (id, tenant_id, kind, display_name, display_name_norm, dob_enc, dob_year, gender, pan_enc, pan_hash, pan_last4, preferred_language,
-           preferred_channel, owner_member_id, org_unit_id, tags, source_kind, source_ref, status, merged_into_id, created_at, updated_at, version, custom_fields)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24::jsonb)`, values);
+           preferred_channel, owner_member_id, org_unit_id, tags, source_kind, source_ref, status, merged_into_id, created_at, updated_at, version, custom_fields, birthday)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24::jsonb,$25)`, values);
     }
     await c.query('delete from contact_point where party_id = $1', [p.id]);
     for (const [position, cp] of p.contactPoints.entries()) {
@@ -214,6 +214,11 @@ const toLink = (r: RoleLinkRow): PartyRoleLink => ({
 });
 
 export class PgRoleLinkRepository implements RoleLinkRepository {
+  async forSubject(tx: Transaction, subjectType: PartyRoleLink['subjectType'], subjectId: string): Promise<PartyRoleLink[]> {
+    const {rows} = await pg(tx).query<RoleLinkRow>('select * from party_role_link where subject_type=$1 and subject_id=$2 order by party_id, role', [subjectType,subjectId]);
+    return rows.map(toLink);
+  }
+
   async forParty(tx: Transaction, partyId: string): Promise<PartyRoleLink[]> {
     const { rows } = await pg(tx).query<RoleLinkRow>('select * from party_role_link where party_id = $1 order by created_at, role, subject_type, subject_id', [partyId]);
     return rows.map(toLink);

@@ -1,5 +1,7 @@
 # M02 · Distribution Network — low-level design
 
+M07 amendment (2026-10-04): an insurer-code reference in a held policy uses the existing composite `${memberId}:${insurerId}`. Book resolves an imported code only when its exact code and insurer match the servicing member's registered code; unmatched external codes remain text without a fabricated reference.
+
 Status: Ready for build · Depends on: M00, M01 · Requirements: Rev 3.0 §1 (memberships), §3 (roles), F02, F32/F92 (onboarding & activation), F33/F91 (hierarchy & supervision), F86 (licence & training), F97 (exit) · HLD §7 (Distribution Network), §11 (authorisation), §17B K7 (leavers) · Screens: W02 `OnboardingHierarchy`, W10 `UsersRoles`
 
 ## 1. Responsibilities

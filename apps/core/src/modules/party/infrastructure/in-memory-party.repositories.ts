@@ -106,6 +106,10 @@ export class InMemoryHouseholdRepository implements HouseholdRepository {
 }
 
 export class InMemoryRoleLinkRepository implements RoleLinkRepository {
+  async forSubject(tx: Transaction, subjectType: PartyRoleLink['subjectType'], subjectId: string): Promise<PartyRoleLink[]> {
+    return this.links.of(tx).filter(l => l.subjectType === subjectType && l.subjectId === subjectId).map(l => ({...l}));
+  }
+
   private readonly links = new TenantBuckets<PartyRoleLink[]>(() => []);
 
   async forParty(tx: Transaction, partyId: string): Promise<PartyRoleLink[]> {

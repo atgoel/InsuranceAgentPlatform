@@ -1,5 +1,9 @@
 # M03 · Party & Consent — low-level design
 
+M07 integration amendment (ADR-M07-cross-module-contracts, approved 2026-10-03): `PartyProps.birthday?: string` stores the derived DOB month/day (`MM-DD`) internally. Capturing DOB derives it without additional decryption. `PartySummary` adds optional `dobYear` and `birthday`; HTTP views and Twenty projections do not expose birthday. Merge copies the projection with the selected DOB; erasure clears both. Existing rows without a projection skip alerts. `PartyFacade.rolesForSubject(tx, subjectType: 'HELD_POLICY' | 'PROPOSAL', subjectId): Promise<PartyRoleLink[]>` exposes role links for lifecycle alert subjects; the repository gains the same query.
+
+`PartyFacade.searchByName(tx, name): Promise<PartySummary[]>` publishes tenant-scoped candidates for M07 referrer review. M07 filters to exact normalized name and its resolved record scope; the importer must explicitly confirm the link.
+
 Status: Ready for build · Depends on: M00, M01, M02 · Requirements: Rev 3.0 F07, F08, F09 (party side), F37, F38, F40; §6 data model (party, contact point, relationship); §18 (DPDP, messaging) · HLD §7 (Party & Consent), §8 (P3 stays in Core, projection to Twenty), §11 (classification, field encryption, consent ledger) · Screens: CRM04 `CRMCustomers`, CRM09 `CRMCustomerRecord` (profile, household, consent), CRM08 `CRMImportDedup` (duplicate queue)
 
 ## 1. Responsibilities

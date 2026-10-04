@@ -96,7 +96,7 @@ export class MergePlan {
 
   private applySensitive(survivor: Party): void {
     const dob = this.from('dateOfBirth').props;
-    if (dob.dateOfBirthEnc !== undefined || dob.dobYear !== undefined) survivor.setSensitive({ dateOfBirthEnc: dob.dateOfBirthEnc, dobYear: dob.dobYear });
+    if (dob.dateOfBirthEnc !== undefined || dob.dobYear !== undefined) survivor.setSensitive({ dateOfBirthEnc: dob.dateOfBirthEnc, dobYear: dob.dobYear, birthday: dob.birthday });
     const pan = this.from('pan').props;
     if (pan.panEnc || pan.panHash || pan.panLast4) survivor.setSensitive({ panEnc: pan.panEnc, panHash: pan.panHash, panLast4: pan.panLast4 });
   }

@@ -1,4 +1,6 @@
+import { bookMessagesHi } from './book-messages';
 export const messagesHi = {
+  ...bookMessagesHi,
   // Shell
   'app.title': 'बीमा एजेंट प्लेटफॉर्म',
   'shell.today': 'आज',

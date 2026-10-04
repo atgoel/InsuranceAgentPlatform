@@ -129,6 +129,16 @@
       "webTests": [
         "src/features/advice"
       ]
+    },
+    {
+      "id": "M07",
+      "name": "Book & Retention",
+      "spec": "docs/spec/modules/M07-book-retention.md",
+      "core": ["src/modules/book"],
+      "coreTests": ["src/modules/book", "test/book"],
+      "integrationTests": ["test/book"],
+      "web": ["src/features/book"],
+      "webTests": ["src/features/book"]
     }
   ]
 }

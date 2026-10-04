@@ -11,3 +11,4 @@ One row per module, refreshed by `npm run quality -- <module>` at the end of eac
 | [M04](M04.md) | CRM Engagement | **92** (A) | 79.1% | 15/15 | 23.8/25 | ✅ | 2026-10-03 |
 | [M05](M05.md) | Product Catalogue & comparison | **98.8** (A) | 93.4% | 15/15 | 23.8/25 | ✅ | 2026-10-03 |
 | [M06](M06.md) | Advice & Quote | **95.2** (A) | 87.4% | 15/15 | 21.3/25 | ✅ | 2026-10-03 |
+| [M07](M07.md) | Book & Retention | **95.9** (A) | 86.5% | 15/15 | 22.3/25 | ✅ | 2026-10-04 |

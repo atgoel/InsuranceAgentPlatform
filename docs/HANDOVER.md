@@ -2,7 +2,7 @@
 
 Read this first in every new session (see "Session protocol" in CLAUDE.md), then update it before ending.
 
-## State (2026-10-03, M06 done)
+## State (2026-10-04, M07 implemented)
 | Module | Status | Quality report |
 |---|---|---|
 | M00 Kernel, observability, web shell | done | docs/quality/M00.md — 94.2 A |
@@ -12,8 +12,9 @@ Read this first in every new session (see "Session protocol" in CLAUDE.md), then
 | M04 CRM (+ M04b Twenty sync) | done; Postgres adapters done (041) | M04.md — 92 A |
 | M05 Product catalogue | done; Postgres adapters done | M05.md — 98.8 A |
 | M06 Advice & quote | done (memory + Postgres adapters, web screens) | M06.md — 95.2 A |
-| M07–M14 | specs written; not started — need the user's go-ahead | — |
-| CR-001 sales-register fields | docs/spec/change-requests/CR-001-sales-register-fields.md; Reference = referrer (customer-confirmed); **approved 2026-10-03**; **next**; build before M07 | — |
+| M07 Book & retention | implemented: domain, memory/Postgres adapters, HTTP, import, jobs, web screens; final verification below | M07.md — 95.9 A |
+| M08–M14 | specs written; not started — need the user's go-ahead; M10 minimal RECEIVED ledger slice supports M07 | — |
+| CR-001 sales-register fields | shared foundations committed in cb8a5af; M07 register/import, risk, custom fields and confirmed referrer links implemented | M07.md |
 
 ## Environment
 - Windows workstation; Postgres via `docker compose -f infra/dev/docker-compose.yml up -d` (port 5433).
@@ -45,6 +46,22 @@ Read this first in every new session (see "Session protocol" in CLAUDE.md), then
 - Web lint: 16 pre-existing `max-lines-per-function` / hook-deps warnings in older screens.
 - Local dev DB can be reset any time: `docker compose -f infra/dev/docker-compose.yml down -v && … up -d`.
 
-## Next steps
-1. **CR-001** (approved): implement after M06 per the CR (held-policy/sale fields, risk_details schemas, custom-field registry, "Office sales register" import profile, AC-CR001-01..06).
-2. Then stop and ask before M07.
+## M07 implementation (2026-10-04)
+- Base commit: `cb8a5af` — `feat: Implement custom fields across multiple modules (CR-001)`. M07 session changes follow this base; see the latest Git commit for the final snapshot.
+- Approved cross-module decisions are in `docs/adr/ADR-M07-cross-module-contracts.md` and affected LLDs: internal birthday month/day projection; durable CRM renewal dedup; minimal M10 RECEIVED ledger. Exact catalogue name/effective-date lookup and M02 composite insurer-code references are documented.
+- Domain: premium schedules, IST due/grace/revival classification, lifecycle strategies, payment and annual-renewal transitions; policy/motor identifiers encrypted and masked. Services include scoped policy reads/patches, dues/Today, lifecycle/renewal jobs, servicing, confirmed-sale and party-merge consumers.
+- CSV/template and Office register imports validate dates/money/risk/custom/commission fields before writes; review decisions, confirmed scoped referrers, 200-row transaction chunks, durable progress/replay, tenant locks and PII purge. Payment replay uses the durable installment ledger before advancing dues.
+- PostgreSQL migrations: 033 birthday, 043 CRM renewals, 070 normalized book tables/RLS, 071 compatibility backfill for an earlier local draft of 070, 100 minimal commission ledger. Held-policy and servicing fields use ordinary columns; DATE reads explicitly cast to text to preserve IST calendar dates.
+- Web: due calendar, held-policy panel/detail, import wizard, servicing tracker, party policies tab and Today integration; loading/empty/error/permission states, quoted version headers and CSV duplicate-header handling.
+- Final independent orchestrator verification: core 1945, web 670, Postgres integration 154 tests — all pass. The last all-gate command caught a missing author in a web test fixture; corrected fixture was verified by the subsequent quality run's global strict typechecks. Zero lint errors; existing web lint has 17 warnings. A real PostgreSQL HTTP payment/servicing journey survives application restart, preserves payment replay and enforces RLS.
+- Final module quality: 95.9 A; backend 115/115 tests, 98% lines and 77.69% branches; frontend 17/17 tests and 95.03% lines. All 15 M07 ACs have behavioral tests; review 8.9/10 has no open High/Critical findings. Report/review: `docs/quality/M07.md`, `docs/quality/M07.review.json`. Coverage includes merged unit/component and real PostgreSQL runs, rather than excluding production PG adapters.
+- Booking-channel corrections, clearing, reassignment and import updates recalculate exact M02 insurer-code references. A targeted regression demonstrated the old stale-projection failure before verifying the corrected behavior.
+- Verification fixed the old pg-boot fixture's single relay pass: relay publication creates follow-on CRM sync events, so the fixture now drains the target tenant with a bounded loop. No database reset was needed.
+- Agents used available Sol 6.1 controls; Sonnet was unavailable and reported. Backend and web were reviewed across author boundaries; subagents did not commit or push.
+
+## Next steps and remaining dependencies
+1. M08 is the next module; obtain its module authorization before starting a new milestone.
+2. Wire the real M09 IssuedPolicyReader when M09 exists. Missing production reader explicitly fails the consumer and retains the event for retry; tests prove insurer-confirmed registration and replay through an injected reader.
+3. Wire a deployment scheduler for lifecycle and renewal jobs, and M12 reminder delivery. These are invocable jobs/events today, without invented future-module implementations.
+4. Complete the remaining M10 rate cards, calculations, performance reporting and screens in its own milestone; only the append-only RECEIVED import ledger is included now.
+5. Scalability follow-up: PostgreSQL book filtering currently scans tenant policies and import persistence rewrites remaining batch rows. Correctness is covered, but these should be optimized before large-book load targets are claimed. Generic in-memory UOW does not roll back unexpected dependency faults; production PostgreSQL transactions do.

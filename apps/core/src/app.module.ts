@@ -7,8 +7,9 @@ import { PartyModule } from './modules/party/party.module';
 import { CrmModule } from './modules/crm/crm.module';
 import { CatalogueModule } from './modules/catalogue/catalogue.module';
 import { AdviceModule } from './modules/advice/advice.module';
+import { BookModule } from './modules/book/book.module';
 
 @Module({
-  imports: [KernelModule.forRoot(loadConfig(process.env)), TenancyModule, DistributionModule, PartyModule, CrmModule, CatalogueModule, AdviceModule],
+  imports: [KernelModule.forRoot(loadConfig(process.env)), TenancyModule, DistributionModule, PartyModule, CrmModule, CatalogueModule, AdviceModule, BookModule],
 })
 export class AppModule {}

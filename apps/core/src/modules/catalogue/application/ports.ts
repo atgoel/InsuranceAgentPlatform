@@ -46,9 +46,11 @@ export interface VersionDetail {
   insurerName: string;
   line: LineOfBusiness;
   category: Product['category'];
+  keyFacts?: Array<{ label: string; value: string }>;
 }
 
 export interface CatalogueQueryFacade {
+  findProduct(insurerName: string, productName: string, date: string): Promise<VersionDetail | undefined>;
   versionDetails(versionIds: readonly string[]): Promise<VersionDetail[]>;
 }
 

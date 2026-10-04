@@ -61,6 +61,7 @@ export interface HouseholdRepository {
 }
 
 export interface RoleLinkRepository {
+  forSubject(tx: Transaction, subjectType: PartyRoleLink['subjectType'], subjectId: string): Promise<PartyRoleLink[]>;
   forParty(tx: Transaction, partyId: string): Promise<PartyRoleLink[]>;
   add(tx: Transaction, l: PartyRoleLink): Promise<void>;
   /** Moves links (all, or only those whose roleLinkKey is listed) to another party; returns the moved keys. */
@@ -121,6 +122,8 @@ export interface CreatePartyInput {
 }
 
 export interface PartySummary {
+  readonly dobYear?: number;
+  readonly birthday?: string;
   readonly id: string;
   readonly displayName: string;
   readonly primaryMobileMasked?: string;
@@ -143,6 +146,8 @@ export interface DuplicateCandidateView {
 
 /** Published facade for other modules (Facade pattern) — the only way M04+ touch parties. */
 export interface PartyFacade {
+  searchByName(tx: Transaction, name: string): Promise<PartySummary[]>;
+  rolesForSubject(tx: Transaction, subjectType: PartyRoleLink['subjectType'], subjectId: string): Promise<PartyRoleLink[]>;
   /** 'link' → an existing party with a candidate score ≥ 90 is returned (created false); else create and queue candidates ≥ 60. */
   findOrCreate(tx: Transaction, input: CreatePartyInput & { onDuplicate: 'link' | 'create' }): Promise<{ partyId: string; created: boolean; candidates: DuplicateCandidateView[] }>;
   linkRole(tx: Transaction, link: Omit<PartyRoleLink, 'createdAt'>): Promise<void>;

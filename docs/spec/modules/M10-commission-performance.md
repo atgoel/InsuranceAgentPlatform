@@ -1,5 +1,7 @@
 # M10 · Commission & Performance — low-level design
 
+M07 integration amendment (ADR-M07-cross-module-contracts, approved 2026-10-03): implement only the durable RECEIVED import ledger ahead of the remaining M10 work. Publish `COMMISSION_IMPORT_PORT` and `CommissionImportPort.recordReceived(tx, { heldPolicyId, insurerId?: string, sellerMemberId: string, amountPaise: number, ratePct?: number, reason?: string, invoiceNo?: string, occurredOn: string, importKey: string }): Promise<{ id: string; created: boolean }>`. `importKey` is stable batch+row; tenant+importKey is unique. Money is integer paise, rows append-only, with RLS and memory/PG adapters. Record `commission.received_recorded` as structured log/audit; this minimal slice has no outbox consumers (kernel outbox event names require three segments). Rates, expected commission, MIS, reconciliation and M10 screens remain future work.
+
 Status: Ready for build · Depends on: M00–M02, M05, M07, M09 · Requirements: Rev 3.0 F25 (rate setup), F26 lite (expected/received with audited adjustments), F30 lite (export), F35 (sales MIS), F85 (income, persistency cohorts, targets); F27–F29 and F31 are **not** at launch (no statement auto-matching beyond exact reference, no payouts, no accounting) · HLD §7 (Commission & Performance) · Screens: W05 `CommissionSetup`, M14 `Income`, W09 `ManagerConsole` (MIS tiles)
 
 ## 1. Responsibilities

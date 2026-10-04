@@ -75,10 +75,10 @@ export class PartyWriter {
 
   private async attachSensitive(tx: Transaction, party: Party, input: CreatePartyInput, now: Date): Promise<void> {
     if (input.dateOfBirth !== undefined) {
-      if (!ISO_DATE.test(input.dateOfBirth) || Number.isNaN(Date.parse(input.dateOfBirth)) || new Date(input.dateOfBirth) > now) {
+      if (!ISO_DATE.test(input.dateOfBirth) || Number.isNaN(Date.parse(input.dateOfBirth)) || new Date(input.dateOfBirth).toISOString().slice(0, 10) !== input.dateOfBirth || new Date(input.dateOfBirth) > now) {
         throw new ValidationError('invalid_date_of_birth', 'Date of birth must be a past date (YYYY-MM-DD)', [{ path: 'dateOfBirth', code: 'invalid', message: 'Invalid date of birth' }]);
       }
-      party.setSensitive({ dateOfBirthEnc: await this.cipher.encrypt(tx.tenantId, input.dateOfBirth), dobYear: Number(input.dateOfBirth.slice(0, 4)) });
+      party.setSensitive({ dateOfBirthEnc: await this.cipher.encrypt(tx.tenantId, input.dateOfBirth), dobYear: Number(input.dateOfBirth.slice(0, 4)), birthday: input.dateOfBirth.slice(5) });
     }
     if (input.pan !== undefined) {
       const pan = input.pan.trim().toUpperCase();

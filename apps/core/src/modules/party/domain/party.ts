@@ -12,6 +12,7 @@ export interface PartyProps {
   readonly displayName: string;
   readonly dateOfBirthEnc?: string;
   readonly dobYear?: number;
+  readonly birthday?: string;
   readonly gender?: 'F' | 'M' | 'X';
   readonly panEnc?: string;
   readonly panHash?: string;
@@ -38,6 +39,7 @@ interface MutablePartyProps {
   displayName: string;
   dateOfBirthEnc?: string;
   dobYear?: number;
+  birthday?: string;
   gender?: 'F' | 'M' | 'X';
   panEnc?: string;
   panHash?: string;
@@ -67,6 +69,7 @@ export class Party {
       displayName: props.displayName,
       dateOfBirthEnc: props.dateOfBirthEnc,
       dobYear: props.dobYear,
+      birthday: props.birthday,
       gender: props.gender,
       panEnc: props.panEnc,
       panHash: props.panHash,
@@ -184,9 +187,10 @@ export class Party {
     this._props.contactPoints = Party.ensureOnePrimaryPerChannel(points);
   }
 
-  setSensitive(input: { dateOfBirthEnc?: string; dobYear?: number; panEnc?: string; panHash?: string; panLast4?: string }): void {
+  setSensitive(input: { dateOfBirthEnc?: string; dobYear?: number; birthday?: string; panEnc?: string; panHash?: string; panLast4?: string }): void {
     if (input.dateOfBirthEnc !== undefined) {
       this._props.dateOfBirthEnc = input.dateOfBirthEnc;
+      this._props.birthday = input.birthday;
     }
     if (input.dobYear !== undefined) {
       this._props.dobYear = input.dobYear;
@@ -272,6 +276,7 @@ export class Party {
     this._props.contactPoints = [];
     this._props.dateOfBirthEnc = undefined;
     this._props.dobYear = undefined;
+    this._props.birthday = undefined;
     this._props.panEnc = undefined;
     this._props.panHash = undefined;
     this._props.panLast4 = undefined;

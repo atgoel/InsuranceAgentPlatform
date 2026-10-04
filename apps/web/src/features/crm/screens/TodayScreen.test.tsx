@@ -54,6 +54,14 @@ describe('AC-M04-29 TodayScreen (/m/today)', () => {
     expect(birthday.getByRole('button', { name: 'Open' })).toBeInTheDocument();
     expect(birthday.queryByRole('button', { name: 'Log activity' })).not.toBeInTheDocument();
   });
+  it('AC-M07-09 AC-M07-15 opens due policies in the due calendar and translates book labels', async () => {
+    const due: MyWorkItem = { kind: 'DUE', id: 'hp1', title: 'Life cover', subtitle: 'DUE_TODAY', priority: 1, subject: { type: 'HELD_POLICY', id: 'hp1' }, actions: ['OPEN'] };
+    const servicing: MyWorkItem = { kind: 'TASK', id: 'srv1', title: 'Servicing — ADDRESS_CHANGE', priority: 1, subject: { type: 'SERVICING_REQUEST', id: 'srv1' }, actions: ['OPEN'] };
+    render(mockClient({ '/api/v1/my-work': { ...MY_WORK, items: [due, servicing] } }));
+    expect(await screen.findByText('Due today')).toBeInTheDocument(); expect(screen.getByText('Servicing tracker · Address change')).toBeInTheDocument();
+    await userEvent.click(within(screen.getByRole('listitem', { name: 'Life cover' })).getByRole('button', { name: 'Open' }));
+    expect(await screen.findByTestId('location')).toHaveTextContent('/m/dues?policyId=hp1');
+  });
 
   it('AC-M04-29 caches only non-sensitive fields of the last response', async () => {
     render(mockClient({ '/api/v1/my-work': MY_WORK }));

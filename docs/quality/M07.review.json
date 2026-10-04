@@ -1,0 +1,69 @@
+{
+  "module": "M07",
+  "reviewer": "Sol 6.1 delegated reviewer",
+  "reviewDate": "2026-10-04",
+  "score": 8.9,
+  "dimensions": {
+    "specConformance": 2.8,
+    "design": 1.7,
+    "securityTenancy": 1.9,
+    "observability": 1.3,
+    "testQuality": 1.2
+  },
+  "reviewProvenance": {
+    "backend": "Independent source and opened-test review by web_builder, who did not author core implementation.",
+    "web": "Authored by web_builder; independently reviewed by integration_builder. Its assessment9.0/10 and permission/stale-target findings were incorporated and fixed with regressions.",
+    "verification": "Root orchestrator independently ran full gates. Earlier reviewer scoped runs failed during concurrent source rewrite/migration contention and are not represented as successful checks. Last all command retained a web type failure from a test note fixture missing its required author; fixture corrected and full web tests passed. Subsequent final quality run passed all global strict typechecks, module lint and scoped coverage tests. Full all command exit0 is not claimed."
+  },
+  "summary": "M07 implements the amended book/retention contract, scoped masked policy views, anchored payments, dues and Today contributors, serialized lifecycle and import operations, restart-safe PostgreSQL storage, renewal opportunities and commission handoff. Identified lifecycle insured/survival omissions, race windows, preview-validation omissions, normalized gross parsing, permission controls, stale-target display and version-header defects were corrected and verified in source and meaningful tests. Remaining concerns are PostgreSQL query/write scaling and approved future scheduler/M09/M12 integration seams.",
+  "verification": {
+    "core": "Root final all: PASS core typecheck no type errors (7s) | PASS core lint clean (8s) | PASS core tests1945passed,1945total (25s)",
+    "web": "Root final all: PASS web lint0errors,17warnings (10s) | PASS web tests670passed,670total (42s). The same command flagged missing note author in a new test fixture; corrected without casts. Subsequent final quality run PASS global strict web typecheck, module lint0 and scoped17/17tests.",
+    "int": "Root final all: PASS pg integration154passed,154total (10s), including PostgreSQL HTTP restart journey and post-restart payment replay. Separate earlier journey PASS1test (14s).",
+    "coverage": "Root final quality PASS: backend115/115tests,98%lines,77.69%branches,96.2%functions,96%statements; frontend17/17tests,95.03%lines,70.86%branches,81.45%functions,87.01%statements. Both global strict typechecks PASS; module lint0errors/0warnings. Meets required backend85%lines/75%branches and frontend80%lines. Generated quality score95.9/100(A)."
+  },
+  "acTraceability": {
+    "AC-M07-01": "apps/core/test/book/http.spec.ts: creates encrypted policy identifiers and minimizes HTTP fields; repositories.contract.ts: persists encrypted identifiers and rejects stale versions. Exact masked last-4, ciphertext absence, tenant and stale-version assertions.",
+    "AC-M07-02": "apps/core/test/book/http.spec.ts: protects stale patches and requires asOf for status updates; updates commercials with guarded aliases and rejects invalid assignment. Domain held-policy.spec.ts asserts transition and older-asOf guards. import-boundaries.spec.ts: commercial corrections replace and clear booking channel projections (exact add/remove aliases).",
+    "AC-M07-03": "apps/core/src/modules/book/domain/premium-schedule.spec.ts: mode schedules, SINGLE and month-end clamping assert actual installment dates.",
+    "AC-M07-04": "apps/core/src/modules/book/domain/premium-schedule.spec.ts: life and annual health/general boundary dates assert exact status and grace dates.",
+    "AC-M07-05": "apps/core/test/book/http.spec.ts: records a payment and exposes the anchored next installment; repositories.contract.ts: stores each installment payment once; pg-journey.int.spec.ts asserts replay after restart retains next due and version.",
+    "AC-M07-06": "apps/core/test/book/jobs.spec.ts: emits stable lifecycle reminders exactly once on replay; uses insured DOB and catalogue survival years with concurrent replay safety. Exact birthday, anniversary and survival payload/date and total emitted assertions; lifecycle-alerts.spec.ts tests rule dates.",
+    "AC-M07-07": "apps/core/test/book/import.spec.ts: mapping, malformed dates/money/contact/modes, normalized duplicate gross columns, positional Remarks#2. http.spec.ts: invalid import date/mode/contact produces row problems and422 before writes; detects file duplicates and checksum replay.",
+    "AC-M07-08": "apps/core/test/book/http.spec.ts: commits201rows across transaction chunks and replays without duplicating policies; masks validation rows, commits once and purges raw PII. Exact imported/linked/skipped counts,201stored policies, one audit event, no raw phone/DOB after commit. import-boundaries.spec.ts: newer existing policy update asserts source/asOf/premium and bookingChannel; older duplicate is skipped.",
+    "AC-M07-09": "apps/core/test/book/http.spec.ts: composes dues into calendar, today and CRM MyWork; prioritizes grace deadlines and servicing follow-ups in Today. Exact two scoped DUE items, priority0 and out-of-scope empty results.",
+    "AC-M07-10": "apps/core/test/book/jobs.spec.ts: creates one renewal opportunity for the serving member. apps/core/test/crm/renewal.spec.ts and renewal.int.spec.ts verify concrete opportunity ownership and replay identity.",
+    "AC-M07-11": "apps/core/test/book/jobs.spec.ts: imports only insurer-confirmed platform sales and deduplicates sale identity across events; rejects unconfirmed sales and leaves failed event retryable. Source PLATFORM_SALE and exact policy count asserted.",
+    "AC-M07-12": "apps/core/test/book/http.spec.ts: validates servicing state, notes, stale versions and cross-tenant mutations; prioritizes servicing follow-ups in Today. pg-journey.int.spec.ts restores actual note after app restart.",
+    "AC-M07-13": "apps/core/test/book/http.spec.ts: own scope and tenant isolation on detail/lists/dues/payments; denied permission and tenant-body injection; cross-tenant and out-of-scope import mutations; servicing cross-tenant guards. repositories.contract.ts exercises tenant isolation in memory and PG.",
+    "AC-M07-14": "apps/core/test/book/repositories.int.spec.ts and repositories.contract.ts: migrations/RLS, tenant-unique policy hash, scoped persistence and raw PII purge. pg-journey.int.spec.ts: actual HTTP registration/payment/servicing-note restart and owner SELECT without tenant returns0rows.",
+    "AC-M07-15": "apps/web/src/features/book/screens/BookScreens.test.tsx and BookImportScreen.test.tsx: provenance/masking, calendar/payment, detail/custom fields, import mapping/decisions/referrer/commit, servicing transitions/notes, permission/error/trace and stale-target regressions. api.test.ts asserts paths/bodies and quoted version headers; csv.test.ts verifies quoted fields and duplicate header position. routes.test.tsx asserts shells render actual child screens.",
+    "AC-CR001-01": "apps/core/test/book/http.spec.ts: imports HEALTH Office register with seller, provenance, gross and renewal aliases. Exact sample holder/policy/gross2946600paise/SI100000000paise, dates, category and servicing member asserted.",
+    "AC-CR001-02": "apps/core/test/book/http.spec.ts: encrypts motor registration and validates motor risk before writes; exact masked last4, encrypted storage, valid model update and invalid claim/NCB rejection. Domain held-policy.spec.ts asserts OD/TP≤net and risk schema/required encrypted registration invariants.",
+    "AC-CR001-04": "apps/core/test/book/http.spec.ts: filters only reportable public custom fields and masks private fields. Exact filter result and nonreportable400 assertions. import-boundaries.spec.ts: reassignment recalculates exact member insurer reference, removes old link and uses replacement composite only with matching code.",
+    "AC-CR001-06": "apps/core/test/book/import.spec.ts: maps register headers and rejects money words; validates every duplicate gross column after normalization. http.spec.ts: keeps referrer text until explicit in-scope confirmation, then confirms linked identity without changing seller."
+  },
+  "findings": [
+    {
+      "severity": "low",
+      "area": "PostgreSQL scalability",
+      "file": "apps/core/src/modules/book/infrastructure/pg-held-policy.repository.ts:41",
+      "summary": "`const rows = (await this.all(tx)).filter((p) => matchesPolicy(p.props, filter))` reads the tenant book before applying pagination. Correct scoped behavior is verified, but large books repeatedly load all policies; push filtering/paging into SQL when scaling the module.",
+      "status": "open"
+    },
+    {
+      "severity": "low",
+      "area": "Import write amplification",
+      "file": "apps/core/src/modules/book/infrastructure/pg-book.repositories.ts:16",
+      "summary": "`delete from book_import_row where batch_id=$1` followed by reinserting all rows makes every mapping/decision/chunk rewrite the batch.200-row commit transactions are bounded in policy creation but batch-row persistence still scales with total upload size.",
+      "status": "open"
+    },
+    {
+      "severity": "info",
+      "area": "Approved infrastructure follow-ups",
+      "file": "docs/spec/modules/M07-book-retention.md",
+      "summary": "Amended LLD explicitly defers production daily-job scheduling, the real M09 issued-policy producer and M12 reminder dispatch. Lifecycle/renewal methods and reader seam are tested; UI explains reminder availability.",
+      "status": "accepted"
+    }
+  ]
+}

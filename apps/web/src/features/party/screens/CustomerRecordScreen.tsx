@@ -133,7 +133,7 @@ export function CustomerRecordScreen() {
 
       <PartyCustomFields party={party} onUpdated={(updated) => setDetail((prev) => (prev ? { ...prev, party: { ...prev.party, ...updated } } : prev))} />
 
-      <PartyTabs
+      <PartyTabs partyId={party.id}
         activeTab={activeTab}
         onTabChange={setActiveTab}
         household={party.household}

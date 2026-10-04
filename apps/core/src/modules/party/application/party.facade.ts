@@ -1,3 +1,4 @@
+import { normaliseName } from '../domain/name-matching';
 import { Inject, Injectable } from '@nestjs/common';
 import { NotFoundError } from '../../../kernel/errors/domain-errors';
 import { ConsentChannel, ConsentPurpose, ConsentRecord } from '../domain/consent';
@@ -52,6 +53,16 @@ export class PartyFacadeService implements PartyFacade {
 
   async recordConsent(tx: Transaction, input: Omit<ConsentRecord, 'id' | 'occurredAt'>): Promise<ConsentRecord> {
     return this.consents.recordIn(tx, await this.require(tx, input.partyId), input);
+  }
+
+  async searchByName(tx: Transaction, name: string): Promise<PartySummary[]> {
+    const normalized = normaliseName(name);
+    const matches = await this.parties.searchByName(tx, normalized, 100);
+    return matches.filter(p => normaliseName(p.props.displayName) === normalized).map(partySummary);
+  }
+
+  rolesForSubject(tx: Transaction, subjectType: PartyRoleLink['subjectType'], subjectId: string): Promise<PartyRoleLink[]> {
+    return this.roles.forSubject(tx, subjectType, subjectId);
   }
 
   async summary(tx: Transaction, partyId: string): Promise<PartySummary | undefined> {

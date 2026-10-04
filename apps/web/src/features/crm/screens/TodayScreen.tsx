@@ -54,7 +54,7 @@ export function TodayScreen({ storage = sessionStorage, now = () => new Date() }
       ) : (
         <ul className="my-work-list">
           {work.items.map((item) => (
-            <WorkItemRow key={`${item.kind}-${item.id}`} item={item} onOpen={(i) => navigate(`/m/leads/${i.subject.id}`)} onLog={setLogging} />
+            <WorkItemRow key={`${item.kind}-${item.id}`} item={item} onOpen={(i) => navigate(i.kind === 'DUE' ? `/m/dues?policyId=${encodeURIComponent(i.subject.id)}` : i.subject.type === 'SERVICING_REQUEST' ? '/m/servicing' : `/m/leads/${i.subject.id}`)} onLog={setLogging} />
           ))}
         </ul>
       )}

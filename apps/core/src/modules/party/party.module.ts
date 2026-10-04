@@ -82,7 +82,7 @@ const services: Provider[] = [
   imports: [DistributionModule, TenancyModule],
   controllers: [PartiesController, ConsentsController, DuplicatesController, HouseholdsController],
   providers: [...adapters, ...services],
-  exports: [PARTY_FACADE],
+  exports: [PARTY_FACADE, FIELD_CIPHER],
 })
 export class PartyModule implements OnModuleInit {
   constructor(@Inject(PERMISSION_POLICY) private readonly permissions: RolePermissionMatrix) {}

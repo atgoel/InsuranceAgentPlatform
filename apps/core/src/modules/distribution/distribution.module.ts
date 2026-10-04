@@ -69,7 +69,7 @@ const services: Provider[] = [
   imports: [TenancyModule],
   controllers: [OrgUnitsController, MembersController, DistributionQueriesController, RolesController],
   providers: [...repositories, ...collaborators, ...services],
-  exports: [SELLER_DIRECTORY, RECORD_SCOPE_PROVIDER, MemberService, LicenceExpiryScanner],
+  exports: [INSURER_CODE_REPOSITORY, MEMBER_REPOSITORY, SELLER_DIRECTORY, RECORD_SCOPE_PROVIDER, MemberService, LicenceExpiryScanner],
 })
 export class DistributionModule implements OnModuleInit {
   constructor(

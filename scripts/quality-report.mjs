@@ -13,6 +13,7 @@ import { execSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync, readdirSync, statSync, mkdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import istanbulCoverage from 'istanbul-lib-coverage';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const CORE = join(ROOT, 'apps/core');
@@ -27,9 +28,9 @@ if (!mod) {
   process.exit(2);
 }
 
-function run(cmd, cwd) {
+function run(cmd, cwd, env = {}) {
   try {
-    return { ok: true, out: execSync(cmd, { cwd, stdio: 'pipe', encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }) };
+    return { ok: true, out: execSync(cmd, { cwd, stdio: 'pipe', encoding: 'utf8', env: { ...process.env, ...env }, maxBuffer: 64 * 1024 * 1024 }) };
   } catch (e) {
     return { ok: false, out: `${e.stdout ?? ''}${e.stderr ?? ''}` };
   }
@@ -54,9 +55,30 @@ function backend() {
   const globs = mod.core.map((p) => `--collectCoverageFrom='${p}/**/*.ts'`).join(' ');
   const exclude = "--collectCoverageFrom='!**/*.module.ts' --collectCoverageFrom='!**/index.ts' --collectCoverageFrom='!**/*.spec.ts'";
   const testPaths = mod.coreTests.join(' ');
-  const t = run(`npx jest ${testPaths} --coverage ${globs} ${exclude} --coverageThreshold='{}' --json --outputFile=coverage/jest-results.json`, CORE);
+  const t = run(`npx jest ${testPaths} --coverage ${globs} ${exclude} --coverageReporters=json --coverageReporters=json-summary --coverageThreshold='{}' --json --outputFile=coverage/jest-results.json`, CORE);
   const results = existsSync(join(CORE, 'coverage/jest-results.json')) ? JSON.parse(readFileSync(join(CORE, 'coverage/jest-results.json'), 'utf8')) : {};
-  const cov = existsSync(join(CORE, 'coverage/coverage-summary.json')) ? JSON.parse(readFileSync(join(CORE, 'coverage/coverage-summary.json'), 'utf8')).total : {};
+  let cov = existsSync(join(CORE, 'coverage/coverage-summary.json')) ? JSON.parse(readFileSync(join(CORE, 'coverage/coverage-summary.json'), 'utf8')).total : {};
+  if (mod.integrationTests?.length) {
+    const pgDir = `coverage/${id}-pg`;
+    const pg = run(`npx jest --config jest.int.config.js ${mod.integrationTests.join(' ')} --coverage ${globs} ${exclude} --coverageReporters=json --coverageReporters=json-summary --coverageDirectory=${pgDir} --coverageThreshold='{}' --json --outputFile=${pgDir}/jest-results.json`, CORE, {
+      DATABASE_URL: process.env.DATABASE_URL ?? 'postgres://iap_app:iap@localhost:5433/iap',
+      MIGRATION_DATABASE_URL: process.env.MIGRATION_DATABASE_URL ?? 'postgres://iap_owner:iap@localhost:5433/iap',
+    });
+    t.ok &&= pg.ok;
+    t.out += pg.out;
+    const pgResultsPath = join(CORE, pgDir, 'jest-results.json');
+    if (existsSync(pgResultsPath)) {
+      const pgResults = JSON.parse(readFileSync(pgResultsPath, 'utf8'));
+      for (const key of ['numTotalTests', 'numPassedTests', 'numFailedTests', 'numTotalTestSuites']) results[key] = (results[key] ?? 0) + (pgResults[key] ?? 0);
+    }
+    const merged = istanbulCoverage.createCoverageMap({});
+    for (const directory of ['coverage', pgDir]) {
+      const raw = join(CORE, directory, 'coverage-final.json');
+      if (existsSync(raw)) merged.merge(JSON.parse(readFileSync(raw, 'utf8')));
+    }
+    cov = merged.getCoverageSummary().toJSON();
+    writeFileSync(join(CORE, 'coverage/coverage-summary.json'), JSON.stringify({ total: cov, ...Object.fromEntries(merged.files().map((file) => [file, merged.fileCoverageFor(file).toSummary().toJSON()])) }));
+  }
   const lint = run(`npx eslint ${mod.core.join(' ')} ${mod.coreTests.join(' ')} -f json`, CORE);
   const lintJson = safeJson(lint.out);
   const tc = run('npx tsc --noEmit -p tsconfig.json', CORE);

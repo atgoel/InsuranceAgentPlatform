@@ -1,6 +1,7 @@
 import { Button } from '../../../../design-system';
 import { useT } from '../../../../lib/i18n';
 import type { MyWorkItem } from '../../api';
+import { enumLabel } from '../../../book/display';
 
 interface WorkItemRowProps {
   item: MyWorkItem;
@@ -15,10 +16,12 @@ interface WorkItemRowProps {
 export function WorkItemRow({ item, onOpen, onLog }: WorkItemRowProps) {
   const { t, lang } = useT();
   const isLead = item.subject.type === 'LEAD';
+  const title = workItemTitle(item, t);
   return (
-    <li className="work-item" aria-label={item.title}>
+    <li className="work-item" aria-label={title}>
       <div className="item-content">
-        <div className="item-title">{item.title}</div>
+        <div className="item-title">{title}</div>
+        {item.kind === 'DUE' && item.subtitle && <p>{enumLabel(item.subtitle, t)}</p>}
         {item.dueAt && <div className="item-due">{new Date(item.dueAt).toLocaleString(lang === 'hi' ? 'hi-IN' : 'en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</div>}
       </div>
       <div className="item-actions">
@@ -29,4 +32,7 @@ export function WorkItemRow({ item, onOpen, onLog }: WorkItemRowProps) {
       </div>
     </li>
   );
+}
+function workItemTitle(item: MyWorkItem, t: (key: string) => string): string {
+  return item.subject.type === 'SERVICING_REQUEST' ? `${t('book.servicing_title')} · ${enumLabel(item.title.replace(/^Servicing — /, ''), t)}` : item.title;
 }

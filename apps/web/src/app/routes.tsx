@@ -1,4 +1,4 @@
-import { RouteObject } from 'react-router-dom';
+import { Outlet, RouteObject } from 'react-router-dom';
 import { Home } from './Home';
 import { EmptyState } from '../design-system';
 
@@ -19,7 +19,7 @@ export const routes: RouteObject[] = [
   // Mobile routes
   {
     path: 'm',
-    element: <div>Mobile Shell</div>, // Placeholder
+    element: <Outlet />,
     children: [
       {
         path: 'today',
@@ -38,7 +38,10 @@ export const routes: RouteObject[] = [
         lazy: () => import('../features/crm/screens/MyTasksScreen').then(m => ({ Component: m.MyTasksScreen })),
       },
       { path: 'customers', element: <EmptyState title="Coming in a later module" /> },
-      { path: 'book', element: <EmptyState title="Coming in a later module" /> },
+      { path: 'book', lazy: () => import('../features/book/screens/DueCalendarScreen').then(m => ({ Component: m.DueCalendarScreen })) },
+      { path: 'dues', lazy: () => import('../features/book/screens/DueCalendarScreen').then(m => ({ Component: m.DueCalendarScreen })) },
+      { path: 'book/import', lazy: () => import('../features/book/screens/BookImportScreen').then(m => ({ Component: m.BookImportScreen })) },
+      { path: 'servicing', lazy: () => import('../features/book/screens/ServicingTrackerScreen').then(m => ({ Component: m.ServicingTrackerScreen })) },
       {
         path: 'research',
         lazy: () => import('../features/catalogue/screens/ResearchLibraryScreen').then(m => ({ Component: m.ResearchLibraryScreen })),
@@ -67,7 +70,7 @@ export const routes: RouteObject[] = [
   // CRM routes
   {
     path: 'crm',
-    element: <div>CRM Shell</div>, // Placeholder
+    element: <Outlet />,
     children: [
       {
         path: 'leads',

@@ -1,8 +1,10 @@
 import { Tabs, StatusChip, Button, type TabDef } from '../../../design-system';
 import { ConsentSummaryItem, PartyRoleLink, HouseholdView } from '../api';
 import { useT } from '../../../lib/i18n';
+import { HeldPoliciesPanel } from '../../book/HeldPoliciesPanel';
 
 interface PartyTabsProps {
+  partyId?: string;
   activeTab: string;
   onTabChange: (id: string) => void;
   household?: HouseholdView;
@@ -12,6 +14,7 @@ interface PartyTabsProps {
 }
 
 export function PartyTabs({
+  partyId,
   activeTab,
   onTabChange,
   household,
@@ -90,7 +93,7 @@ export function PartyTabs({
 
         {activeTab === 'policies' && (
           <div className="tab-content">
-            <p>{t('party.record.coming_soon')}</p>
+            {partyId && <HeldPoliciesPanel partyId={partyId} />}
           </div>
         )}
       </div>

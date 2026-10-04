@@ -1,4 +1,6 @@
+import { bookMessagesEn } from './book-messages';
 export const messagesEn = {
+  ...bookMessagesEn,
   // Shell
   'app.title': 'Insurance Agent Platform',
   'shell.today': 'Today',

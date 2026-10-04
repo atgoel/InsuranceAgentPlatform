@@ -28,6 +28,20 @@ describe('AC-M00-32 Routes', () => {
     );
   }
 
+  it('AC-M07-15 mobile and CRM shells render their nested screen without technical labels', () => {
+    const shellRoutes = ['m', 'crm'].map(path => ({
+      element: routes.find(route => route.path === path)?.element,
+      path,
+      children: [{ path: 'probe', element: <div>{path} child screen</div> }],
+    }));
+    const mobile = render(<RouterProvider router={createMemoryRouter(shellRoutes, { initialEntries: ['/m/probe'] })} />);
+    expect(screen.getByText('m child screen')).toBeInTheDocument();
+    expect(screen.queryByText('Mobile Shell')).not.toBeInTheDocument();
+    mobile.unmount();
+    render(<RouterProvider router={createMemoryRouter(shellRoutes, { initialEntries: ['/crm/probe'] })} />);
+    expect(screen.getByText('crm child screen')).toBeInTheDocument();
+    expect(screen.queryByText('CRM Shell')).not.toBeInTheDocument();
+  });
   it('defines routes array', () => {
     expect(routes).toBeDefined();
     expect(Array.isArray(routes)).toBe(true);
@@ -118,12 +132,12 @@ describe('AC-M00-32 Routes', () => {
 
   it('renders mobile shell for nested routes', async () => {
     renderWithRouter(['/m/today']);
-    expect(await screen.findByText('Mobile Shell')).toBeInTheDocument(); // lazy child: the router renders once it resolves
+    expect(screen.queryByText('Mobile Shell')).not.toBeInTheDocument();
   });
 
   it('renders crm shell placeholder', () => {
     renderWithRouter(['/crm']);
-    expect(screen.getByText('CRM Shell')).toBeInTheDocument();
+    expect(screen.queryByText('CRM Shell')).not.toBeInTheDocument();
   });
 
   it('renders console shell placeholder', () => {
@@ -138,16 +152,16 @@ describe('AC-M00-32 Routes', () => {
 
   it('renders mobile leads nested route', async () => {
     renderWithRouter(['/m/leads']);
-    expect(await screen.findByText('Mobile Shell')).toBeInTheDocument(); // lazy child: the router renders once it resolves
+    expect(screen.queryByText('Mobile Shell')).not.toBeInTheDocument();
   });
 
   it('renders mobile customers nested route', () => {
     renderWithRouter(['/m/customers']);
-    expect(screen.getByText('Mobile Shell')).toBeInTheDocument();
+    expect(screen.getByText('Coming in a later module')).toBeInTheDocument();
   });
 
-  it('renders mobile book nested route', () => {
+  it('renders mobile book nested route', async () => {
     renderWithRouter(['/m/book']);
-    expect(screen.getByText('Mobile Shell')).toBeInTheDocument();
+    expect(screen.queryByText('Mobile Shell')).not.toBeInTheDocument();
   });
 });

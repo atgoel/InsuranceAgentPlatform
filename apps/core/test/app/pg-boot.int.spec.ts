@@ -99,8 +99,19 @@ run('AC-M00-23 application boot and lead journey on Postgres', () => {
     state.opportunityId = conv.body.opportunityId;
   });
 
+  async function relayTenantEvents(): Promise<void> {
+    // Other integration suites share this DB; subscriber writes can also enqueue follow-on syncs.
+    const relay = t.app.get<OutboxRelay>(OUTBOX_RELAY);
+    for (let round = 0; round < 20; round += 1) {
+      const pending = await owner.query<{ n: string }>('select count(*) as n from outbox_event where tenant_id=$1 and published_at is null and attempts<3', [tenantId]);
+      if (Number(pending.rows[0]?.n ?? 0) === 0) return;
+      await relay.relayOnce(1000);
+    }
+    throw new Error('Test tenant outbox did not drain within 20 relay batches');
+  }
+
   it('AC-M00-21 the outbox relay delivers the Postgres outbox to subscribers (Twenty sync)', async () => {
-    await t.app.get<OutboxRelay>(OUTBOX_RELAY).relayOnce(1000);
+    await relayTenantEvents();
     const twenty = t.app.get(FakeTwentyClient);
     expect(twenty.find('lead', state.leadId as string)?.fields).toMatchObject({ core_id: state.leadId, stage: 'CONVERTED', product_interest: 'TERM_LIFE' });
     expect(twenty.find('opportunity', state.opportunityId as string)?.fields).toMatchObject({ premium_band: '15-30k', stage: 'DISCOVERY' });
@@ -122,7 +133,7 @@ run('AC-M00-23 application boot and lead journey on Postgres', () => {
     expect(added.body.options).toHaveLength(1);
     expect((await req('post', `/api/v1/quotes/${quoteId}/shares`)).status).toBe(200);
 
-    await t.app.get<OutboxRelay>(OUTBOX_RELAY).relayOnce(1000);
+    await relayTenantEvents();
 
     const quote = await req('get', `/api/v1/quotes/${quoteId}`);
     expect(quote.body).toMatchObject({ id: quoteId, status: 'SHARED' });

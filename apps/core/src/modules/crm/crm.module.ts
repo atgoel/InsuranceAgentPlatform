@@ -1,3 +1,5 @@
+import { RENEWAL_OPPORTUNITY_PORT } from './application/renewal-opportunity.port';
+import { RenewalOpportunityService } from './application/renewal-opportunity.service';
 import { Inject, Module, OnModuleInit, Provider } from '@nestjs/common';
 import { Pool } from 'pg';
 import { APP_POOL, EVENT_BUS, KERNEL_OPTIONS, PERMISSION_POLICY } from '../../kernel/tokens';
@@ -101,7 +103,7 @@ const policies: Provider[] = [
 ];
 
 const services: Provider[] = [
-  CrmContext, RoutingService, LeadAssignment, LeadCaptureService, LeadViews, LeadDeps, LeadService, ActivityService, TaskService,
+  RenewalOpportunityService, {provide:RENEWAL_OPPORTUNITY_PORT,useExisting:RenewalOpportunityService}, CrmContext, RoutingService, LeadAssignment, LeadCaptureService, LeadViews, LeadDeps, LeadService, ActivityService, TaskService,
   ConversionService, OpportunityService, { provide: OPPORTUNITY_LOOKUP, useExisting: OpportunityService }, MyWorkService, LeadImportService, CrmSubscribers, SlaSweepJob, CrmSyncWorker, SyncRecordSource, TwentyWebhookService, TwentyOwnerChange,
 ];
 
@@ -113,7 +115,7 @@ const services: Provider[] = [
   imports: [TenancyModule, DistributionModule, PartyModule, CatalogueModule],
   controllers: [LeadsController, PublicLeadsController, OpportunitiesController, TasksController, RoutingController, MyWorkController, LeadImportsController, TwentyWebhookController],
   providers: [...adapters, ...policies, ...services],
-  exports: [SlaSweepJob, TaskService, OPPORTUNITY_LOOKUP],
+  exports: [SlaSweepJob, TaskService, OPPORTUNITY_LOOKUP, RENEWAL_OPPORTUNITY_PORT, MyWorkService],
 })
 export class CrmModule implements OnModuleInit {
   constructor(

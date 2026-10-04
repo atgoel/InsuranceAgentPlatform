@@ -58,13 +58,19 @@ export class SlaAtRiskContributor implements MyWorkContributor {
 /** "Today" (F79): composed from contributors; a failing contributor degrades, never fails the page. */
 @Injectable()
 export class MyWorkService {
+  private readonly contributors: MyWorkContributor[];
   private readonly composer: MyWorkComposer;
 
   constructor(
     @Inject(MY_WORK_CONTRIBUTORS) contributors: MyWorkContributor[],
     private readonly ctx: CrmContext,
   ) {
-    this.composer = new MyWorkComposer(contributors, ctx.logger);
+    this.contributors = [...contributors];
+    this.composer = new MyWorkComposer(this.contributors, ctx.logger);
+  }
+
+  registerContributor(contributor: MyWorkContributor): void {
+    if (!this.contributors.some(c => c.name === contributor.name)) this.contributors.push(contributor);
   }
 
   today(principal: Principal) {

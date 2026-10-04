@@ -1,5 +1,9 @@
 # M05 · Product Catalogue & Comparison Scope — low-level design
 
+M07 amendment (2026-10-03): CATALOGUE_QUERY VersionDetail additionally exposes optional `keyFacts: Array<{label:string;value:string}>` for lifecycle consumers. `survivalBenefitYears` is a comma-separated list of positive integer anniversary years; absent/invalid facts do not schedule a survival benefit.
+
+M07 import lookup: `CatalogueQueryFacade.findProduct(insurerName: string, productName: string, date: string): Promise<VersionDetail | undefined>` matches exact normalized names and returns the unique active product version effective on that business date. Missing or ambiguous matches return undefined and require an import decision.
+
 Status: Ready for build · Depends on: M00, M01 (tie-ups, entity type), M02 (selling scope) · Requirements: Rev 3.0 F13, F67, F77, F78, §1 structural rules, §18 (tie-up limits, comparison and advice); launch acceptance LA-6 · HLD §7 (Product Catalogue; comparison scope engine is "the single gate"), §5 (Strapi product blocks by reference only) · Screens: W07 `TenantSetup` (catalogue tab), M07 `ResearchAssistant` (library part), M08 `NeedsCompare` (scope + disclosure part)
 
 ## 1. Responsibilities

@@ -9,7 +9,7 @@ import { CustomFieldInput, fieldLabel } from './CustomFieldInput';
 import '../styles/CustomFieldsSection.css';
 
 export interface CustomFieldsSectionProps {
-  entity: 'party' | 'lead';
+  entity: 'party' | 'lead' | 'held_policy';
   definitions: CustomFieldDefinition[];
   values: CustomFieldValues;
   version: number;

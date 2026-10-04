@@ -64,7 +64,7 @@ export function partyRepositoriesContract(label: string, setup: () => Promise<Co
       const p = mk('rt', 'Asha Rao', { tags: ['vip', 'renewal'], ownerMemberId: 'mem_1', orgUnitId: 'ou_1', contacts: [cp('rt'), cp('rt-mail', 'EMAIL')] });
       const dobEnc = await contractCipher.encrypt(A(), '1988-04-12');
       const panEnc = await contractCipher.encrypt(A(), 'ABCDE1234F');
-      p.setSensitive({ dateOfBirthEnc: dobEnc, dobYear: 1988, panEnc, panHash: contractCipher.hash(A(), 'ABCDE1234F'), panLast4: '234F' });
+      p.setSensitive({ dateOfBirthEnc: dobEnc, dobYear: 1988, birthday: '04-12', panEnc, panHash: contractCipher.hash(A(), 'ABCDE1234F'), panLast4: '234F' });
       p.setSensitiveField('preferredChannel', 'WHATSAPP');
       await save(A(), p);
       expect(p.props.version).toBe(2);

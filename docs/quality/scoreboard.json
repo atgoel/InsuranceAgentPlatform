@@ -82,5 +82,17 @@
     "covAvg": 87.4,
     "allPass": true,
     "date": "2026-10-03"
+  },
+  "M07": {
+    "name": "Book & Retention",
+    "total": 95.9,
+    "coverage": 33.7,
+    "lint": 15,
+    "types": 10,
+    "trace": 15,
+    "review": 22.3,
+    "covAvg": 86.5,
+    "allPass": true,
+    "date": "2026-10-04"
   }
 }
