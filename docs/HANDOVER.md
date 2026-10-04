@@ -94,6 +94,10 @@ Orchestrator review of the Codex M07 commit `11c0319` found three problem groups
 - Findings (bugs BUG-01…17, UI-01…10, PWA-01…06, lessons): `docs/quality/demo-readiness-findings.md`. Lessons copied into CLAUDE.md.
 - Plan with hand-over packages (lanes A foundation, B screens, C data, D PWA, E process), route → artboard map and verification: `docs/plan/ui-parity-and-pwa-plan.md`.
 - D1–D6 and ADR-008 approved by the user on 2026-10-04 (plan §6; M00 §13.7 and M04 Today row updated). Keycloak client accepts Vite ports 5173–5179. Next: baseline commit, then wave 1 (A1, A3, A4, C1, C2, E1) in separate worktrees per plan §7–§8.
+- Wave 1 started 2026-10-04: worktrees `../IMF-<wp>` on branches `ui/a1`, `ui/a3`, `ui/a4`, `ui/c1`, `ui/c2`, `ui/e1`, all from c014307.
+- WP-A1 merged (d105900, merge a509a99): `PageContainer`, `PageHeader`, `KpiRow`, `KpiTile`, `Select`, `DateInput`, `MonthInput`, `SearchField`, `CountChips`, `formatIstDate` in `design-system/`; body uses `--ground`. M00 §13.1, §13.3 and new AC-M00-34 approved by the user. Deviations: internal `FieldShell.tsx/.css` (not exported); `DateInput`/`MonthInput` use `.ds-control` from `FieldShell.css`; `KpiRow` has an outer `.kpi-row-frame`. `PageHeader` needs a Router. Wave 2 branches from a509a99 or later.
+- Open: AC-M06-12/13 (`features/advice/screens/QuoteWorkspaceScreen.test.tsx`) time out at 5000 ms under load; passes when the machine is quiet. A test near its timeout is a defect; assign it to the advice owner.
+- Port: the main checkout's Vite holds 5173 (plan §8.1 gives it to A1); A1 used 5190 for a no-auth gallery.
 
 ## Next steps and remaining dependencies
 M08 implemented and reviewed on 2026-10-04. User approved decisions 1–13,
