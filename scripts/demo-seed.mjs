@@ -193,11 +193,12 @@ async function convert(seller, id, product, startStage) {
   return res.opportunityId;
 }
 
-async function shareQuote(seller, lead, opportunityId) {
+async function shareQuote(seller, lead, opportunityId, adviceRecordId) {
   const quote = await call(seller, 'POST', '/quotes', {
     opportunityId,
     insuredPartyIds: [lead.partyId],
     requirements: { sumAssured: '1cr' },
+    ...(adviceRecordId ? { adviceRecordId } : {}),
   });
   await call(seller, 'POST', `/quotes/${quote.id}/options`, {
     versionId: 'pv_hdfc_term_v1',
@@ -213,6 +214,8 @@ async function shareQuote(seller, lead, opportunityId) {
     validUntil: addDays(istToday(), 30),
   });
   await call(seller, 'POST', `/quotes/${quote.id}/shares`);
+  const readBack = await call(seller, 'GET', `/quotes/${quote.id}`);
+  verify(readBack.status === 'SHARED', `quote ${quote.id} status is ${readBack.status}, expected SHARED`);
   step(`quote ${quote.id} shared for ${lead.id}`);
 }
 
@@ -315,6 +318,135 @@ async function seedBook(seller) {
   }
 }
 
+class VerifyError extends Error {}
+
+function verify(condition, message) {
+  if (!condition) throw new VerifyError(`read-back failed: ${message}`);
+}
+
+const EXTRA_LEADS = [
+  { name: 'Vivek Anand', mobile: '+919876100011', product: 'TERM_LIFE', source: 'REFERRAL', fate: 'advice' },
+  { name: 'Meenal Kapoor', mobile: '+919876100012', product: 'HEALTH', source: 'WEB_FORM', fate: 'PROPOSAL_COMPLETE' },
+  { name: 'Tarun Bose', mobile: '+919876100013', product: 'TERM_LIFE', source: 'PHONE', fate: 'INSURER_PENDING' },
+  { name: 'Gita Rao', mobile: '+919876100014', product: 'SAVINGS_LIFE', source: 'WALK_IN', fate: 'LOST' },
+];
+
+const DEDUP_PAIR = [
+  { name: 'Suresh Nambiar', mobile: '+919876300001' },
+  { name: 'Suresh K Nambiar', mobile: '+919876300001' },
+];
+
+const STAGE_PATH = ['QUOTE_SHARED', 'PROPOSAL_COMPLETE', 'INSURER_PENDING'];
+
+async function findLeadByName(seller, name) {
+  const res = await call(seller, 'GET', `/leads?q=${encodeURIComponent(name)}&limit=10`);
+  return res.items.find((l) => l.fullName === name || l.name === name || l.displayName === name);
+}
+
+async function moveOpportunity(seller, opportunityId, finalStage) {
+  const path = STAGE_PATH.slice(0, STAGE_PATH.indexOf(finalStage) + 1);
+  for (const to of path) {
+    await call(seller, 'POST', `/opportunities/${opportunityId}/stage-transitions`, { to });
+  }
+}
+
+async function seedAdvice(seller, lead, opportunityId) {
+  const advice = await call(seller, 'POST', '/advice-records', { partyId: lead.partyId, opportunityId, line: 'LIFE', category: 'TERM' });
+  await call(seller, 'POST', `/advice-records/${advice.id}/calculator-runs`, {
+    calculator: 'protection-gap',
+    input: {
+      annualIncomePaise: 120_000_000,
+      annualExpensesPaise: 60_000_000,
+      yearsToRetire: 25,
+      liabilitiesPaise: 500_000_000,
+      existingCoverPaise: 0,
+      liquidAssetsPaise: 100_000_000,
+    },
+  });
+  const versionId = 'pv_hdfc_term_v1';
+  await call(seller, 'POST', `/advice-records/${advice.id}/recommendations`, {
+    versionId,
+    rationale: 'Pure term cover matches the protection gap and the budget.',
+  });
+  const current = await call(seller, 'GET', `/advice-records/${advice.id}`);
+  const etag = `"v${current.version}"`;
+  await call(seller, 'PUT', `/advice-records/${advice.id}/customer-choice`, { versionId }, etag);
+  await call(seller, 'POST', `/advice-records/${advice.id}/finalisation`);
+  const final = await call(seller, 'GET', `/advice-records/${advice.id}`);
+  verify(final.status === 'FINALISED', `advice ${advice.id} status is ${final.status}, expected FINALISED`);
+  return advice.id;
+}
+
+async function seedExtraLead(seller, sellerId, l, i) {
+  const lead = await captureLead(l);
+  if (lead.owner !== sellerId) throw new Error(`lead ${l.name} routed to ${lead.owner}, expected ${sellerId}`);
+  await contact(seller, lead.id, `demo-seed-act-x${String(i + 1).padStart(2, '0')}`);
+  await qualify(seller, lead.id);
+  const opportunityId = await convert(seller, lead.id, l.product, 'DISCOVERY');
+  if (l.fate === 'advice') {
+    const adviceId = await seedAdvice(seller, lead, opportunityId);
+    await shareQuote(seller, lead, opportunityId, adviceId);
+  } else if (l.fate === 'LOST') {
+    await call(seller, 'POST', `/opportunities/${opportunityId}/loss`, { reason: 'PREMIUM_TOO_HIGH' });
+  } else {
+    await moveOpportunity(seller, opportunityId, l.fate);
+  }
+  step(`extra lead ${l.name} -> opportunity ${opportunityId} (${l.fate})`);
+}
+
+async function seedDedupPair(seller) {
+  const ids = [];
+  for (const p of DEDUP_PAIR) {
+    const res = await call(seller, 'POST', '/parties', {
+      kind: 'PERSON',
+      displayName: p.name,
+      contacts: [{ channel: 'MOBILE', value: p.mobile, isPrimary: true }],
+      onDuplicate: 'create',
+    });
+    ids.push(res.party.id);
+  }
+  step(`duplicate pair created: ${ids.join(', ')}`);
+}
+
+function isDedupItem(item) {
+  const names = [item.a.displayName, item.b.displayName].sort();
+  return names[0] === DEDUP_PAIR[1].name && names[1] === DEDUP_PAIR[0].name;
+}
+
+async function seedExtras(seller, sellerId) {
+  for (const [i, l] of EXTRA_LEADS.entries()) {
+    const existing = await findLeadByName(seller, l.name);
+    if (existing) {
+      step(`extra lead ${l.name} already exists; skipped`);
+      continue;
+    }
+    await seedExtraLead(seller, sellerId, l, i);
+  }
+  const queue = await call(adminToken, 'GET', '/duplicates?limit=100');
+  if (queue.items.some(isDedupItem)) {
+    step('duplicate pair already queued; skipped');
+    return;
+  }
+  await seedDedupPair(seller);
+}
+
+async function verifyExtras(seller) {
+  const board = await call(seller, 'GET', '/opportunities?view=board');
+  const counts = {};
+  for (const col of board.columns) counts[col.stage] = col.count;
+  for (const stage of ['DISCOVERY', 'QUOTE_SHARED', 'PROPOSAL_COMPLETE', 'INSURER_PENDING']) {
+    verify((counts[stage] ?? 0) >= 1, `no opportunity in stage ${stage} (counts ${JSON.stringify(counts)})`);
+  }
+  verify(board.closed.lost >= 1, `expected >= 1 LOST opportunities, got ${board.closed.lost}`);
+  for (const l of EXTRA_LEADS) {
+    verify(await findLeadByName(seller, l.name), `lead ${l.name} not found`);
+  }
+  const queue = await call(adminToken, 'GET', '/duplicates?limit=100');
+  verify(queue.items.some(isDedupItem), 'duplicate pair is not in the dedup queue');
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  step(`verified: board=${JSON.stringify(counts)} closed=${JSON.stringify(board.closed)} total open=${total} dedupQueue=${queue.items.length}`);
+}
+
 async function existingMembers() {
   const res = await call(adminToken, 'GET', '/members?limit=100');
   const members = {};
@@ -375,6 +507,9 @@ async function main() {
     await seedTasks(seller, leads);
     await seedBook(seller);
   }
+  const seller = tokenFor({ roles: ['SALESPERSON'], memberId: members['priya.sales'], orgUnitId: branchId });
+  await seedExtras(seller, members['priya.sales']);
+  await verifyExtras(seller);
   await linkKeycloak(members, branchId);
   step(`done: branch=${branchId} members=${JSON.stringify(members)}`);
 }
