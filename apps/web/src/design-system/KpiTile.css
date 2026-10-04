@@ -1,0 +1,49 @@
+.kpi-tile {
+  padding: var(--spacing-lg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background-color: white;
+  color: var(--ink);
+}
+
+.kpi-tile-label {
+  font-size: 13px;
+  color: var(--secondary);
+}
+
+.kpi-tile-value {
+  margin-top: var(--spacing-xs);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.kpi-tile-caption {
+  margin-top: var(--spacing-xs);
+  font-size: 12px;
+  color: var(--caption);
+}
+
+.kpi-tile[data-tone="ok"] .kpi-tile-value {
+  color: var(--ok-fg);
+}
+
+.kpi-tile[data-tone="warn"] .kpi-tile-value {
+  color: var(--warn-fg);
+}
+
+.kpi-tile[data-tone="bad"] .kpi-tile-value {
+  color: var(--bad-fg);
+}
+
+/* Compact tile when the row is phone-width (container set by KpiRow). */
+@container (max-width: 559px) {
+  .kpi-tile {
+    padding: var(--spacing-md);
+  }
+
+  .kpi-tile-value {
+    font-size: 22px;
+  }
+}

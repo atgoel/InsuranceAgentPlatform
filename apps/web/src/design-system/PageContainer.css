@@ -1,0 +1,21 @@
+.page-container {
+  container-type: inline-size;
+  background-color: var(--ground);
+}
+
+.page-container-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.page-container[data-width="wide"] .page-container-inner {
+  max-width: 1600px;
+}
+
+/* Container query, not media query: inside the mobile phone frame the viewport is wide but the page is 390 px. */
+@container (min-width: 1024px) {
+  .page-container-inner {
+    padding: 32px;
+  }
+}

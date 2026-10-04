@@ -1,0 +1,30 @@
+.ds-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+
+.ds-field-label {
+  font-size: 13px;
+  color: var(--secondary);
+}
+
+.ds-control {
+  width: 100%;
+  height: var(--touch-min-height);
+  min-height: var(--touch-min-height);
+  padding: 0 var(--spacing-md);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background-color: white;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+.ds-control:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
