@@ -12,7 +12,7 @@ import { NewServicingForm, ServicingCard } from '../ServicingCard';
 
 describe('AC-M07-15 book screens', () => {
   it('marks the selected installment paid with exact body and keeps date controls', async () => {
-    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+    const today = '2026-10-04';
     const client = mockClient({
       '/api/v1/me': { permissions: ['book.write'] },
       '/api/v1/dues': {
@@ -38,10 +38,10 @@ describe('AC-M07-15 book screens', () => {
       },
       '/api/v1/held-policies/hp1/payments': {},
     });
-    renderAt(<DueCalendarScreen />, client, '/m/dues');
-    fireEvent.click(await screen.findByRole('button', { name: 'Mark paid' }));
+    renderAt(<DueCalendarScreen today={today} />, client, '/m/dues');
+    fireEvent.click(await screen.findByText('Mark paid'));
     fireEvent.change(screen.getByLabelText('Paid on'), { target: { value: '2026-10-02' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    fireEvent.click(screen.getByText('Save'));
     await waitFor(() =>
       expect(client.post).toHaveBeenCalledWith('/api/v1/held-policies/hp1/payments', { installmentDue: today, paidOn: '2026-10-02' }),
     );
@@ -69,7 +69,9 @@ describe('AC-M07-15 book screens', () => {
     renderAt(<HeldPoliciesPanel partyId="party1" />, client, '/crm/customers/party1');
     expect(await screen.findByText('Health cover')).toBeInTheDocument();
     expect(client.get).toHaveBeenCalledWith('/api/v1/held-policies', { query: { partyId: 'party1' } });
-    expect(screen.getByText(/Imported · As of 2026-07-02 · Confidence Medium/)).toBeInTheDocument();
+    expect(screen.getByText(/Imported · As of 2 Jul 2026 · Confidence Medium/)).toBeInTheDocument();
+    expect(screen.getByText('In force')).toBeInTheDocument();
+    expect(screen.queryByText('IN_FORCE')).not.toBeInTheDocument();
     expect(screen.getByText(/XXXX1234/)).toBeInTheDocument();
   });
   it('reports read errors with a trace reference', async () => {
@@ -119,9 +121,9 @@ describe('AC-M07-15 book screens', () => {
     expect(screen.getByText('Registration number XXXX4567')).toBeInTheDocument();
     expect(screen.getByText('Nexon')).toBeInTheDocument();
     expect(screen.getByText('Saurabh')).toBeInTheDocument();
-    expect(screen.getByText(/2027-10-01/)).toBeInTheDocument();
+    expect(screen.getByText(/1 Oct 2027/)).toBeInTheDocument();
     expect(screen.queryByText('FRESH')).not.toBeInTheDocument();
-    expect(screen.getByText(/Manually recorded · As of 2026-10-01 · Confidence High/)).toBeInTheDocument();
+    expect(screen.getByText(/Manually recorded · As of 1 Oct 2026 · Confidence High/)).toBeInTheDocument();
   });
   it('keeps servicing notes on failure and submits status with version', async () => {
     const request = { id: 'r1', heldPolicyId: 'hp1', kind: 'CLAIM', status: 'OPEN', followUpOn: '2026-10-01', notes: [], version: 2 };

@@ -1,0 +1,29 @@
+.due-month{background:var(--surface,#fff);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;margin:12px 0}
+.due-weekdays,.due-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.due-weekdays{text-align:center;font-size:11px;color:var(--caption)}
+.due-grid .due-day{margin:0;min-height:52px;padding:2px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font:inherit}
+.due-day[aria-pressed=true]{border:2px solid var(--accent);background:var(--info-bg);color:var(--ink)}
+.due-day-number{font-size:13px;font-weight:600}
+.due-day-dot{width:6px;height:6px;border-radius:3px;background:transparent}
+.due-day-amount{font-size:10px;color:var(--secondary);min-height:12px;white-space:nowrap}
+.due-day[data-tone=bad] .due-day-dot,.due-legend-dot[data-tone=bad]{background:#a12c2c}
+.due-day[data-tone=warn] .due-day-dot,.due-legend-dot[data-tone=warn]{background:#b45309}
+.due-day[data-tone=neutral] .due-day-dot,.due-legend-dot[data-tone=neutral]{background:#3b4352}
+.due-day[data-tone=ok] .due-day-dot,.due-legend-dot[data-tone=ok]{background:#1d5f3a}
+.due-day[data-tone=bad]{background:var(--bad-bg)}
+.due-day[data-tone=warn]{background:var(--warn-bg)}
+.due-legend{list-style:none;margin:0;padding:4px 0 0;display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--secondary)}
+.due-legend li{display:flex;align-items:center;gap:4px}
+.due-legend-dot{width:8px;height:8px;border-radius:4px;display:inline-block}
+.due-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.due-card-head h3{margin:0;font-size:14px}
+.due-meta{margin:4px 0;font-size:12px;color:var(--caption)}
+.due-when{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:4px 0;font-size:12px;color:var(--caption)}
+.due-actions{display:flex;flex-wrap:wrap;gap:8px}
+.due-actions button{flex:1;margin:0}
+.due-heading{margin:12px 0 4px;font-size:15px}
+.due-subheading{margin:0;font-size:12px;color:var(--caption)}
+.book-screen .due-grid .due-day[aria-pressed=true]{border:2px solid var(--accent);background:var(--info-bg);color:var(--ink)}
+.book-screen .count-chips{flex-wrap:nowrap;overflow-x:auto;gap:6px;padding-bottom:2px}
+.book-screen .count-chips .count-chip{margin:0;flex:none}
+.book-import-link{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);text-decoration:none;font-size:13px}

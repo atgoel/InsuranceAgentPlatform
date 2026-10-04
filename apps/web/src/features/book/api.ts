@@ -111,7 +111,7 @@ export function createBookApi(api: ApiClient) {
     referrer: (id: string, rowNo: number, link: { memberId?: string; partyId?: string }) =>
       api.put(`${root}/book-imports/${id}/rows/${rowNo}/referrer`, link),
     commit: (id: string) => api.post<ImportResult>(`${root}/book-imports/${id}/commit`),
-    servicing: (followUpBefore: string) =>
+    servicing: (followUpBefore?: string) =>
       api.get<{ items: ServicingRequest[] }>(`${root}/servicing-requests`, { query: { followUpBefore } }),
     createRequest: (id: string, input: { kind: string; insurerRef?: string; followUpOn?: string; portalUrl?: string }) =>
       api.post<ServicingRequest>(`${root}/held-policies/${id}/servicing-requests`, input),

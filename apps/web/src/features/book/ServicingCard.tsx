@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { formatIstDate } from '../../design-system';
 import { useT } from '../../lib/i18n';
 import { usePermissions } from '../../lib/auth/me';
 import type { ApiError } from '../../lib/api/api-error';
 import type { ServicingRequest } from './api';
+import { Label } from './Label';
 import { asError, BookError, useBookApi } from './shared';
 
 const transitions: Record<string, string[]> = {
@@ -12,9 +14,17 @@ const transitions: Record<string, string[]> = {
   RESOLVED: [],
   REJECTED: [],
 };
+const KINDS = ['ADDRESS_CHANGE', 'NOMINEE_CHANGE', 'BANK_MANDATE', 'SURRENDER', 'LOAN', 'CLAIM', 'DUPLICATE_POLICY', 'OTHER'];
+function KindOption({ code }: { code: string }) {
+  return (
+    <option value={code}>
+      <Label kind="servicingType" code={code} />
+    </option>
+  );
+}
 export function ServicingCard({ request, onUpdated }: { request: ServicingRequest; onUpdated(r: ServicingRequest): void }) {
   const api = useBookApi();
-  const { t } = useT();
+  const { t, lang } = useT();
   const { can } = usePermissions();
   const [text, setText] = useState('');
   const [error, setError] = useState<ApiError>();
@@ -33,9 +43,11 @@ export function ServicingCard({ request, onUpdated }: { request: ServicingReques
   }
   return (
     <article className="book-card">
-      <h3>{t(`book.enum.${request.kind}`)}</h3>
+      <h3>
+        <Label kind="servicingType" code={request.kind} />
+      </h3>
       <p>
-        {t(`book.enum.${request.status}`)} · {request.followUpOn ?? t('book.no_followup')}
+        {t(`book.enum.${request.status}`)} · {request.followUpOn ? formatIstDate(request.followUpOn, lang) : t('book.no_followup')}
       </p>
       {request.insurerRef && (
         <p>
@@ -57,7 +69,7 @@ export function ServicingCard({ request, onUpdated }: { request: ServicingReques
       <ul>
         {request.notes.map((n, i) => (
           <li key={`${n.at}:${i}`}>
-            {n.at} · {n.text}
+            {formatIstDate(n.at, lang)} · {n.text}
           </li>
         ))}
       </ul>
@@ -117,10 +129,8 @@ export function NewServicingForm({ policyId, onCreated }: { policyId: string; on
       <label>
         {t('book.request_kind')}
         <select value={kind} onChange={(e) => setKind(e.target.value)}>
-          {['ADDRESS_CHANGE', 'NOMINEE_CHANGE', 'BANK_MANDATE', 'SURRENDER', 'LOAN', 'CLAIM', 'DUPLICATE_POLICY', 'OTHER'].map((k) => (
-            <option key={k} value={k}>
-              {t(`book.enum.${k}`)}
-            </option>
+          {KINDS.map((k) => (
+            <KindOption key={k} code={k} />
           ))}
         </select>
       </label>

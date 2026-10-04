@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BottomSheet, LoadingSkeleton } from '../../design-system';
+import { BottomSheet, formatIstDate, LoadingSkeleton } from '../../design-system';
 import { useT } from '../../lib/i18n';
 import { formatMoney } from '../../lib/format';
 import { usePermissions } from '../../lib/auth/me';
@@ -13,7 +13,7 @@ import { displayField, fieldLabel } from './display';
 
 export function HeldPolicyDetail({ id, onClose }: { id: string; onClose(): void }) {
   const api = useBookApi();
-  const { t } = useT();
+  const { t, lang } = useT();
   const { can } = usePermissions();
   const definitions = useCustomFieldDefinitions('held_policy');
   const [policy, setPolicy] = useState<PolicyDetail>();
@@ -98,7 +98,7 @@ export function HeldPolicyDetail({ id, onClose }: { id: string; onClose(): void 
           <ul>
             {policy.schedule.map((s) => (
               <li key={s.dueDate}>
-                {s.dueDate} · {formatMoney(s.amountPaise)}
+                {formatIstDate(s.dueDate, lang)} · {formatMoney(s.amountPaise)}
               </li>
             ))}
           </ul>

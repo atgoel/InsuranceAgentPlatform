@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
-import { LoadingSkeleton } from '../../../design-system';
+import { DateInput, LoadingSkeleton, PageContainer, PageHeader } from '../../../design-system';
 import { useT } from '../../../lib/i18n';
 import type { ApiError } from '../../../lib/api/api-error';
 import type { ServicingRequest } from '../api';
-import { asError, BookError, istToday, useBookApi } from '../shared';
+import { asError, BookError, useBookApi } from '../shared';
 import { ServicingCard } from '../ServicingCard';
 import '../book.css';
 
-export function ServicingTrackerScreen() {
+function byFollowUp(a: ServicingRequest, b: ServicingRequest): number {
+  return (a.followUpOn ?? '').localeCompare(b.followUpOn ?? '') || a.id.localeCompare(b.id);
+}
+
+function useServicing(before: string) {
   const api = useBookApi();
-  const { t } = useT();
-  const [before, setBefore] = useState(istToday());
   const [items, setItems] = useState<ServicingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError>();
@@ -21,7 +23,7 @@ export function ServicingTrackerScreen() {
       setError(undefined);
       setItems([]);
       try {
-        const r = await api.servicing(before);
+        const r = await api.servicing(before || undefined);
         if (live) setItems(r.items);
       } catch (e) {
         if (live) setError(asError(e));
@@ -34,27 +36,37 @@ export function ServicingTrackerScreen() {
       live = false;
     };
   }, [api, before]);
+  return { items, setItems, loading, error };
+}
+
+export function ServicingTrackerScreen() {
+  const { t } = useT();
+  // The M07 LLD only narrows by follow-up date when asked to, so the default is every open request.
+  const [before, setBefore] = useState('');
+  const { items, setItems, loading, error } = useServicing(before);
   return (
-    <main className="book-screen">
-      <h1>{t('book.servicing_title')}</h1>
-      <label>
-        {t('book.followup_before')}
-        <input type="date" value={before} onChange={(e) => setBefore(e.target.value)} />
-      </label>
-      <BookError error={error} />
-      {loading && <LoadingSkeleton />}
-      {!loading && !error && items.length === 0 && <p>{t('book.no_requests')}</p>}
-      {!loading &&
-        !error &&
-        [...items]
-          .sort((a, b) => (a.followUpOn ?? '').localeCompare(b.followUpOn ?? '') || a.id.localeCompare(b.id))
-          .map((r) => (
+    <PageContainer>
+      <div className="book-screen">
+        <PageHeader title={t('book.servicing_title')} />
+        <DateInput label={t('book.followup_before')} value={before} onChange={setBefore} />
+        {before && (
+          <button type="button" onClick={() => setBefore('')}>
+            {t('book.clear_filter')}
+          </button>
+        )}
+        <BookError error={error} />
+        {loading && <LoadingSkeleton />}
+        {!loading && !error && items.length === 0 && <p>{t('book.no_requests')}</p>}
+        {!loading &&
+          !error &&
+          [...items].sort(byFollowUp).map((r) => (
             <ServicingCard
               key={r.id}
               request={r}
               onUpdated={(updated) => setItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))}
             />
           ))}
-    </main>
+      </div>
+    </PageContainer>
   );
 }
