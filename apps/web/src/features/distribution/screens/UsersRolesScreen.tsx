@@ -1,44 +1,60 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useApi } from '../../../lib/api';
-import { LoadingSkeleton, ErrorState, FilterChips, Button } from '../../../design-system';
-import { useT } from '../../../lib/i18n';
-import { useMembers } from '../hooks/useMembers';
-import { useRoles } from '../hooks/useRoles';
 import {
-  MembersTable,
+  Button,
+  ErrorState,
+  LoadingSkeleton,
+  PageContainer,
+  PageHeader,
+  PermissionDenied,
+} from '../../../design-system';
+import type { ApiError } from '../../../lib/api/api-error';
+import { usePermissions } from '../../../lib/auth/me';
+import { useT } from '../../../lib/i18n';
+import type { MemberView } from '../api';
+import { useMembers } from '../hooks/useMembers';
+import { useOrgUnits } from '../hooks/useOrgUnits';
+import { useRoles } from '../hooks/useRoles';
+import { useUsersRolesActions } from '../hooks/useUsersRolesActions';
+import {
+  ALL,
   InviteMemberSheet,
+  MemberFilters,
+  MembersTable,
   ReasonDialog,
   RoleCards,
-  RolePermissionEditor,
-  RolePreviewPanel,
+  RoleEditorPanel,
+  UsersKpis,
 } from '../components';
 import '../styles/UsersRolesScreen.css';
 
-interface MemberActionState {
-  memberId: string;
-  action: 'suspend' | 'reactivate';
-  reason: string;
+function LoadError({ error, onRetry }: { error: ApiError; onRetry(): void }) {
+  return error.status === 403 ? <PermissionDenied /> : <ErrorState error={error} onRetry={onRetry} />;
+}
+
+function RolesSection(props: { error?: ApiError; onRetry(): void; children: ReactNode }) {
+  return props.error ? <LoadError error={props.error} onRetry={props.onRetry} /> : <>{props.children}</>;
+}
+
+function filterMembers(members: MemberView[], status: string, role: string): MemberView[] {
+  return members.filter((m) => (status === ALL || m.status === status) && (role === ALL || m.roles.includes(role)));
 }
 
 export function UsersRolesScreen() {
   const api = useApi();
   const { t } = useT();
+  const { can } = usePermissions();
   const membersHook = useMembers({ apiClient: api });
   const rolesHook = useRoles({ apiClient: api });
+  const units = useOrgUnits(api);
+  const actions = useUsersRolesActions(membersHook, rolesHook, t('distribution.users.action_failed'));
+  const [statusFilter, setStatusFilter] = useState(ALL);
+  const [roleFilter, setRoleFilter] = useState(ALL);
 
-  const [statusFilters, setStatusFilters] = useState<string[]>([]);
-  const [roleFilters, setRoleFilters] = useState<string[]>([]);
-  const [showInviteForm, setShowInviteForm] = useState(false);
-  const [showMemberAction, setShowMemberAction] = useState(false);
-  const [memberAction, setMemberAction] = useState<MemberActionState | undefined>();
-  const [editingRole, setEditingRole] = useState<typeof rolesHook.roles[0] | undefined>();
-  const [actioning, setActioning] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [inviting, setInviting] = useState(false);
-
-  // Depend on the hooks' stable callbacks, not the hook objects (new every render → refetch loop).
+  // Depend on the hooks' stable callbacks, not the hook objects (new every render, which would loop).
   const { loadMembers } = membersHook;
   const { loadRoles, loadRolePreview } = rolesHook;
+  const editingRoleName = actions.editingRole?.role;
 
   useEffect(() => {
     loadMembers({ limit: 100 }).catch(() => undefined); // errors surface through hook state
@@ -46,190 +62,83 @@ export function UsersRolesScreen() {
   }, [loadMembers, loadRoles]);
 
   useEffect(() => {
-    if (editingRole) loadRolePreview(editingRole.role).catch(() => undefined); // preview is optional
-  }, [editingRole, loadRolePreview]);
+    if (editingRoleName) loadRolePreview(editingRoleName).catch(() => undefined); // the preview is optional
+  }, [editingRoleName, loadRolePreview]);
 
-  const filteredMembers = membersHook.members.filter((m) => {
-    if (statusFilters.length > 0 && !statusFilters.includes(m.status)) return false;
-    if (roleFilters.length > 0 && !m.roles.some((r) => roleFilters.includes(r))) return false;
-    return true;
-  });
+  if (membersHook.loading || rolesHook.loading) return <LoadingSkeleton />;
+  if (membersHook.error) return <LoadError error={membersHook.error} onRetry={() => void loadMembers({ limit: 100 })} />;
 
-  const uniqueRoles = Array.from(new Set(membersHook.members.flatMap((m) => m.roles)));
-  const uniqueStatuses = Array.from(new Set(membersHook.members.map((m) => m.status)));
-
-  const statusFilterOptions = uniqueStatuses.map((s) => ({ id: s, label: s }));
-  const roleFilterOptions = uniqueRoles.map((r) => ({ id: r, label: r }));
-
-  const handleInvite = async (input: Parameters<typeof membersHook.inviteMember>[0]) => {
-    try {
-      setInviting(true);
-      await membersHook.inviteMember(input);
-      setShowInviteForm(false);
-    } finally {
-      setInviting(false);
-    }
-  };
-
-  const handleMemberAction = async () => {
-    if (!memberAction) return;
-
-    try {
-      setActioning(true);
-      await membersHook.transitionMemberStatus(
-        memberAction.memberId,
-        memberAction.action === 'suspend' ? 'suspended' : 'active',
-        memberAction.reason
-      );
-      setShowMemberAction(false);
-      setMemberAction(undefined);
-    } finally {
-      setActioning(false);
-    }
-  };
-
-  const handleSaveRole = async (permissions: string[], etag: string) => {
-    if (!editingRole) return;
-
-    try {
-      setSaving(true);
-      await rolesHook.updateRolePermissions(editingRole.role, permissions, etag);
-      setEditingRole(undefined);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (membersHook.loading || rolesHook.loading) {
-    return <LoadingSkeleton />;
-  }
-
-  if (membersHook.error) {
-    return <ErrorState error={membersHook.error} />;
-  }
-
-  if (rolesHook.error) {
-    return <ErrorState error={rolesHook.error} />;
-  }
+  const visible = filterMembers(membersHook.members, statusFilter, roleFilter);
+  const canManage = can('distribution.member.write');
+  const canInvite = canManage && !rolesHook.error;
+  const action = actions.memberAction;
 
   return (
-    <div className="users-roles-screen">
-      <div className="page-header">
-        <h1>{t('distribution.users.title')}</h1>
-        <Button onClick={() => setShowInviteForm(true)} variant="primary" size="md">
-          {t('distribution.users.invite')}
-        </Button>
-      </div>
-
-      {/* KPI Tiles */}
-      <div className="kpi-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-2)' }}>
-        <div style={{ padding: 'var(--spacing-2)', border: '1px solid var(--color-line)', borderRadius: '8px' }}>
-          <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-bold)' }}>
-            {filteredMembers.length}
-          </div>
-          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-caption)' }}>
-            {t('distribution.users.total_users')}
-          </div>
-        </div>
-        <div style={{ padding: 'var(--spacing-2)', border: '1px solid var(--color-line)', borderRadius: '8px' }}>
-          <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-bold)' }}>
-            {filteredMembers.filter((m) => m.mfaRequired).length}
-          </div>
-          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-caption)' }}>
-            {t('distribution.users.mfa_enabled')}
-          </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="filters-section">
-        <div className="filter-group">
-          <label>{t('common.status')}</label>
-          <FilterChips
-            options={statusFilterOptions}
-            selected={statusFilters}
-            onChange={setStatusFilters}
-            multi={true}
-          />
-        </div>
-        <div className="filter-group">
-          <label>{t('common.role')}</label>
-          <FilterChips
-            options={roleFilterOptions}
-            selected={roleFilters}
-            onChange={setRoleFilters}
-            multi={true}
-          />
-        </div>
-      </div>
-
-      {/* Members Table */}
+    <PageContainer>
+      <PageHeader
+        title={t('distribution.users.title')}
+        subtitle={t('distribution.users.subtitle')}
+        actions={
+          canInvite ? (
+            <Button onClick={actions.openInvite} variant="primary" size="md">
+              {t('distribution.users.invite')}
+            </Button>
+          ) : undefined
+        }
+      />
+      <UsersKpis members={membersHook.members} />
+      <MemberFilters
+        members={membersHook.members}
+        status={statusFilter}
+        role={roleFilter}
+        onStatusChange={setStatusFilter}
+        onRoleChange={setRoleFilter}
+      />
       <MembersTable
-        members={filteredMembers}
-        onSuspend={(memberId) => {
-          setMemberAction({ memberId, action: 'suspend', reason: '' });
-          setShowMemberAction(true);
-        }}
-        onReactivate={(memberId) => {
-          setMemberAction({ memberId, action: 'reactivate', reason: '' });
-          setShowMemberAction(true);
-        }}
-      />
-
-      {/* Roles Section */}
-      <RoleCards roles={rolesHook.roles} onEditRole={setEditingRole} />
-
-      {/* Invite Member Modal */}
-      <InviteMemberSheet
-        isOpen={showInviteForm}
+        members={visible}
         roles={rolesHook.roles}
-        onClose={() => setShowInviteForm(false)}
-        onSubmit={handleInvite}
-        isLoading={inviting}
+        canManage={canManage}
+        onSuspend={(id) => actions.startAction(id, 'suspend')}
+        onReactivate={(id) => actions.startAction(id, 'reactivate')}
       />
-
-      {/* Member Action Modal */}
+      <RolesSection error={rolesHook.error} onRetry={() => void loadRoles()}>
+        <RoleCards
+          roles={rolesHook.roles}
+          selectedRole={editingRoleName}
+          canEdit={can('distribution.role.write')}
+          onEditRole={actions.startEditing}
+        />
+        {actions.editingRole && (
+          <RoleEditorPanel
+            role={actions.editingRole}
+            preview={rolesHook.rolePreview}
+            saving={actions.saving}
+            error={actions.saveError}
+            onSave={actions.saveRole}
+            onCancel={actions.stopEditing}
+          />
+        )}
+      </RolesSection>
+      <p className="policy-note">{t('distribution.users.signin_policy')}</p>
+      <p className="policy-note">{t('distribution.users.medical_note')}</p>
+      <InviteMemberSheet
+        isOpen={actions.inviteOpen}
+        roles={rolesHook.roles}
+        units={units}
+        onClose={actions.closeInvite}
+        onSubmit={actions.invite}
+        isLoading={actions.inviting}
+      />
       <ReasonDialog
-        isOpen={showMemberAction}
-        title={
-          memberAction?.action === 'suspend'
-            ? t('distribution.users.confirm_suspend')
-            : t('distribution.users.confirm_reactivate')
-        }
-        reason={memberAction?.reason ?? ''}
-        onReasonChange={(reason) =>
-          setMemberAction((prev) => (prev ? { ...prev, reason } : prev))
-        }
-        onConfirm={handleMemberAction}
-        onCancel={() => {
-          setShowMemberAction(false);
-          setMemberAction(undefined);
-        }}
-        isLoading={actioning}
+        isOpen={action !== undefined}
+        title={t(action?.action === 'reactivate' ? 'distribution.users.confirm_reactivate' : 'distribution.users.confirm_suspend')}
+        reason={action?.reason ?? ''}
+        onReasonChange={actions.setReason}
+        onConfirm={actions.confirmAction}
+        onCancel={actions.cancelAction}
+        isLoading={actions.actioning}
+        error={actions.actionError}
       />
-
-      {/* Role Editor Modal */}
-      {editingRole && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', zIndex: 1000 }}>
-          <div style={{ backgroundColor: 'white', width: '100%', maxHeight: '80vh', overflowY: 'auto', padding: 'var(--spacing-3)', borderRadius: '8px 8px 0 0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-2)' }}>
-              <h2 style={{ margin: 0 }}>{editingRole.role}</h2>
-              <button onClick={() => setEditingRole(undefined)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }}>
-                ×
-              </button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-3)' }}>
-              <RolePermissionEditor
-                role={editingRole}
-                onSave={handleSaveRole}
-                onCancel={() => setEditingRole(undefined)}
-                isSaving={saving}
-              />
-              <RolePreviewPanel preview={rolesHook.rolePreview} />
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </PageContainer>
   );
 }

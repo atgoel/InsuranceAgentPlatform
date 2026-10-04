@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '../../../design-system';
-import { RoleDefinition } from '../api';
+import { useT } from '../../../lib/i18n';
+import type { RoleDefinition } from '../api';
 
 const LOCKED_PERMISSIONS = ['party.medical.read', 'audit.delete', 'ops.*'];
 
@@ -26,74 +27,55 @@ interface RolePermissionEditorProps {
   error?: string;
 }
 
-export function RolePermissionEditor({
-  role,
-  onSave,
-  onCancel,
-  isSaving,
-  error,
-}: RolePermissionEditorProps) {
-  const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(
-    new Set(role.permissions)
-  );
+/** Every editable permission plus whatever the role already holds (other modules and locked ones), so nothing is hidden. */
+function listedPermissions(role: RoleDefinition): string[] {
+  return Array.from(new Set([...ALL_PERMISSIONS, ...role.permissions]));
+}
 
-  const handlePermissionChange = (permission: string) => {
-    if (LOCKED_PERMISSIONS.includes(permission)) return;
+export function RolePermissionEditor({ role, onSave, onCancel, isSaving, error }: RolePermissionEditorProps) {
+  const { t } = useT();
+  const [selected, setSelected] = useState<Set<string>>(new Set(role.permissions));
 
-    const newPermissions = new Set(selectedPermissions);
-    if (newPermissions.has(permission)) {
-      newPermissions.delete(permission);
-    } else {
-      newPermissions.add(permission);
-    }
-    setSelectedPermissions(newPermissions);
+  const labelFor = (permission: string) => {
+    const key = `distribution.perm.${permission}`;
+    const text = t(key);
+    return text === key ? permission : text;
   };
 
-  const handleSave = async () => {
-    await onSave(Array.from(selectedPermissions), role.etag);
+  const toggle = (permission: string) => {
+    if (LOCKED_PERMISSIONS.includes(permission)) return;
+    const next = new Set(selected);
+    if (next.has(permission)) next.delete(permission);
+    else next.add(permission);
+    setSelected(next);
   };
 
   return (
     <div className="permission-editor">
-      <h3>Edit Permissions</h3>
-
-      {error && <div className="error-message">{error}</div>}
-
+      <h3>{t('distribution.roles.edit_permissions')}</h3>
+      {error && (
+        <div className="error-message" role="alert">
+          {error}
+        </div>
+      )}
       <div className="permissions-grid">
-        {ALL_PERMISSIONS.map((permission) => {
-          const isLocked = LOCKED_PERMISSIONS.includes(permission);
-          const isSelected = selectedPermissions.has(permission);
-
+        {listedPermissions(role).map((permission) => {
+          const locked = LOCKED_PERMISSIONS.includes(permission);
           return (
-            <label key={permission} className={`permission-checkbox ${isLocked ? 'locked' : ''}`}>
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={() => handlePermissionChange(permission)}
-                disabled={isLocked}
-              />
-              <span>{permission}</span>
-              {isLocked && (
-                <span className="locked-badge" title="Locked">
-                  Locked
-                </span>
-              )}
+            <label key={permission} className={`permission-checkbox ${locked ? 'locked' : ''}`}>
+              <input type="checkbox" checked={selected.has(permission)} onChange={() => toggle(permission)} disabled={locked} />
+              <span>{labelFor(permission)}</span>
+              {locked && <span className="locked-badge">{t('distribution.roles.locked')}</span>}
             </label>
           );
         })}
       </div>
-
       <div className="editor-actions">
-        <Button
-          onClick={handleSave}
-          disabled={isSaving}
-          variant="primary"
-          size="md"
-        >
-          {isSaving ? 'Saving...' : 'Save'}
+        <Button onClick={() => onSave(Array.from(selected), role.etag)} disabled={isSaving} variant="primary" size="md">
+          {isSaving ? t('distribution.roles.saving') : t('distribution.roles.save_version', { version: role.version + 1 })}
         </Button>
         <Button onClick={onCancel} variant="secondary" size="md">
-          Cancel
+          {t('common.cancel')}
         </Button>
       </div>
     </div>

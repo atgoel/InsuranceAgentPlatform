@@ -7,3 +7,8 @@ export { ReasonDialog } from './ReasonDialog';
 export { RolePermissionEditor } from './RolePermissionEditor';
 export { RoleCards } from './RoleCards';
 export { RolePreviewPanel } from './RolePreviewPanel';
+export { RoleEditorPanel } from './RoleEditorPanel';
+export { MemberFilters, ALL } from './MemberFilters';
+export { UsersKpis } from './UsersKpis';
+export { MemberDetailPanel } from './MemberDetailPanel';
+export { OnboardingPipeline } from './OnboardingPipeline';

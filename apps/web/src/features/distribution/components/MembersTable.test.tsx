@@ -1,282 +1,65 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, within, fireEvent } from '@testing-library/react';
+import { renderT as render } from '../test-render';
+import { member, role } from '../test-fixtures';
 import { MembersTable } from './MembersTable';
-import { MemberView } from '../api';
+
+const noop = () => undefined;
 
 describe('MembersTable', () => {
-  const mockMembers: MemberView[] = [
-    {
-      id: 'mem_1',
-      displayName: 'Alice Manager',
-      phoneMasked: '+91-****-****-1111',
-      emailMasked: 'alice****@example.com',
-      roles: ['BRANCH_MANAGER'],
-      orgUnitId: 'ou_branch1',
-      orgUnitName: 'Branch 1',
-      status: 'active',
-      capacityPerDay: 25,
-      skills: [],
-      languages: ['en'],
-      invitedAt: '2024-01-01T00:00:00Z',
-      mfaRequired: true,
-      version: 1,
-      etag: 'v1',
-    },
-    {
-      id: 'mem_2',
-      displayName: 'Bob Seller',
-      phoneMasked: '+91-****-****-2222',
-      emailMasked: 'bob****@example.com',
-      roles: ['SALESPERSON'],
-      orgUnitId: 'ou_branch1',
-      orgUnitName: 'Branch 1',
-      status: 'active',
-      capacityPerDay: 25,
-      skills: [],
-      languages: ['en'],
-      invitedAt: '2024-02-01T00:00:00Z',
-      mfaRequired: false,
-      version: 1,
-      etag: 'v1',
-    },
-    {
-      id: 'mem_3',
-      displayName: 'Carol Suspended',
-      phoneMasked: '+91-****-****-3333',
-      emailMasked: 'carol****@example.com',
-      roles: ['SALES_MANAGER'],
-      orgUnitId: 'ou_branch1',
-      orgUnitName: 'Branch 1',
-      status: 'suspended',
-      capacityPerDay: 25,
-      skills: [],
-      languages: ['en'],
-      invitedAt: '2024-03-01T00:00:00Z',
-      mfaRequired: true,
-      version: 1,
-      etag: 'v1',
-    },
-  ];
-
-  it('AC-M02-16 renders member names', () => {
-    const handleSuspend = vi.fn();
-    const handleReactivate = vi.fn();
-
-    render(
-      <MembersTable
-        members={mockMembers}
-        onSuspend={handleSuspend}
-        onReactivate={handleReactivate}
-      />
-    );
-
-    expect(screen.getByText('Alice Manager')).toBeInTheDocument();
-    expect(screen.getByText('Bob Seller')).toBeInTheDocument();
-    expect(screen.getByText('Carol Suspended')).toBeInTheDocument();
+  it('AC-M02-16 shows role chips and record scope as labels, never raw codes (BUG-09)', () => {
+    render(<MembersTable members={[member()]} roles={[role()]} onSuspend={noop} onReactivate={noop} />);
+    const row = screen.getByRole('row', { name: /Alice Manager/ });
+    expect(within(row).getByText('Branch manager')).toBeInTheDocument();
+    expect(within(row).getByText('Unit and sub-units')).toBeInTheDocument();
+    expect(screen.queryByText('BRANCH_MANAGER')).not.toBeInTheDocument();
+    expect(screen.queryByText('UNIT_SUBTREE')).not.toBeInTheDocument();
   });
 
-  it('AC-M02-13 displays masked phone numbers', () => {
-    const handleSuspend = vi.fn();
-    const handleReactivate = vi.fn();
-
-    render(
-      <MembersTable
-        members={mockMembers}
-        onSuspend={handleSuspend}
-        onReactivate={handleReactivate}
-      />
-    );
-
+  it('AC-M02-13 shows only the masked contact', () => {
+    render(<MembersTable members={[member({ phoneMasked: '+91-****-****-1111', emailMasked: undefined })]} onSuspend={noop} onReactivate={noop} />);
     expect(screen.getByText('+91-****-****-1111')).toBeInTheDocument();
-    expect(screen.getByText('+91-****-****-2222')).toBeInTheDocument();
   });
 
-  it('AC-M02-16 displays member roles', () => {
-    const handleSuspend = vi.fn();
-    const handleReactivate = vi.fn();
-
-    render(
-      <MembersTable
-        members={mockMembers}
-        onSuspend={handleSuspend}
-        onReactivate={handleReactivate}
-      />
-    );
-
-    expect(screen.getByText('BRANCH_MANAGER')).toBeInTheDocument();
-    expect(screen.getByText('SALESPERSON')).toBeInTheDocument();
-    expect(screen.getByText('SALES_MANAGER')).toBeInTheDocument();
+  it('AC-M02-12 shows MFA for members that require it and Mobile OTP for the others', () => {
+    const members = [member({ id: 'a', displayName: 'Mfa Person', mfaRequired: true }), member({ id: 'b', displayName: 'Otp Person', mfaRequired: false })];
+    render(<MembersTable members={members} onSuspend={noop} onReactivate={noop} />);
+    expect(within(screen.getByRole('row', { name: /Mfa Person/ })).getByText('MFA')).toBeInTheDocument();
+    expect(within(screen.getByRole('row', { name: /Otp Person/ })).getByText('Mobile OTP')).toBeInTheDocument();
   });
 
-  it('AC-M02-16 displays member status', () => {
-    const handleSuspend = vi.fn();
-    const handleReactivate = vi.fn();
-
-    render(
-      <MembersTable
-        members={mockMembers}
-        onSuspend={handleSuspend}
-        onReactivate={handleReactivate}
-      />
-    );
-
-    const statusChips = screen.getAllByText(/active|suspended/);
-    expect(statusChips.length).toBeGreaterThan(0);
-  });
-
-  it('AC-M02-12 displays MFA indicator for members requiring MFA', () => {
-    const handleSuspend = vi.fn();
-    const handleReactivate = vi.fn();
-
-    render(
-      <MembersTable
-        members={mockMembers}
-        onSuspend={handleSuspend}
-        onReactivate={handleReactivate}
-      />
-    );
-
-    const mfaCheckmarks = screen.getAllByText('✓');
-    expect(mfaCheckmarks.length).toBeGreaterThan(0);
-  });
-
-  it('AC-M02-06 shows Suspend button for active members', () => {
-    const handleSuspend = vi.fn();
-    const handleReactivate = vi.fn();
-
-    render(
-      <MembersTable
-        members={mockMembers}
-        onSuspend={handleSuspend}
-        onReactivate={handleReactivate}
-      />
-    );
-
-    const suspendButtons = screen.getAllByText('Suspend');
-    expect(suspendButtons.length).toBeGreaterThan(0);
-  });
-
-  it('AC-M02-06 calls onSuspend when Suspend button is clicked', () => {
-    const handleSuspend = vi.fn();
-    const handleReactivate = vi.fn();
-
-    render(
-      <MembersTable
-        members={mockMembers}
-        onSuspend={handleSuspend}
-        onReactivate={handleReactivate}
-      />
-    );
-
-    const suspendButtons = screen.getAllByText('Suspend');
-    fireEvent.click(suspendButtons[0]);
-    expect(handleSuspend).toHaveBeenCalledWith('mem_1');
-  });
-
-  it('AC-M02-06 shows Reactivate button for suspended members', () => {
-    const handleSuspend = vi.fn();
-    const handleReactivate = vi.fn();
-
-    render(
-      <MembersTable
-        members={mockMembers}
-        onSuspend={handleSuspend}
-        onReactivate={handleReactivate}
-      />
-    );
-
-    const reactivateButtons = screen.getAllByText('Reactivate');
-    expect(reactivateButtons.length).toBeGreaterThan(0);
-  });
-
-  it('AC-M02-06 calls onReactivate when Reactivate button is clicked', () => {
-    const handleSuspend = vi.fn();
-    const handleReactivate = vi.fn();
-
-    render(
-      <MembersTable
-        members={mockMembers}
-        onSuspend={handleSuspend}
-        onReactivate={handleReactivate}
-      />
-    );
-
-    const reactivateButtons = screen.getAllByText('Reactivate');
-    fireEvent.click(reactivateButtons[0]);
-    expect(handleReactivate).toHaveBeenCalledWith('mem_3');
-  });
-
-  it('AC-M02-16 renders table with correct columns', () => {
-    const handleSuspend = vi.fn();
-    const handleReactivate = vi.fn();
-
-    render(
-      <MembersTable
-        members={mockMembers}
-        onSuspend={handleSuspend}
-        onReactivate={handleReactivate}
-      />
-    );
-
-    // Verify that DataGrid is rendered with members data
-    expect(screen.getByText('Alice Manager')).toBeInTheDocument();
-    expect(screen.getByText('Bob Seller')).toBeInTheDocument();
-  });
-
-  it('AC-M02-16 handles empty member list', () => {
-    const handleSuspend = vi.fn();
-    const handleReactivate = vi.fn();
-
-    render(
-      <MembersTable
-        members={[]}
-        onSuspend={handleSuspend}
-        onReactivate={handleReactivate}
-      />
-    );
-
-    // Should render without errors, but no members shown
-    expect(screen.queryByText('Alice Manager')).not.toBeInTheDocument();
-  });
-
-  it('AC-M02-16 shows action buttons only for appropriate statuses', () => {
-    const handleSuspend = vi.fn();
-    const handleReactivate = vi.fn();
-
-    render(
-      <MembersTable
-        members={mockMembers}
-        onSuspend={handleSuspend}
-        onReactivate={handleReactivate}
-      />
-    );
-
-    // Count of Suspend buttons should be equal to count of active members
-    const suspendButtons = screen.getAllByText('Suspend');
-    expect(suspendButtons.length).toBe(2); // mem_1 and mem_2 are active
-
-    // Count of Reactivate buttons should be equal to count of suspended members
-    const reactivateButtons = screen.getAllByText('Reactivate');
-    expect(reactivateButtons.length).toBe(1); // mem_3 is suspended
-  });
-
-  it('AC-M02-16 displays member without email', () => {
-    const handleSuspend = vi.fn();
-    const handleReactivate = vi.fn();
-
-    const membersWithoutEmail = [
-      { ...mockMembers[0], emailMasked: undefined },
+  it('AC-M02-06 offers Deactivate for active, Reactivate for deactivated and nothing for invited members', () => {
+    const onSuspend = vi.fn();
+    const onReactivate = vi.fn();
+    const members = [
+      member({ id: 'a', displayName: 'Active One', status: 'active' }),
+      member({ id: 'b', displayName: 'Gone One', status: 'suspended' }),
+      member({ id: 'c', displayName: 'New One', status: 'invited' }),
     ];
+    render(<MembersTable members={members} onSuspend={onSuspend} onReactivate={onReactivate} />);
 
-    render(
-      <MembersTable
-        members={membersWithoutEmail}
-        onSuspend={handleSuspend}
-        onReactivate={handleReactivate}
-      />
-    );
+    fireEvent.click(screen.getByRole('button', { name: 'Deactivate Active One' }));
+    expect(onSuspend).toHaveBeenCalledExactlyOnceWith('a');
+    fireEvent.click(screen.getByRole('button', { name: 'Reactivate Gone One' }));
+    expect(onReactivate).toHaveBeenCalledExactlyOnceWith('b');
+    expect(within(screen.getByRole('row', { name: /New One/ })).queryByRole('button')).not.toBeInTheDocument();
+  });
 
-    expect(screen.getByText('Alice Manager')).toBeInTheDocument();
-    expect(screen.getByText('+91-****-****-1111')).toBeInTheDocument();
+  it('AC-M02-16 leaves out the action column when the caller cannot manage members and the scope column when roles are unknown', () => {
+    render(<MembersTable members={[member()]} canManage={false} onSuspend={noop} onReactivate={noop} />);
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Action' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Record scope' })).not.toBeInTheDocument();
+  });
+
+  it('AC-M02-16 shows status labels', () => {
+    render(<MembersTable members={[member({ status: 'suspended' })]} onSuspend={noop} onReactivate={noop} />);
+    expect(screen.getByText('Deactivated')).toBeInTheDocument();
+    expect(screen.queryByText('suspended')).not.toBeInTheDocument();
+  });
+
+  it('AC-M02-16 shows an empty state when no member matches', () => {
+    render(<MembersTable members={[]} onSuspend={noop} onReactivate={noop} />);
+    expect(screen.getByText('No users match these filters')).toBeInTheDocument();
   });
 });

@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useApi } from '../../../lib/api';
-import { Button, EmptyState, ErrorState, LoadingSkeleton, PermissionDenied, Tabs } from '../../../design-system';
+import {
+  Button,
+  EmptyState,
+  ErrorState,
+  LoadingSkeleton,
+  PageContainer,
+  PageHeader,
+  PermissionDenied,
+  Tabs,
+} from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { usePermissions } from '../../../lib/auth/me';
 import { useT } from '../../../lib/i18n';
@@ -92,15 +101,14 @@ export function CustomFieldsScreen() {
   const tabs = CUSTOM_FIELD_ENTITIES.map((e) => ({ id: e, label: t(`tenancy.cf.entity.${e}`), badge: items.filter((d) => d.entity === e).length }));
 
   return (
-    <main className="custom-fields-screen">
-      <div className="page-header">
-        <div>
-          <h1>{t('tenancy.cf.title')}</h1>
-          <p>{t('tenancy.cf.description')}</p>
-          <p role="status" className="cf-usage">{t('tenancy.cf.usage', { active, limit })}</p>
-        </div>
-        {writable && <Button onClick={() => setAdding(true)}>{t('tenancy.cf.add')}</Button>}
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={t('tenancy.cf.title')}
+        subtitle={t('tenancy.cf.description')}
+        actions={writable ? <Button onClick={() => setAdding(true)}>{t('tenancy.cf.add')}</Button> : undefined}
+      />
+      <p role="status" className="cf-usage">{t('tenancy.cf.usage', { active, limit })}</p>
+      <p className="cf-note">{t('tenancy.cf.builder_note')}</p>
       {forbiddenWrite && <p role="alert" className="cf-error">{t('tenancy.cf.read_only')}</p>}
       {actionError && <p role="alert" className="cf-banner">{actionError}</p>}
       <Tabs tabs={tabs} value={entity} onChange={(id) => setEntity(id as CustomFieldEntity)} />
@@ -113,6 +121,6 @@ export function CustomFieldsScreen() {
       </div>
       <DefineFieldSheet open={adding} entity={entity} onClose={() => setAdding(false)} onCreate={handleCreate} />
       <EditFieldSheet definition={editing} onClose={() => setEditing(undefined)} onRevise={handleRevise} />
-    </main>
+    </PageContainer>
   );
 }

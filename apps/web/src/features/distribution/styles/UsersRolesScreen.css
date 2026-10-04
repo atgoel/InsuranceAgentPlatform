@@ -1,181 +1,236 @@
-.users-roles-screen {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-3);
-  padding: var(--spacing-3);
-  max-width: 100%;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-2);
-}
-
-.page-header h1 {
-  margin: 0;
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-}
-
-.kpi-tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--spacing-2);
-}
-
-.kpi-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
-  padding: var(--spacing-2);
-}
-
-.kpi-value {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-ink);
-}
-
-.kpi-label {
-  font-size: var(--font-size-sm);
-  color: var(--color-caption);
-}
+/* Users & roles, plus form pieces shared with the onboarding screen (invite sheet, reason dialog). */
 
 .filters-section {
   display: flex;
-  gap: var(--spacing-3);
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-
-.filter-group {
-  display: flex;
   flex-direction: column;
-  gap: var(--spacing-1);
-}
-
-.filter-group label {
-  font-weight: var(--font-weight-medium);
-  font-size: var(--font-size-sm);
+  gap: var(--spacing-sm);
+  margin: var(--spacing-lg) 0;
 }
 
 .members-table-card {
   overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
 }
 
-.action-buttons {
+.member-name {
   display: flex;
-  gap: var(--spacing-1);
+  flex-direction: column;
+  gap: 2px;
+}
+
+.member-contact {
+  font-size: 12px;
+  color: var(--caption);
+}
+
+.member-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
 }
 
 .roles-section {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-2);
-  margin-top: var(--spacing-3);
-  padding-top: var(--spacing-3);
-  border-top: 1px solid var(--color-line);
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
 }
 
 .roles-section h2 {
   margin: 0;
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold);
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .roles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--spacing-2);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: var(--spacing-md);
 }
 
-.role-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-  padding: var(--spacing-2);
+.role-card[data-selected='true'] > * {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .role-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--spacing-1);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
 }
 
 .role-header h3 {
   margin: 0;
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold);
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .mfa-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   padding: 2px 8px;
-  background-color: var(--color-warn);
-  color: var(--color-ink);
-  border-radius: 4px;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .role-details {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-1);
-  font-size: var(--font-size-sm);
-  color: var(--color-caption);
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  font-size: 13px;
+  color: var(--caption);
 }
 
 .role-details strong {
-  color: var(--color-ink);
+  color: var(--ink);
+  font-weight: 500;
 }
 
-/* Invite Form */
-.invite-form {
+.role-editor {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-2);
-  padding: var(--spacing-3);
+  gap: var(--spacing-md);
 }
 
-.invite-form h2 {
+.role-editor-title {
   margin: 0;
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.role-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: var(--spacing-xl);
+}
+
+.permission-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.permission-editor h3,
+.role-preview h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.permissions-grid {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.permission-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.permission-checkbox.locked {
+  background: var(--ground);
+  color: var(--caption);
+  cursor: not-allowed;
+}
+
+.permission-checkbox input {
+  width: 18px;
+  height: 18px;
+  cursor: inherit;
+}
+
+.locked-badge {
+  margin-inline-start: auto;
+  padding: 2px 6px;
+  background: var(--line);
+  color: var(--secondary);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.role-preview {
+  padding: var(--spacing-md);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--ground);
+  align-self: start;
+}
+
+.preview-permissions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+}
+
+.permission-tag {
+  padding: 4px 8px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.policy-note {
+  margin: var(--spacing-lg) 0 0;
+  font-size: 13px;
+  color: var(--caption);
+}
+
+/* Invite form and reason dialog */
+.invite-form,
+.member-action-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) 0;
 }
 
 .form-field {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-1);
+  gap: var(--spacing-xs);
+  border: none;
+  padding: 0;
+  margin: 0;
 }
 
-.form-field label {
-  font-weight: var(--font-weight-medium);
-  font-size: var(--font-size-sm);
+.form-field label,
+.form-field legend {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--secondary);
 }
 
-.form-field input[type="text"],
-.form-field input[type="tel"],
-.form-field input[type="email"],
+.form-field input[type='text'],
+.form-field input[type='tel'],
+.form-field input[type='email'],
+.form-field select,
 .form-field textarea {
-  padding: var(--spacing-1) var(--spacing-2);
-  border: 1px solid var(--color-line);
-  border-radius: 6px;
-  font-size: var(--font-size-sm);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
   font-family: inherit;
-}
-
-.form-field input:focus,
-.form-field textarea:focus {
-  outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 2px rgba(31, 95, 191, 0.1);
 }
 
 .form-field textarea {
@@ -186,183 +241,34 @@
 .role-checkboxes {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-1);
+  gap: var(--spacing-sm);
 }
 
 .role-checkboxes label {
   display: flex;
   align-items: center;
-  gap: var(--spacing-1);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-}
-
-.role-checkboxes input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  gap: var(--spacing-sm);
+  font-size: 14px;
+  color: var(--ink);
   cursor: pointer;
 }
 
 .field-error {
-  color: #8a1f1f;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  color: var(--bad-fg);
+  font-size: 13px;
 }
 
 .error-message {
-  padding: var(--spacing-2);
-  background-color: var(--color-bad);
-  border-radius: 6px;
-  color: var(--color-ink);
-  font-size: var(--font-size-sm);
+  padding: var(--spacing-md);
+  background: var(--bad-bg);
+  color: var(--bad-fg);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
 }
 
 .form-actions {
   display: flex;
-  gap: var(--spacing-2);
-  margin-top: var(--spacing-2);
-}
-
-/* Member Action Form */
-.member-action-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-  padding: var(--spacing-3);
-}
-
-.member-action-form h2 {
-  margin: 0;
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold);
-}
-
-/* Role Editor */
-.role-editor-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-3);
-  padding: var(--spacing-3);
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.permission-editor {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-}
-
-.permission-editor h3 {
-  margin: 0;
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold);
-}
-
-.permissions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: var(--spacing-2);
-}
-
-.permission-checkbox {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-1);
-  padding: var(--spacing-1) var(--spacing-2);
-  border: 1px solid var(--color-line);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.permission-checkbox:hover {
-  background-color: var(--color-ground);
-}
-
-.permission-checkbox.locked {
-  background-color: var(--color-ground);
-  cursor: not-allowed;
-}
-
-.permission-checkbox.locked input {
-  cursor: not-allowed;
-}
-
-.permission-checkbox input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: inherit;
-}
-
-.locked-badge {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px 6px;
-  background-color: var(--color-line);
-  color: var(--color-caption);
-  border-radius: 3px;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
-}
-
-.editor-actions {
-  display: flex;
-  gap: var(--spacing-2);
-  margin-top: var(--spacing-2);
-}
-
-.role-preview {
-  padding: var(--spacing-2);
-  border: 1px solid var(--color-line);
-  border-radius: 6px;
-  background-color: var(--color-ground);
-}
-
-.role-preview h3 {
-  margin: 0 0 var(--spacing-1) 0;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
-}
-
-.preview-permissions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
-}
-
-.permission-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  background-color: white;
-  border: 1px solid var(--color-line);
-  border-radius: 4px;
-  font-size: var(--font-size-sm);
-}
-
-@media (max-width: 768px) {
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .kpi-tiles {
-    grid-template-columns: 1fr;
-  }
-
-  .filters-section {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .roles-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .permissions-grid {
-    grid-template-columns: 1fr;
-  }
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
 }

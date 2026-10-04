@@ -1,19 +1,45 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useApi } from '../../../lib/api';
 import {
   Button,
-  Card,
-  DataGrid,
-  BottomSheet,
-  StatusChip,
-  LoadingSkeleton,
   ErrorState,
+  KpiRow,
+  KpiTile,
+  LoadingSkeleton,
+  PageContainer,
+  PageHeader,
   PermissionDenied,
 } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
-import { createTenancyApi, TenantSummary, ProvisionTenantInput, PlanCode, Plan, EntityType } from '../api';
+import { createTenancyApi, type Plan, type ProvisionTenantInput, type ProvisionTenantResponse, type TenantSummary } from '../api';
+import { PlanCards } from '../components/PlanCards';
+import { ProvisionTenantSheet } from '../components/ProvisionTenantSheet';
+import { TenantStatusSheet, type TenantStatusTarget } from '../components/TenantStatusSheet';
+import { TenantsTable } from '../components/TenantsTable';
 import '../styles/OperatorTenantsScreen.css';
+
+const PAGE_SIZE = 50;
+
+function asApiError(err: unknown): ApiError {
+  return err instanceof ApiError ? err : ApiError.network(err instanceof Error ? err : new Error(String(err)));
+}
+
+function ProvisionNotice({ result }: { result: ProvisionTenantResponse }) {
+  const { t } = useT();
+  if (result.failedStep) {
+    return (
+      <p role="alert" className="operator-error">
+        {t('tenancy.operator.provision_incomplete', { step: result.failedStep })}
+      </p>
+    );
+  }
+  return (
+    <p role="status" className="operator-ok">
+      {t('tenancy.operator.provisioned', { host: result.host })}
+    </p>
+  );
+}
 
 export function OperatorTenantsScreen() {
   const api = useApi();
@@ -22,264 +48,107 @@ export function OperatorTenantsScreen() {
 
   const [tenants, setTenants] = useState<TenantSummary[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<ApiError | undefined>();
-  const [provisionSheet, setProvisionSheet] = useState(false);
-  const [provisioning, setProvisioning] = useState(false);
-
-  const [formData, setFormData] = useState<ProvisionTenantInput>({
-    slug: '',
-    displayName: '',
-    kind: 'ORGANISATION',
-    planCode: 'TEAM',
-    entity: {
-      entityType: 'IMF',
-      legalName: '',
-      registrationNo: '',
-      registrationValidTo: '',
-    },
-    admin: {
-      name: '',
-    },
-  });
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [statusTarget, setStatusTarget] = useState<TenantStatusTarget | undefined>();
+  const [notice, setNotice] = useState<ProvisionTenantResponse | undefined>();
+  const [actionError, setActionError] = useState<string | undefined>();
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const [tenantList, planList] = await Promise.all([
-          tenancyApi.listTenants({ limit: 50 }),
-          tenancyApi.listPlans(),
-        ]);
+    let cancelled = false;
+    Promise.all([tenancyApi.listTenants({ limit: PAGE_SIZE }), tenancyApi.listPlans()])
+      .then(([tenantList, planList]) => {
+        if (cancelled) return;
         setTenants(tenantList.items);
         setPlans(planList.items);
-      } catch (err) {
-        if (err instanceof ApiError) {
-          setError(err);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
-
-  const handleProvision = async () => {
-    setProvisioning(true);
-    try {
-      await tenancyApi.provisionTenant(formData);
-      const updated = await tenancyApi.listTenants({ limit: 50 });
-      setTenants(updated.items);
-      setProvisionSheet(false);
-      setFormData({
-        slug: '',
-        displayName: '',
-        kind: 'ORGANISATION',
-        planCode: 'TEAM',
-        entity: {
-          entityType: 'IMF',
-          legalName: '',
-          registrationNo: '',
-          registrationValidTo: '',
-        },
-        admin: { name: '' },
+        setLoaded(true);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(asApiError(err));
       });
+    return () => {
+      cancelled = true;
+    };
+  }, [tenancyApi]);
+
+  const refresh = useCallback(async () => {
+    try {
+      const updated = await tenancyApi.listTenants({ limit: PAGE_SIZE });
+      setTenants(updated.items);
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err);
-      }
-    } finally {
-      setProvisioning(false);
+      setActionError(asApiError(err).title);
     }
+  }, [tenancyApi]);
+
+  const closeProvision = useCallback(() => setSheetOpen(false), []);
+  const closeStatus = useCallback(() => setStatusTarget(undefined), []);
+
+  const provision = async (input: ProvisionTenantInput) => {
+    const result = await tenancyApi.provisionTenant(input);
+    setNotice(result);
+    setSheetOpen(false);
+    await refresh();
+    return result;
   };
 
-  if (loading) {
-    return <LoadingSkeleton />;
-  }
-
-  if (error) {
-    if (error.status === 403) {
-      return <PermissionDenied />;
-    }
-    return <ErrorState error={error} />;
-  }
-
-  const statusTone = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'ok';
-      case 'suspended':
-        return 'warn';
-      case 'offboarded':
-        return 'bad';
-      default:
-        return 'neutral';
-    }
+  const changeStatus = async (tenantId: string, to: 'suspended' | 'active', reason: string) => {
+    await tenancyApi.transitionTenantStatus(tenantId, to, reason);
+    setStatusTarget(undefined);
+    await refresh();
   };
 
+  const resumeProvisioning = async (tenant: TenantSummary) => {
+    setActionError(undefined);
+    try {
+      setNotice(await tenancyApi.resumeProvisioning(tenant.id));
+    } catch (err) {
+      setActionError(asApiError(err).title);
+      return;
+    }
+    await refresh();
+  };
+
+  if (error) return error.status === 403 ? <PermissionDenied /> : <ErrorState error={error} />;
+  if (!loaded) return <LoadingSkeleton />;
+
+  const organisations = tenants.filter((tenant) => tenant.kind === 'ORGANISATION').length;
   return (
-    <div className="operator-tenants-screen">
-      <div className="page-header">
-        <div>
-          <h1>{t('tenancy.operator.title')}</h1>
-          <p>{t('tenancy.operator.description')}</p>
-        </div>
-        <Button onClick={() => setProvisionSheet(true)} size="lg">
-          {t('tenancy.operator.provision')}
-        </Button>
-      </div>
-
-      <Card>
-        <DataGrid
-          columns={[
-            { key: 'displayName', header: t('tenancy.operator.col_name') },
-            { key: 'kind', header: t('tenancy.operator.col_type') },
-            {
-              key: 'planCode',
-              header: t('tenancy.operator.col_plan'),
-            },
-            {
-              key: 'status',
-              header: t('tenancy.operator.col_status'),
-              render: (row: TenantSummary) => (
-                <StatusChip tone={statusTone(row.status)}>
-                  {row.status}
-                </StatusChip>
-              ),
-            },
-          ]}
-          rows={tenants}
-          rowKey={t => t.id}
-        />
-      </Card>
-
-      <BottomSheet
-        open={provisionSheet}
-        title={t('tenancy.operator.provision_title')}
-        onClose={() => setProvisionSheet(false)}
-      >
-        <div className="provision-form">
-          <label>
-            <span>{t('tenancy.operator.form_legal_name')}</span>
-            <input
-              type="text"
-              value={formData.entity.legalName}
-              onChange={e =>
-                setFormData({
-                  ...formData,
-                  entity: { ...formData.entity, legalName: e.target.value },
-                })
-              }
-            />
-          </label>
-
-          <label>
-            <span>{t('tenancy.operator.form_entity_type')}</span>
-            <select
-              value={formData.entity.entityType}
-              onChange={e =>
-                setFormData({
-                  ...formData,
-                  entity: { ...formData.entity, entityType: e.target.value as EntityType },
-                })
-              }
-            >
-              <option value="IMF">Insurance Marketing Firm</option>
-              <option value="BROKER">Broker</option>
-              <option value="CORPORATE_AGENT">Corporate Agent</option>
-              <option value="INDIVIDUAL_AGENT">Individual Agent</option>
-            </select>
-          </label>
-
-          <label>
-            <span>{t('tenancy.operator.form_plan')}</span>
-            <select
-              value={formData.planCode}
-              onChange={e =>
-                setFormData({
-                  ...formData,
-                  planCode: e.target.value as PlanCode,
-                })
-              }
-            >
-              {plans.map(p => (
-                <option key={p.code} value={p.code}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            <span>{t('tenancy.operator.form_slug')}</span>
-            <input
-              type="text"
-              value={formData.slug}
-              onChange={e => setFormData({ ...formData, slug: e.target.value })}
-              placeholder="tenant-slug"
-            />
-          </label>
-
-          <label>
-            <span>{t('tenancy.operator.form_registration')}</span>
-            <input
-              type="text"
-              value={formData.entity.registrationNo}
-              onChange={e =>
-                setFormData({
-                  ...formData,
-                  entity: { ...formData.entity, registrationNo: e.target.value },
-                })
-              }
-            />
-          </label>
-
-          <label>
-            <span>{t('tenancy.operator.form_registration_valid')}</span>
-            <input
-              type="date"
-              value={formData.entity.registrationValidTo}
-              onChange={e =>
-                setFormData({
-                  ...formData,
-                  entity: { ...formData.entity, registrationValidTo: e.target.value },
-                })
-              }
-            />
-          </label>
-
-          <label>
-            <span>{t('tenancy.operator.form_admin_name')}</span>
-            <input
-              type="text"
-              value={formData.admin.name}
-              onChange={e =>
-                setFormData({
-                  ...formData,
-                  admin: { ...formData.admin, name: e.target.value },
-                })
-              }
-            />
-          </label>
-
-          <div className="form-actions">
-            <Button
-              onClick={handleProvision}
-              loading={provisioning}
-              size="lg"
-            >
-              {t('tenancy.operator.provision')}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => setProvisionSheet(false)}
-            >
-              {t('common.cancel')}
-            </Button>
-          </div>
-        </div>
-      </BottomSheet>
-    </div>
+    <PageContainer>
+      <PageHeader
+        title={t('tenancy.operator.title')}
+        subtitle={t('tenancy.operator.description')}
+        actions={
+          <Button onClick={() => setSheetOpen(true)} size="lg">
+            {t('tenancy.operator.provision')}
+          </Button>
+        }
+      />
+      <KpiRow>
+        <KpiTile label={t('tenancy.operator.kpi_orgs')} value={organisations} caption={t('tenancy.operator.kpi_orgs_caption')} />
+        <KpiTile label={t('tenancy.operator.kpi_solo')} value={tenants.length - organisations} />
+      </KpiRow>
+      {notice && <ProvisionNotice result={notice} />}
+      {actionError && (
+        <p role="alert" className="operator-error">
+          {actionError}
+        </p>
+      )}
+      <PlanCards plans={plans} />
+      <TenantsTable
+        tenants={tenants}
+        plans={plans}
+        onSuspend={(tenant) => setStatusTarget({ tenant, to: 'suspended' })}
+        onResume={(tenant) => setStatusTarget({ tenant, to: 'active' })}
+        onResumeProvisioning={resumeProvisioning}
+      />
+      <ProvisionTenantSheet open={sheetOpen} plans={plans} onClose={closeProvision} onSubmit={provision} />
+      <TenantStatusSheet
+        key={statusTarget ? `${statusTarget.tenant.id}-${statusTarget.to}` : 'none'}
+        target={statusTarget}
+        onClose={closeStatus}
+        onConfirm={changeStatus}
+      />
+    </PageContainer>
   );
 }

@@ -1,210 +1,228 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { ApiProvider } from '../../../lib/api';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { screen, within, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { renderAt, mockClient } from '../../../test/render';
 import { ApiError } from '../../../lib/api/api-error';
-import { I18nProvider } from '../../../lib/i18n';
 import { TenantSetupScreen } from './TenantSetupScreen';
-import { ApiClient } from '../../../lib/api/api-client';
-import { TenantProfile, TieUpsResponse } from '../api';
+import type { FeatureFlag, TenantProfile, TieUpsResponse } from '../api';
 
-/** Answers by path, so the embedded catalogue table (M05) can request in any order. */
-const byPath = (profile: unknown, tieUps: unknown) => (path: string) => {
-  if (path === '/api/v1/tenant') return Promise.resolve(profile);
-  if (path === '/api/v1/tenant/tie-ups') return Promise.resolve(tieUps);
-  if (path === '/api/v1/catalogue/products') return Promise.resolve({ items: [] });
-  return Promise.reject(new Error(`unexpected GET ${path}`));
+const PROFILE = '/api/v1/tenant';
+const TIE_UPS = '/api/v1/tenant/tie-ups';
+const FLAGS = '/api/v1/tenant/feature-flags';
+const ONLINE = `${FLAGS}/online_purchase`;
+
+const profile: TenantProfile = {
+  id: 'tenant-1',
+  slug: 'acme',
+  displayName: 'Acme',
+  kind: 'ORGANISATION',
+  status: 'active',
+  planCode: 'BUSINESS',
+  crmMode: 'twenty',
+  entity: {
+    entityType: 'IMF',
+    legalName: 'Acme Insurance Marketing',
+    registrationNo: 'IMF001',
+    registrationValidTo: '2027-12-31',
+    principalOfficerName: 'John Doe',
+  },
+  registrationStatus: 'valid',
+  comparisonScope: 'TIED_INSURERS',
+  hosts: [],
 };
 
-describe('AC-M01-16 TenantSetupScreen', () => {
-  const mockProfile: TenantProfile = {
-    id: 'tenant-1',
-    slug: 'test-tenant',
-    displayName: 'Test Tenant',
-    kind: 'ORGANISATION',
-    status: 'active',
-    planCode: 'BUSINESS',
-    crmMode: 'twenty',
-    entity: {
-      entityType: 'IMF',
-      legalName: 'Test IMF',
-      registrationNo: 'IMF001',
-      registrationValidTo: '2027-12-31',
-      principalOfficerName: 'John Doe',
-      registrationStatus: 'valid',
-      comparisonScope: 'TIED_INSURERS',
-    },
-    hosts: [],
-  };
+const tieUps: TieUpsResponse = {
+  entityType: 'IMF',
+  comparisonScope: 'TIED_INSURERS',
+  lines: [
+    { line: 'LIFE', max: 2, active: [{ insurerId: 'INSURER1', line: 'LIFE', effectiveFrom: '2026-01-01' }] },
+    { line: 'HEALTH', max: 2, active: [] },
+  ],
+};
 
-  const mockTieUps: TieUpsResponse = {
-    entityType: 'IMF',
-    comparisonScope: 'TIED_INSURERS',
-    lines: [
-      {
-        line: 'LIFE',
-        max: 6,
-        active: [
-          { insurerId: 'INSURER1', line: 'LIFE', effectiveFrom: '2024-01-01' },
+const flags: FeatureFlag[] = [
+  { key: 'online_purchase', enabled: false, gate: { kind: 'COMPLIANCE_REVIEW', reason: 'ISNP rules require compliance review' } },
+  { key: 'referral_rewards', enabled: false, gate: { kind: 'LEGAL_LOCK', reason: 'Insurance Act s.41' } },
+];
+
+function setup(over: Record<string, unknown> = {}, permissions: string[] = ['tenant.flag.write']) {
+  const client = mockClient({
+    '/api/v1/me': { userRef: 'u1', tenantId: 't1', roles: [], permissions },
+    [PROFILE]: profile,
+    [TIE_UPS]: tieUps,
+    [FLAGS]: { items: flags },
+    '/api/v1/catalogue/products': { items: [] },
+    ...over,
+  });
+  renderAt(<TenantSetupScreen />, client, '/console/tenant');
+  return client;
+}
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('AC-M01-16 TenantSetupScreen', () => {
+  it('AC-M01-16 shows the entity with a translated registration status chip and a formatted date (BUG-14, BUG-16)', async () => {
+    setup();
+    expect(await screen.findByText('Acme Insurance Marketing')).toBeInTheDocument();
+    expect(screen.getByText('Insurance Marketing Firm')).toBeInTheDocument();
+    expect(screen.getByText('IMF001')).toBeInTheDocument();
+    expect(screen.getByText('31 Dec 2027')).toBeInTheDocument();
+    expect(screen.getByText('Valid')).toBeInTheDocument();
+    expect(screen.getByText('John Doe')).toBeInTheDocument();
+    expect(screen.getByText('Only tied insurers')).toBeInTheDocument();
+    expect(screen.queryByText(/tenancy\.setup\.status_/)).not.toBeInTheDocument();
+    expect(screen.queryByText('IMF')).not.toBeInTheDocument();
+  });
+
+  it('AC-M01-16 shows the expiring chip when the server computes it', async () => {
+    setup({ [PROFILE]: { ...profile, registrationStatus: 'expiring' } });
+    expect(await screen.findByText('Expiring soon')).toBeInTheDocument();
+  });
+
+  it('AC-M01-16 shows the market-wide sentence for a market-wide scope', async () => {
+    setup({ [PROFILE]: { ...profile, comparisonScope: 'MARKET_WIDE' } });
+    expect(await screen.findByText('Market-wide comparison across configured insurers')).toBeInTheDocument();
+  });
+
+  it('AC-M01-16 shows tie-ups per line with used/max counters and line labels, not codes (BUG-09)', async () => {
+    setup();
+    expect(await screen.findByText('Life insurance')).toBeInTheDocument();
+    expect(screen.getByText('1/2')).toBeInTheDocument();
+    expect(screen.getByText('0/2')).toBeInTheDocument();
+    expect(screen.getByText('INSURER1')).toBeInTheDocument();
+    expect(screen.queryByText('LIFE')).not.toBeInTheDocument();
+  });
+
+  it('AC-M01-16 hides the add form and warns when a line is at its limit', async () => {
+    setup({
+      [TIE_UPS]: {
+        ...tieUps,
+        lines: [
+          {
+            line: 'LIFE',
+            max: 2,
+            active: [
+              { insurerId: 'A', line: 'LIFE', effectiveFrom: '2026-01-01' },
+              { insurerId: 'B', line: 'LIFE', effectiveFrom: '2026-01-01' },
+            ],
+          },
         ],
       },
-      {
-        line: 'HEALTH',
-        max: 6,
-        active: [],
-      },
-    ],
-  };
-
-  let mockApiClient: ApiClient;
-
-  beforeEach(() => {
-    mockApiClient = {
-      get: vi.fn().mockResolvedValue(mockProfile),
-      post: vi.fn().mockResolvedValue({}),
-      put: vi.fn().mockResolvedValue(mockTieUps),
-      patch: vi.fn().mockResolvedValue({}),
-      del: vi.fn().mockResolvedValue(undefined),
-    };
+    });
+    expect(await screen.findByText('2/2')).toBeInTheDocument();
+    expect(screen.getByText('Limit reached')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Insurer ID for Life insurance')).not.toBeInTheDocument();
   });
 
-  it('AC-M01-16 loads and displays tenant profile with entity and tie-ups', async () => {
-    (mockApiClient.get as Mock).mockImplementation(byPath(mockProfile, mockTieUps));
+  it('AC-M01-16 saves the edited tie-ups with the IST date as effective-from', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-04T20:00:00Z')); // 5 Oct 01:30 in IST, still 4 Oct in UTC
+    const client = setup();
+    const user = userEvent.setup({ delay: null });
+    await screen.findByText('Life insurance');
+    await user.click(screen.getByLabelText('Insurer ID for Health insurance'));
+    await user.paste('INSURER2');
+    const healthLine = screen.getByText('Health insurance').closest('.line-section') as HTMLElement;
+    await user.click(within(healthLine).getByRole('button', { name: 'Add' }));
+    await user.click(screen.getByRole('button', { name: 'Save configuration' }));
 
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <TenantSetupScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    // Wait for data to load - check entity details
-    expect(await screen.findByText('Test IMF')).toBeInTheDocument();
-    expect(screen.getByText('IMF001')).toBeInTheDocument();
-    expect(screen.getByText('LIFE')).toBeInTheDocument();
-  });
-
-  it('AC-M01-16 displays registration status as valid chip', async () => {
-    (mockApiClient.get as Mock).mockImplementation(byPath(mockProfile, mockTieUps));
-
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <TenantSetupScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    expect(await screen.findByText('2027-12-31')).toBeInTheDocument();
-  });
-
-  it('AC-M01-16 displays comparison scope for IMF as tied insurers', async () => {
-    (mockApiClient.get as Mock).mockImplementation(byPath(mockProfile, mockTieUps));
-
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <TenantSetupScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    expect(await screen.findByText(/tied insurers/i)).toBeInTheDocument();
-  });
-
-  it('AC-M01-16 displays tie-ups per line with used/max counters', async () => {
-    (mockApiClient.get as Mock).mockImplementation(byPath(mockProfile, mockTieUps));
-
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <TenantSetupScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    expect(await screen.findByText('LIFE')).toBeInTheDocument();
-    expect(screen.getByText(/1\/6/)).toBeInTheDocument();
-    expect(screen.getByText('INSURER1')).toBeInTheDocument();
-  });
-
-  it('AC-M01-16 disables save when over limit', async () => {
-    const overLimitProfile = { ...mockProfile };
-    const overLimitTieUps: TieUpsResponse = {
-      ...mockTieUps,
-      lines: [
-        {
-          line: 'LIFE',
-          max: 6,
-          active: Array.from({ length: 6 }, (_, i) => ({
-            insurerId: `INSURER${i + 1}`,
-            line: 'LIFE' as const,
-            effectiveFrom: '2024-01-01',
-          })),
-        },
+    await waitFor(() => expect(client.put).toHaveBeenCalledTimes(1));
+    expect(client.put).toHaveBeenCalledWith(TIE_UPS, {
+      tieUps: [
+        { insurerId: 'INSURER1', line: 'LIFE', effectiveFrom: '2026-01-01' },
+        { insurerId: 'INSURER2', line: 'HEALTH', effectiveFrom: '2026-10-05' },
       ],
-    };
-
-    (mockApiClient.get as Mock).mockImplementation(byPath(overLimitProfile, overLimitTieUps));
-
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <TenantSetupScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    expect(await screen.findByText(/6\/6/)).toBeInTheDocument();
+    });
   });
 
-  it('AC-M01-16 shows referral rewards disabled with legal text', async () => {
-    (mockApiClient.get as Mock).mockImplementation(byPath(mockProfile, mockTieUps));
-
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <TenantSetupScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    expect(await screen.findByText(/Referral rewards/i)).toBeInTheDocument();
+  it('AC-M01-16 removes a tie-up before saving', async () => {
+    const client = setup();
+    const user = userEvent.setup({ delay: null });
+    await user.click(await screen.findByRole('button', { name: 'Remove INSURER1 from Life insurance' }));
+    await user.click(screen.getByRole('button', { name: 'Save configuration' }));
+    await waitFor(() => expect(client.put).toHaveBeenCalledTimes(1));
+    expect(client.put).toHaveBeenCalledWith(TIE_UPS, { tieUps: [] });
   });
 
-  it('AC-M01-16 handles 403 permission denied', async () => {
-    const apiError = new ApiError(403, 'forbidden', 'Forbidden');
-    mockApiClient = {
-      get: vi.fn().mockRejectedValue(apiError),
-      post: vi.fn().mockResolvedValue({}),
-      put: vi.fn().mockResolvedValue({}),
-      patch: vi.fn().mockResolvedValue({}),
-      del: vi.fn().mockResolvedValue(undefined),
-    };
-
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <TenantSetupScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    expect(await screen.findByText(/Access Denied/i)).toBeInTheDocument();
+  it('AC-M01-16 shows tie_up_limit_exceeded inline and keeps the page', async () => {
+    const client = setup();
+    client.put.mockRejectedValue(new ApiError(422, 'tie_up_limit_exceeded', 'Tie-up limit exceeded'));
+    const user = userEvent.setup({ delay: null });
+    await user.click(await screen.findByRole('button', { name: 'Save configuration' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('This exceeds the insurer tie-up limit for your entity type');
+    expect(screen.getByText('Acme Insurance Marketing')).toBeInTheDocument();
   });
 
-  it('AC-M01-16 handles loading state', () => {
-    (mockApiClient.get as Mock).mockImplementation(() => new Promise(() => {}));
+  it('AC-M01-16 shows any other save failure by its server title inline', async () => {
+    const client = setup();
+    client.put.mockRejectedValue(new ApiError(500, 'server_error', 'Could not save tie-ups'));
+    const user = userEvent.setup({ delay: null });
+    await user.click(await screen.findByRole('button', { name: 'Save configuration' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not save tie-ups');
+    expect(screen.getByText('Acme Insurance Marketing')).toBeInTheDocument();
+  });
 
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <TenantSetupScreen />
-        </I18nProvider>
-      </ApiProvider>
+  it('AC-M01-16 records a compliance review, then enables online purchase', async () => {
+    const client = setup();
+    const reviewed: FeatureFlag = { ...flags[0], gate: { ...flags[0].gate!, reviewRef: 'CR-2026-07', reviewedAt: '2026-10-04' } };
+    client.post.mockResolvedValue(reviewed);
+    client.put.mockResolvedValue({ ...reviewed, enabled: true });
+    const user = userEvent.setup({ delay: null });
+    await screen.findByText('Pending review');
+    await user.click(screen.getByLabelText('Compliance review reference'));
+    await user.paste('CR-2026-07');
+    await user.click(screen.getByRole('button', { name: 'Record Compliance review' }));
+
+    expect(await screen.findByText('Reviewed, not enabled')).toBeInTheDocument();
+    expect(client.post).toHaveBeenCalledExactlyOnceWith(
+      `${ONLINE}/compliance-reviews`,
+      { reviewRef: 'CR-2026-07' },
+      { idempotencyKey: expect.any(String) },
     );
+    await user.click(screen.getByRole('button', { name: 'Enable for this tenant' }));
+    expect(await screen.findByText('Enabled')).toBeInTheDocument();
+    expect(client.put).toHaveBeenCalledExactlyOnceWith(ONLINE, { enabled: true });
+  });
 
-    // Should show loading skeleton
-    expect(screen.queryByText('Test Tenant')).not.toBeInTheDocument();
+  it('AC-M01-16 shows a refused enable (compliance_review_required) inline and keeps the page', async () => {
+    const reviewed: FeatureFlag = { ...flags[0], gate: { ...flags[0].gate!, reviewRef: 'CR-1' } };
+    const client = setup({ [FLAGS]: { items: [reviewed, flags[1]] } });
+    client.put.mockRejectedValue(new ApiError(422, 'compliance_review_required', 'A compliance review is required'));
+    const user = userEvent.setup({ delay: null });
+    await user.click(await screen.findByRole('button', { name: 'Enable for this tenant' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('A compliance review is required');
+    expect(screen.getByText('Reviewed, not enabled')).toBeInTheDocument();
+  });
+
+  it('AC-M01-16 shows the referral rewards locked with its legal text and a disabled switch', async () => {
+    setup();
+    expect(await screen.findByText('Off · legal review required')).toBeInTheDocument();
+    expect(screen.getByText(/Rebates and inducements to policyholders are prohibited/)).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Referral rewards (locked)' })).toBeDisabled();
+  });
+
+  it('AC-M01-16 offers no compliance actions without tenant.flag.write', async () => {
+    setup({}, []);
+    await screen.findByText('Pending review');
+    expect(screen.queryByRole('button', { name: 'Record Compliance review' })).not.toBeInTheDocument();
+  });
+
+  it('AC-M01-16 shows the permission-denied state on 403', async () => {
+    setup({ [PROFILE]: new ApiError(403, 'forbidden', 'Forbidden') });
+    expect(await screen.findByText('Access Denied')).toBeInTheDocument();
+  });
+
+  it('AC-M01-16 shows an error state on a server failure', async () => {
+    setup({ [TIE_UPS]: new ApiError(500, 'server_error', 'Server error') });
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+  });
+
+  it('AC-M01-16 shows the loading state first', () => {
+    const client = mockClient({});
+    client.get.mockImplementation(() => new Promise(() => undefined));
+    renderAt(<TenantSetupScreen />, client, '/console/tenant');
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 });
