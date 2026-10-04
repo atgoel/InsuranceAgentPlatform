@@ -129,6 +129,10 @@ export const routes: RouteObject[] = [
     element: <div>Console Shell<Outlet /></div>, // Placeholder
     children: [
       {
+        path: 'integrations',
+        lazy: () => import('../features/integrations/screens/IntegrationsScreen').then(m => ({ Component: m.IntegrationsScreen })),
+      },
+      {
         path: 'tenant',
         lazy: () => import('../features/tenancy/screens/TenantSetupScreen').then(m => ({ Component: m.TenantSetupScreen })),
       },

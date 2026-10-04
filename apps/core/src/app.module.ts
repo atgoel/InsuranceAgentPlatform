@@ -8,8 +8,10 @@ import { CrmModule } from './modules/crm/crm.module';
 import { CatalogueModule } from './modules/catalogue/catalogue.module';
 import { AdviceModule } from './modules/advice/advice.module';
 import { BookModule } from './modules/book/book.module';
+import { IntegrationModule } from './modules/integration/integration.module';
 
 @Module({
-  imports: [KernelModule.forRoot(loadConfig(process.env)), TenancyModule, DistributionModule, PartyModule, CrmModule, CatalogueModule, AdviceModule, BookModule],
+  imports: [KernelModule.forRoot(loadConfig(process.env)), TenancyModule, DistributionModule, PartyModule, CrmModule, CatalogueModule,
+    AdviceModule, BookModule, IntegrationModule],
 })
 export class AppModule {}

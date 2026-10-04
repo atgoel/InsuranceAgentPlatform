@@ -10,3 +10,6 @@
 | ADR-006 | HLD Rev 1.0 (Twenty + Strapi) supersedes Rev 2.0's custom CRM + Payload proposal; Rev 2.0 funnel, roles and data-model refinements adopted (spec 05) | Accepted |
 | [ADR-007](ADR-007-keycloak-sign-in-and-demo-stack.md) | Keycloak OIDC sign-in (PKCE, persona login), RS256 JWKS verifier, dev-realm claims and local Docker demo stack with seed | Accepted |
 | [ADR-008](ADR-008-pwa-incremental.md) | Agent PWA built incrementally: shell foundation + HTTPS phone profile once, offline rules per module | Accepted |
+| [ADR-M08-contract-clarifications](ADR-M08-contract-clarifications.md) | Integration hub decisions 1–7 | Accepted |
+| [ADR-M08-integration-hub](ADR-M08-integration-hub.md) | Integration hub decisions 8–13, recorded amendments and five simple implementation contract completions | Accepted |
+| [ADR-M08-future-evolution](ADR-M08-future-evolution.md) | Larger-scale alternatives, comparison estimates and revisit triggers; implementation not authorized | Proposed |

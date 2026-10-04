@@ -1,0 +1,17 @@
+[
+  {
+    "scenario": "reconciliation stale ownership, three-query and document URL guards",
+    "output": "FAIL  core tests       Tests:       5 failed, 17 passed, 22 total (7s)\n      ● M08 scheduled work › AC-M08-06 counts exactly three failed queries and creates one status-only dead letter\n        expect(received).toMatchObject(expected)\n        - Expected  - 1\n        + Received  + 1\n        Object {\n        \"attempts\": 2,\n        -   \"state\": \"PENDING\",\n      … 78 more lines (raise --max)\n",
+    "restored": true
+  },
+  {
+    "scenario": "per-record lease refresh and retention age/count guards",
+    "output": "FAIL  core tests       Tests:       4 failed, 18 passed, 22 total (6s)\n      ● M08 scheduled work › AC-M08-05 refreshes each queued lease before IO and skips ownership lost to another worker\n        expect(received).toEqual(expected) // deep equality\n        - Expected  - 1\n        + Received  + 0\n        Array [\n        \"a-slow\",\n        -   \"b-slow\",\n      … 32 more lines (raise --max)\n",
+    "restored": true
+  },
+  {
+    "scenario": "callback raw parser boundary regression",
+    "output": "FAIL  core tests       Tests:       3 failed, 19 passed, 22 total (7s)\n      ● AC-M08-07 callback HTTP byte boundaries › AC-M08-07 accepts exact 1MiB signed JSON without the default 100KB parser rejecting it\n        expect(received).toBe(expected) // Object.is equality\n        Expected: 200\n        Received: 500\n        > 34 |     expect(response.status).toBe(200);\n      ● AC-M08-07 callback HTTP byte boundaries › AC-M08-07 rejects one byte beyond 1MiB with the exact code and no acceptance effects\n        expect(received).toBe(expected) // Object.is equality\n      … 9 more lines (raise --max)\n",
+    "restored": true
+  }
+]

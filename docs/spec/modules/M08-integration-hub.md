@@ -1,6 +1,6 @@
 # M08 · Integration Hub — low-level design
 
-Status: Approved contract — decisions 1–13 approved by the user on 2026-10-04; runtime not implemented · Depends on: M00 (kernel), M01 (tenant directory for per-tenant adapter pins and credentials refs) · Requirements: Rev 3.0 F18 (API quote/submission/issuance; assisted route always available), F57–F59 (gated vendors on the same SPI) · HLD D6, §9 "Adapter SPI" and "Reliability contract for every external call", §12 failure table (insurer API down → assisted with banner), §16 business monitors (dead-letter depth) · Screens: W12 `Integrations` (adapter health board, DLQ operations)
+Status: Approved contract — decisions 1–13 approved by the user on 2026-10-04; runtime implemented; final verification recorded in docs/quality/M08-handback.md · Depends on: M00 (kernel), M01 (tenant directory for per-tenant adapter pins and credentials refs) · Requirements: Rev 3.0 F18 (API quote/submission/issuance; assisted route always available), F57–F59 (gated vendors on the same SPI) · HLD D6, §9 "Adapter SPI" and "Reliability contract for every external call", §12 failure table (insurer API down → assisted with banner), §16 business monitors (dead-letter depth) · Screens: W12 `Integrations` (adapter health board, DLQ operations)
 
 ## 1. Responsibilities
 
@@ -118,11 +118,23 @@ export interface SubmissionRepository {
   reserve(tx: Transaction, record: SubmissionRecord): Promise<{ created: boolean; record: SubmissionRecord }>;   // unique tenant+idempotencyKey
   getByKey(tx: Transaction, idempotencyKey: string): Promise<SubmissionRecord | undefined>;
   claimDue(tx: Transaction, now: string, leaseUntil: string, limit: number): Promise<SubmissionRecord[]>;   // PENDING due, or SENDING with an expired lease
-  save(tx: Transaction, record: SubmissionRecord): Promise<void>;
+  save(
+    tx: Transaction,
+    record: SubmissionRecord,
+    expected: { state: SubmissionRecord['state']; leaseUntil?: string },
+  ): Promise<boolean>;
+  purgeProposalBefore(tx: Transaction, before: string): Promise<number>;
 }
 ```
 
 Unique tenant+business key; same key with a different canonical input hash → 409 `idempotency_key_reuse`. A duplicate SENDING/PENDING or unresolved DEAD_LETTER returns unknown with `reconciliationId` (= SubmissionRecord.id) and never calls submit again. A duplicate COMPLETED record replays DIRECT or RECONCILED according to resultKind. `proposalEnc` is purged at 180 days; the record, its classification and `resultEnc` are kept, so a completed key always blocks a resend and always replays its result. Unresolved barriers are retained until resolved. Reserve stores `proposalEnc`, `inputHash` and the bound adapter/version. SENDING has a 60-second lease; after process failure/lease expiry it becomes PENDING GET_STATUS work, never a resend. Assisted does not reserve a SENDING intent.
+
+save matches persisted state and lease against expected atomically. False means
+stale ownership: discard that worker's result and publish no reconciliation event.
+Direct send completion compares its original SENDING lease; recovered PENDING
+work cannot be overwritten by a late response. Result and outbox commit together
+in one short unit of work; external IO holds no database lock. The memory adapter
+performs comparison and update synchronously, with the same return semantics.
 
 Timeout/reset atomically records PENDING and nextAttemptAt=now; ReconciliationJob claims due SubmissionRecords with a 60-second lease, batch limit 100, through trusted tenant enumeration and tenant UoWs. Query only the original adapter/version with the original key. Any authoritative status resolves work, emits `integration.submission.reconciled` with `{ reconciliationId, adapterId, adapterVersion, idempotencyKey, status }`, and retains the encrypted full result for authorized reads. The event has no policy number or answers. RECEIVED/UNDERWRITING/REQUIREMENTS_PENDING/DECLINED/ISSUED prove receipt; NOT_FOUND permits M09 to reject that attempt and begin a NEW attempt, consistent with M09 §3.3. M08 never automatically resubmits.
 
@@ -160,6 +172,7 @@ export interface CallbackRepository {
     eventId: string; idempotencyKey: string; occurredAt: string;
     rawBodyHash: string;                    // SHA-256 hex of the exact raw bytes; same eventId with a different hash -> CONFLICT
     rawPayloadEnc: string; canonicalPayloadEnc: string; receivedAt: string; expiresAt: string }): Promise<CallbackAcceptResult>;
+  purgeExpired(tx: Transaction, now: string): Promise<number>;
 }
 ```
 
@@ -329,7 +342,39 @@ export interface BreakerStateStore {   // display snapshot for the health board;
   get(adapterId: string, adapterVersion: string, operation: Operation): Promise<BreakerSnapshot | undefined>;
   save(value: BreakerSnapshot): Promise<void>;   // last write wins
 }
+export interface IntegrationHealthRecord {
+  adapterId: string;
+  adapterVersion: string;
+  probes: Array<{
+    at: string;
+    outcome: 'success' | 'failure' | 'unknown';
+    latencyMs: number;
+  }>;
+  lastOkAt?: string;
+}
+export interface IntegrationHealthRepository {
+  get(tx: Transaction, adapterId: string, version: string): Promise<IntegrationHealthRecord | undefined>;
+  recordProbe(
+    tx: Transaction,
+    adapterId: string,
+    version: string,
+    probe: IntegrationHealthRecord['probes'][number],
+  ): Promise<void>;
+}
+export interface SandboxCertificationRunner {
+  run(adapterId: string, adapterVersion: string): Promise<Certification['checks']>;
+}
+export type InsurerUrlAllowlist = Readonly<Record<string, readonly string[]>>;
 ```
+
+Bind INTEGRATION_HEALTH_REPOSITORY, SANDBOX_CERTIFICATION_RUNNER and
+INSURER_URL_ALLOWLIST in integration.module.ts. InsurerUrlAllowlist is a map from
+insurerId to exact HTTPS origins, validated at startup and supplied through module
+deployment wiring. It adds no database configuration table or administration UI.
+Missing bindings fail closed. Returned document/payment URLs with embedded
+credentials, an unlisted origin or a non-HTTPS scheme become a non-retryable
+CallOutcome failure with safe code integration_url_invalid. Never return or log
+the rejected URL. Later configuration sources can supply the same map.
 
 Extend registry lookup to `get(adapterId: string, version?: string)`; when omitted, return only if exactly one version is registered. Define `paymentLink?(ctx: AdapterContext, req: PaymentLinkRequest): Promise<CallOutcome<PaymentLinkResult>>`. The SPI signatures above apply. The status facade copies its key into both AdapterContext and the getStatus reference. PinRepository owns M08 pins; M01 supplies tenant directory and secret references, without M08 importing M01 repositories. Publish symbol tokens with these exact interface names, plus `INTEGRATION_GATEWAY = Symbol('IntegrationGateway')`.
 
@@ -403,6 +448,17 @@ consumers are not replayed through M08 (§5.2).
 | CertificationService | Five sandbox checklist checks; persist exact tenant+adapter+version PASSED/FAILED result. |
 
 Certification checklist: HAPPY_PATH, DECLINE, TIMEOUT, DUPLICATE_CALLBACK and SCHEMA_DRIFT. Run against the adapter's sandbox double, never production calls or production breaker samples. Persist results for exact tenant+adapter+version; all five checks must pass. A separate per-tenant sandbox credential binding is future scope. The assisted adapter supplies instructions; M09 owns operator evidence capture, with no invented M08 portal-record endpoint.
+
+SandboxCertificationRunner executes those five checks for the exact version using
+scriptable sandbox doubles, without production credentials, breaker samples or
+production call metrics. CertificationService derives PASSED only when every
+named check occurs once and passes; it owns storage, status, audit and permissions.
+The one-method runner can later be replaced by a real sandbox implementation.
+
+ProbeJob uses IntegrationHealthRepository.recordProbe to atomically append and
+trim observations to the latest 20 completed probes. Preserve lastOkAt even when
+its observation leaves the window; derive the existing health projection and
+nearest-rank p95 from that bounded history. No separate probe pipeline is added.
 
 Jobs expose `runOnce(): Promise<void>`, invocable per run like the M07 jobs; durable leases prevent duplicate reconciliation across processes. Intended cadence: probe every five minutes, reconciliation every minute, retention daily. Wiring a deployment scheduler or in-process timers is future scope. Missing historical adapter versions raise `adapter_version_unavailable` and remain unresolved.
 
@@ -481,6 +537,19 @@ Dead letters are tenant data and are handled by the tenant itself: routes live u
 
 Call log is a plain tenant-scoped table indexed on (tenant_id, at); RetentionJob deletes rows at exact 90-day age. Monthly partitioning is future scope (revisit at call-log volume targets). Payload retention uses elapsed UTC time of 180 days, independently of IST business dates. Purge ciphertext/raw bodies at expiry, retaining minimal dedup hashes and unresolved safety barriers; submission records and their encrypted results are kept (record purge is future scope). RetentionJob cleans payloads even for OPEN dead letters. Raw callback storage includes the raw-body hash needed to detect changed duplicates. Background tenant enumeration does not bypass RLS for tenant reads/writes; only platform breaker snapshot storage uses the owner pool.
 
+integration_health has one tenant-scoped row per adapter+version, a bounded JSON
+probe history and lastOkAt. Appends are atomic, so concurrent probes do not lose
+observations. Use the existing table; no additional health table is introduced.
+
+RetentionJob calls SubmissionRepository.purgeProposalBefore with now minus
+180 elapsed days; it clears only proposalEnc where createdAt <= before, including
+COMPLETED records. Preserve inputHash, state, resultEnc, resultKind and barriers.
+CallbackRepository.purgeExpired clears rawPayloadEnc and canonicalPayloadEnc where
+expiresAt <= now, preserving minimal dedup hashes and cursor state. Both return
+the number of rows whose ciphertext was cleared; repeating the same purge returns
+zero. Existing EncryptedPayloadRepository and IntegrationCallLog handle the other
+payload and call-log retention. No general retention framework is introduced.
+
 Replacement dead letters have a unique non-null tenant+replayed_from_id. Reconciliation claims lock rows, use SKIP LOCKED, and fence writes by lease. Callback rows store callbackId, canonical ciphertext, raw ciphertext and raw hash; both ciphertexts expire at 180 days. No credentials are stored. Submission resultKind and encrypted discriminated result support DIRECT/RECONCILED replay. integration_submission enforces its state union, non-negative attempts and forced tenant RLS.
 
 ## 8. Observability
@@ -523,3 +592,8 @@ Additional acceptance evidence under the same IDs:
 - AC-M08-06: synchronous replay; concurrent replays close the entry once (second gets 409); crash before close leaves it OPEN; one linked replacement on failure; replay never submits proposals.
 - AC-M08-07: accepted callback reference storage/read audit; a failing consumer is retried and dead-lettered by the kernel outbox after three attempts; acceptance is not repeated.
 - AC-M08-08: aggregate metrics have no tenant labels; tenant summaries use verified context; terminal dead letters excluded from the open count.
+- AC-M08-05: a stale state/lease makes save return false; no stale result or event is committed, including late direct-send completion after recovery.
+- AC-M08-06/10: completed proposal ciphertext and both callback ciphertexts purge at the exact 180-day boundary; results, dedup metadata and barriers remain; repeated purge returns zero.
+- AC-M08-08/10: health appends retain the latest 20 probes without lost concurrent observations; lastOkAt survives trimming; p95 uses nearest rank.
+- AC-M08-08: sandbox certification runs all five unique checks with no production credentials, breaker samples or call metrics.
+- AC-M08-09: unsafe document/payment URLs fail with integration_url_invalid without leaking the URL; allowlist configuration rejects invalid origins at startup.

@@ -1,0 +1,54 @@
+{
+  "source": "apps/web/src/features/integrations/components/AdapterCard.tsx",
+  "testFile": "src/features/integrations/screens/IntegrationsScreen.test.tsx",
+  "implementation": "server-snapshot-bound derived overrides",
+  "mutations": [
+    {
+      "name": "certification-version-key",
+      "command": "node ../../node_modules/vitest/vitest.mjs run src/features/integrations/screens/IntegrationsScreen.test.tsx --silent --reporter=json --outputFile=../../.tmp/m08-ui-review-derived-certification-version-key.json",
+      "exitCode": 1,
+      "passed": 23,
+      "failed": 1,
+      "failedTests": [
+        "AC-M08-11 integrations screen uses a new certification key after pinning another version following a network failure"
+      ],
+      "reportPath": ".tmp/m08-ui-review-derived-certification-version-key.json"
+    },
+    {
+      "name": "pin-prop-refresh",
+      "command": "node ../../node_modules/vitest/vitest.mjs run src/features/integrations/screens/IntegrationsScreen.test.tsx --silent --reporter=json --outputFile=../../.tmp/m08-ui-review-derived-pin-prop-refresh.json",
+      "exitCode": 1,
+      "passed": 23,
+      "failed": 1,
+      "failedTests": [
+        "AC-M08-11 integrations screen refreshes the pin and exact-version certification on other cards after changing the same adapter"
+      ],
+      "reportPath": ".tmp/m08-ui-review-derived-pin-prop-refresh.json"
+    },
+    {
+      "name": "certification-prop-refresh",
+      "command": "node ../../node_modules/vitest/vitest.mjs run src/features/integrations/screens/IntegrationsScreen.test.tsx --silent --reporter=json --outputFile=../../.tmp/m08-ui-review-derived-certification-prop-refresh.json",
+      "exitCode": 1,
+      "passed": 23,
+      "failed": 1,
+      "failedTests": [
+        "AC-M08-11 integrations screen refreshes the pin and exact-version certification on other cards after changing the same adapter"
+      ],
+      "reportPath": ".tmp/m08-ui-review-derived-certification-prop-refresh.json"
+    }
+  ],
+  "restored": {
+    "command": "node ../../node_modules/vitest/vitest.mjs run src/features/integrations/screens/IntegrationsScreen.test.tsx --silent --reporter=json --outputFile=../../.tmp/m08-ui-review-derived-restored.json",
+    "exitCode": 0,
+    "passed": 24,
+    "failed": 0,
+    "failedTests": [],
+    "reportPath": ".tmp/m08-ui-review-derived-restored.json"
+  },
+  "speedObservation": {
+    "test": "shows adapter pin, translated breaker/probe diagnostics and exact tenant-free requests",
+    "source": "restored single-screen debug run",
+    "budgetMs": 200,
+    "durationMs": 223.34
+  }
+}

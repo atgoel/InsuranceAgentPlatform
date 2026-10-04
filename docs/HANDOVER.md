@@ -13,7 +13,8 @@ Read this first in every new session (see "Session protocol" in CLAUDE.md), then
 | M05 Product catalogue | done; Postgres adapters done | M05.md — 98.8 A |
 | M06 Advice & quote | done (memory + Postgres adapters, web screens) | M06.md — 95.2 A |
 | M07 Book & retention | implemented (11c0319) + orchestrator review fixes (9284d3c, see "M07 review fixes") | M07.md — 95.9 A (stale: lint score was inflated by packed one-line code; re-run `scripts/quality-report.mjs M07`) |
-| M08–M14 | specs written; not started — need the user's go-ahead; M10 minimal RECEIVED ledger slice supports M07 | — |
+| M08 | implemented and reviewed; commit containing this handover publishes M08 | docs/quality/M08.md — 96.8 A |
+| M09–M14 | specs written; not started; M10 minimal RECEIVED ledger slice supports M07 | — |
 | CR-001 sales-register fields | kernel, M01, M03, M04, M07 parts done (cb8a5af, 11c0319), all ACs in built modules tested; M09 §11 and M10 §11 parts wait for those modules | M07.md |
 
 ## Environment
@@ -89,27 +90,40 @@ Orchestrator review of the Codex M07 commit `11c0319` found three problem groups
 - Browser fix (2026-10-04): `FetchApiClient` stored the global `fetch` unbound and called it as `this.fetchImpl(...)`, so every real browser threw "Illegal invocation" and the app showed "Something went wrong" (bug since M00; unit tests always injected fetchImpl). Fixed in `apps/web/src/lib/api/api-client.ts` with a regression test that fails on the old code. Persona homes moved to built screens (TENANT_ADMIN `/console/tenant`, PRINCIPAL_OFFICER and OPS `/console/onboarding`; M00 §13.7 updated). Keycloak data now persists in volume `iap-kc-data`, so recreating the container keeps the seed's `mid`/`ou` links. Verified in headless Chrome (playwright-core in the scratchpad, not the repo) for all five personas on :8080. Web gate 701 pass.
 - Dev DB reset with `down -v` on 2026-10-04 (user approved); the seed then ran clean and a second run was a no-op. Priya sees 2 due today (life + health renewal), 1 in grace; policies IN_FORCE, GRACE, LAPSED. The seed sets status at creation because `HeldPolicy.updateStatusFromSource` ignores an `asOf` that is not newer than `statusAsOf` (same-day PATCH is a silent no-op by design). Open: After `down -v` re-run the seed (it re-links Keycloak idempotently). Keycloak `sub` is not the member `userRef` (stub IdentityAdmin). `signOut()` exists but no sign-out button yet. Docker images build from the working tree, so they currently include the uncommitted M08 code.
 
-
 ## Demo readiness and UI parity (2026-10-04)
 - Findings (bugs BUG-01…17, UI-01…10, PWA-01…06, lessons): `docs/quality/demo-readiness-findings.md`. Lessons copied into CLAUDE.md.
 - Plan with hand-over packages (lanes A foundation, B screens, C data, D PWA, E process), route → artboard map and verification: `docs/plan/ui-parity-and-pwa-plan.md`.
 - D1–D6 and ADR-008 approved by the user on 2026-10-04 (plan §6; M00 §13.7 and M04 Today row updated). Keycloak client accepts Vite ports 5173–5179. Next: baseline commit, then wave 1 (A1, A3, A4, C1, C2, E1) in separate worktrees per plan §7–§8.
 
-
 ## Next steps and remaining dependencies
-1. M08 contract decisions 1–13 approved on 2026-10-04 by the user's explicit
-“Approve all 13” in this session. Both M08 ADRs are Accepted. The M08 LLD now
-consolidates the draft into the original domain/ports/services/API/DDL/observability
-and AC sections; M09 specifies committed caller state, assisted handling,
-DIRECT/RECONCILED/EXPIRED results and M08-owned uncertain-send reconciliation.
-Runtime code/migrations remain unimplemented. Next: bounded delegated builds,
-review and independent necessary gates. No new business decisions are approved
-beyond the 13 listed. Last commit observed: 67d9031; no commit or push performed.
-Documentation-only consolidation ran no gates/tests. The earlier unnecessary
-all-gate failed on the known M07 201-row timeout (1950 core passed); core/web
-typechecks passed, core lint clean, web lint 17 warnings, web 670 passed.
-Integration verification was not completed; no clean all-gate claim.
-1a. M08 decisions amended on 2026-10-04 by the user after the orchestrator's review: 8b (no M08 unknown-age monitor; M09 `proposal_unknown_open` owns it), 10 (synchronous replay, no replay queue/table/job), 12 (no EXPIRED result; results kept for the record's life), 13 (callback consumers use the kernel outbox three-strike dead-letter; no callback-processing queue). Updated: ADR-M08-integration-hub, M08 LLD §§2–10, M09 (EXPIRED removed), FUTURE-SCOPE.md.
+M08 implemented and reviewed on 2026-10-04. User approved decisions 1–13,
+the explicit amendments and the simple option in this session. The contract and
+both accepted M08 ADRs are consolidated; Future ADR remains Proposed. Domain,
+application/API, memory/Postgres repositories, migration 080, encrypted readers,
+raw callback parsing and W12 are wired. Status treatments were shown before code.
+Unknown submissions retain their original version/key and reconcile with status
+queries; synchronous replay never submits a proposal. Callback consumer failure
+uses the kernel outbox three-strike policy. No EXPIRED result or replay queue.
+
+M08 quality: 152 backend and 26 frontend tests pass; module lint 0/0, types clean.
+Report 96.8 A; review 8.7/10. Final `node scripts/gate.mjs all` passed: core 2105,
+web 703, PostgreSQL 169; zero lint errors, 1 core and 17 web existing warnings.
+No behavior changed after this gate; publication review cleaned trailing blank lines.
+Full results are recorded in the hand-back.
+Verification, deviations, boundaries and open questions:
+`docs/quality/M08-handback.md`, `M08.md` and `M08.review.json`.
+Backend and web received cross-author review. Available agents followed project
+roles because Sonnet was unavailable. Tests were not consistently written first;
+negative-behavior mutation evidence is retained without claiming original TDD.
+Real insurer adapters, secret/origin deployment bindings and job scheduling remain
+deferred deployment work. PostgreSQL restart/RLS/rollback checks cover production
+atomicity; existing memory UnitOfWork has no rollback. User explicitly authorized
+review, handover update, commit and push on 2026-10-04. M08 is published by the
+commit containing this handover; its parent is `c014307d0fa4b324d56f740cffc736ae02809a47`.
+Next: configure real insurer bindings/scheduling only under approved deployment
+scope; implement M09 only when requested. Future alternatives remain Proposed.
+No further approval is required for the completed M08 contract. Future alternatives
+require approval for their exact scope before implementation.
 2. Wire the real M09 IssuedPolicyReader when M09 exists. Missing production reader explicitly fails the consumer and retains the event for retry; tests prove insurer-confirmed registration and replay through an injected reader.
 3. Wire a deployment scheduler for lifecycle and renewal jobs, and M12 reminder delivery. These are invocable jobs/events today, without invented future-module implementations.
 4. Complete the remaining M10 rate cards, calculations, performance reporting and screens in its own milestone; only the append-only RECEIVED import ledger is included now.

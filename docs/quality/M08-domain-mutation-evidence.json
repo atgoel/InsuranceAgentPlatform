@@ -1,0 +1,17 @@
+[
+  {
+    "scenario": "permissive domain boundaries",
+    "output": "FAIL  core tests       Tests:       44 failed, 18 passed, 62 total (4s)\n      ● AC-M08-04 retry policy › AC-M08-04 uses deterministic full jitter and the specified exponential cap\n        expect(received).toBe(expected) // Object.is equality\n        Expected: 100\n        Received: 0\n        >  8 |     expect(retry.delayFor(1)).toBe(100);\n      … 336 more lines (raise --max)\n",
+    "restored": true
+  },
+  {
+    "scenario": "half-open interleaving regression",
+    "output": "FAIL  core tests       Tests:       1 failed, 6 passed, 7 total (2s)\n      ● AC-M08-02 circuit breaker › AC-M08-02 never admits a fourth half-open probe after an earlier probe succeeds\n        expect(received).toBe(expected) // Object.is equality\n        Expected: false\n        Received: true\n        > 103 |     expect(breaker.canPass()).toBe(false);\n",
+    "restored": true
+  },
+  {
+    "scenario": "strict domain and routing boundaries",
+    "output": "FAIL  core tests       Tests:       33 failed, 29 passed, 62 total (4s)\n      ● AC-M08-01 capability validation › AC-M08-01 accepts valid semver 1.0.0\n        expect(received).toEqual(expected) // deep equality\n        - Expected  - 1\n        + Received  + 3\n        - Array []\n      … 295 more lines (raise --max)\n",
+    "restored": true
+  }
+]

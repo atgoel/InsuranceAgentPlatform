@@ -259,3 +259,159 @@ inventory above. Code, migrations and implementation tests remain outstanding.
 Next: delegate bounded builds against these contracts and independently verify
 actual code changes. Run gates only when necessary, per the user's latest rule.
 No commit or push was performed.
+
+## Implementation boundary addendum (2026-10-04)
+
+Status: Accepted
+
+Approval: on 2026-10-04 the user explicitly said “Ok Simple Option approved,
+note everything including the changes for future in Future ADR”. This accepts
+the five simple contract completions below. Larger-scale alternatives are
+recorded separately in ADR-M08-future-evolution.md and remain Proposed.
+
+This addendum has its own explicit approval, separate from decisions 1–13. The resumed build
+reviewed commit `303ce31` and the amended contract: synchronous replay, retained
+submission results, no M08 unknown-age monitor and kernel outbox callback delivery.
+The accepted decisions are unchanged. Implementation stopped before retaining any
+runtime draft, as required by the user's stop-on-missing-contract instruction.
+
+### Missing application boundaries
+
+| Contract requirement | Missing boundary | Recommended addition |
+|---|---|---|
+| M08 LLD :398, :474, :480: persist health and last-20 probe history/p95 | BreakerStateStore (:328) stores only breaker state; no application read/write contract for integration_health | One small IntegrationHealthRepository: read a record and append a probe atomically |
+| M08 LLD :400, :482, :484: purge proposalEnc and both callback ciphertexts at 180 days, including completed records | SubmissionRepository (:117–121) cannot enumerate/purge completed records; CallbackRepository (:158–164) only accepts callbacks | Add explicit ciphertext-purge methods to the existing repositories |
+| M08 LLD :405: checklist must use a sandbox double, never production calls | InsurerAdapter and AdapterRegistry (:253–261) expose normal adapters without a sandbox binding | SandboxCertificationRunner boundary, bound to sandbox doubles in infrastructure |
+| M08 LLD :223: returned document/payment URLs require a configured insurer allowlist | No allowlist configuration binding or safe validation-failure contract is published | One injected insurer-to-HTTPS-origin map and safe integration_url_invalid failure code |
+
+### Accepted simple contracts
+
+The following are consolidated into the M08 LLD's original port, persistence,
+service and acceptance sections. Runtime implementation remains outstanding.
+
+```ts
+export interface IntegrationHealthRecord {
+  adapterId: string;
+  adapterVersion: string;
+  probes: Array<{
+    at: string;
+    outcome: 'success' | 'failure' | 'unknown';
+    latencyMs: number;
+  }>;
+  lastOkAt?: string;
+}
+export interface IntegrationHealthRepository {
+  get(tx: Transaction, adapterId: string, version: string): Promise<IntegrationHealthRecord | undefined>;
+  recordProbe(
+    tx: Transaction,
+    adapterId: string,
+    version: string,
+    probe: IntegrationHealthRecord['probes'][number],
+  ): Promise<void>;
+}
+export interface SandboxCertificationRunner {
+  run(adapterId: string, adapterVersion: string): Promise<Certification['checks']>;
+}
+export type InsurerUrlAllowlist = Readonly<Record<string, readonly string[]>>;
+```
+
+Tokens: INTEGRATION_HEALTH_REPOSITORY, SANDBOX_CERTIFICATION_RUNNER and
+INSURER_URL_ALLOWLIST. Health is tenant-scoped; retain only the newest 20 completed
+observations, with lastOkAt retained even when its observation leaves the window.
+The application derives the existing AdapterHealth projection and nearest-rank
+p95. recordProbe appends/trims atomically, avoiding a caller read/modify/write race.
+Use one row per tenant+adapter+version in the already planned integration_health
+table, with a bounded JSON history. This adds no health endpoint or new status.
+
+Add to SubmissionRepository:
+`purgeProposalBefore(tx: Transaction, before: string): Promise<number>`.
+Clear only proposalEnc for records with createdAt <= before, preserving inputHash,
+status, resultEnc, resultKind and barriers, regardless of operational status.
+
+Add to CallbackRepository:
+`purgeExpired(tx: Transaction, now: string): Promise<number>`.
+Clear rawPayloadEnc and canonicalPayloadEnc when expiresAt <= now; retain minimal
+dedup hashes and cursor state. Return the number of rows whose ciphertext was
+cleared, so repeated purges return zero. Existing EncryptedPayloadRepository and
+IntegrationCallLog continue to handle DLQ payload and 90-day log deletion.
+
+SandboxCertificationRunner supplies all five named checks for the exact registered
+version through a sandbox double; it receives no production credentials and its
+calls cannot affect production breakers or call metrics. CertificationService
+derives PASSED only when each of the five checks appears once and passes.
+
+InsurerUrlAllowlist is an injected module binding, keyed by insurerId. Each entry
+is an exact HTTPS origin. Missing bindings fail closed; returned URLs with embedded
+credentials or an unlisted/non-HTTPS origin produce a non-retryable CallOutcome
+failure with safe code integration_url_invalid, without returning/logging the URL.
+Validate configured origins at startup. Start with deployment/module wiring; no
+configuration table, administration UI, extra environment format or kernel-wide
+configuration framework is proposed. No new HTTP route or credentials field.
+
+### Submission lease fencing clarification
+
+M08 :484 requires fenced reconciliation writes, while save at :121 accepts only
+a mutated record and returns void. Specify how callers know they still own a
+claim before committing a result and its outbox event. Recommended replacement:
+
+```ts
+save(
+  tx: Transaction,
+  record: SubmissionRecord,
+  expected: { state: SubmissionRecord['state']; leaseUntil?: string },
+): Promise<boolean>;
+```
+
+Match the persisted state and expected lease atomically before writing. False
+means stale ownership: discard the result and publish no reconciliation event.
+Direct send completion also compares its original SENDING lease, so a late result
+cannot overwrite recovered PENDING work. This proposes no new status/error code.
+
+### Simplicity and extension boundary
+
+These five amendments complete the original requirements rather than extend M08's
+business scope. Keep the changes local to the module:
+
+1. Health: one bounded row and a two-method repository; no time-series store or
+   probe event pipeline. More history can later use a different repository adapter.
+2. Retention: two targeted methods on existing repositories, executed by the
+   already specified RetentionJob; no general retention framework or new job.
+3. Certification: one runner method executing the existing five checks through
+   scriptable sandbox doubles. Return the existing check-result shape; no plugins,
+   second registry, production credentials or configurable checklist language.
+   A real insurer sandbox runner can later replace the double-backed runner.
+4. Allowlist: an injected map and a small URL check; no configuration management
+   subsystem. Later configuration sources can supply the same map contract.
+5. Fencing: a conditional SQL update using the existing state and lease columns;
+   a false result prevents event publication. The memory adapter performs the same
+   comparison and update synchronously. No distributed lock service, new state,
+   extra lease token or retry framework. Result and outbox writes remain one short
+   database transaction, with no lock held during external IO.
+
+Use the existing synchronous replay, per-process breaker, kernel outbox and
+invocable jobs. Add no new tables beyond the original M08 table list, public
+routes, screens, queues or schedulers. The sandbox runner owns executing checks;
+CertificationService owns certification storage, status, audit and permissions.
+
+Approval covers these five local contract completions. It does not change the
+previously accepted business behavior or authorize the larger-scale alternatives.
+See [Future ADR](ADR-M08-future-evolution.md) for comparisons and revisit triggers.
+No runtime code or test run accompanies this documentation update.
+
+### Findings that do not need contract changes
+
+- Callback equal-time comparison can use the existing injected FieldCipher to
+  decrypt canonical ciphertext inside persistence; no plaintext status field is
+  required solely for the comparison.
+- DeadLetterRepository.save can implement the specified conditional OPEN close
+  and throw the already specified dead_letter_closed when another replay wins.
+- Existing RequestContext and AuditLog support scoped-reader access audits.
+- main.ts already enables rawBody; the tenant resolver supports callback Host
+  verification. No raw-body or tenant kernel interface change is proposed.
+
+### Build status
+
+No retained runtime changes, migrations, gates, tests, commits or pushes. The
+pre-code status inventory was shown to the user. Agents used the available model
+under project-role instructions because Sonnet is unavailable. The simple
+contracts are now incorporated into the LLD; resume the bounded implementation.

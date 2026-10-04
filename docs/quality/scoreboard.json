@@ -94,5 +94,17 @@
     "covAvg": 86.5,
     "allPass": true,
     "date": "2026-10-04"
+  },
+  "M08": {
+    "name": "Integration Hub",
+    "total": 96.8,
+    "coverage": 35,
+    "lint": 15,
+    "types": 10,
+    "trace": 15,
+    "review": 21.7,
+    "covAvg": 91.7,
+    "allPass": true,
+    "date": "2026-10-04"
   }
 }

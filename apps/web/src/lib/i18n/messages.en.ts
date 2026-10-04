@@ -1,6 +1,8 @@
 import { bookMessagesEn } from './book-messages';
+import { integrationMessagesEn } from './integration-messages';
 export const messagesEn = {
   ...bookMessagesEn,
+  ...integrationMessagesEn,
   // Shell
   'app.title': 'Insurance Agent Platform',
   'shell.today': 'Today',

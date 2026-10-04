@@ -74,6 +74,7 @@ export function Home() {
           <Button onClick={() => (window.location.href = '/m/today')}>Mobile App</Button>
           <Button onClick={() => (window.location.href = '/crm/leads')}>CRM</Button>
           <Button onClick={() => (window.location.href = '/console/dashboard')}>Console</Button>
+          <Button onClick={() => (window.location.href = '/console/integrations')}>{t('integrations.title')}</Button>
         </div>
       </Card>
     </div>

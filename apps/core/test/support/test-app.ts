@@ -12,6 +12,7 @@ import { MemoryLogSink } from '../../src/kernel/observability/log-sink';
 import { FixedClock } from '../../src/kernel/domain/clock';
 import { MetricsRegistry } from '../../src/kernel/observability/metrics';
 import { KernelModule } from '../../src/kernel/kernel.module';
+import { installCallbackBodyParser } from '../../src/modules/integration/api/callback-body-parser';
 
 export interface TestApp {
   app: INestApplication;
@@ -87,6 +88,7 @@ export async function createTestApp(opts?: {
     .compile();
 
   const app = moduleFixture.createNestApplication({ rawBody: true });
+  installCallbackBodyParser(app);
   await app.init();
 
   return {

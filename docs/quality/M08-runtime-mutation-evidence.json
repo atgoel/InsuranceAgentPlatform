@@ -1,0 +1,17 @@
+[
+  {
+    "scenario": "submission identity, terminal replay, privacy and URL guards",
+    "output": "FAIL  core tests       Tests:       15 failed, 48 passed, 63 total (10s)\n      ● AC-M08 facade business rules › AC-M08-05 commits intent before send and replays completed results without resubmission\n        expect(received).toEqual(expected) // deep equality\n        - Expected  - 7\n        + Received  + 3\n        Object {\n        \"adapterId\": \"fake-insurer\",\n        \"adapterVersion\": \"1.0.0\",\n        \"kind\": \"DIRECT\",\n        \"outcome\": Object {\n        -     \"kind\": \"success\",\n        -     \"value\": Object {\n        -       \"acknowledgedAt\": \"2026-01-01T00:00:00.000Z\",\n        -       \"insurerRef\": \"proposal_1\",\n        -       \"schemaVersion\": \"v1\",\n        -     },\n        +     \"kind\": \"unknown\",\n        +     \"reason\": \"timeout\",\n        },\n        \"reason\": \"api_available\",\n        -   \"reconciliationId\": undefined,\n      … 178 more lines (raise --max)\n",
+    "restored": true
+  },
+  {
+    "scenario": "startup origins, raw bytes, route metadata, logging and unavailable-version continuation",
+    "output": "FAIL  core tests       Tests:       7 failed, 56 passed, 63 total (12s)\n      ● AC-M08-07 callback HTTP byte boundaries › AC-M08-07 never verifies altered decoding of invalid UTF-8 bytes as the original body\n        expect(received).rejects.toMatchObject(expected)\n        - Expected  - 1\n        + Received  + 1\n        Object {\n        -   \"code\": \"callback_signature_invalid\",\n        +   \"code\": \"callback_schema_invalid\",\n        }\n        > 63 |       timestampHeader, signatureHeader })).rejects.toMatchObject({ code: 'callback_signature_invalid' });\n        PASS test/integration/gateway.spec.ts (5.985 s)\n        PASS test/integration/http.spec.ts (6.175 s)\n        FAIL test/integration/jobs.spec.ts (6.275 s)\n      ● M08 scheduled work › AC-M08-05 reports a missing historical version after continuing healthy work in the same batch\n        expect(received).toMatchObject(expected)\n        - Expected  - 1\n        + Received  + 1\n        Object {\n        -   \"state\": \"COMPLETED\",\n        +   \"state\": \"PENDING\",\n        }\n      … 35 more lines (raise --max)\n",
+    "restored": true
+  },
+  {
+    "scenario": "DLQ reason and expiry guards",
+    "output": "FAIL  core tests       Tests:       1 failed, 62 passed, 63 total (11s)\n      ● AC-M08 tenant HTTP operations › AC-M08-06 discard requires a reason and expiry rejects replay without an external call\n        expect(received).toBe(expected) // Object.is equality\n        Expected: 410\n        Received: 200\n        > 160 |     expect(expired.status).toBe(410);\n        PASS test/integration/jobs.spec.ts\n        PASS test/integration/runtime.spec.ts (5.205 s)\n",
+    "restored": true
+  }
+]

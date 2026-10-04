@@ -139,6 +139,16 @@
       "integrationTests": ["test/book"],
       "web": ["src/features/book"],
       "webTests": ["src/features/book"]
+    },
+    {
+      "id": "M08",
+      "name": "Integration Hub",
+      "spec": "docs/spec/modules/M08-integration-hub.md",
+      "core": ["src/modules/integration"],
+      "coreTests": ["src/modules/integration", "test/integration"],
+      "integrationTests": ["test/integration"],
+      "web": ["src/features/integrations"],
+      "webTests": ["src/features/integrations"]
     }
   ]
 }

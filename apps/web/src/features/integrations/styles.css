@@ -1,0 +1,8 @@
+.integrations-screen { padding: 24px; max-width: 1200px; margin: auto; }
+.integration-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.integration-card, .integration-detail { border: 1px solid #d4d9e1; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.integrations-screen label { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.integrations-screen button { margin: 4px; padding: 8px 12px; }
+.integrations-screen table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+.integrations-screen td, .integrations-screen th { text-align: left; padding: 10px; border-bottom: 1px solid #d4d9e1; }
+.integration-detail pre { white-space: pre-wrap; overflow-wrap: anywhere; }
