@@ -14,7 +14,7 @@ Read this first in every new session (see "Session protocol" in CLAUDE.md), then
 | M06 Advice & quote | done (memory + Postgres adapters, web screens) | M06.md — 95.2 A |
 | M07 Book & retention | implemented: domain, memory/Postgres adapters, HTTP, import, jobs, web screens; final verification below | M07.md — 95.9 A |
 | M08–M14 | specs written; not started — need the user's go-ahead; M10 minimal RECEIVED ledger slice supports M07 | — |
-| CR-001 sales-register fields | shared foundations committed in cb8a5af; M07 register/import, risk, custom fields and confirmed referrer links implemented | M07.md |
+| CR-001 sales-register fields | kernel, M01, M03, M04, M07 parts done (cb8a5af, 11c0319), all ACs in built modules tested; M09 §11 and M10 §11 parts wait for those modules | M07.md |
 
 ## Environment
 - Windows workstation; Postgres via `docker compose -f infra/dev/docker-compose.yml up -d` (port 5433).

@@ -1,6 +1,6 @@
 # CR-001 · Sales/booking register fields and an extensible data model
 
-Status: Approved 2026-10-03 · Specified in the module LLDs (M00 §16, M01 §3.9, M03 §11, M04 §11, M07 §11, M09 §11, M10 §11); kernel + M01/M03/M04 parts implemented 2026-10-03, M07/M09/M10 parts built with those modules · Raised: 2026-10-03 from a customer sample of their office sales register · Affects: M07 Book & Retention, M09 Proposal & Issuance (policy sale), M10 Commission, M03 Party, M04 lead attribution, kernel (custom-field registry) · Target: before the M07 build starts, so import, the held-policy tables and commission are built once.
+Status: Approved 2026-10-03 · Specified in the module LLDs (M00 §16, M01 §3.9, M03 §11, M04 §11, M07 §11, M09 §11, M10 §11); kernel + M01/M03/M04 parts implemented 2026-10-03 (cb8a5af), M07 part implemented 2026-10-04 (11c0319); remaining: M09 §11 (policy-sale commercials, OPPORTUNITY_LOOKUP attribution per M04 §11.2) and M10 §11 (`expectedCommission` on net, invoice date, MIS by referrer/source), built with those modules · Raised: 2026-10-03 from a customer sample of their office sales register · Affects: M07 Book & Retention, M09 Proposal & Issuance (policy sale), M10 Commission, M03 Party, M04 lead attribution, kernel (custom-field registry) · Target: before the M07 build starts, so import, the held-policy tables and commission are built once.
 
 ## 1. Sample received
 One register row per booked policy (health and motor, possibly life):
