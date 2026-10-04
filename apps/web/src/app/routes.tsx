@@ -11,6 +11,10 @@ export const routes: RouteObject[] = [
     path: 'login',
     lazy: () => import('./pages/LoginPage').then(m => ({ Component: m.LoginPage })),
   },
+  {
+    path: 'auth/callback',
+    lazy: () => import('./pages/AuthCallback').then(m => ({ Component: m.AuthCallback })),
+  },
   // Public routes
   {
     path: 'signup',
@@ -122,7 +126,7 @@ export const routes: RouteObject[] = [
   // Console routes
   {
     path: 'console',
-    element: <div>Console Shell</div>, // Placeholder
+    element: <div>Console Shell<Outlet /></div>, // Placeholder
     children: [
       {
         path: 'tenant',

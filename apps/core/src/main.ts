@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { LOGGER } from './kernel/tokens';
+import { KERNEL_OPTIONS, LOGGER } from './kernel/tokens';
+import { KernelConfig } from './kernel/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -13,7 +14,7 @@ async function bootstrap() {
   // Disable default Nest logger
   app.useLogger(false);
 
-  const config = app.get('KernelConfig');
+  const config = app.get<KernelConfig>(KERNEL_OPTIONS);
   const port = config.port;
 
   await app.listen(port);

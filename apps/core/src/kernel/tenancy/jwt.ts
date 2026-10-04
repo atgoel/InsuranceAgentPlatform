@@ -16,7 +16,7 @@ export interface JwtClaims {
   iat: number;
   exp: number;
   iss?: string;
-  aud?: string;
+  aud?: string | string[];
 }
 
 export type { Principal } from './principal';
@@ -53,6 +53,53 @@ export interface TokenVerifier {
   verify(token: string): Promise<Principal>;
 }
 
+export interface ClaimRules {
+  issuer?: string;
+  audience?: string;
+  leewaySeconds?: number;
+}
+
+function audienceMatches(aud: string | string[] | undefined, expected: string): boolean {
+  if (Array.isArray(aud)) return aud.includes(expected);
+  return aud === expected;
+}
+
+/** Shared claim rules for every verifier: required claims, expiry with leeway, configured iss/aud. */
+export function validateClaims(claims: JwtClaims, clock: Clock, rules?: ClaimRules): void {
+  validateRequiredClaims(claims);
+  validateExpiration(claims, clock, rules);
+  validateIssuerAudience(claims, rules);
+}
+
+function validateRequiredClaims(claims: JwtClaims): void {
+  if (!claims.sub || claims.sub === '') throw new Error('Missing or empty sub claim');
+  if (!claims.org || claims.org === '') throw new Error('Missing or empty org claim');
+}
+
+function validateExpiration(claims: JwtClaims, clock: Clock, rules?: ClaimRules): void {
+  const now = Math.floor(clock.now().getTime() / 1000);
+  const leewaySeconds = rules?.leewaySeconds ?? 30;
+  if (claims.exp < now - leewaySeconds) throw new Error('Token expired');
+}
+
+function validateIssuerAudience(claims: JwtClaims, rules?: ClaimRules): void {
+  // A configured issuer/audience is mandatory: a token that omits the claim is rejected.
+  if (rules?.issuer && claims.iss !== rules.issuer) throw new Error('Invalid issuer');
+  if (rules?.audience && !audienceMatches(claims.aud, rules.audience)) throw new Error('Invalid audience');
+}
+
+export function principalFromClaims(claims: JwtClaims): Principal {
+  return {
+    userRef: claims.sub,
+    tenantId: claims.org,
+    memberId: claims.mid,
+    orgUnitId: claims.ou,
+    roles: claims.roles || [],
+    realm: claims.realm || 'customers',
+    amr: Array.isArray(claims.amr) ? claims.amr : undefined,
+  };
+}
+
 export class HmacJwtVerifier implements TokenVerifier {
   constructor(
     private readonly secret: string,
@@ -76,9 +123,9 @@ export class HmacJwtVerifier implements TokenVerifier {
       if (header.alg !== 'HS256') throw new Error('Invalid algorithm');
 
       const claims = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString()) as JwtClaims;
-      this.validateClaims(claims);
+      validateClaims(claims, this.clock, this.opts);
 
-      return this.principalFromClaims(claims);
+      return principalFromClaims(claims);
     } catch {
       throw new UnauthenticatedError('invalid_token', 'Invalid or expired token');
     }
@@ -92,45 +139,6 @@ export class HmacJwtVerifier implements TokenVerifier {
     if (!this.timingSafeEqual(signature, expectedSignature)) {
       throw new Error('Invalid signature');
     }
-  }
-
-  private validateClaims(claims: JwtClaims): void {
-    this.validateRequiredClaims(claims);
-    this.validateExpiration(claims);
-    this.validateOptionalClaims(claims);
-  }
-
-  private validateRequiredClaims(claims: JwtClaims): void {
-    if (!claims.sub || claims.sub === '') throw new Error('Missing or empty sub claim');
-    if (!claims.org || claims.org === '') throw new Error('Missing or empty org claim');
-  }
-
-  private validateExpiration(claims: JwtClaims): void {
-    const now = Math.floor(this.clock.now().getTime() / 1000);
-    const leewaySeconds = this.opts?.leewaySeconds ?? 30;
-    if (claims.exp < now - leewaySeconds) throw new Error('Token expired');
-  }
-
-  private validateOptionalClaims(claims: JwtClaims): void {
-    // A configured issuer/audience is mandatory: a token that omits the claim is rejected.
-    if (this.opts?.issuer && claims.iss !== this.opts.issuer) {
-      throw new Error('Invalid issuer');
-    }
-    if (this.opts?.audience && claims.aud !== this.opts.audience) {
-      throw new Error('Invalid audience');
-    }
-  }
-
-  private principalFromClaims(claims: JwtClaims): Principal {
-    return {
-      userRef: claims.sub,
-      tenantId: claims.org,
-      memberId: claims.mid,
-      orgUnitId: claims.ou,
-      roles: claims.roles || [],
-      realm: claims.realm || 'customers',
-      amr: Array.isArray(claims.amr) ? claims.amr : undefined,
-    };
   }
 
   private timingSafeEqual(a: string, b: string): boolean {

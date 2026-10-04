@@ -97,6 +97,20 @@ describe('AC-M00-27 FetchApiClient', () => {
     expect(result).toBeUndefined();
   });
 
+  it('calls the global fetch unbound when no fetchImpl is given (browsers reject fetch called on another object)', async () => {
+    const browserFetch = vi.fn(function (this: unknown) {
+      if (this !== undefined && this !== globalThis) throw new TypeError('Illegal invocation');
+      return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+    });
+    vi.stubGlobal('fetch', browserFetch);
+    try {
+      const realClient = new FetchApiClient({ baseUrl: 'http://localhost', getToken: () => undefined });
+      await expect(realClient.get('/api/v1/me')).resolves.toEqual({ ok: true });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('sends query parameters', async () => {
     mockFetch.mockResolvedValue(
       new Response(JSON.stringify([]), { status: 200 }),

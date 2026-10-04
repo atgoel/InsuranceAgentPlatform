@@ -1,6 +1,15 @@
 # Local Postgres for IAP integration tests and PERSISTENCE=pg development.
 # Port 5433 so it does not clash with other projects' Postgres on 5432.
 #   docker compose -f infra/dev/docker-compose.yml up -d
+#
+# Full local stack for demos (Postgres + Keycloak + migrations + core API + web + static clickable prototype):
+#   docker compose -f infra/dev/docker-compose.yml --profile app up -d --build
+#   node scripts/demo-seed.mjs        (loads demo data once; see ADR-007)
+#   web       http://localhost:8080   (core API proxied under /api)
+#   core API  http://localhost:3000
+#   keycloak  http://localhost:8180   (admin console admin / admin; demo users' password Demo@1234)
+#   prototype http://localhost:8081   (static design prototype, no backend)
+# The secrets below are development-only placeholders. Never reuse them outside local machines.
 name: iap-dev
 services:
   postgres:
@@ -20,5 +29,104 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+
+  keycloak:
+    profiles: ["app"]
+    image: quay.io/keycloak/keycloak:26.4
+    container_name: iap-keycloak
+    command: ["start-dev", "--import-realm", "--health-enabled=true"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # One issuer for the browser and for the core container, which reaches Keycloak at keycloak:8080.
+      KC_HOSTNAME: http://localhost:8180
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+    ports:
+      - "8180:8080"
+    volumes:
+      - ./keycloak/iap-realm.json:/opt/keycloak/data/import/iap-realm.json:ro
+      # Keeps users and the seed's mid/ou attributes when the container is recreated (the import skips an existing realm).
+      - iap-kc-data:/opt/keycloak/data
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+
+  migrate:
+    profiles: ["app"]
+    build:
+      context: ../..
+      dockerfile: infra/docker/core.Dockerfile
+    image: iap-core:dev
+    command: ["node", "dist/kernel/db/migrate.js"]
+    environment:
+      MIGRATION_DATABASE_URL: postgres://iap_owner:iap@postgres:5432/iap
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  core:
+    profiles: ["app"]
+    image: iap-core:dev
+    container_name: iap-core
+    environment:
+      NODE_ENV: development
+      PORT: "3000"
+      PERSISTENCE: pg
+      DATABASE_URL: postgres://iap_app:iap@postgres:5432/iap
+      PLATFORM_DATABASE_URL: postgres://iap_owner:iap@postgres:5432/iap
+      AUTH_HS256_SECRET: dev-only-hs256-secret-change-me-0001
+      AUTH_JWKS_URL: http://keycloak:8080/realms/iap/protocol/openid-connect/certs
+      AUTH_ISSUER: http://localhost:8180/realms/iap
+      AUTH_AUDIENCE: iap-core
+      DEBUG_TOKEN_SECRET: dev-only-debug-secret
+      ACTOR_PEPPER: dev-only-actor-pepper
+      OTP_PEPPER: dev-only-otp-pepper
+      DEV_AUTH: "1"
+      DEV_TENANTS: '{"localhost":{"tenantId":"ten_acme","status":"active"}}'
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/health/live || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
+
+  web:
+    profiles: ["app"]
+    build:
+      context: ../..
+      dockerfile: infra/docker/web.Dockerfile
+      args:
+        VITE_OIDC_AUTHORITY: http://localhost:8180/realms/iap
+        VITE_OIDC_CLIENT_ID: iap-web
+        VITE_DEMO_LOGIN: "1"
+    image: iap-web:dev
+    container_name: iap-web
+    ports:
+      - "8080:80"
+    depends_on:
+      core:
+        condition: service_healthy
+
+  prototype:
+    profiles: ["app"]
+    image: nginx:1.27-alpine
+    container_name: iap-prototype
+    ports:
+      - "8081:80"
+    volumes:
+      - ../../index.html:/usr/share/nginx/html/index.html:ro
+      - ../../app.js:/usr/share/nginx/html/app.js:ro
+      - ../../screens.js:/usr/share/nginx/html/screens.js:ro
+      - ../../vendor:/usr/share/nginx/html/vendor:ro
+
 volumes:
   iap-pg-data:
+  iap-kc-data:

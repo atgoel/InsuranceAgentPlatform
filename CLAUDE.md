@@ -45,6 +45,16 @@ The M07 build had to be corrected after merge. Do not repeat these mistakes.
 **Hand-back**
 - Report every deviation from the LLD, every assumption and every rule you could not satisfy, with file and line. Do not inflate quality scores or describe partial work as done.
 
+## Lessons from the demo-readiness review (mandatory)
+Findings: `docs/quality/demo-readiness-findings.md`. Plan: `docs/plan/ui-parity-and-pwa-plan.md`.
+- Entry points (`apps/core/src/main.ts`, `apps/web/src/main.tsx`) must run in a check: boot the built core and load the built web app in a real browser. Both had never run.
+- Tests that inject fakes for platform APIs (`fetchImpl`, storage, timers) must have one test that uses the real default. A screen is not done until it loaded real data in a real browser.
+- Wireframes are part of the spec (`design/screen-inventory.md`). A screen is done only with a side-by-side screenshot against its artboard. Logic-only screens are partial work; report them as partial.
+- An AC test must fail when the AC is not met. Never satisfy an AC with a placeholder (`<Outlet/>`, "Console Shell" text).
+- When web and backend share a vocabulary (roles, codes), add a test that ties the two together.
+- Seed or import scripts read back what they wrote; domain rules can turn a write into a silent no-op.
+- One session per git worktree. Never run gates or build images from a tree with another session's uncommitted work.
+
 ## Session protocol (token budget)
 - One module (or one bounded task) per session. Start by reading `docs/HANDOVER.md`; end by updating it (state, last commit, next steps, open decisions) and committing. Do not re-read history that the handover already summarises.
 - Delegate building to the project agents in `.claude/agents` (Sonnet): `backend-builder`, `web-builder`, `wiring` (mechanical, low effort), `module-reviewer` (writes the review JSON). Give each a precise brief: paths, the LLD sections, the pattern file to copy, the ACs.

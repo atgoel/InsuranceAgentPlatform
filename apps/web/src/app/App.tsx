@@ -1,18 +1,21 @@
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { Navigate, Outlet, RouterProvider, createBrowserRouter, useLocation } from 'react-router-dom';
 import { routes } from './routes';
 import { useAuth } from '../lib/auth';
-import { DevLogin } from '../lib/auth';
 import './App.css';
 
-const router = createBrowserRouter(routes);
+const PUBLIC_PATHS = ['/login', '/auth/callback', '/signup'];
+
+function AuthGate() {
+  const { isAuthenticated } = useAuth();
+  const { pathname } = useLocation();
+  if (!isAuthenticated && !PUBLIC_PATHS.includes(pathname)) {
+    return <Navigate to="/login" replace />;
+  }
+  return <Outlet />;
+}
+
+const router = createBrowserRouter([{ element: <AuthGate />, children: routes }]);
 
 export function App() {
-  const { isAuthenticated } = useAuth();
-
-  // Show login screen if not authenticated
-  if (!isAuthenticated) {
-    return <DevLogin />;
-  }
-
   return <RouterProvider router={router} />;
 }

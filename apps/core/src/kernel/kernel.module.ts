@@ -23,6 +23,8 @@ import { LogOverridesController } from './observability/log-overrides.controller
 import { RouteTemplateInterceptor } from './observability/route-template.interceptor';
 import { ProblemDetailsFilter } from './errors/problem-details.filter';
 import { HmacJwtVerifier } from './tenancy/jwt';
+import { JwksTokenVerifier } from './tenancy/jwks-token-verifier';
+import { CompositeTokenVerifier } from './tenancy/composite-token-verifier';
 import { DelegatingTenantResolver, StaticTenantResolver } from './tenancy/tenant-resolver';
 import { DelegatingMfaPolicy, DelegatingPermissionPolicy, RolePermissionMatrix, StaticTenantPermissionPolicy } from './tenancy/permissions';
 import { AuthGuard } from './tenancy/auth.guard';
@@ -46,6 +48,14 @@ import { PgAuditLog } from './audit/pg-audit-log';
 import { InMemoryIdempotencyStore } from './idempotency/idempotency-store';
 import { PgIdempotencyStore } from './idempotency/pg-idempotency-store';
 import { IdempotencyInterceptor } from './idempotency/idempotency.interceptor';
+
+function tokenVerifierFactory(config: KernelConfig): (clock: Clock) => CompositeTokenVerifier {
+  return (clock: Clock) => {
+    const issuerAudience = { issuer: config.tokenIssuer, audience: config.tokenAudience };
+    const rs256 = config.jwksUrl ? new JwksTokenVerifier(config.jwksUrl, clock, issuerAudience) : undefined;
+    return new CompositeTokenVerifier({ HS256: new HmacJwtVerifier(config.tokenSecret, clock), RS256: rs256 });
+  };
+}
 
 /** Observability, clock, ids and access control — identical in memory and pg modes. */
 function coreProviders(config: KernelConfig): Provider[] {
@@ -79,7 +89,7 @@ function coreProviders(config: KernelConfig): Provider[] {
     { provide: T.DEBUG_TOKENS, useFactory: (clock: Clock) => new DebugTokenService(config.debugTokenSecret, clock), inject: [T.CLOCK] },
     { provide: T.FLUSH_POLICY, useValue: new FlushPolicy() },
     { provide: T.HEAD_SAMPLER, useValue: new HeadSampler({ rates: config.logSampleRates }) },
-    { provide: T.TOKEN_VERIFIER, useFactory: (clock: Clock) => new HmacJwtVerifier(config.tokenSecret, clock), inject: [T.CLOCK] },
+    { provide: T.TOKEN_VERIFIER, useFactory: tokenVerifierFactory(config), inject: [T.CLOCK] },
     { provide: T.TENANT_RESOLVER, useValue: new DelegatingTenantResolver(new StaticTenantResolver(config.staticTenants)) },
     { provide: T.PERMISSION_POLICY, useValue: new RolePermissionMatrix() },
     {

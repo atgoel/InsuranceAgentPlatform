@@ -18,6 +18,16 @@ export const messagesHi = {
   'auth.manager': 'प्रबंधक',
   'auth.operator': 'ऑपरेटर',
 
+  // Sign-in
+  'login.description': 'अपने लीड, ग्राहक और पॉलिसी बुक संभालने के लिए साइन इन करें।',
+  'login.demoPersona': 'डेमो पर्सोना',
+  'login.demoHint': 'यूज़रनेम {username} · पासवर्ड {password}',
+  'login.signIn': 'साइन इन करें',
+  'login.notConfigured': 'साइन-इन कॉन्फ़िगर नहीं है',
+  'login.failed': 'साइन-इन विफल रहा। कृपया फिर कोशिश करें।',
+  'login.completing': 'साइन-इन पूरा हो रहा है...',
+  'login.backToSignIn': 'साइन-इन पर वापस जाएँ',
+
   // Common
   'common.loading': 'लोड हो रहा है...',
   'common.error': 'कुछ गलत हुआ',

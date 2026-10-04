@@ -54,6 +54,10 @@ export interface KernelConfig {
   /** Owner-role DSN for cross-tenant platform work (outbox relay, tenant directory); defaults to databaseUrl. */
   platformDatabaseUrl?: string;
   tokenSecret: string;
+  /** Keycloak certs endpoint; enables RS256 verification (ADR-007). */
+  jwksUrl?: string;
+  tokenIssuer?: string;
+  tokenAudience?: string;
   actorPepper: string;
   /** HMAC key for public quote-share links (M06 §3.5). */
   shareTokenSecret: string;
@@ -70,6 +74,9 @@ const configSchema = z.object({
   persistence: z.enum(['memory', 'pg']),
   databaseUrl: z.string().optional(),
   tokenSecret: z.string(),
+  jwksUrl: z.string().optional(),
+  tokenIssuer: z.string().optional(),
+  tokenAudience: z.string().optional(),
   actorPepper: z.string(),
   shareTokenSecret: z.string(),
   debugTokenSecret: z.string(),
@@ -92,6 +99,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): KernelConfig {
     databaseUrl: env.DATABASE_URL,
     platformDatabaseUrl: env.PLATFORM_DATABASE_URL ?? env.DATABASE_URL,
     tokenSecret: env.AUTH_HS256_SECRET || '',
+    ...oidcConfig(env),
     actorPepper: env.ACTOR_PEPPER || '',
     shareTokenSecret: shareTokenSecret(env, nodeEnv),
     debugTokenSecret: env.DEBUG_TOKEN_SECRET || '',
@@ -104,6 +112,14 @@ export function loadConfig(env: NodeJS.ProcessEnv): KernelConfig {
   if (errors.length > 0) throw new Error(`Configuration validation failed:\n${errors.join('\n')}`);
   configSchema.parse(config);
   return config;
+}
+
+function oidcConfig(env: NodeJS.ProcessEnv): Pick<KernelConfig, 'jwksUrl' | 'tokenIssuer' | 'tokenAudience'> {
+  return {
+    jwksUrl: env.AUTH_JWKS_URL || undefined,
+    tokenIssuer: env.AUTH_ISSUER || undefined,
+    tokenAudience: env.AUTH_AUDIENCE || undefined,
+  };
 }
 
 function parseJson<T>(raw: string | undefined, name: string): T {

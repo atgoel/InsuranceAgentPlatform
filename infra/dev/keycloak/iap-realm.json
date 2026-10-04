@@ -1,0 +1,341 @@
+{
+  "realm": "iap",
+  "enabled": true,
+  "displayName": "Insurance Agent Platform",
+  "displayNameHtml": "<strong>Insurance Agent Platform</strong>",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "rememberMe": true,
+  "resetPasswordAllowed": false,
+  "accessTokenLifespan": 600,
+  "ssoSessionIdleTimeout": 28800,
+  "ssoSessionMaxLifespan": 36000,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "en",
+    "hi"
+  ],
+  "defaultLocale": "en",
+  "roles": {
+    "realm": [
+      {
+        "name": "SALESPERSON",
+        "description": "IAP role SALESPERSON"
+      },
+      {
+        "name": "BRANCH_MANAGER",
+        "description": "IAP role BRANCH_MANAGER"
+      },
+      {
+        "name": "TENANT_ADMIN",
+        "description": "IAP role TENANT_ADMIN"
+      },
+      {
+        "name": "PRINCIPAL_OFFICER",
+        "description": "IAP role PRINCIPAL_OFFICER"
+      },
+      {
+        "name": "OPS",
+        "description": "IAP role OPS"
+      }
+    ]
+  },
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "subComponents": {},
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"validations\":{\"length\":{\"min\":3,\"max\":255}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\"]}},{\"name\":\"email\",\"displayName\":\"${email}\",\"validations\":{\"email\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]}},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]}},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]}}],\"unmanagedAttributePolicy\":\"ADMIN_EDIT\"}"
+          ]
+        }
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "iap-web",
+      "name": "IAP web app",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "redirectUris": [
+        "http://localhost:8080/*",
+        "http://localhost:5173/*",
+        "http://localhost:5174/*",
+        "http://localhost:5175/*",
+        "http://localhost:5176/*",
+        "http://localhost:5177/*",
+        "http://localhost:5178/*",
+        "http://localhost:5179/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080",
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:5176",
+        "http://localhost:5177",
+        "http://localhost:5178",
+        "http://localhost:5179"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8080/*##http://localhost:5173/*##http://localhost:5174/*##http://localhost:5175/*##http://localhost:5176/*##http://localhost:5177/*##http://localhost:5178/*##http://localhost:5179/*"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email",
+        "roles",
+        "web-origins",
+        "acr"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "protocolMappers": [
+        {
+          "name": "org claim",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "org",
+            "claim.name": "org",
+            "jsonType.label": "String",
+            "multivalued": "false",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "mid claim",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "mid",
+            "claim.name": "mid",
+            "jsonType.label": "String",
+            "multivalued": "false",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "ou claim",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "ou",
+            "claim.name": "ou",
+            "jsonType.label": "String",
+            "multivalued": "false",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "amr claim",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "amr",
+            "claim.name": "amr",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "roles claim",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "realm claim",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "config": {
+            "claim.name": "realm",
+            "claim.value": "customers",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "iap-core audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "iap-core",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "priya.sales",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Priya",
+      "lastName": "Sharma",
+      "email": "priya.sales@acme.demo",
+      "attributes": {
+        "org": [
+          "ten_acme"
+        ],
+        "amr": [
+          "pwd"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "SALESPERSON"
+      ]
+    },
+    {
+      "username": "rahul.manager",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Rahul",
+      "lastName": "Verma",
+      "email": "rahul.manager@acme.demo",
+      "attributes": {
+        "org": [
+          "ten_acme"
+        ],
+        "amr": [
+          "pwd",
+          "mfa"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "BRANCH_MANAGER"
+      ]
+    },
+    {
+      "username": "anita.admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Anita",
+      "lastName": "Rao",
+      "email": "anita.admin@acme.demo",
+      "attributes": {
+        "org": [
+          "ten_acme"
+        ],
+        "amr": [
+          "pwd",
+          "mfa"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "TENANT_ADMIN"
+      ]
+    },
+    {
+      "username": "vikram.po",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Vikram",
+      "lastName": "Iyer",
+      "email": "vikram.po@acme.demo",
+      "attributes": {
+        "org": [
+          "ten_acme"
+        ],
+        "amr": [
+          "pwd",
+          "mfa"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "PRINCIPAL_OFFICER"
+      ]
+    },
+    {
+      "username": "meera.ops",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Meera",
+      "lastName": "Nair",
+      "email": "meera.ops@acme.demo",
+      "attributes": {
+        "org": [
+          "ten_acme"
+        ],
+        "amr": [
+          "pwd",
+          "mfa"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo@1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "OPS"
+      ]
+    }
+  ]
+}

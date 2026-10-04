@@ -34,7 +34,8 @@ export class FetchApiClient implements ApiClient {
   constructor(opts: FetchApiClientOpts) {
     this.baseUrl = opts.baseUrl;
     this.getToken = opts.getToken;
-    this.fetchImpl = opts.fetchImpl ?? fetch;
+    // Browsers throw "Illegal invocation" when fetch is called as a method of another object, so never store it unbound.
+    this.fetchImpl = opts.fetchImpl ?? ((input, init) => fetch(input, init));
     this.newId = opts.newId ?? (() => Math.random().toString(36).slice(2));
     this.onError = opts.onError;
   }

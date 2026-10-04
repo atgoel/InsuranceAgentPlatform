@@ -18,6 +18,16 @@ export const messagesEn = {
   'auth.manager': 'Manager',
   'auth.operator': 'Operator',
 
+  // Sign-in
+  'login.description': 'Sign in to manage your leads, customers and policy book.',
+  'login.demoPersona': 'Demo persona',
+  'login.demoHint': 'Username {username} · password {password}',
+  'login.signIn': 'Sign in',
+  'login.notConfigured': 'Sign-in is not configured',
+  'login.failed': 'Sign-in failed. Please try again.',
+  'login.completing': 'Completing sign-in...',
+  'login.backToSignIn': 'Back to sign-in',
+
   // Common
   'common.loading': 'Loading...',
   'common.error': 'Something went wrong',

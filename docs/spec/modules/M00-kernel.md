@@ -418,7 +418,20 @@ export class HmacJwtVerifier implements TokenVerifier {
   // rejects (UnauthenticatedError 'invalid_token'): malformed, alg != HS256, bad signature (timing-safe compare), exp passed, iss/aud mismatch when configured, missing sub/org
 }
 ```
-`JwksTokenVerifier` (Keycloak RS256) is specified for M02; not built in M00.
+Keycloak RS256 verification (ADR-007):
+```ts
+export class JwksTokenVerifier implements TokenVerifier {
+  constructor(jwksUrl: string, clock: Clock, opts?: { issuer?: string; audience?: string; leewaySeconds?: number /*30*/; fetchJwks?: (url: string) => Promise<{ keys: JsonWebKey[] }> })
+  // verifies alg RS256 with node:crypto against the key whose kid matches the JWS header; keys cached by kid,
+  // refetched at most once per 60 s on an unknown kid. Same claim rules and rejections as HmacJwtVerifier;
+  // aud may be a string or an array (the configured audience must be one of its values).
+}
+export class CompositeTokenVerifier implements TokenVerifier {
+  constructor(byAlg: { HS256?: TokenVerifier; RS256?: TokenVerifier })
+  // reads the JWS header alg and delegates; an alg with no verifier → UnauthenticatedError 'invalid_token'
+}
+```
+`TOKEN_VERIFIER` is a `CompositeTokenVerifier` with `HS256` = `HmacJwtVerifier(tokenSecret)` and, when `jwksUrl` is set, `RS256` = `JwksTokenVerifier(jwksUrl, { issuer: tokenIssuer, audience: tokenAudience })`.
 
 ### 5.2 Tenant resolution (HLD "tenant from trust")
 ```ts
@@ -608,6 +621,9 @@ export interface KernelConfig {
   persistence: 'memory' | 'pg';              // PERSISTENCE, default 'memory'
   databaseUrl?: string;                      // DATABASE_URL (required when pg)
   tokenSecret: string;                       // AUTH_HS256_SECRET (≥ 32 chars outside dev/test)
+  jwksUrl?: string;                          // AUTH_JWKS_URL (Keycloak certs endpoint); enables RS256 (ADR-007)
+  tokenIssuer?: string;                      // AUTH_ISSUER, checked on RS256 tokens when set
+  tokenAudience?: string;                    // AUTH_AUDIENCE, checked on RS256 tokens when set
   actorPepper: string;                       // ACTOR_PEPPER
   debugTokenSecret: string;                  // DEBUG_TOKEN_SECRET
   devAuth: boolean;                          // DEV_AUTH === '1' and env !== 'production'
@@ -718,12 +734,14 @@ export class ClientTelemetry {
 export function ErrorBoundary(props: { telemetry?: ClientTelemetry; children }): JSX.Element  // renders ErrorState on crash and reports
 ```
 
-### 13.7 Auth (dev) and shells
+### 13.7 Auth and shells
 - `session.ts`: `getToken()`, `setSession({ token, tenantId, roles })`, `clearSession()` in `sessionStorage` (try/catch).
-- `DevLogin`: role picker (Agent, ISP, Manager, Ops, Compliance, Tenant admin, Operator) → `POST /api/v1/dev/tokens` → stores session → navigates to the role's home. Shown only when no session.
+- `oidc.ts` (ADR-007): `oidc-client-ts` `UserManager` for authority `VITE_OIDC_AUTHORITY`, client `VITE_OIDC_CLIENT_ID`, code + PKCE, redirect `/auth/callback`, post-logout redirect `/login`, automatic silent renew. `signIn(loginHint?)`, `completeSignIn()` (stores the session from the access token claims `org` and `roles`), `signOut()` (clears the session, then Keycloak end-session).
+- `LoginPage` (`/login`): product name, short description and a "Sign in" button that calls `signIn()`. When `VITE_DEMO_LOGIN=1` it also shows a persona `<select>` (label "Demo persona"; options "<name> — <role label>") and the demo password; "Sign in" calls `signIn(persona.username)`. Personas (`demo-personas.ts`): `{ username, name, role, home }` for `SALESPERSON` → `/m/today`, `BRANCH_MANAGER` → `/crm/leads`, `TENANT_ADMIN` → `/console/tenant`, `PRINCIPAL_OFFICER` → `/console/onboarding`, `OPS` → `/console/onboarding`. When OIDC is not configured the page shows an `ErrorState` "Sign-in is not configured". Layout follows the prototype `Start` artboard (D5, 2026-10-04): a dark hero band with the product name, a one-line pitch and the sign-in panel; the persona choice stays a `<select>`, as the user asked on 2026-10-04.
+- `AuthCallback` (`/auth/callback`): calls `completeSignIn()` and navigates to the home of the first role in `roles` (persona table above; unknown role → `/`); on failure shows `ErrorState` with a "Back to sign-in" action.
 - `Home` (P00 Prototype home): role entry cards and links to the three surfaces.
-- `MobileShell`: phone frame (390 × 844) on wide screens, full-screen on narrow; bottom nav **Today, Leads, Customers, Book, Me** (`/m/today`, `/m/leads`, `/m/customers`, `/m/book`, `/m/me`); EN/हि switch in the app bar.
-- `ConsoleShell` / `CrmShell`: left sidebar with collapsible sections (CRM: Leads, Pipeline, Customers, Tasks, Campaigns, Routing, Import · Console: Dashboard, Onboarding, Users & roles, Tenant, Brand, Configuration, Integrations, Content, Reports, Compliance, Commission, AI controls), search box, tenant name; `<Outlet/>` for screens; unknown routes render a "Coming in a later module" `EmptyState`.
+- `MobileShell`: phone frame (390 × 844) on wide screens, full-screen on narrow; app bar with the tenant brand (display name from `GET /api/v1/tenant`), the EN/हि switch and an avatar menu (user name, role label, **Sign out** → `signOut()`); bottom nav **Today, Leads, Customers, Book, Me** (`/m/today`, `/m/leads`, `/m/customers`, `/m/book`, `/m/me`). Screens inside the shell do not render their own language switch. `/m/customers` and `/m/customers/:id` render `CustomersScreen` and `CustomerRecordScreen` (M03) inside the mobile shell until a mobile Customer 360 is specified (D6, 2026-10-04).
+- `ConsoleShell` / `CrmShell`: left sidebar with collapsible sections (CRM: Leads, Pipeline, Customers, Tasks, Campaigns, Routing, Import · Console: Dashboard, Onboarding, Users & roles, Tenant, Brand, Configuration, Integrations, Content, Reports, Compliance, Commission, AI controls), search box that filters the entries, tenant name and role line, **Sign out**; `<Outlet/>` for screens; unknown routes render a "Coming in a later module" `EmptyState`. Entries the user has no permission for (`GET /api/v1/me`) are hidden. Entries whose screen is not built yet stay visible with a "Coming soon" badge and open the `EmptyState` (D3, 2026-10-04).
 
 ---
 
@@ -778,7 +796,8 @@ Frontend
 - **AC-M00-29** i18n: EN/हि switch re-renders strings, persists the choice, interpolates params, handles plurals and falls back to English.
 - **AC-M00-30** `ClientTelemetry` deduplicates errors by fingerprint, rate-limits per minute and batches sends; `ErrorBoundary` renders `ErrorState` and reports.
 - **AC-M00-31** Design-system components meet the props contracts: `Tabs` keyboard navigation and `aria-selected`; `BottomSheet` closes on Escape and is a modal dialog; `Button` loading state is disabled and `aria-busy`; `DataGrid` renders columns/rows and the empty state; `FilterChips` toggles `aria-pressed`.
-- **AC-M00-32** Shells: `MobileShell` shows the five bottom-nav destinations and the language switch; `ConsoleShell` sidebar sections collapse and filter by search; `DevLogin` obtains a token and routes by role; unknown routes show the "later module" empty state.
+- **AC-M00-32** Shells: `MobileShell` shows the five bottom-nav destinations and the language switch; `ConsoleShell` sidebar sections collapse and filter by search; `LoginPage` starts the Keycloak sign-in (with the selected persona as `login_hint` in demo mode) and `AuthCallback` stores the session and routes by role; unknown routes show the "later module" empty state.
+- **AC-M00-33** `JwksTokenVerifier` accepts an RS256 token signed by a JWKS key and maps `sub`, `org`, `roles`, `mid`, `ou`, `amr`; it rejects a wrong signature, an unknown `kid` after one refetch, an expired token and a wrong issuer or audience (string or array `aud`); `CompositeTokenVerifier` routes by `alg` and rejects an `alg` with no verifier.
 
 ---
 

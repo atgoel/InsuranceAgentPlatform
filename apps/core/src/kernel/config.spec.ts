@@ -150,6 +150,24 @@ describe('config', () => {
       expect(config.tokenSecret).toBe('short');
     });
 
+    it('AC-M00-33 loads AUTH_JWKS_URL, AUTH_ISSUER and AUTH_AUDIENCE', () => {
+      const env: NodeJS.ProcessEnv = {
+        NODE_ENV: 'test',
+        AUTH_HS256_SECRET: 'test-secret-32-chars-minimum!!!1',
+        ACTOR_PEPPER: 'test-pepper',
+        DEBUG_TOKEN_SECRET: 'test-debug-secret-32-chars!!!1',
+        AUTH_JWKS_URL: 'https://kc.example/certs',
+        AUTH_ISSUER: 'https://kc.example/realms/iap',
+        AUTH_AUDIENCE: 'iap-api',
+      };
+
+      const config = loadConfig(env);
+
+      expect(config.jwksUrl).toBe('https://kc.example/certs');
+      expect(config.tokenIssuer).toBe('https://kc.example/realms/iap');
+      expect(config.tokenAudience).toBe('iap-api');
+    });
+
     it('parses persistence mode', () => {
       const env: NodeJS.ProcessEnv = {
         NODE_ENV: 'test',

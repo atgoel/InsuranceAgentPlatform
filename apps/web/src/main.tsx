@@ -10,7 +10,8 @@ import './design-system/theme.css';
 
 // Initialize API client
 const apiClient = new FetchApiClient({
-  baseUrl: (import.meta.env.VITE_API_URL as string | undefined) || '/api',
+  // Request paths already start with /api/v1, and URL() needs an absolute base.
+  baseUrl: (import.meta.env.VITE_API_URL as string | undefined) || window.location.origin,
   getToken: () => {
     try {
       const session = JSON.parse(sessionStorage.getItem('iap_session') || '{}');
