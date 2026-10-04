@@ -286,6 +286,8 @@ The Rev 3.0 18–20 week plan holds: Twenty removes most pipeline, task, email-s
 | Weeks 11–14: agent experience and AI | Twenty read-only projections, AI Gateway with gates, Strapi share-card and microsite templates, white-label domains |
 | Weeks 15–18: pilot | Game day and restore test added to pilot exit criteria |
 
+Scope deliberately deferred from module builds is tracked in the [future scope register](FUTURE-SCOPE.md).
+
 ### Risks
 | Risk | Mitigation |
 | Twenty Community limits the number of workspaces per instance | Day-3 spike; fallback is one Twenty instance per organisation tenant on shared data services; Solo-CRM-lite in Core for solo agents |
