@@ -72,10 +72,28 @@ Orchestrator review of the Codex M07 commit `11c0319` found three problem groups
   - Due-item my-work priority is 0 only for IN_GRACE items whose grace ends ≤ 3 days (general renewal due today = 1).
   - AC tags corrected: `commission/ledger.int.spec.ts` → AC-M07-14; `party/birthday.spec.ts` → AC-M07-06.
 - `071_book_normalize.sql` (back-fill for Codex's uncommitted local 070 draft) removed in 9284d3c; the migration runner tolerates its absence on databases that applied it.
-- **Watch:** `AC-M07-08 commits 201 rows…` takes ~25 s against the 30 s Jest timeout and timed out once when core and web gates ran in parallel; run gates sequentially.
+- **Watch:** `AC-M07-08 commits 201 rows…` takes ~25 s alone; its timeout was raised from 30 s to 90 s in bbb5db9 after it timed out under full-suite load. Run gates sequentially.
+
+## Formatting enforcement (2026-10-04, commit bbb5db9)
+- ESLint (core and web) now errors on `max-statements-per-line` (max 1) and `max-len` 180 (strings, template literals, URLs, comments and regexps ignored). This stops packed one-line code that hid `max-lines-per-function` warnings (see AGENTS.md "Lessons from the M07 review", commit 67d9031).
+- The 61 violating files were reformatted with a one-off `npx prettier@3` (singleQuote, printWidth 140, trailingComma all); no prettier config or dependency was added. This is formatting only: `prettier --debug-check` on the HEAD copies passed (identical ASTs), and the working files byte-match the formatted HEAD copies.
+- Gate after the change: core 1951, web 670, Postgres integration 154 — all pass; core lint 1 warning, web lint 17 warnings (pre-existing).
+- New visible warning: `apps/core/src/modules/advice/infrastructure/pg-advice.repositories.ts:213` `save` is 72 lines (> 60). Packing had hidden it; it was left unsplit because this change was formatting-only.
 
 ## Next steps and remaining dependencies
-1. M08 start authorized on 2026-10-04. Contract gaps were reported before implementation; user authorized a draft. See M08 LLD §11 and `docs/adr/ADR-M08-contract-clarifications.md`, pending approval. No M08 runtime code or migrations yet. Last commit at draft time: `a1d96d8`. Next: review/approve contracts, consolidate LLD corrections and M09 consumption notes, then delegate bounded builds and independently run gates. Revised after user review: gateway takes no caller tx (M09 commits first), unified `SubmissionRecord` with `proposalEnc` and COMPLETED, callback `rawBodyHash`, injected `RandomSource`; scope reduced (per-process breaker, `runOnce` jobs only, unpartitioned call log, checklist against sandbox double), deferred items in `docs/hld/FUTURE-SCOPE.md`. Dead letters: each tenant's TENANT_ADMIN/OPS handle their own under `/api/v1/integrations/dead-letters` (option A, decided 2026-10-04); operator access options in FUTURE-SCOPE.md. Still open: full ADR approval before build.
+1. M08 contract decisions 1–13 approved on 2026-10-04 by the user's explicit
+“Approve all 13” in this session. Both M08 ADRs are Accepted. The M08 LLD now
+consolidates the draft into the original domain/ports/services/API/DDL/observability
+and AC sections; M09 specifies committed caller state, assisted handling,
+DIRECT/RECONCILED/EXPIRED results and M08-owned uncertain-send reconciliation.
+Runtime code/migrations remain unimplemented. Next: bounded delegated builds,
+review and independent necessary gates. No new business decisions are approved
+beyond the 13 listed. Last commit observed: 67d9031; no commit or push performed.
+Documentation-only consolidation ran no gates/tests. The earlier unnecessary
+all-gate failed on the known M07 201-row timeout (1950 core passed); core/web
+typechecks passed, core lint clean, web lint 17 warnings, web 670 passed.
+Integration verification was not completed; no clean all-gate claim.
+1a. M08 decisions amended on 2026-10-04 by the user after the orchestrator's review: 8b (no M08 unknown-age monitor; M09 `proposal_unknown_open` owns it), 10 (synchronous replay, no replay queue/table/job), 12 (no EXPIRED result; results kept for the record's life), 13 (callback consumers use the kernel outbox three-strike dead-letter; no callback-processing queue). Updated: ADR-M08-integration-hub, M08 LLD §§2–10, M09 (EXPIRED removed), FUTURE-SCOPE.md.
 2. Wire the real M09 IssuedPolicyReader when M09 exists. Missing production reader explicitly fails the consumer and retains the event for retry; tests prove insurer-confirmed registration and replay through an injected reader.
 3. Wire a deployment scheduler for lifecycle and renewal jobs, and M12 reminder delivery. These are invocable jobs/events today, without invented future-module implementations.
 4. Complete the remaining M10 rate cards, calculations, performance reporting and screens in its own milestone; only the append-only RECEIVED import ledger is included now.

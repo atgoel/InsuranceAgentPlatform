@@ -66,21 +66,32 @@ export type PaymentStatus = 'NOT_STARTED' | 'LINK_SENT' | 'PAID' | 'FAILED' | 'R
 export interface PaymentRecord { proposalId; method: 'INSURER_LINK' | 'INSURER_PORTAL' | 'CHEQUE_TO_INSURER'; insurerPaymentRef?; amountPaise; status: PaymentStatus; at }   // no card/bank data, ever
 export interface PolicySale { id; proposalId; opportunityId?; policyNumberEnc; policyNumberHash; issuedOn; premiumPaise; sumAssuredPaise?; documentRef; deliveredAt?; deliveryEvidenceRef?; sellerMemberId; confirmedBy: 'INSURER_API' | 'INSURER_DOCUMENT' }
 ```
+M09 commits FrozenSnapshot and SubmissionAttempt before invoking M08, never inside
+an open caller transaction. It applies GatewaySubmissionResult in a new transaction:
+- DIRECT ASSISTED: create operator work with evidence capture; leave the attempt PENDING. Do not call apply with assisted unknown.
+- DIRECT API/FILE: apply the CallOutcome; M08 alone schedules uncertain-send reconciliation.
+- RECONCILED: NOT_FOUND rejects the old attempt; a new attempt uses a new key. All other statuses prove receipt and acknowledge the attempt, then pass through the separate legal proposal transition and issuance validation.
+
+Scoped callback/reconciliation readers return undefined for missing, cross-tenant
+or expired callback content; consumption requires manual review rather than invented facts.
+No M08 callback/status result directly marks payment PAID. M09 owns payment
+eligibility, confirmation and legal proposal transitions.
+
 `ISSUED` only through `IssuanceService.recordIssuance` with insurer confirmation (API status or the insurer's policy document reference) — never a free-text field.
 
 ## 4. Ports
-Repositories for templates, proposals (answers encrypted), submissions, payments, sales, requirements; `INTEGRATION_GATEWAY` (M08), `PARTY_FACADE` (M03, incl. `sensitive` read via the protected accessor for prefill with purpose `PROPOSAL`), quote lookup (M06 selected option), `OTP_SENDER`/`OTP_GENERATOR` (M01 reuse) for customer confirmation.
+Repositories for templates, proposals (answers encrypted), submissions, payments, sales, requirements; `INTEGRATION_GATEWAY`, `INTEGRATION_CALLBACK_READER`, `INTEGRATION_RECONCILIATION_READER` (M08; signatures in M08 §4), `PARTY_FACADE` (M03, incl. `sensitive` read via the protected accessor for prefill with purpose `PROPOSAL`), quote lookup (M06 selected option), `OTP_SENDER`/`OTP_GENERATOR` (M01 reuse) for customer confirmation.
 
 ## 5. Application services
 | Service | Behaviour |
 |---|---|
 | `ProposalService` | start from `quote.option.selected` (subscriber, or explicit POST), prefill (audit lists prefilled keys, not values), answer, documents, completeness, ready, reopen; events `proposal.created`, `proposal.ready` |
 | `ConfirmationService` | customer link (signed token, 72 h) or OTP (6 digits, 3 attempts, 10 min) or assisted signature evidence → `confirm` → snapshot hash stored; event `proposal.confirmed` `{ proposalId, snapshotHash, method }` |
-| `SubmissionSaga` | route via M08 gateway; ASSISTED → task for ops desk "Submit on insurer portal" with snapshot PDF ref, operator records insurerRef; API → apply outcome; UNKNOWN → schedule status query (M08) and surface; events `proposal.submitted`, `proposal.submission_unknown`, `proposal.submission_rejected` |
+| `SubmissionSaga` | route via M08 gateway; ASSISTED → task for ops desk "Submit on insurer portal" with snapshot PDF ref, operator records insurerRef; API/FILE → apply DIRECT outcome; RECONCILED → receipt mapping then legal business transition; UNKNOWN → consume M08 scheduled reconciliation and surface; events `proposal.submitted`, `proposal.submission_unknown`, `proposal.submission_rejected` |
 | `PaymentService` | record insurer link/reference and status (from callback, status query or operator); `PAID` with no issuance after 24 h → paid-not-issued queue item; event `proposal.payment_recorded` |
 | `IssuanceService` | `recordIssuance` (API status or insurer document) → PolicySale; events `proposal.policy.issued` `{ proposalId, opportunityId, policySaleId }` (M04 → opportunity ISSUED, M07 → held policy PLATFORM_SALE, M10 → expected commission), `proposal.declined` |
 | `RequirementsService` | medical/inspection/document/clarification items with owner and due date; overdue → my-work items; event `proposal.requirement_added` |
-| `ReconciliationJob` | every 15 min: UNKNOWN submissions → status query; nightly: proposals SENT/ACKNOWLEDGED > 48 h → status sweep; paid-not-issued > 24 h → ops queue (monitor) |
+| `ReconciliationJob` | consume M08 referenced reconciliation/callback results for UNKNOWN submissions; no competing UNKNOWN query scheduler; nightly: proposals SENT/ACKNOWLEDGED > 48 h → status sweep; paid-not-issued > 24 h → ops queue (monitor) |
 
 ## 6. API (`/api/v1`; ✱ = `@Idempotent()`)
 | Method | Path | Permission | Notes |
@@ -114,11 +125,11 @@ Events above (ids/enums/paise only); metrics `proposal_submissions_total{route,o
 - **AC-M09-01** Template validation per question type, conditional questions, P3 answers encrypted; nominee shares sum to 100; role rules per line.
 - **AC-M09-02** Prefill only fills empty answers from confirmed facts and flags them; completeness lists missing answers, declarations and documents.
 - **AC-M09-03** Confirmation freezes a canonical snapshot (hash stable across key order); any later edit requires reopen and re-confirmation; OTP limits enforced.
-- **AC-M09-04** Submission states: success → ACKNOWLEDGED, retryable failure keeps the same idempotency key, timeout → UNKNOWN with a status query scheduled and no resubmission; NOT_FOUND allows a new attempt.
-- **AC-M09-05** Assisted route creates an ops task and records the insurer reference with evidence.
+- **AC-M09-04** Submission states: success → ACKNOWLEDGED, retryable failure keeps the same idempotency key, timeout → UNKNOWN with a status query scheduled and no resubmission; NOT_FOUND allows a new attempt with a new key. Commit the snapshot/attempt before calling M08; test DIRECT and RECONCILED separately.
+- **AC-M09-05** Assisted route creates an ops task and records the insurer reference with evidence; it does not enter UNKNOWN or schedule status reconciliation.
 - **AC-M09-06** Payment records hold only insurer references (no card/bank data); paid-not-issued after 24 h enters the queue.
 - **AC-M09-07** Issuance only with insurer confirmation; emits `proposal.policy.issued` once; M04 opportunity becomes ISSUED and M07 creates the held policy (cross-module test).
-- **AC-M09-08** Reconciliation job resolves UNKNOWN via status and sweeps proposals older than 48 h.
+- **AC-M09-08** Consume M08 reconciliation/callback references to resolve UNKNOWN, without a duplicate query scheduler; retain the status sweep for proposals older than 48 h.
 - **AC-M09-09** Customer portal: token-bound, tenant-bound, P3 shown only after OTP, confirmation receipt.
 - **AC-M09-10** Record scope, tenant isolation; answers never logged (canary test).
 - **AC-M09-11** Postgres: migration, RLS, answer immutability after confirmation, unique submission idempotency key. *(integration)*
