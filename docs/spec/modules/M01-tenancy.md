@@ -306,7 +306,7 @@ export class CachingTenantResolver implements TenantResolver {                  
   invalidate(host?: string): void                                                                          // all when host omitted
 }
 ```
-`TenancyModule` overrides the kernel `TENANT_RESOLVER` provider with `CachingTenantResolver(DirectoryTenantResolver)`. In memory mode the directory is seeded from `config.staticTenants` so existing kernel tests keep working.
+`TenancyModule` overrides the kernel `TENANT_RESOLVER` provider with `CachingTenantResolver(DirectoryTenantResolver)`. In memory mode the directory is seeded from `config.staticTenants` so existing kernel tests keep working. The dev seeder only creates tenants missing from the directory; the seeded distributor entity legal name is `DEV_TENANT_LEGAL_NAME` when set (applied to every seeded tenant), otherwise `<host label> Insurance Marketing Firm`.
 
 ## 6. API (all under `/api/v1`; ✱ = `@Idempotent()`)
 
