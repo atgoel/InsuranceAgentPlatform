@@ -660,6 +660,8 @@ export const operatorToken: () => string   // workforce realm, tenant 'platform'
 ```
 design-system/  tokens.ts  theme.css  Button.tsx  StatusChip.tsx  Card.tsx  Tabs.tsx  FilterChips.tsx  DataGrid.tsx
                 BottomSheet.tsx  Toast.tsx  Stepper.tsx  Timeline.tsx  ConsentCheckbox.tsx  DisclosureFooter.tsx
+                PageContainer.tsx  PageHeader.tsx  KpiRow.tsx  KpiTile.tsx  Select.tsx  DateInput.tsx  MonthInput.tsx
+                SearchField.tsx  CountChips.tsx  FieldShell.tsx (internal, not exported)  formatIstDate.ts
                 states/ LoadingSkeleton.tsx  EmptyState.tsx  ErrorState.tsx  PermissionDenied.tsx  OfflineBanner.tsx
                 index.ts
 lib/api/        api-error.ts  api-client.ts  fetch-api-client.ts  ApiProvider.tsx  useApiQuery.ts  trace.ts
@@ -693,6 +695,21 @@ EmptyState: { title: string; body?: string; action?: { label: string; onClick():
 ErrorState: { error: ApiError | Error; onRetry?(): void }   // shows friendly title, "Reference <traceId first 8 chars>" with copy button when traceId exists
 PermissionDenied: { reason?: 'role'|'tenant' }
 OfflineBanner: listens to online/offline events; shows "You are offline. Changes will sync when you reconnect."
+
+// Page frame (layout follows the container width, so it also fits inside the 390 px MobileShell frame)
+PageContainer: { width?: 'default'|'wide'; children }               // --ground background; max-width 1280 px (wide 1600 px); padding 24 px, 32 px when ≥ 1024 px wide
+PageHeader: { title: string; subtitle?: string; actions?: ReactNode; back?: { to: string; label: string } }   // h1 + subtitle; actions right-aligned, wrap below on narrow widths; back is a router Link
+KpiRow: { children }                                                 // grid of 1–4 columns
+KpiTile: { label: string; value: ReactNode; caption?: string; tone?: 'neutral'|'ok'|'warn'|'bad' }           // data-tone; tone colours the value
+
+// Form controls (native element underneath; visible <label for>; hideLabel keeps an sr-only label)
+Select: { label: string; value: string; options: { value: string; label: string }[]; onChange(value: string): void; hideLabel?: boolean; id?: string }
+DateInput: { label: string; value: string /* YYYY-MM-DD */; onChange(value: string): void; min?: string; max?: string; hideLabel?: boolean }
+MonthInput: { label: string; value: string /* YYYY-MM */; onChange(value: string): void; hideLabel?: boolean }
+SearchField: { label: string; value: string; onChange(value: string): void; placeholder?: string }
+CountChips: { options: { id: string; label: string; count?: number }[]; selected: string; onChange(id: string): void; ariaLabel: string }  // single-select; role=group; aria-pressed
+
+formatIstDate(isoDate: string, lang: 'en'|'hi'): string   // "4 Oct 2026"; YYYY-MM-DD is formatted without a timezone shift; a timestamp shows its Asia/Kolkata date; never a time; invalid or impossible input is returned unchanged
 ```
 
 ### 13.4 API client (Adapter over fetch)
@@ -798,6 +815,7 @@ Frontend
 - **AC-M00-31** Design-system components meet the props contracts: `Tabs` keyboard navigation and `aria-selected`; `BottomSheet` closes on Escape and is a modal dialog; `Button` loading state is disabled and `aria-busy`; `DataGrid` renders columns/rows and the empty state; `FilterChips` toggles `aria-pressed`.
 - **AC-M00-32** Shells: `MobileShell` shows the five bottom-nav destinations and the language switch; `ConsoleShell` sidebar sections collapse and filter by search; `LoginPage` starts the Keycloak sign-in (with the selected persona as `login_hint` in demo mode) and `AuthCallback` stores the session and routes by role; unknown routes show the "later module" empty state.
 - **AC-M00-33** `JwksTokenVerifier` accepts an RS256 token signed by a JWKS key and maps `sub`, `org`, `roles`, `mid`, `ou`, `amr`; it rejects a wrong signature, an unknown `kid` after one refetch, an expired token and a wrong issuer or audience (string or array `aud`); `CompositeTokenVerifier` routes by `alg` and rejects an `alg` with no verifier.
+- **AC-M00-34** Page frame and form controls meet the props contracts: `Select`, `DateInput`, `MonthInput` and `SearchField` are labelled (also with `hideLabel`) and pass the string value to `onChange`; `DateInput` passes `min`/`max`; `CountChips` keeps exactly one chip `aria-pressed` and works from the keyboard; `PageHeader` renders the title, subtitle, actions and back link; `KpiTile` exposes its tone; `PageContainer` exposes its width; `formatIstDate` shows a date-only value without a timezone shift, a timestamp as its IST date, never a time, and returns invalid input unchanged.
 
 ---
 

@@ -1,0 +1,12 @@
+.kpi-row-frame {
+  container-type: inline-size;
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Auto-fit grid capped at 4 columns: 3 compact tiles across in the phone frame (Main), 4 on wide pages (UsersRoles). */
+.kpi-row {
+  --kpi-gap: var(--spacing-md);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(96px, calc((100% - 3 * var(--kpi-gap)) / 4)), 1fr));
+  gap: var(--kpi-gap);
+}

@@ -1,0 +1,16 @@
+.ds-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ds-search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--caption);
+  pointer-events: none;
+}
+
+.ds-search-input {
+  padding-left: 36px;
+}
