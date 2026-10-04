@@ -1,156 +1,100 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { ErrorState, LoadingSkeleton, PageContainer, PermissionDenied } from '../../../design-system';
 import { useApi } from '../../../lib/api';
-import {
-  LoadingSkeleton,
-  ErrorState,
-  PermissionDenied,
-} from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
-import {
-  createPartyApi,
-  PartyView,
-  HouseholdView,
-  ConsentSummaryItem,
-  ContactabilityDecision,
-  PartyRoleLink,
-  ConsentChannel,
-  ConsentPurpose,
-} from '../api';
+import { createPartyApi, type ConsentChannel, type ConsentPurpose } from '../api';
+import { PartyCustomFields } from '../components/PartyCustomFields';
 import { PartyHeader } from '../components/PartyHeader';
 import { PartyTabs } from '../components/PartyTabs';
-import { PartyCustomFields } from '../components/PartyCustomFields';
 import { RecordConsentSheet } from '../components/RecordConsentSheet';
+import { usePartyBase } from '../partyLabels';
+import { useCustomerRecord } from '../useCustomerRecord';
+import '../styles/party-frame.css';
 import '../styles/CustomerRecordScreen.css';
 
-interface DetailState {
-  party: PartyView & {
-    household?: HouseholdView;
-    roles: PartyRoleLink[];
-    consentSummary: ConsentSummaryItem[];
-  };
-  contactability: {
-    whatsapp?: ContactabilityDecision;
-    call?: ContactabilityDecision;
-  };
-}
+const INITIAL_CONSENT = {
+  purpose: 'SERVICE' as ConsentPurpose,
+  channel: 'WHATSAPP' as ConsentChannel,
+  granted: true,
+  noticeVersion: '1.0',
+};
 
+/** CRM09 customer record. Shown under /crm/customers/:id and, at phone width, under /m/customers/:id (D6). */
 export function CustomerRecordScreen() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const api = useApi();
   const partyApi = useMemo(() => createPartyApi(api), [api]);
   const { t } = useT();
+  const base = usePartyBase();
+  const record = useCustomerRecord(partyApi, id);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<ApiError | undefined>();
-  const [detail, setDetail] = useState<DetailState | undefined>();
-  const [activeTab, setActiveTab] = useState<string>('overview');
-  const [recordingConsent, setRecordingConsent] = useState(false);
-  const [consentSheet, setConsentSheet] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [consentOpen, setConsentOpen] = useState(false);
+  const [consentSaving, setConsentSaving] = useState(false);
   const [consentError, setConsentError] = useState<string | undefined>();
-  const [consentForm, setConsentForm] = useState({
-    purpose: 'SERVICE' as ConsentPurpose,
-    channel: 'WHATSAPP' as ConsentChannel,
-    granted: true,
-    noticeVersion: '1.0',
-  });
+  const [consentForm, setConsentForm] = useState(INITIAL_CONSENT);
 
-  useEffect(() => {
-    const loadData = async () => {
-      if (!id) return;
-      try {
-        setLoading(true);
-        setError(undefined);
-        const [party, whatsapp, call] = await Promise.all([
-          partyApi.getParty(id),
-          partyApi.checkContactability(id, 'WHATSAPP', 'SERVICE').catch(() => undefined),
-          partyApi.checkContactability(id, 'CALL', 'SERVICE').catch(() => undefined),
-        ]);
-        setDetail({
-          party,
-          contactability: { whatsapp, call },
-        });
-      } catch (err) {
-        if (err instanceof ApiError) {
-          setError(err);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, [id, partyApi]);
-
-  const handleBack = () => {
-    navigate('/crm/customers');
-  };
-
-  const handleRecordConsent = async () => {
+  const saveConsent = async () => {
     if (!id) return;
+    setConsentSaving(true);
+    setConsentError(undefined);
     try {
-      setRecordingConsent(true);
-      setConsentError(undefined);
       // Recorded by staff on the customer's behalf (M03 consent source ASSISTED).
       await partyApi.recordConsent(id, { ...consentForm, source: 'ASSISTED' });
-      // Reload party data
       const updated = await partyApi.getParty(id);
-      setDetail((prev) => (prev ? { ...prev, party: updated } : undefined));
-      setConsentSheet(false);
-    } catch {
-      setConsentError(t('party.record.consent_failed'));
+      record.setParty(() => updated);
+      setConsentOpen(false);
+    } catch (err) {
+      const reason = err instanceof ApiError ? err.title : t('common.error');
+      setConsentError(t('party.record.consent_failed', { reason }));
     } finally {
-      setRecordingConsent(false);
+      setConsentSaving(false);
     }
   };
 
-  if (loading) {
+  if (record.error?.status === 403) {
+    return <PermissionDenied />;
+  }
+  if (record.error) {
+    return <ErrorState error={record.error} onRetry={record.reload} />;
+  }
+  if (!record.detail) {
     return <LoadingSkeleton />;
   }
 
-  if (error) {
-    if (error.status === 403) {
-      return <PermissionDenied />;
-    }
-    return <ErrorState error={error} onRetry={() => window.location.reload()} />;
-  }
-
-  if (!detail) {
-    return <LoadingSkeleton />;
-  }
-
-  const { party, contactability } = detail;
+  const { party, contactability } = record.detail;
 
   return (
-    <main className="customer-record-screen" role="main">
-      <button className="back-button" onClick={handleBack} aria-label="Back to customers">
-        ← {t('common.back')}
-      </button>
-
-      <PartyHeader party={party} contactability={contactability} />
-
-      <PartyCustomFields party={party} onUpdated={(updated) => setDetail((prev) => (prev ? { ...prev, party: { ...prev.party, ...updated } } : prev))} />
-
-      <PartyTabs partyId={party.id}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        household={party.household}
-        roles={party.roles}
-        consentSummary={party.consentSummary}
-        onOpenConsentSheet={() => setConsentSheet(true)}
-      />
-
-      <RecordConsentSheet
-        open={consentSheet}
-        onClose={() => setConsentSheet(false)}
-        form={consentForm}
-        onFormChange={setConsentForm}
-        onSave={handleRecordConsent}
-        saving={recordingConsent}
-        error={consentError}
-      />
-    </main>
+    <div className="party-screen-frame">
+      <PageContainer width="wide">
+        <nav className="record-breadcrumb" aria-label={t('party.record.breadcrumb')}>
+          <Link to={`${base}/customers`}>{t('party.customers.title')}</Link>
+          <span aria-hidden="true"> › </span>
+          <span aria-current="page">{party.displayName}</span>
+        </nav>
+        <PartyHeader party={party} contactability={contactability} />
+        <PartyCustomFields party={party} onUpdated={(updated) => record.setParty((prev) => ({ ...prev, ...updated }))} />
+        <PartyTabs
+          partyId={party.id}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          household={party.household}
+          roles={party.roles}
+          consentSummary={party.consentSummary}
+          onOpenConsentSheet={() => setConsentOpen(true)}
+        />
+        <RecordConsentSheet
+          open={consentOpen}
+          onClose={() => setConsentOpen(false)}
+          form={consentForm}
+          onFormChange={setConsentForm}
+          onSave={saveConsent}
+          saving={consentSaving}
+          error={consentError}
+        />
+      </PageContainer>
+    </div>
   );
 }

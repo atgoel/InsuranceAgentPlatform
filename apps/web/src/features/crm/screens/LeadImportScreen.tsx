@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { PageContainer, PageHeader, Stepper, type StepDef } from '../../../design-system';
 import { useApi } from '../../../lib/api';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
@@ -10,12 +11,24 @@ import { MapStep } from '../components/ImportSteps/MapStep';
 import { ImportPreview, ValidateStep } from '../components/ImportSteps/ValidateStep';
 import { CommitOptions, ImportStep } from '../components/ImportSteps/ImportStep';
 import { ResultStep } from '../components/ImportSteps/ResultStep';
+import '../styles/crm-frame.css';
 import '../styles/LeadImportScreen.css';
 
 type Step = 'upload' | 'map' | 'validate' | 'import' | 'result';
-const STEPS: Step[] = ['upload', 'map', 'validate', 'import', 'result'];
+const STEPS: Step[] = ['upload', 'map', 'validate', 'import'];
 interface ParsedFile { checksum: string; headers: string[]; rows: string[][] }
 type ImportResult = Parameters<typeof ResultStep>[0]['result'];
+
+/** The four steps of CRM08; the result screen belongs to the last one, so every step reads as done there. */
+function stepState(index: number, at: number): StepDef['state'] {
+  if (index < at) return 'done';
+  return index === at ? 'current' : 'todo';
+}
+
+function stepStates(current: Step, label: (step: Step) => string): StepDef[] {
+  const at = current === 'result' ? STEPS.length : STEPS.indexOf(current);
+  return STEPS.map((id, index) => ({ id, label: label(id), state: stepState(index, at) }));
+}
 
 /** CRM08 lead import (AC-M04-30): upload → map → server preview → commit with source and consent basis → result. */
 export function LeadImportScreen() {
@@ -46,14 +59,22 @@ export function LeadImportScreen() {
   const rows = () => (file ? toImportRows(file.headers, file.rows, mapping) : []);
 
   return (
-    <main className="lead-import-screen">
-      <h1>{t('crm.import.title')}</h1>
-      <ol className="stepper">
-        {STEPS.map((s) => <li key={s} aria-current={s === step ? 'step' : undefined}>{t(`crm.import.step_${s}`)}</li>)}
-      </ol>
-      {failure && <p role="alert" className="error-banner">{t('crm.import.request_failed', { reason: failure })}</p>}
-      {renderStep()}
-    </main>
+    <div className="crm-screen-frame">
+      <PageContainer>
+        <PageHeader title={t('crm.import.page_title')} subtitle={t('crm.import.subtitle')} />
+        <nav className="import-tabs" aria-label={t('crm.import.tabs')}>
+          <span aria-current="page">{t('crm.import.tab_import')}</span>
+          <Link to="/crm/import/duplicates">{t('crm.import.duplicates_tab')}</Link>
+        </nav>
+        <Stepper steps={stepStates(step, (id) => t(`crm.import.step_${id}`))} />
+        {failure && (
+          <p role="alert" className="error-banner">
+            {t('crm.import.request_failed', { reason: failure })}
+          </p>
+        )}
+        <div className="import-content">{renderStep()}</div>
+      </PageContainer>
+    </div>
   );
 
   function renderStep() {

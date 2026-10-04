@@ -1,368 +1,154 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ApiProvider } from '../../../lib/api';
 import { ApiError } from '../../../lib/api/api-error';
-import { I18nProvider } from '../../../lib/i18n';
+import { mockClient, renderAt, type MockClient } from '../../../test/render';
+import type { DuplicateCandidateView } from '../api';
 import { DuplicateQueueScreen } from './DuplicateQueueScreen';
-import { ApiClient } from '../../../lib/api/api-client';
-import { DuplicateCandidateView, ComparisonResponse } from '../api';
 
-describe('AC-M03-17 DuplicateQueueScreen', () => {
-  const mockDuplicates: DuplicateCandidateView[] = [
-    {
-      id: 'dup-1',
-      score: 100,
-      rule: 'Same PAN',
-      explanation: 'Exact PAN match detected',
-      a: {
-        id: 'cust-1',
-        displayName: 'Rajesh Kumar',
-        primaryMobileMasked: '+91 98XXX XXXXX',
-        householdName: undefined,
-        rolesSummary: [],
-        tags: [],
-        ownerMemberId: 'member-1',
-      },
-      b: {
-        id: 'cust-2',
-        displayName: 'Raj Kumar',
-        primaryMobileMasked: '+91 98XXX XXXXX',
-        householdName: undefined,
-        rolesSummary: [],
-        tags: [],
-        ownerMemberId: 'member-2',
-      },
+const user = userEvent.setup({ delay: null });
+
+const PAIR: DuplicateCandidateView = {
+  id: 'dup-1',
+  a: { id: 'a', displayName: 'Rajesh Kumar', rolesSummary: [], tags: [] },
+  b: { id: 'b', displayName: 'Rajesh Kumaar', rolesSummary: [], tags: [] },
+  score: 90,
+  rule: 'SameMobileAndNameRule',
+  explanation: 'Same mobile and a similar name',
+};
+
+const COMPARISON = {
+  fields: [
+    { field: 'displayName', a: 'Rajesh Kumar', b: 'Rajesh Kumaar' },
+    { field: 'preferredLanguage', a: 'hi', b: null },
+    { field: 'dateOfBirth', a: 1984, b: 1984 },
+  ],
+  sourceA: { kind: 'LEAD' },
+  sourceB: { kind: 'IMPORT' },
+};
+
+function client(queue: DuplicateCandidateView[] = [PAIR]): MockClient {
+  let current = queue;
+  const c = mockClient({
+    '/api/v1/duplicates': () => ({ items: current }),
+    '/api/v1/duplicates/dup-1/comparison': COMPARISON,
+    '/api/v1/duplicates/dup-1/merge': () => {
+      current = [];
+      return { mergeId: 'm1', survivorId: 'a', mergedId: 'b', reversibleUntil: '2026-11-03T00:00:00Z' };
     },
-    {
-      id: 'dup-2',
-      score: 90,
-      rule: 'Same Mobile and Similar Name',
-      explanation: 'Shared mobile number with similar name',
-      a: {
-        id: 'cust-3',
-        displayName: 'Priya Singh',
-        primaryMobileMasked: '+91 97XXX XXXXX',
-        householdName: undefined,
-        rolesSummary: [],
-        tags: [],
-        ownerMemberId: 'member-3',
-      },
-      b: {
-        id: 'cust-4',
-        displayName: 'Preya Singh',
-        primaryMobileMasked: '+91 97XXX XXXXX',
-        householdName: undefined,
-        rolesSummary: [],
-        tags: [],
-        ownerMemberId: 'member-4',
-      },
+    '/api/v1/duplicates/dup-1/dismissal': () => {
+      current = [];
+      return undefined;
     },
-  ];
+  });
+  return c;
+}
 
-  const mockComparison: ComparisonResponse = {
-    fields: [
-      { field: 'displayName', a: 'Rajesh Kumar', b: 'Raj Kumar' },
-      { field: 'mobile', a: '+91 98XXX XXXXX', b: '+91 98XXX XXXXX' },
-      { field: 'email', a: null, b: null },
-      { field: 'dateOfBirth', a: 1980, b: 1981 },
-      { field: 'pan', a: 'XXXXXX1234', b: 'XXXXXX1234' },
-      { field: 'preferredLanguage', a: 'en', b: 'en' },
-      { field: 'preferredChannel', a: 'WHATSAPP', b: 'SMS' },
-      { field: 'ownerMemberId', a: 'member-1', b: 'member-2' },
-    ],
-    sourceA: { kind: 'IMPORT', ref: 'batch-1' },
-    sourceB: { kind: 'MANUAL' },
-  };
+function open(c: MockClient) {
+  return renderAt(<DuplicateQueueScreen />, c, '/crm/import/duplicates');
+}
 
-  let mockApiClient: ApiClient;
+async function compare() {
+  await user.click(await screen.findByText('Compare'));
+  return within(await screen.findByRole('region', { name: 'Compare records' }));
+}
 
-  beforeEach(() => {
-    mockApiClient = {
-      get: vi.fn().mockImplementation((url) => {
-        if (url.includes('comparison')) {
-          return Promise.resolve(mockComparison);
-        }
-        return Promise.resolve({ items: mockDuplicates, nextCursor: undefined });
-      }),
-      post: vi.fn().mockResolvedValue({ mergeId: 'mrg-1', survivorId: 'cust-1', reversibleUntil: '2024-02-01' }),
-      put: vi.fn(),
-      patch: vi.fn(),
-      del: vi.fn(),
-    };
+describe('AC-M03-17 DuplicateQueueScreen (/crm/import/duplicates)', () => {
+  it('AC-M03-17 lists each pair with its score, the rule by name and the explanation', async () => {
+    open(client());
+    expect(await screen.findByText('Queue · 1 pairs')).toBeInTheDocument();
+    const card = screen.getByText('Rajesh Kumar', { exact: false, selector: 'p' }).closest('li');
+    expect(card?.textContent).toBe('90Same mobile and similar nameRajesh Kumar ↔ Rajesh KumaarSame mobile and a similar nameCompare Rajesh Kumar / Rajesh Kumaar');
   });
 
-  it('AC-M03-17 loads and displays duplicate queue with score and rule', async () => {
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <DuplicateQueueScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('100')).toBeInTheDocument();
-    expect(screen.getByText('Same PAN')).toBeInTheDocument();
-    expect(screen.getByText('Raj Kumar')).toBeInTheDocument();
+  it('AC-M03-17 shows "Queue is clear." when there are no pairs, with the page header and the Import link', async () => {
+    open(client([]));
+    expect(await screen.findByText('Queue is clear.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Import & duplicates' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Import' })).toHaveAttribute('href', '/crm/import');
   });
 
-  it('AC-M03-17 displays empty state when queue is clear', async () => {
-    (mockApiClient.get as Mock).mockResolvedValueOnce({
-      items: [],
-      nextCursor: undefined,
-    });
-
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <DuplicateQueueScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Queue is clear.')).toBeInTheDocument();
-    });
+  it('AC-M03-17 compares field by field with source names, translated values and "–" for a missing value', async () => {
+    const c = client();
+    open(c);
+    const panel = await compare();
+    expect(c.get).toHaveBeenCalledWith('/api/v1/duplicates/dup-1/comparison');
+    expect(panel.getByText('Record A · Lead')).toBeInTheDocument();
+    expect(panel.getByText('Record B · Import')).toBeInTheDocument();
+    const rows = Array.from(document.querySelectorAll('.comparison-table tbody tr')).map((tr) => tr.textContent);
+    expect(rows).toEqual(['NameRajesh KumarRajesh Kumaar', 'LanguageHindi–', 'Birth year19841984']);
+    expect(panel.getByText('Policies, activities, consents and attribution from both records are kept. A shared mobile alone never auto-merges people.')).toBeInTheDocument();
   });
 
-  it('AC-M03-17 opens comparison sheet when compare button is clicked', async () => {
-    const user = userEvent.setup();
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <DuplicateQueueScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
+  it('AC-M03-17 merging asks for confirmation that states the 30 day reversibility, then sends the chosen survivor values', async () => {
+    const c = client();
+    open(c);
+    const panel = await compare();
+    await user.click(panel.getByLabelText('Name: keep record B'));
+    await user.click(panel.getByText('Merge records'));
+    expect(screen.getByText('Merges are reversible for 30 days. After that the merge cannot be undone.')).toBeInTheDocument();
+    expect(c.post).not.toHaveBeenCalled();
 
-    await waitFor(() => {
-      expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
+    await user.click(screen.getByText('Confirm merge'));
+
+    expect(c.post).toHaveBeenCalledTimes(1);
+    const [url, body, options] = c.post.mock.calls[0] as [string, unknown, { idempotencyKey: string }];
+    expect(url).toBe('/api/v1/duplicates/dup-1/merge');
+    expect(body).toEqual({
+      survivor: 'A',
+      choices: [
+        { field: 'displayName', from: 'B' },
+        { field: 'preferredLanguage', from: 'A' },
+        { field: 'dateOfBirth', from: 'A' },
+      ],
     });
-
-    const compareButtons = screen.getAllByRole('button', { name: /compare/i });
-    await user.click(compareButtons[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/displayName/i)).toBeInTheDocument();
-    });
+    expect(options.idempotencyKey).toMatch(/^[0-9a-f-]{36}$/);
+    expect(await screen.findByText('Queue is clear.')).toBeInTheDocument();
   });
 
-  it('AC-M03-17 displays field-by-field comparison with radio buttons', async () => {
-    const user = userEvent.setup();
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <DuplicateQueueScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
-    });
-
-    const compareButtons = screen.getAllByRole('button', { name: /compare/i });
-    await user.click(compareButtons[0]);
-
-    await waitFor(() => {
-      const displayNameField = screen.getByText(/displayName/i);
-      expect(displayNameField).toBeInTheDocument();
-    });
-
-    // Check for radio buttons for field choices
-    const radios = screen.getAllByRole('radio');
-    expect(radios.length).toBeGreaterThan(0);
+  it('AC-M03-17 "Not a duplicate" posts the dismissal and refreshes the queue', async () => {
+    const c = client();
+    open(c);
+    const panel = await compare();
+    await user.click(panel.getByText('Not a duplicate'));
+    const [url, body] = c.post.mock.calls[0] as [string, unknown];
+    expect(url).toBe('/api/v1/duplicates/dup-1/dismissal');
+    expect(body).toEqual({});
+    expect(await screen.findByText('Queue is clear.')).toBeInTheDocument();
   });
 
-  it('AC-M03-17 allows selecting field values via radio buttons', async () => {
-    const user = userEvent.setup();
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <DuplicateQueueScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
-    });
-
-    const compareButtons = screen.getAllByRole('button', { name: /compare/i });
-    await user.click(compareButtons[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/displayName/i)).toBeInTheDocument();
-    });
-
-    // Find and click a radio button
-    const radios = screen.getAllByRole('radio');
-    if (radios.length > 0) {
-      await user.click(radios[0]);
-      expect(radios[0]).toBeChecked();
-    }
+  it('AC-M03-17 a failed merge shows the server title next to the buttons and keeps the comparison open', async () => {
+    const c = client();
+    c.post.mockRejectedValueOnce(new ApiError(409, 'conflict', 'Record already merged'));
+    open(c);
+    const panel = await compare();
+    await user.click(panel.getByText('Merge records'));
+    await user.click(screen.getByText('Confirm merge'));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not complete the action: Record already merged');
+    expect(screen.getByRole('region', { name: 'Compare records' })).toBeInTheDocument();
+    expect(screen.getByText('Rajesh Kumaar', { selector: 'span' })).toBeInTheDocument();
   });
 
-  it('AC-M03-17 merges records and closes comparison sheet', async () => {
-    const user = userEvent.setup();
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <DuplicateQueueScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
+  it('AC-M03-17 a failed comparison load is reported inline and the queue stays', async () => {
+    const c = client();
+    c.get.mockImplementation(async (path: string) => {
+      if (path.endsWith('/comparison')) throw new ApiError(500, 'boom', 'Comparison unavailable');
+      return { items: [PAIR] };
     });
-
-    const compareButtons = screen.getAllByRole('button', { name: /compare/i });
-    await user.click(compareButtons[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/displayName/i)).toBeInTheDocument();
-    });
-
-    // Find and click merge button
-    const mergeButton = screen.getByRole('button', { name: /merge/i });
-    await user.click(mergeButton);
-
-    // Verify POST was called
-    await waitFor(() => {
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        expect.stringContaining('/merge'),
-        expect.any(Object),
-        expect.any(Object)
-      );
-    });
+    open(c);
+    await user.click(await screen.findByText('Compare'));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not complete the action: Comparison unavailable');
+    expect(screen.getByText('Queue · 1 pairs')).toBeInTheDocument();
   });
 
-  it('AC-M03-17 dismisses duplicate when dismiss button is clicked', async () => {
-    const user = userEvent.setup();
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <DuplicateQueueScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
-    });
-
-    const compareButtons = screen.getAllByRole('button', { name: /compare/i });
-    await user.click(compareButtons[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/displayName/i)).toBeInTheDocument();
-    });
-
-    const dismissButton = screen.getByRole('button', { name: /not a duplicate|dismiss/i });
-    await user.click(dismissButton);
-
-    // Verify POST was called for dismissal
-    await waitFor(() => {
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        expect.stringContaining('/dismissal'),
-        expect.any(Object),
-        expect.any(Object)
-      );
-    });
+  it('AC-M03-17 a queue load error shows the error state inline under the page header', async () => {
+    open(mockClient({ '/api/v1/duplicates': new ApiError(500, 'boom', 'Server error', 'Internal server error', 'trace-123456789') }));
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Import & duplicates' })).toBeInTheDocument();
   });
 
-  it('AC-M03-17 displays reversibility notice in comparison sheet', async () => {
-    const user = userEvent.setup();
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <DuplicateQueueScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
-    });
-
-    const compareButtons = screen.getAllByRole('button', { name: /compare/i });
-    await user.click(compareButtons[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText('Merges are reversible for 30 days')).toBeInTheDocument();
-    });
-  });
-
-  it('AC-M03-17 shows loading skeleton initially', () => {
-    mockApiClient.get = vi.fn().mockImplementationOnce(() =>
-      new Promise(() => {}) // Never resolves
-    );
-
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <DuplicateQueueScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    // Should show loading indicator
-    const container = document.body;
-    expect(container).toBeInTheDocument();
-  });
-
-  it('AC-M03-17 handles API errors gracefully', async () => {
-    const apiError = new ApiError(500, 'server_error', 'Server error', 'Internal server error', 'trace-123');
-    (mockApiClient.get as Mock).mockRejectedValueOnce(apiError);
-
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <DuplicateQueueScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-    });
-  });
-
-  it('AC-M03-17 displays permission denied when status is 403', async () => {
-    const apiError = new ApiError(403, 'forbidden', 'Forbidden', 'You do not have permission', 'trace-123');
-    (mockApiClient.get as Mock).mockRejectedValueOnce(apiError);
-
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <DuplicateQueueScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Access Denied')).toBeInTheDocument();
-    });
-  });
-
-  it('AC-M03-17 displays score badges with appropriate styling', async () => {
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <DuplicateQueueScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      // Should display both duplicate scores
-      const scores = screen.getAllByText(/^(100|90)$/);
-      expect(scores.length).toBeGreaterThan(0);
-    });
+  it('AC-M03-17 403 shows the permission state', async () => {
+    open(mockClient({ '/api/v1/duplicates': new ApiError(403, 'forbidden', 'Forbidden') }));
+    expect(await screen.findByText(/access denied/i)).toBeInTheDocument();
   });
 });

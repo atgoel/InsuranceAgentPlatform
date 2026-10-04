@@ -1,142 +1,79 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { EmptyState, ErrorState, LoadingSkeleton, PageContainer, PageHeader, PermissionDenied } from '../../../design-system';
 import { useApi } from '../../../lib/api';
-import { LoadingSkeleton, ErrorState, PermissionDenied, EmptyState } from '../../../design-system';
-import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
-import { createPartyApi, DuplicateCandidateView, ComparisonResponse, SurvivorChoice } from '../api';
-import { DuplicateQueueList } from '../components/DuplicateQueueList';
+import { createPartyApi } from '../api';
 import { DuplicateComparison } from '../components/DuplicateComparison';
+import { DuplicateQueueList } from '../components/DuplicateQueueList';
+import { useDuplicateQueue, useDuplicateReview, type DuplicateQueueState } from '../useDuplicateQueue';
+import '../styles/party-frame.css';
 import '../styles/DuplicateQueueScreen.css';
 
-interface ComparisonState {
-  candidateId: string;
-  comparison: ComparisonResponse;
-  selectedSurvivor: 'A' | 'B';
-  fieldChoices: Record<string, 'A' | 'B'>;
+function QueueBody({ queue, children }: { queue: DuplicateQueueState; children: ReactNode }) {
+  const { t } = useT();
+
+  if (queue.error) {
+    return <ErrorState error={queue.error} onRetry={queue.reload} />;
+  }
+  if (queue.loading) {
+    return <LoadingSkeleton />;
+  }
+  if (queue.items.length === 0) {
+    return <EmptyState title={t('party.duplicates.empty')} />;
+  }
+  return <>{children}</>;
 }
 
+/** CRM08 duplicate queue (M03 frontend row `/crm/import/duplicates`): compare, choose surviving values, merge or dismiss. */
 export function DuplicateQueueScreen() {
   const api = useApi();
   const partyApi = useMemo(() => createPartyApi(api), [api]);
   const { t } = useT();
+  const queue = useDuplicateQueue(partyApi);
+  const review = useDuplicateReview(partyApi, queue.reload, t('common.error'));
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<ApiError | undefined>();
-  const [queue, setQueue] = useState<DuplicateCandidateView[]>([]);
-  const [comparison, setComparison] = useState<ComparisonState | undefined>();
-  const [merging, setMerging] = useState(false);
-  const [dismissing, setDismissing] = useState(false);
-
-  const loadQueue = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(undefined);
-      const result = await partyApi.listDuplicates({ limit: 25 });
-      setQueue(result.items);
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [partyApi]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadQueue();
-  }, [loadQueue]);
-
-  const handleCompare = async (item: DuplicateCandidateView) => {
-    try {
-      const comp = await partyApi.getDuplicateComparison(item.id);
-      const choices: Record<string, 'A' | 'B'> = {};
-      comp.fields.forEach((f) => {
-        choices[f.field] = 'A';
-      });
-      setComparison({ candidateId: item.id, comparison: comp, selectedSurvivor: 'A', fieldChoices: choices });
-    } catch {
-      // Silently handle comparison load failure
-    }
-  };
-
-  const handleFieldChoice = (field: string, value: 'A' | 'B') => {
-    if (comparison) {
-      setComparison({
-        ...comparison,
-        fieldChoices: { ...comparison.fieldChoices, [field]: value },
-      });
-    }
-  };
-
-  const handleMerge = async () => {
-    if (!comparison) return;
-    try {
-      setMerging(true);
-      const choices: SurvivorChoice[] = Object.entries(comparison.fieldChoices).map(([field, from]) => ({ field, from }));
-      await partyApi.mergeDuplicates(comparison.candidateId, { survivor: comparison.selectedSurvivor, choices });
-      setComparison(undefined);
-      await loadQueue();
-    } catch {
-      // Silently handle merge failure
-    } finally {
-      setMerging(false);
-    }
-  };
-
-  const handleDismiss = async () => {
-    if (!comparison) return;
-    try {
-      setDismissing(true);
-      await partyApi.dismissDuplicate(comparison.candidateId);
-      setComparison(undefined);
-      await loadQueue();
-    } catch {
-      // Silently handle dismiss failure
-    } finally {
-      setDismissing(false);
-    }
-  };
-
-  if (loading) {
-    return <LoadingSkeleton />;
-  }
-
-  if (error) {
-    if (error.status === 403) {
-      return <PermissionDenied />;
-    }
-    return <ErrorState error={error} onRetry={loadQueue} />;
-  }
-
-  if (queue.length === 0) {
-    return (
-      <main className="duplicate-queue-screen" role="main">
-        <EmptyState title="Queue is clear." />
-      </main>
-    );
+  if (queue.error?.status === 403) {
+    return <PermissionDenied />;
   }
 
   return (
-    <main className="duplicate-queue-screen" role="main">
-      <div className="screen-header">
-        <h1>{t('party.duplicates.title')}</h1>
-        <p>{t('party.duplicates.description')}</p>
-      </div>
-
-      <DuplicateQueueList items={queue} onCompare={handleCompare} />
-
-      <DuplicateComparison
-        open={!!comparison}
-        onClose={() => setComparison(undefined)}
-        comparison={comparison?.comparison}
-        fieldChoices={comparison?.fieldChoices ?? {}}
-        onFieldChoice={handleFieldChoice}
-        onMerge={handleMerge}
-        onDismiss={handleDismiss}
-        merging={merging}
-        dismissing={dismissing}
-      />
-    </main>
+    <div className="party-screen-frame">
+      <PageContainer width="wide">
+        <PageHeader title={t('party.duplicates.page_title')} subtitle={t('party.duplicates.page_subtitle')} />
+        <nav className="import-tabs" aria-label={t('party.duplicates.tabs')}>
+          <Link to="/crm/import">{t('party.duplicates.import_tab')}</Link>
+          <span aria-current="page">{t('party.duplicates.queue_tab')}</span>
+        </nav>
+        {review.failure && !review.review && (
+          <p role="alert" className="comparison-error">
+            {t('party.duplicates.action_failed', { reason: review.failure })}
+          </p>
+        )}
+        <QueueBody queue={queue}>
+          <div className="duplicates-layout">
+            <DuplicateQueueList
+              items={queue.items}
+              activeId={review.review?.candidateId}
+              busy={review.busy !== undefined}
+              onCompare={(item) => review.open(item.id)}
+            />
+            {review.review && (
+              <DuplicateComparison
+                key={review.review.candidateId}
+                comparison={review.review.comparison}
+                choices={review.review.choices}
+                busy={review.busy}
+                failure={review.failure}
+                onChoose={review.choose}
+                onMerge={review.merge}
+                onDismiss={review.dismiss}
+                onClose={review.close}
+              />
+            )}
+          </div>
+        </QueueBody>
+      </PageContainer>
+    </div>
   );
 }

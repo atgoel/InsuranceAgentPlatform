@@ -1,236 +1,166 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ApiProvider } from '../../../lib/api';
 import { ApiError } from '../../../lib/api/api-error';
-import { I18nProvider } from '../../../lib/i18n';
+import { mockClient, renderAt, type MockClient } from '../../../test/render';
+import type { PartyListItem } from '../api';
 import { CustomersScreen } from './CustomersScreen';
-import { ApiClient } from '../../../lib/api/api-client';
-import { PartyListItem } from '../api';
 
-describe('AC-M03-15 CustomersScreen', () => {
-  const mockCustomers: PartyListItem[] = [
-    {
-      id: 'cust-1',
-      displayName: 'Rajesh Kumar',
-      primaryMobileMasked: '+91 98XXX XXXXX',
-      householdName: 'Kumar Family',
-      rolesSummary: ['PROPOSER · life', 'INSURED · health'],
-      tags: ['vip', 'active'],
-      ownerMemberId: 'member-1',
-    },
-    {
-      id: 'cust-2',
-      displayName: 'Priya Singh',
-      primaryMobileMasked: '+91 97XXX XXXXX',
-      householdName: undefined,
-      rolesSummary: ['INSURED · health'],
-      tags: [],
-      ownerMemberId: 'member-2',
-    },
-  ];
+const user = userEvent.setup({ delay: null });
 
-  let mockApiClient: ApiClient;
+const ARJUN: PartyListItem = {
+  id: 'p_arjun',
+  displayName: 'Arjun Reddy',
+  primaryMobileMasked: '+91 ••••• ••210',
+  householdName: 'Reddy household',
+  rolesSummary: ['PROPOSER · Term life', 'INSURED'],
+  tags: ['vip'],
+  ownerMemberId: 'mem_priya',
+};
+const FARHAN: PartyListItem = { id: 'p_farhan', displayName: 'Farhan Khan', rolesSummary: [], tags: [] };
+const SPOUSE: PartyListItem = { id: 'p_sana', displayName: 'Sana Reddy', rolesSummary: ['NOMINEE'], tags: [] };
 
-  beforeEach(() => {
-    mockApiClient = {
-      get: vi.fn().mockResolvedValue({ items: mockCustomers, nextCursor: undefined }),
-      post: vi.fn(),
-      put: vi.fn(),
-      patch: vi.fn(),
-      del: vi.fn(),
-    };
+const PARTY_DETAIL = {
+  id: 'p_arjun',
+  household: {
+    id: 'hh_1',
+    name: 'Reddy household',
+    headPartyId: 'p_arjun',
+    members: [
+      { partyId: 'p_arjun', relation: 'SELF' },
+      { partyId: 'p_sana', relation: 'SPOUSE' },
+    ],
+  },
+};
+
+function client(items: PartyListItem[] = [ARJUN, FARHAN]): MockClient {
+  return mockClient({
+    '/api/v1/parties': (opts: { query?: { householdId?: string } }) =>
+      opts.query?.householdId ? { items: [ARJUN, SPOUSE] } : { items },
+    '/api/v1/parties/p_arjun': PARTY_DETAIL,
+  });
+}
+
+function listQueries(c: MockClient): Array<Record<string, unknown>> {
+  return c.get.mock.calls
+    .filter(([path]) => path === '/api/v1/parties')
+    .map(([, opts]) => (opts as { query: Record<string, unknown> }).query);
+}
+
+function open(c: MockClient, path = '/crm/customers') {
+  return renderAt(<CustomersScreen />, c, path, path);
+}
+
+describe('AC-M03-15 CustomersScreen (/crm/customers)', () => {
+  it('AC-M03-15 shows the seeded parties as rows with masked mobile, household, translated roles, owner and tags', async () => {
+    open(client());
+    const row = (await screen.findByText('Arjun Reddy')).closest('tr');
+    expect(row?.textContent).toBe('Arjun Reddy+91 ••••• ••210Reddy householdProposer · Term life, Insuredmem_priyavip');
+    expect(screen.getByText('Farhan Khan')).toBeInTheDocument();
+    expect(screen.getByText('Showing 2 customers')).toBeInTheDocument();
+    expect(screen.getByText('Shared numbers never merge people automatically.')).toBeInTheDocument();
   });
 
-  it('AC-M03-15 loads and displays customers list with masked mobile and household', async () => {
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <CustomersScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
+  it('AC-M03-15 BUG-11 requests the list once, without a tag, and offers only the All and Tags segments without counts', async () => {
+    const c = client();
+    const view = open(c);
+    await screen.findByText('Arjun Reddy');
 
-    await waitFor(() => {
-      expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Priya Singh')).toBeInTheDocument();
-    expect(screen.getByText('Kumar Family')).toBeInTheDocument();
-    expect(screen.getByText('+91 98XXX XXXXX')).toBeInTheDocument();
+    expect(listQueries(c)).toEqual([{ limit: 25 }]);
+    const segments = within(screen.getByRole('group', { name: 'Segments' }));
+    expect(segments.getAllByRole('button').map((b) => b.textContent)).toEqual(['All', 'Tags']);
+    expect(segments.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
+    expect(view.container.querySelector('.count-chip-badge')).toBeNull();
+    expect(screen.queryByText('With dues')).not.toBeInTheDocument();
+    expect(screen.queryByText('No policy')).not.toBeInTheDocument();
+    const tags = listQueries(c).map((q) => q.tag);
+    expect(tags).not.toContain('with_dues');
+    expect(tags).not.toContain('no_policy');
   });
 
-  it('AC-M03-15 filters customers by search query', async () => {
-    const user = userEvent.setup();
-    (mockApiClient.get as Mock)
-      .mockResolvedValueOnce({
-        items: [mockCustomers[0]],
-        nextCursor: undefined,
-      })
-      .mockResolvedValueOnce({
-        items: [mockCustomers[0]],
-        nextCursor: undefined,
-      });
-
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <CustomersScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
-    });
-
-    const searchBox = screen.getByPlaceholderText('Search name, mobile, email, PAN or policy no.');
-    await user.type(searchBox, 'Rajesh');
-
-    await waitFor(() => {
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        '/api/v1/parties',
-        expect.objectContaining({
-          query: expect.objectContaining({ q: 'Rajesh' }),
-        })
-      );
-    });
+  it('AC-M03-15 the Tags segment shows a tag field and sends it as the tag filter', async () => {
+    const c = client();
+    open(c);
+    await screen.findByText('Arjun Reddy');
+    await user.click(screen.getByRole('button', { name: 'Tags' }));
+    expect(screen.getByRole('button', { name: 'Tags' })).toHaveAttribute('aria-pressed', 'true');
+    await user.type(screen.getByLabelText('Tag'), 'vip');
+    await waitFor(() => expect(listQueries(c).at(-1)).toEqual({ tag: 'vip', limit: 25 }));
   });
 
-  it('AC-M03-15 opens household panel when row is clicked', async () => {
-    const user = userEvent.setup();
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <CustomersScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
-    });
-
-    const nameCell = screen.getByText('Rajesh Kumar');
-    await user.click(nameCell);
-
-    await waitFor(() => {
-      const kumartFamilyElements = screen.getAllByText('Kumar Family');
-      expect(kumartFamilyElements.length).toBeGreaterThan(0);
-    });
+  it('AC-M03-15 searching sends q and keeps the search box mounted while the list reloads', async () => {
+    const c = client();
+    open(c);
+    await screen.findByText('Arjun Reddy');
+    const box = screen.getByLabelText('Search customers');
+    await user.type(box, 'Arjun');
+    await waitFor(() => expect(listQueries(c).at(-1)).toEqual({ q: 'Arjun', limit: 25 }));
+    expect(screen.getByLabelText('Search customers')).toBe(box);
+    expect(box).toHaveValue('Arjun');
   });
 
-  it('AC-M03-15 closes household panel when close button is clicked', async () => {
-    const user = userEvent.setup();
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <CustomersScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByText('Rajesh Kumar'));
-
-    await waitFor(() => {
-      expect(screen.getByRole('complementary')).toBeInTheDocument();
-    });
-
-    const closeButton = screen.getByLabelText('Close panel');
-    await user.click(closeButton);
-
-    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
-  });
-
-  it('AC-M03-15 displays loading skeleton initially', () => {
-    mockApiClient.get = vi.fn().mockImplementationOnce(() =>
-      new Promise(() => {}) // Never resolves
-    );
-
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <CustomersScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    // Check for loading skeleton progressbar
+  it('AC-M03-15 the search box is on screen while the first load is pending', () => {
+    const c = mockClient({});
+    c.get.mockImplementation(() => new Promise(() => undefined));
+    open(c);
+    expect(screen.getByLabelText('Search customers')).toBeInTheDocument();
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
-  it('AC-M03-15 displays empty state when no customers found', async () => {
-    (mockApiClient.get as Mock).mockResolvedValueOnce({
-      items: [],
-      nextCursor: undefined,
-    });
+  it('AC-M03-15 selecting a row opens the household panel with members, relations and roles', async () => {
+    const c = client();
+    open(c);
+    await user.click(await screen.findByRole('button', { name: 'Arjun Reddy' }));
 
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <CustomersScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.queryByText('Rajesh Kumar')).not.toBeInTheDocument();
-    });
+    const panel = within(await screen.findByRole('complementary', { name: 'Household details' }));
+    expect(await panel.findByText('Sana Reddy')).toBeInTheDocument();
+    expect(panel.getByText('Spouse')).toBeInTheDocument();
+    expect(panel.getByText('Self')).toBeInTheDocument();
+    expect(panel.getByText('Nominee')).toBeInTheDocument();
+    expect(c.get).toHaveBeenCalledWith('/api/v1/parties/p_arjun');
+    expect(listQueries(c).at(-1)).toEqual({ householdId: 'hh_1', limit: 25 });
+    await user.click(panel.getByRole('button', { name: 'Close panel' }));
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   });
 
-  it('AC-M03-15 handles API errors gracefully', async () => {
-    const apiError = new ApiError(500, 'server_error', 'Server error', 'Internal server error', 'trace-123');
-    (mockApiClient.get as Mock).mockRejectedValueOnce(apiError);
-
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <CustomersScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-    });
+  it('AC-M03-15 Open full record goes to the record inside the CRM shell', async () => {
+    open(client());
+    await user.click(await screen.findByRole('button', { name: 'Arjun Reddy' }));
+    await user.click(await screen.findByRole('button', { name: 'Open full record' }));
+    expect(await screen.findByTestId('location')).toHaveTextContent('/crm/customers/p_arjun');
   });
 
-  it('AC-M03-15 displays permission denied when status is 403', async () => {
-    const apiError = new ApiError(403, 'forbidden', 'Forbidden', 'You do not have permission', 'trace-123');
-    (mockApiClient.get as Mock).mockRejectedValueOnce(apiError);
-
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <CustomersScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Access Denied')).toBeInTheDocument();
-    });
+  it('AC-M03-15 D6 under the phone shell the record link stays under /m', async () => {
+    open(client(), '/m/customers');
+    await user.click(await screen.findByRole('button', { name: 'Arjun Reddy' }));
+    await user.click(await screen.findByRole('button', { name: 'Open full record' }));
+    expect(await screen.findByTestId('location')).toHaveTextContent('/m/customers/p_arjun');
   });
 
-  it('AC-M03-15 displays shared number note', async () => {
-    render(
-      <ApiProvider client={mockApiClient}>
-        <I18nProvider>
-          <CustomersScreen />
-        </I18nProvider>
-      </ApiProvider>
-    );
+  it('AC-M03-15 an empty list shows the empty state and keeps the filters', async () => {
+    open(client([]));
+    expect(await screen.findByText('No customers in this view')).toBeInTheDocument();
+    expect(screen.getByLabelText('Search customers')).toBeInTheDocument();
+  });
 
-    await waitFor(() => {
-      expect(screen.getByText('Rajesh Kumar')).toBeInTheDocument();
+  it('AC-M03-15 a server error is shown inline with the filters still on screen, and retry loads the list', async () => {
+    let failing = true;
+    const c = mockClient({
+      '/api/v1/parties': () => {
+        if (failing) throw new ApiError(500, 'boom', 'Server error', 'Internal server error', 'trace-123456789');
+        return { items: [ARJUN] };
+      },
     });
+    open(c);
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+    expect(screen.getByLabelText('Search customers')).toBeInTheDocument();
+    failing = false;
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(await screen.findByText('Arjun Reddy')).toBeInTheDocument();
+  });
 
-    // Note about shared numbers should be visible
-    const note = screen.queryByText(/shared/i) || screen.queryByText(/never/i);
-    expect(note).toBeInTheDocument();
+  it('AC-M03-15 403 shows the permission state', async () => {
+    open(mockClient({ '/api/v1/parties': new ApiError(403, 'forbidden', 'Forbidden') }));
+    expect(await screen.findByText(/access denied/i)).toBeInTheDocument();
   });
 });

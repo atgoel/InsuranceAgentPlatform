@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import userEventLib from '@testing-library/user-event';
 import { ApiError } from '../../../lib/api/api-error';
 import { LeadImportScreen } from './LeadImportScreen';
 import { mockClient, renderAt, type MockClient } from '../../../test/render';
@@ -14,6 +14,9 @@ const EXPECTED_ROWS = [
   { fullName: 'Asha Verma', mobile: '9876500001', productInterest: 'HEALTH_FLOATER' },
   { fullName: 'Ravi Kumar', mobile: '12345', productInterest: 'TERM_LIFE' },
 ];
+
+/** No inter-key delay: the default 0 ms timer per keystroke made long typing tests slow under load. */
+const userEvent = userEventLib.setup({ delay: null });
 
 describe('AC-M04-30 LeadImportScreen (/crm/import)', () => {
   const start = async (client: MockClient, csv = CSV) => {
@@ -79,5 +82,13 @@ describe('AC-M04-30 LeadImportScreen (/crm/import)', () => {
     renderAt(<LeadImportScreen />, mockClient({}), '/crm/import');
     await userEvent.upload(screen.getByLabelText('Select CSV file'), new File(['Name,Mobile\r\n'], 'empty.csv', { type: 'text/csv' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('CSV must have at least a header row and one data row');
+  });
+
+  it('AC-M04-30 shows the four steps of CRM08 with the current one marked, and a Duplicate queue tab', async () => {
+    renderAt(<LeadImportScreen />, mockClient({}), '/crm/import');
+    const steps = Array.from(document.querySelectorAll('.stepper-item')).map((item) => item.textContent);
+    expect(steps).toEqual(['1Upload', '2Map columns', '3Validate', '4Import']);
+    expect(document.querySelector('.stepper-badge.step-current')?.textContent).toBe('1');
+    expect(screen.getByRole('link', { name: 'Duplicate queue' })).toHaveAttribute('href', '/crm/import/duplicates');
   });
 });
