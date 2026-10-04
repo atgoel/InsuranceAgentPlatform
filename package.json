@@ -3,12 +3,19 @@
   "private": true,
   "version": "0.1.0",
   "description": "India Insurance Distribution Platform — Domain Core, BFF and web apps",
-  "workspaces": ["apps/*"],
-  "engines": { "node": ">=22" },
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "npm run test -w apps/core && npm run test -w apps/web",
     "lint": "npm run lint -w apps/core && npm run lint -w apps/web",
     "typecheck": "npm run typecheck -w apps/core && npm run typecheck -w apps/web",
     "quality": "node scripts/quality-report.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.63.0"
   }
 }
