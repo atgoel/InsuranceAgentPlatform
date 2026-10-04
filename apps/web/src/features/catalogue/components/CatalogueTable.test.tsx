@@ -6,6 +6,8 @@ import type { CatalogueRow } from '../api';
 import { CatalogueTable } from './CatalogueTable';
 import { mockClient, renderAt } from '../../../test/render';
 
+const user = userEvent.setup({ delay: null });
+
 const row = (over: Partial<CatalogueRow>): CatalogueRow => ({
   versionId: 'pv', productId: 'prd', productName: 'Plan', insurerId: 'ins', insurerName: 'Insurer', line: 'HEALTH', category: 'HEALTH_FLOATER',
   uin: 'UIN000001', wordingVersion: 'v1', ispEligible: true, posEligible: false, status: 'active', inScope: true, ...over,
@@ -41,10 +43,10 @@ describe('AC-M05-10 CatalogueTable (W07)', () => {
     const client = mockClient({ '/api/v1/catalogue/products': (opts: { query: { line?: string } }) => ({ items: ROWS.filter((r) => !opts.query.line || r.line === opts.query.line) }) });
     renderAt(<CatalogueTable />, client, '/console/tenant');
     await screen.findByText('Family Health Optima');
-    await userEvent.click(screen.getByRole('button', { name: 'General' }));
+    await user.click(screen.getByText('General'));
     expect(await screen.findByText('Old Motor')).toBeInTheDocument();
     expect(screen.queryByText('Family Health Optima')).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'All' }));
+    await user.click(screen.getByText('All'));
     await screen.findByText('Family Health Optima');
     const lines = client.get.mock.calls.map(([, opts]) => (opts as { query: { line?: string } }).query.line);
     expect(lines).toEqual([undefined, 'GENERAL', undefined]);

@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApi } from '../../../lib/api';
-import { FilterChips, LoadingSkeleton, ErrorState, PermissionDenied, Tabs } from '../../../design-system';
+import { FilterChips, LoadingSkeleton, ErrorState, PageContainer, PageHeader, PermissionDenied, SearchField, Tabs } from '../../../design-system';
 import { ResearchCard } from '../components/ResearchCard';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
@@ -72,13 +72,8 @@ export function ResearchLibraryScreen() {
   }
 
   return (
-    <div className="research-library-screen">
-      <div className="page-header">
-        <div>
-          <h1>{t('catalogue.research.title')}</h1>
-          <p>{t('catalogue.research.subtitle')}</p>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader title={t('catalogue.research.title')} subtitle={t('catalogue.research.subtitle')} />
 
       <FilterChips
         options={lineChipOptions(t)}
@@ -105,13 +100,11 @@ export function ResearchLibraryScreen() {
               setSearchQuery(draftQuery.trim());
             }}
           >
-            <input
-              type="search"
-              aria-label={t('catalogue.research.search_placeholder')}
+            <SearchField
+              label={t('catalogue.research.search_label')}
               placeholder={t('catalogue.research.search_placeholder')}
               value={draftQuery}
-              onChange={(e) => setDraftQuery(e.target.value)}
-              className="search-input"
+              onChange={setDraftQuery}
             />
           </form>
 
@@ -134,6 +127,6 @@ export function ResearchLibraryScreen() {
           <p>{t('catalogue.research.coming_later')}</p>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

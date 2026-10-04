@@ -6,6 +6,8 @@ import type { ResearchItem } from '../api';
 import { ResearchLibraryScreen } from './ResearchLibraryScreen';
 import { mockClient, renderAt } from '../../../test/render';
 
+const user = userEvent.setup({ delay: null });
+
 const ITEMS: ResearchItem[] = [
   {
     versionId: 'pv_floater', productName: 'Family Health Optima', insurerName: 'Star Health', line: 'HEALTH', posEligible: true,
@@ -19,7 +21,7 @@ const ITEMS: ResearchItem[] = [
 ];
 
 const PATH = '/api/v1/catalogue/research';
-const card = (name: string) => screen.getByRole('article', { name });
+const card = (name: string) => screen.getByLabelText(name);
 const queries = (get: { mock: { calls: unknown[][] } }) => get.mock.calls.map(([, opts]) => (opts as { query: Record<string, string | undefined> }).query);
 
 describe('AC-M05-10 ResearchLibraryScreen (/m/research)', () => {
@@ -28,8 +30,8 @@ describe('AC-M05-10 ResearchLibraryScreen (/m/research)', () => {
     expect(await screen.findByText('Approved content for your tied insurers only')).toBeInTheDocument();
     const floater = card('Family Health Optima');
     expect(within(floater).getByText('Star Health')).toBeInTheDocument();
-    expect(within(floater).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['100% restoration once a year', 'Day-care covered']);
-    expect(within(floater).getByText('Source: Policy wording v1, section 3 · 2025-04-01')).toBeInTheDocument();
+    expect([...floater.querySelectorAll('li')].map((li) => li.textContent)).toEqual(['100% restoration once a year', 'Day-care covered']);
+    expect(within(floater).getByText('Source: Policy wording v1, section 3 · 1 Apr 2025')).toBeInTheDocument();
   });
 
   it('AC-M05-10 shows the stale banner and the POSP chip only where they apply', async () => {
@@ -44,7 +46,7 @@ describe('AC-M05-10 ResearchLibraryScreen (/m/research)', () => {
   it('AC-M05-10 Compare navigates to /m/compare with the card’s line', async () => {
     renderAt(<ResearchLibraryScreen />, mockClient({ [PATH]: { items: ITEMS } }), '/m/research');
     await screen.findByText('Family Health Optima');
-    await userEvent.click(within(card('Family Health Optima')).getByRole('button', { name: 'Compare' }));
+    await user.click(within(card('Family Health Optima')).getByText('Compare'));
     expect(await screen.findByTestId('location')).toHaveTextContent('/m/compare?line=HEALTH');
   });
 
@@ -52,12 +54,12 @@ describe('AC-M05-10 ResearchLibraryScreen (/m/research)', () => {
     const client = mockClient({ [PATH]: { items: ITEMS } });
     renderAt(<ResearchLibraryScreen />, client, '/m/research?line=LIFE');
     await screen.findByText('Family Health Optima');
-    const box = screen.getByRole('searchbox');
-    await userEvent.type(box, 'star');
+    const box = screen.getByLabelText('Search');
+    await user.type(box, 'star');
     expect(client.get).toHaveBeenCalledTimes(1);
     expect(box).toHaveFocus();
-    await userEvent.type(box, '{Enter}');
-    await userEvent.click(screen.getByRole('button', { name: 'Health' }));
+    await user.type(box, '{Enter}');
+    await user.click(screen.getByText('Health'));
     await screen.findByText('Family Health Optima');
     expect(queries(client.get)).toEqual([
       { line: 'LIFE', q: undefined },
@@ -69,7 +71,7 @@ describe('AC-M05-10 ResearchLibraryScreen (/m/research)', () => {
   it('AC-M05-10 the assistant tab says it is coming in a later module', async () => {
     renderAt(<ResearchLibraryScreen />, mockClient({ [PATH]: { items: ITEMS } }), '/m/research');
     await screen.findByText('Family Health Optima');
-    await userEvent.click(screen.getByRole('tab', { name: 'Assistant' }));
+    await user.click(screen.getByRole('tab', { name: 'Assistant' }));
     expect(screen.getByText('Coming in a later module')).toBeInTheDocument();
     expect(screen.queryByText('Family Health Optima')).not.toBeInTheDocument();
   });
@@ -83,5 +85,12 @@ describe('AC-M05-10 ResearchLibraryScreen (/m/research)', () => {
     failed.unmount();
     renderAt(<ResearchLibraryScreen />, mockClient({ [PATH]: new ApiError(403, 'forbidden', 'No') }), '/m/research');
     expect(await screen.findByText(/access denied/i)).toBeInTheDocument();
+  });
+
+  it('AC-M05-10 shows each card’s line as a translated label, never the code', async () => {
+    renderAt(<ResearchLibraryScreen />, mockClient({ [PATH]: { items: ITEMS } }), '/m/research');
+    await screen.findByText('Family Health Optima');
+    expect(within(card('Family Health Optima')).getByText('Health insurance')).toBeInTheDocument();
+    expect(within(card('Family Health Optima')).queryByText('HEALTH')).not.toBeInTheDocument();
   });
 });

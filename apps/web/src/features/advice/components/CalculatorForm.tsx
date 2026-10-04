@@ -56,7 +56,7 @@ export function CalculatorForm({ calculator, values, fieldErrors, running, onCha
   const { t } = useT();
   return (
     <form
-      className="advice-form"
+      className="advice-form advice-form-card"
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit();

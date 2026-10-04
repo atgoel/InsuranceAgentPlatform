@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useApi } from '../../../lib/api';
-import { Button, ErrorState, LoadingSkeleton, PermissionDenied } from '../../../design-system';
+import { Button, ErrorState, LoadingSkeleton, PageContainer, PageHeader, PermissionDenied, StatusChip, formatIstDate } from '../../../design-system';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
-import { formatDate } from '../../../lib/format';
 import { createAdviceApi, type AdviceView, type MissingItem } from '../api';
 import { ChoiceSection, MissingChecklist, NotesSection, RecommendationsSection, RunsSection } from '../components/AdviceSections';
 import { InlineError } from '../components/InlineError';
@@ -18,7 +17,7 @@ function missingFrom(err: ApiError): MissingItem[] | undefined {
 export function AdviceRecordScreen() {
   const api = useApi();
   const adviceApi = useMemo(() => createAdviceApi(api), [api]);
-  const { t } = useT();
+  const { t, lang } = useT();
   const { id } = useParams<{ id: string }>();
 
   const [loading, setLoading] = useState(true);
@@ -74,10 +73,13 @@ export function AdviceRecordScreen() {
   const readOnly = view.status === 'FINALISED';
   const common = { view, readOnly, busy };
   return (
-    <div className="advice-screen">
-      <h1>{t('advice.record.title')}</h1>
-      <p>{t(`advice.status.${view.status}`)}</p>
-      {readOnly && view.finalisedAt && <p>{t('advice.record.finalised_on', { date: formatDate(new Date(view.finalisedAt)) })}</p>}
+    <PageContainer>
+      <PageHeader
+        title={t('advice.record.title')}
+        subtitle={t('advice.record.subtitle')}
+        actions={<StatusChip tone={readOnly ? 'ok' : 'warn'}>{t(`advice.status.${view.status}`)}</StatusChip>}
+      />
+      {readOnly && view.finalisedAt && <p>{t('advice.record.finalised_on', { date: formatIstDate(view.finalisedAt, lang) })}</p>}
       <p className="advice-banner" role="note">
         {view.scope.disclosure}
       </p>
@@ -92,6 +94,6 @@ export function AdviceRecordScreen() {
           {t('advice.record.finalise')}
         </Button>
       )}
-    </div>
+    </PageContainer>
   );
 }

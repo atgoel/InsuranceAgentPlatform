@@ -85,3 +85,11 @@ export function pathMatches(path: string, name: string): boolean {
   const local = path.replace(/^input\./, '');
   return local === name || local.startsWith(`${name}.`) || local.startsWith(`${name}[`);
 }
+
+/** Where the educational result leads next: existing mobile routes only (research or compare, filtered by line). */
+export const NEXT_STEP: Partial<Record<CalculatorId, string>> = {
+  retirement: '/m/research?line=LIFE',
+  'child-goal': '/m/research?line=LIFE',
+  'health-sum-insured': '/m/compare?line=HEALTH',
+  floater: '/m/compare?line=HEALTH',
+};

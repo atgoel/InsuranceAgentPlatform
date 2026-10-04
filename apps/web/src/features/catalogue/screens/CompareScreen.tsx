@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useApi } from '../../../lib/api';
-import { LoadingSkeleton, ErrorState, PermissionDenied } from '../../../design-system';
+import { LoadingSkeleton, ErrorState, PageContainer, PageHeader, PermissionDenied } from '../../../design-system';
 import { PlanCard } from '../components/PlanCard';
 import { ApiError } from '../../../lib/api/api-error';
 import { useT } from '../../../lib/i18n';
@@ -97,12 +97,8 @@ export function CompareScreen() {
   }
 
   return (
-    <div className="compare-screen">
-      <div className="page-header">
-        <div>
-          <h1>{t('catalogue.compare.title')}</h1>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader title={t('catalogue.compare.title')} subtitle={t('catalogue.compare.subtitle')} />
 
       {disclosure && (
         <div className="disclosure-section">
@@ -128,6 +124,6 @@ export function CompareScreen() {
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
