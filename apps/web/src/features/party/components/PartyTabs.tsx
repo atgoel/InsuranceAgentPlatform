@@ -1,10 +1,12 @@
-import { Tabs, StatusChip, Button, type TabDef } from '../../../design-system';
-import { ConsentSummaryItem, PartyRoleLink, HouseholdView } from '../api';
+import { Tabs, type TabDef } from '../../../design-system';
 import { useT } from '../../../lib/i18n';
+import type { ConsentSummaryItem, HouseholdView, PartyRoleLink } from '../api';
 import { HeldPoliciesPanel } from '../../book/HeldPoliciesPanel';
+import { ConsentTab } from './ConsentTab';
+import { OverviewTab } from './OverviewTab';
 
 interface PartyTabsProps {
-  partyId?: string;
+  partyId: string;
   activeTab: string;
   onTabChange: (id: string) => void;
   household?: HouseholdView;
@@ -13,89 +15,32 @@ interface PartyTabsProps {
   onOpenConsentSheet: () => void;
 }
 
-export function PartyTabs({
-  partyId,
-  activeTab,
-  onTabChange,
-  household,
-  roles,
-  consentSummary,
-  onOpenConsentSheet,
-}: PartyTabsProps) {
+function LaterModule() {
   const { t } = useT();
+  return <p className="tab-later">{t('party.record.coming_soon')}</p>;
+}
 
+/** CRM09 tabs. Activity and Documents wait for later modules (M04, M13) and say so. */
+export function PartyTabs({ partyId, activeTab, onTabChange, household, roles, consentSummary, onOpenConsentSheet }: PartyTabsProps) {
+  const { t } = useT();
   const tabs: TabDef[] = [
     { id: 'overview', label: t('party.record.tab_overview') },
-    { id: 'consent', label: t('party.record.tab_consent') },
     { id: 'policies', label: t('party.record.tab_policies') },
+    { id: 'activity', label: t('party.record.tab_activity') },
+    { id: 'documents', label: t('party.record.tab_documents') },
+    { id: 'consent', label: t('party.record.tab_consent') },
   ];
 
   return (
     <>
-      <Tabs tabs={tabs} value={activeTab} onChange={onTabChange} />
-
-      <div className="tab-content-wrapper">
-        {activeTab === 'overview' && (
-          <div className="tab-content overview-tab">
-            {household && (
-              <div className="section">
-                <h3>{t('party.record.household_title')}</h3>
-                <p>{household.name}</p>
-                <ul>
-                  {household.members.map((m) => (
-                    <li key={m.partyId}>
-                      {m.partyId} ({m.relation})
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {roles && roles.length > 0 && (
-              <div className="section">
-                <h3>{t('party.record.roles_title')}</h3>
-                <ul>
-                  {roles.map((role, idx) => (
-                    <li key={idx}>
-                      {role.role}
-                      {role.label && ` · ${role.label}`}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'consent' && (
-          <div className="tab-content consent-tab">
-            <div className="consent-summary">
-              {consentSummary.map((item) => (
-                <div key={`${item.purpose}-${item.channel}`} className="consent-item">
-                  <span className="consent-label">
-                    {item.purpose} · {item.channel}
-                  </span>
-                  <StatusChip tone={item.granted ? 'ok' : 'bad'}>
-                    {item.granted
-                      ? t('party.record.consent_granted')
-                      : t('party.record.consent_withdrawn')}
-                  </StatusChip>
-                  <span className="consent-date">{new Date(item.occurredAt).toLocaleDateString()}</span>
-                </div>
-              ))}
-            </div>
-
-            <Button variant="secondary" onClick={onOpenConsentSheet}>
-              {t('party.record.record_consent')}
-            </Button>
-          </div>
-        )}
-
-        {activeTab === 'policies' && (
-          <div className="tab-content">
-            {partyId && <HeldPoliciesPanel partyId={partyId} />}
-          </div>
-        )}
+      <div className="record-tabs">
+        <Tabs tabs={tabs} value={activeTab} onChange={onTabChange} />
+      </div>
+      <div className="tab-content" role="tabpanel" id={`panel-${activeTab}`}>
+        {activeTab === 'overview' && <OverviewTab household={household} roles={roles} />}
+        {activeTab === 'policies' && <HeldPoliciesPanel partyId={partyId} />}
+        {(activeTab === 'activity' || activeTab === 'documents') && <LaterModule />}
+        {activeTab === 'consent' && <ConsentTab summary={consentSummary} onRecord={onOpenConsentSheet} />}
       </div>
     </>
   );

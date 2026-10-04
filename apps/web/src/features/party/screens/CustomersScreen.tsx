@@ -1,136 +1,98 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useApi } from '../../../lib/api';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  LoadingSkeleton,
-  ErrorState,
   EmptyState,
+  ErrorState,
+  LoadingSkeleton,
+  PageContainer,
+  PageHeader,
   PermissionDenied,
-  FilterChips,
-  type FilterOption,
 } from '../../../design-system';
-import { ApiError } from '../../../lib/api/api-error';
+import { useApi } from '../../../lib/api';
 import { useT } from '../../../lib/i18n';
-import { createPartyApi, PartyListItem } from '../api';
+import { createPartyApi, type PartyListItem } from '../api';
+import { CustomersFilters, type CustomerSegment } from '../components/CustomersFilters';
 import { CustomersGrid } from '../components/CustomersGrid';
 import { HouseholdPanel } from '../components/HouseholdPanel';
+import { usePartyBase } from '../partyLabels';
+import { useCustomersList, type CustomersListState } from '../useCustomersList';
+import { useDebouncedValue } from '../useDebouncedValue';
+import '../styles/party-frame.css';
 import '../styles/CustomersScreen.css';
 
-interface SelectedParty {
-  id: string;
-  displayName: string;
-  householdName?: string;
-  roles?: string[];
+function CustomersBody({ list, onSelect }: { list: CustomersListState; onSelect: (item: PartyListItem) => void }) {
+  const { t } = useT();
+
+  if (list.error) {
+    return <ErrorState error={list.error} onRetry={list.reload} />;
+  }
+  if (list.loading && list.items.length === 0) {
+    return <LoadingSkeleton />;
+  }
+  if (list.items.length === 0) {
+    return <EmptyState title={t('party.customers.empty_title')} body={t('party.customers.empty_description')} />;
+  }
+  return (
+    <>
+      <CustomersGrid items={list.items} onRowClick={onSelect} />
+      <p className="customers-count" aria-live="polite">
+        {t('party.customers.showing', { count: list.items.length })}
+      </p>
+    </>
+  );
 }
 
-const SEGMENT_OPTIONS: FilterOption[] = [
-  { id: '', label: 'All', count: 0 },
-  { id: 'with_dues', label: 'With dues', count: 0 },
-  { id: 'no_policy', label: 'No policy', count: 0 },
-];
-
+/** CRM04 customers list. Shown under /crm/customers and, at phone width, under /m/customers (D6). */
 export function CustomersScreen() {
   const api = useApi();
   const partyApi = useMemo(() => createPartyApi(api), [api]);
   const { t } = useT();
+  const navigate = useNavigate();
+  const base = usePartyBase();
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<ApiError | undefined>();
-  const [items, setItems] = useState<PartyListItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
-  const [selectedParty, setSelectedParty] = useState<SelectedParty | undefined>();
+  const [search, setSearch] = useState('');
+  const [segment, setSegment] = useState<CustomerSegment>('all');
+  const [tag, setTag] = useState('');
+  const [selected, setSelected] = useState<PartyListItem | undefined>();
 
-  useEffect(() => {
-    const loadCustomers = async () => {
-      try {
-        setLoading(true);
-        setError(undefined);
-        const result = await partyApi.listParties({
-          q: searchQuery || undefined,
-          tag: selectedSegments.length > 0 ? selectedSegments[0] : undefined,
-        });
-        setItems(result.items);
-      } catch (err) {
-        if (err instanceof ApiError) {
-          setError(err);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+  const q = useDebouncedValue(search).trim();
+  const tagQuery = useDebouncedValue(tag).trim();
+  const query = useMemo(
+    () => ({ q: q || undefined, tag: segment === 'tags' && tagQuery ? tagQuery : undefined }),
+    [q, segment, tagQuery],
+  );
+  const list = useCustomersList(partyApi, query);
 
-    loadCustomers();
-  }, [partyApi, searchQuery, selectedSegments]);
-
-  const handleRowClick = (item: PartyListItem) => {
-    setSelectedParty({
-      id: item.id,
-      displayName: item.displayName,
-      householdName: item.householdName,
-      roles: item.rolesSummary,
-    });
-  };
-
-  const handleOpenRecord = () => {
-    if (selectedParty) {
-      window.location.hash = `/crm/customers/${selectedParty.id}`;
-    }
-  };
-
-  if (loading && items.length === 0) {
-    return <LoadingSkeleton />;
-  }
-
-  if (error) {
-    if (error.status === 403) {
-      return <PermissionDenied />;
-    }
-    return <ErrorState error={error} onRetry={() => window.location.reload()} />;
+  if (list.error?.status === 403) {
+    return <PermissionDenied />;
   }
 
   return (
-    <main className="customers-screen" role="main">
-      <div className="screen-header">
-        <div>
-          <h1>{t('party.customers.title')}</h1>
-          <p className="shared-number-note">{t('party.customers.shared_number_note')}</p>
+    <div className="party-screen-frame">
+      <PageContainer width="wide">
+        <PageHeader title={t('party.customers.title')} subtitle={t('party.customers.shared_number_note')} />
+        <div className="customers-layout" data-panel={selected ? 'open' : 'closed'}>
+          <div className="customers-main">
+            <CustomersFilters
+              search={search}
+              onSearchChange={setSearch}
+              segment={segment}
+              onSegmentChange={setSegment}
+              tag={tag}
+              onTagChange={setTag}
+            />
+            <CustomersBody list={list} onSelect={setSelected} />
+          </div>
+          {selected && (
+            <HouseholdPanel
+              key={selected.id}
+              party={selected}
+              onClose={() => setSelected(undefined)}
+              onOpenRecord={() => navigate(`${base}/customers/${selected.id}`)}
+            />
+          )}
         </div>
-      </div>
-
-      <div className="search-and-filters">
-        <input
-          type="text"
-          className="search-box"
-          placeholder="Search name, mobile, email, PAN or policy no."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          aria-label="Search customers by name, mobile, email, PAN or policy number"
-        />
-        <FilterChips
-          options={SEGMENT_OPTIONS}
-          selected={selectedSegments}
-          onChange={setSelectedSegments}
-        />
-      </div>
-
-      {items.length === 0 ? (
-        <EmptyState
-          title={t('party.customers.empty_title')}
-          body={t('party.customers.empty_description')}
-        />
-      ) : (
-        <CustomersGrid items={items} onRowClick={handleRowClick} />
-      )}
-
-      {selectedParty && (
-        <HouseholdPanel
-          displayName={selectedParty.displayName}
-          householdName={selectedParty.householdName}
-          roles={selectedParty.roles}
-          onClose={() => setSelectedParty(undefined)}
-          onOpenRecord={handleOpenRecord}
-        />
-      )}
-    </main>
+      </PageContainer>
+    </div>
   );
 }

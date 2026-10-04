@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import userEventLib from '@testing-library/user-event';
 import { ApiError } from '../../../lib/api/api-error';
 import type { CapacityRow, RoutingRule } from '../api';
 import { RoutingRulesScreen } from './RoutingRulesScreen';
@@ -17,6 +17,9 @@ const CAPACITY: CapacityRow[] = [
 ];
 const routes = () => ({ '/api/v1/routing-rules': { rules: RULES }, '/api/v1/routing/capacity': { items: CAPACITY } });
 const savedBody = (client: MockClient) => client.put.mock.calls[0]?.[1] as { rules: RoutingRule[] };
+
+/** No inter-key delay: the default 0 ms timer per keystroke made long typing tests slow under load. */
+const userEvent = userEventLib.setup({ delay: null });
 
 describe('AC-M04-19/28 RoutingRulesScreen (/crm/routing)', () => {
   const open = async (client: MockClient) => {
@@ -104,12 +107,36 @@ describe('AC-M04-19/28 RoutingRulesScreen (/crm/routing)', () => {
   it('AC-M04-28 the capacity table shows availability or the server reason', async () => {
     await open(mockClient(routes()));
     const table = within(screen.getByRole('region', { name: 'Capacity' }));
-    expect(table.getByText('Priya Sharma').closest('tr')).toHaveTextContent('Priya SharmaEMPLOYEE320Available');
+    expect(table.getByText('Priya Sharma').closest('tr')).toHaveTextContent('Priya SharmaEmployee320Available');
     expect(table.getByText('Arjun Rao').closest('tr')).toHaveTextContent('On leave until 5 Oct');
   });
 
   it('AC-M04-28 403 shows the permission state', async () => {
     renderAt(<RoutingRulesScreen />, mockClient({ '/api/v1/routing-rules': new ApiError(403, 'forbidden', 'No'), '/api/v1/routing/capacity': { items: [] } }), '/crm/routing');
     expect(await screen.findByText(/access denied/i)).toBeInTheDocument();
+  });
+
+  it('AC-M04-28 a server error shows the error state, and Try again loads the rules', async () => {
+    let failing = true;
+    const client = mockClient({
+      '/api/v1/routing-rules': () => {
+        if (failing) throw new ApiError(500, 'boom', 'Server error', 'Internal server error', 'trace-123456789');
+        return { rules: RULES };
+      },
+      '/api/v1/routing/capacity': { items: CAPACITY },
+    });
+    renderAt(<RoutingRulesScreen />, client, '/crm/routing');
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+    failing = false;
+    await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(await screen.findByRole('listitem', { name: 'Everything else' })).toBeInTheDocument();
+  });
+
+  it('AC-M04-28 shows the rule order as numbers and translates the salesperson type', async () => {
+    await open(mockClient(routes()));
+    const numbers = Array.from(document.querySelectorAll('.rule-priority')).map((n) => n.textContent);
+    expect(numbers).toEqual(['1', '2']);
+    expect(screen.getByText('POSP')).toBeInTheDocument();
+    expect(screen.queryByText('EMPLOYEE')).not.toBeInTheDocument();
   });
 });

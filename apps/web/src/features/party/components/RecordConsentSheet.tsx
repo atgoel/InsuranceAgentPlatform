@@ -2,6 +2,10 @@ import { useId } from 'react';
 import { BottomSheet, Button } from '../../../design-system';
 import { ConsentChannel, ConsentPurpose } from '../api';
 import { useT } from '../../../lib/i18n';
+import { partyLabel } from '../partyLabels';
+
+const PURPOSES: ConsentPurpose[] = ['SERVICE', 'MARKETING', 'AI_PROCESSING', 'DATA_SHARING_INSURER'];
+const CHANNELS: ConsentChannel[] = ['WHATSAPP', 'SMS', 'EMAIL', 'CALL'];
 
 interface ConsentForm {
   purpose: ConsentPurpose;
@@ -50,10 +54,11 @@ export function RecordConsentSheet({
                 onFormChange({ ...form, purpose: e.target.value as ConsentPurpose })
               }
             >
-              <option value="SERVICE">SERVICE</option>
-              <option value="MARKETING">MARKETING</option>
-              <option value="AI_PROCESSING">AI_PROCESSING</option>
-              <option value="DATA_SHARING_INSURER">DATA_SHARING_INSURER</option>
+              {PURPOSES.map((purpose) => (
+                <option key={purpose} value={purpose}>
+                  {partyLabel(t, 'purpose', purpose)}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -66,10 +71,11 @@ export function RecordConsentSheet({
                 onFormChange({ ...form, channel: e.target.value as ConsentChannel })
               }
             >
-              <option value="WHATSAPP">WHATSAPP</option>
-              <option value="SMS">SMS</option>
-              <option value="EMAIL">EMAIL</option>
-              <option value="CALL">CALL</option>
+              {CHANNELS.map((channel) => (
+                <option key={channel} value={channel}>
+                  {partyLabel(t, 'consentChannel', channel)}
+                </option>
+              ))}
             </select>
           </div>
 

@@ -75,7 +75,7 @@ describe('AC-CR001-08 customer record custom fields', () => {
 
   it('AC-CR001-08 hides the section when the tenant has no party definitions', async () => {
     render([]);
-    expect(await screen.findByText('Meera Shah')).toBeInTheDocument();
+    expect(await screen.findByText('Meera Shah', { selector: 'h1' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Custom fields' })).not.toBeInTheDocument();
   });
 });

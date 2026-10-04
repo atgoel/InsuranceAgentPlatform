@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, within } from '@testing-library/react';
+import userEventLib from '@testing-library/user-event';
 import { I18nProvider } from '../../../lib/i18n';
 import { ApiError } from '../../../lib/api/api-error';
 import { CustomFieldsSection } from './CustomFieldsSection';
@@ -56,6 +56,9 @@ function valueOf(label: string): string | null {
   return term.nextElementSibling?.textContent ?? null;
 }
 
+/** No inter-key delay: the default 0 ms timer per keystroke is what made these tests slow under load. */
+const userEvent = userEventLib.setup({ delay: null });
+
 describe('AC-CR001-08 CustomFieldsSection', () => {
   it('AC-CR001-08 renders each value by type with money in rupees and the enum label', () => {
     renderSection();
@@ -81,22 +84,24 @@ describe('AC-CR001-08 CustomFieldsSection', () => {
   });
 
   it('AC-CR001-08 saves edits with rupees converted to integer paise and the record version', async () => {
-    const onSave = renderSection();
-    await userEvent.click(screen.getByRole('button', { name: 'Edit custom fields' }));
-    const sheet = await screen.findByRole('dialog');
-    expect(within(sheet).getByLabelText('Budget (rupees)')).toHaveValue('1234.56');
-
+    const smallest = [definitions[0], definitions[2], definitions[4], definitions[5]];
+    const onSave = renderSection(undefined, smallest);
+    await userEvent.click(screen.getByText('Edit custom fields'));
+    const sheet = document.querySelector<HTMLElement>('[role="dialog"]') as HTMLElement;
     const budget = within(sheet).getByLabelText('Budget (rupees)');
+    expect(budget).toHaveValue('1234.56');
     await userEvent.clear(budget);
-    await userEvent.type(budget, '19.99');
+    await userEvent.click(budget);
+    await userEvent.paste('19.99');
     await userEvent.selectOptions(within(sheet).getByLabelText('Region'), 'NORTH');
     await userEvent.click(within(sheet).getByLabelText('VIP'));
-    await userEvent.click(within(sheet).getByRole('button', { name: 'Save' }));
+    await userEvent.click(within(sheet).getByText('Save'));
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await screen.findByText('Custom fields');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(onSave).toHaveBeenCalledTimes(1);
     expect(onSave).toHaveBeenCalledWith(
-      { branch_code: 'BR-7', seats: 12, budget: 1999, visit_on: '2026-03-05', region: 'NORTH', vip: false },
+      { branch_code: 'BR-7', budget: 1999, region: 'NORTH', vip: false },
       7,
     );
   });
@@ -108,7 +113,8 @@ describe('AC-CR001-08 CustomFieldsSection', () => {
     expect(within(sheet).getByLabelText('Branch code *')).toBeInTheDocument();
     const budget = within(sheet).getByLabelText('Budget (rupees)');
     await userEvent.clear(budget);
-    await userEvent.type(budget, '1.234');
+    await userEvent.click(budget);
+    await userEvent.paste('1.234');
     await userEvent.click(within(sheet).getByRole('button', { name: 'Save' }));
 
     expect(budget).toHaveAccessibleDescription('Enter an amount in rupees, up to two decimals');

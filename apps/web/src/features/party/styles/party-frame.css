@@ -1,0 +1,6 @@
+/* PageContainer is a size container; as a direct child of a flex row (CrmShell) it would collapse to zero width. */
+.party-screen-frame {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+}
