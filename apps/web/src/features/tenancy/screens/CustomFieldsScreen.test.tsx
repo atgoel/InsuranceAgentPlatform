@@ -38,6 +38,7 @@ describe('AC-CR001-04 CustomFieldsScreen', () => {
   it('AC-CR001-04 shows the usage meter and the definitions of the selected entity tab', async () => {
     const client = setup();
     expect(await screen.findByText('1 of 5 custom fields in use')).toBeInTheDocument();
+    expect(screen.getByText('There is no free-form entity builder, by design.')).toBeInTheDocument();
     const row = screen.getByRole('row', { name: /branch_code/ });
     expect(within(row).getByText('Branch code')).toBeInTheDocument();
     expect(within(row).getByText('Text')).toBeInTheDocument();
@@ -72,15 +73,20 @@ describe('AC-CR001-04 CustomFieldsScreen', () => {
     const client = setup();
     const created = { ...branchCode, id: 'cfd_2', key: 'region', label: { en: 'Region', hi: 'क्षेत्र' }, type: 'enum' as const, version: 1 };
     client.post.mockResolvedValue(created);
+    const user = userEvent.setup({ delay: null });
     const sheet = await openAddSheet();
-    await userEvent.type(within(sheet).getByLabelText('Key'), 'region');
-    await userEvent.type(within(sheet).getByLabelText('Label (English)'), 'Region');
-    await userEvent.type(within(sheet).getByLabelText('Label (Hindi)'), 'क्षेत्र');
-    await userEvent.selectOptions(within(sheet).getByLabelText('Type'), 'enum');
-    await userEvent.type(within(sheet).getByLabelText('Option 1 value'), 'north');
-    await userEvent.type(within(sheet).getByLabelText('Option 1 label (English)'), 'North');
-    await userEvent.click(within(sheet).getByLabelText('Required'));
-    await userEvent.click(within(sheet).getByRole('button', { name: 'Add field' }));
+    const fill = async (label: string, value: string) => {
+      await user.click(within(sheet).getByLabelText(label));
+      await user.paste(value);
+    };
+    await fill('Key', 'region');
+    await fill('Label (English)', 'Region');
+    await fill('Label (Hindi)', 'क्षेत्र');
+    await user.selectOptions(within(sheet).getByLabelText('Type'), 'enum');
+    await fill('Option 1 value', 'north');
+    await fill('Option 1 label (English)', 'North');
+    await user.click(within(sheet).getByLabelText('Required'));
+    await user.click(within(sheet).getByRole('button', { name: 'Add field' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(client.post).toHaveBeenCalledWith(

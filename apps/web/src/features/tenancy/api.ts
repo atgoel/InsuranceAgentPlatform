@@ -83,9 +83,10 @@ export interface TenantProfile {
     registrationNo: string;
     registrationValidTo: string;
     principalOfficerName?: string;
-    registrationStatus: 'valid' | 'expiring' | 'expired';
-    comparisonScope: 'MARKET_WIDE' | 'TIED_INSURERS';
   };
+  /** Computed by the server from the entity (M01 §5): top level, not inside `entity`. */
+  registrationStatus?: 'valid' | 'expiring' | 'expired';
+  comparisonScope?: 'MARKET_WIDE' | 'TIED_INSURERS';
   hosts: Array<{ host: string; kind: string }>;
 }
 

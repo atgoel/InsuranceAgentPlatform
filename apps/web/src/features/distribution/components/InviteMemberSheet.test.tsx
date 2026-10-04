@@ -1,355 +1,95 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { renderT as render } from '../test-render';
+import { ApiError } from '../../../lib/api/api-error';
+import { role } from '../test-fixtures';
 import { InviteMemberSheet } from './InviteMemberSheet';
-import { RoleDefinition } from '../api';
+
+const roles = [role({ role: 'SALESPERSON' }), role({ role: 'BRANCH_MANAGER' })];
+const units = [
+  { id: 'ou_root', name: 'Head Office' },
+  { id: 'ou_branch1', name: 'Andheri' },
+];
+
+function setup(onSubmit = vi.fn().mockResolvedValue(undefined)) {
+  const onClose = vi.fn();
+  render(<InviteMemberSheet isOpen roles={roles} units={units} onClose={onClose} onSubmit={onSubmit} />);
+  return { onSubmit, onClose };
+}
+
+function fillValid() {
+  fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'John Seller' } });
+  fireEvent.change(screen.getByLabelText('Phone'), { target: { value: '+91-1234-5678-9012' } });
+  fireEvent.change(screen.getByLabelText('Unit'), { target: { value: 'ou_branch1' } });
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Salesperson' }));
+}
 
 describe('InviteMemberSheet', () => {
-  const mockRoles: RoleDefinition[] = [
-    {
-      role: 'SALESPERSON',
-      version: 1,
-      permissions: ['distribution.self.read'],
-      recordScope: 'OWN',
-      privileged: false,
-      editable: true,
-      etag: 'v1',
-    },
-    {
-      role: 'BRANCH_MANAGER',
-      version: 1,
-      permissions: ['distribution.member.read'],
-      recordScope: 'UNIT_SUBTREE',
-      privileged: true,
-      editable: true,
-      etag: 'v1',
-    },
-  ];
-
-  it('AC-M02-05 renders form when open', () => {
-    const handleClose = vi.fn();
-    const handleSubmit = vi.fn();
-
-    render(
-      <InviteMemberSheet
-        isOpen={true}
-        roles={mockRoles}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-      />
-    );
-
-    expect(screen.getByText('Invite Member')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Name')).toBeInTheDocument();
+  it('AC-M02-05 renders nothing when closed', () => {
+    render(<InviteMemberSheet isOpen={false} roles={roles} units={units} onClose={vi.fn()} onSubmit={vi.fn()} />);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('AC-M02-05 does not render form when closed', () => {
-    const handleClose = vi.fn();
-    const handleSubmit = vi.fn();
-
-    render(
-      <InviteMemberSheet
-        isOpen={false}
-        roles={mockRoles}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-      />
-    );
-
-    expect(screen.queryByPlaceholderText('Name')).not.toBeInTheDocument();
+  it('AC-M02-05 lists roles by label and units by name, never raw codes (BUG-09)', () => {
+    setup();
+    expect(screen.getByRole('checkbox', { name: 'Salesperson' })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Branch manager' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Andheri' })).toBeInTheDocument();
+    expect(screen.queryByText('SALESPERSON')).not.toBeInTheDocument();
   });
 
-  it('AC-M02-05 validates name field is required', async () => {
-    const handleClose = vi.fn();
-    const handleSubmit = vi.fn();
+  it('AC-M02-05 requires name, contact, role and unit', () => {
+    const { onSubmit } = setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Invite' }));
+    expect(screen.getByText('Name required')).toBeInTheDocument();
+    expect(screen.getByText('Phone or email required')).toBeInTheDocument();
+    expect(screen.getByText('Roles required')).toBeInTheDocument();
+    expect(screen.getByText('Unit required')).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 
-    render(
-      <InviteMemberSheet
-        isOpen={true}
-        roles={mockRoles}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-      />
-    );
-
-    const submitButton = screen.getByText('Invite');
-    fireEvent.click(submitButton);
-
-    await waitFor(() => {
-      expect(screen.getByText('Name required')).toBeInTheDocument();
+  it('AC-M02-05 submits exactly the entered values, with the chosen unit', async () => {
+    const { onSubmit } = setup();
+    fillValid();
+    fireEvent.click(screen.getByRole('button', { name: 'Invite' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith({
+      displayName: 'John Seller',
+      phone: '+91-1234-5678-9012',
+      email: undefined,
+      roles: ['SALESPERSON'],
+      orgUnitId: 'ou_branch1',
     });
   });
 
-  it('AC-M02-02 validates contact is required (phone or email)', async () => {
-    const handleClose = vi.fn();
-    const handleSubmit = vi.fn();
-
-    render(
-      <InviteMemberSheet
-        isOpen={true}
-        roles={mockRoles}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-      />
-    );
-
-    const nameInput = screen.getByPlaceholderText('Name');
-    fireEvent.change(nameInput, { target: { value: 'John Seller' } });
-
-    const submitButton = screen.getByText('Invite');
-    fireEvent.click(submitButton);
-
-    await waitFor(() => {
-      expect(screen.getByText('Phone or email required')).toBeInTheDocument();
+  it('AC-M02-02 accepts an email as the only contact', async () => {
+    const { onSubmit } = setup();
+    fillValid();
+    fireEvent.change(screen.getByLabelText('Phone'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'john@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Invite' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith({
+      displayName: 'John Seller',
+      phone: undefined,
+      email: 'john@example.com',
+      roles: ['SALESPERSON'],
+      orgUnitId: 'ou_branch1',
     });
   });
 
-  it('AC-M02-05 validates roles are required', async () => {
-    const handleClose = vi.fn();
-    const handleSubmit = vi.fn();
-
-    render(
-      <InviteMemberSheet
-        isOpen={true}
-        roles={mockRoles}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-      />
-    );
-
-    const nameInput = screen.getByPlaceholderText('Name');
-    fireEvent.change(nameInput, { target: { value: 'John Seller' } });
-
-    const phoneInput = screen.getByPlaceholderText('+91-XXXX-XXXX-XXXX');
-    fireEvent.change(phoneInput, { target: { value: '+91-1234-5678-9012' } });
-
-    const submitButton = screen.getByText('Invite');
-    fireEvent.click(submitButton);
-
-    await waitFor(() => {
-      expect(screen.getByText('Roles required')).toBeInTheDocument();
-    });
+  it('AC-M02-05 shows the server title inline and keeps the entered values', async () => {
+    const { onSubmit } = setup(vi.fn().mockRejectedValue(new ApiError(409, 'member_exists', 'A member with this phone already exists')));
+    fillValid();
+    fireEvent.click(screen.getByRole('button', { name: 'Invite' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('A member with this phone already exists');
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText('Name')).toHaveValue('John Seller');
   });
 
-  it('AC-M02-05 validates org unit is required', async () => {
-    const handleClose = vi.fn();
-    const handleSubmit = vi.fn();
-
-    render(
-      <InviteMemberSheet
-        isOpen={true}
-        roles={mockRoles}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-      />
-    );
-
-    const nameInput = screen.getByPlaceholderText('Name');
-    fireEvent.change(nameInput, { target: { value: 'John Seller' } });
-
-    const phoneInput = screen.getByPlaceholderText('+91-XXXX-XXXX-XXXX');
-    fireEvent.change(phoneInput, { target: { value: '+91-1234-5678-9012' } });
-
-    const roleCheckbox = screen.getByRole('checkbox', { name: 'SALESPERSON' });
-    fireEvent.click(roleCheckbox);
-
-    const submitButton = screen.getByText('Invite');
-    fireEvent.click(submitButton);
-
-    await waitFor(
-      () => {
-        const errorText = screen.queryByText('Unit required');
-        expect(errorText).toBeInTheDocument();
-      },
-      { timeout: 1000 }
-    ).catch(() => {
-      // The component may not require orgUnitId in the form validation
-      // Just verify the submit button exists
-      expect(submitButton).toBeInTheDocument();
-    });
-  });
-
-  it('AC-M02-05 submits form with valid data', async () => {
-    const handleClose = vi.fn();
-    const handleSubmit = vi.fn().mockResolvedValue(undefined);
-
-    render(
-      <InviteMemberSheet
-        isOpen={true}
-        roles={mockRoles}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-      />
-    );
-
-    const nameInput = screen.getByPlaceholderText('Name');
-    fireEvent.change(nameInput, { target: { value: 'John Seller' } });
-
-    const phoneInput = screen.getByPlaceholderText('+91-XXXX-XXXX-XXXX');
-    fireEvent.change(phoneInput, { target: { value: '+91-1234-5678-9012' } });
-
-    const roleCheckbox = screen.getByRole('checkbox', { name: 'SALESPERSON' });
-    fireEvent.click(roleCheckbox);
-
-    const submitButton = screen.getByText('Invite');
-    expect(submitButton).toBeInTheDocument();
-  });
-
-  it('AC-M02-05 closes sheet on cancel', () => {
-    const handleClose = vi.fn();
-    const handleSubmit = vi.fn();
-
-    render(
-      <InviteMemberSheet
-        isOpen={true}
-        roles={mockRoles}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-      />
-    );
-
-    const cancelButton = screen.getByText('Cancel');
-    fireEvent.click(cancelButton);
-    expect(handleClose).toHaveBeenCalled();
-  });
-
-  it('AC-M02-05 handles submission error', async () => {
-    const handleClose = vi.fn();
-    const handleSubmit = vi.fn().mockRejectedValue(new Error('Invitation failed'));
-
-    render(
-      <InviteMemberSheet
-        isOpen={true}
-        roles={mockRoles}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-      />
-    );
-
-    const nameInput = screen.getByPlaceholderText('Name');
-    fireEvent.change(nameInput, { target: { value: 'John Seller' } });
-
-    const phoneInput = screen.getByPlaceholderText('+91-XXXX-XXXX-XXXX');
-    fireEvent.change(phoneInput, { target: { value: '+91-1234-5678-9012' } });
-
-    const roleCheckbox = screen.getByRole('checkbox', { name: 'SALESPERSON' });
-    fireEvent.click(roleCheckbox);
-
-    const submitButton = screen.getByText('Invite');
-    fireEvent.click(submitButton);
-
-    // Wait briefly for the error message to potentially appear
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  });
-
-  it('AC-M02-05 displays roles as checkboxes', () => {
-    const handleClose = vi.fn();
-    const handleSubmit = vi.fn();
-
-    render(
-      <InviteMemberSheet
-        isOpen={true}
-        roles={mockRoles}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-      />
-    );
-
-    expect(screen.getByRole('checkbox', { name: 'SALESPERSON' })).toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: 'BRANCH_MANAGER' })).toBeInTheDocument();
-  });
-
-  it('AC-M02-05 allows email-only invitation (without phone)', async () => {
-    const handleClose = vi.fn();
-    const handleSubmit = vi.fn().mockResolvedValue(undefined);
-
-    render(
-      <InviteMemberSheet
-        isOpen={true}
-        roles={mockRoles}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-      />
-    );
-
-    const nameInput = screen.getByPlaceholderText('Name');
-    fireEvent.change(nameInput, { target: { value: 'Jane Seller' } });
-
-    const emailInput = screen.getByPlaceholderText('user@example.com');
-    fireEvent.change(emailInput, { target: { value: 'jane@example.com' } });
-
-    const roleCheckbox = screen.getByRole('checkbox', { name: 'SALESPERSON' });
-    fireEvent.click(roleCheckbox);
-
-    const submitButton = screen.getByText('Invite');
-    fireEvent.click(submitButton);
-
-    // Should not show contact error with email provided
-    await waitFor(() => {
-      expect(screen.queryByText('Phone or email required')).not.toBeInTheDocument();
-    });
-  });
-
-  it('AC-M02-05 disables submit button during loading', () => {
-    const handleClose = vi.fn();
-    const handleSubmit = vi.fn();
-
-    render(
-      <InviteMemberSheet
-        isOpen={true}
-        roles={mockRoles}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-        isLoading={true}
-      />
-    );
-
-    const submitButton = screen.getByText('Loading...');
-    expect(submitButton).toBeDisabled();
-  });
-
-  it('AC-M02-05 clears form after successful submission', async () => {
-    const handleClose = vi.fn();
-    const handleSubmit = vi.fn().mockResolvedValue(undefined);
-
-    render(
-      <InviteMemberSheet
-        isOpen={true}
-        roles={mockRoles}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-      />
-    );
-
-    const nameInput = screen.getByPlaceholderText('Name') as HTMLInputElement;
-    fireEvent.change(nameInput, { target: { value: 'John Seller' } });
-
-    const phoneInput = screen.getByPlaceholderText('+91-XXXX-XXXX-XXXX') as HTMLInputElement;
-    fireEvent.change(phoneInput, { target: { value: '+91-1234-5678-9012' } });
-
-    expect(nameInput.value).toBe('John Seller');
-    expect(phoneInput.value).toBe('+91-1234-5678-9012');
-  });
-
-  it('AC-M02-05 allows selection of multiple roles', () => {
-    const handleClose = vi.fn();
-    const handleSubmit = vi.fn();
-
-    render(
-      <InviteMemberSheet
-        isOpen={true}
-        roles={mockRoles}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-      />
-    );
-
-    const salespersonCheckbox = screen.getByRole('checkbox', { name: 'SALESPERSON' });
-    const managerCheckbox = screen.getByRole('checkbox', { name: 'BRANCH_MANAGER' });
-
-    fireEvent.click(salespersonCheckbox);
-    fireEvent.click(managerCheckbox);
-
-    expect((salespersonCheckbox as HTMLInputElement).checked).toBe(true);
-    expect((managerCheckbox as HTMLInputElement).checked).toBe(true);
+  it('AC-M02-05 closes on Cancel', () => {
+    const { onClose } = setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

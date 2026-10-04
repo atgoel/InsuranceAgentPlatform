@@ -1,43 +1,24 @@
-import { Card } from '../../../design-system';
-
-interface StageStats {
-  invited: number;
-  onboarding: number;
-  active: number;
-  suspended: number;
-}
+import { KpiRow, KpiTile } from '../../../design-system';
+import { useT } from '../../../lib/i18n';
 
 interface StatsKPIsProps {
-  stats: StageStats;
+  /** Members still invited or in onboarding. */
+  inOnboarding: number;
+  /** Licences expiring within 60 days; undefined while unknown (the count is optional and its failure is not fatal). */
+  licencesExpiring?: number;
 }
 
-export function StatsKPIs({ stats }: StatsKPIsProps) {
+/** The two tiles the LLD lists for the onboarding screen (M02 section 9). */
+export function StatsKPIs({ inOnboarding, licencesExpiring }: StatsKPIsProps) {
+  const { t } = useT();
   return (
-    <div className="kpi-tiles">
-      <Card>
-        <div className="kpi-content">
-          <div className="kpi-value">{stats.invited}</div>
-          <div className="kpi-label">Invited</div>
-        </div>
-      </Card>
-      <Card>
-        <div className="kpi-content">
-          <div className="kpi-value">{stats.onboarding}</div>
-          <div className="kpi-label">In Progress</div>
-        </div>
-      </Card>
-      <Card>
-        <div className="kpi-content">
-          <div className="kpi-value">{stats.active}</div>
-          <div className="kpi-label">Active</div>
-        </div>
-      </Card>
-      <Card>
-        <div className="kpi-content">
-          <div className="kpi-value">{stats.suspended}</div>
-          <div className="kpi-label">Suspended</div>
-        </div>
-      </Card>
-    </div>
+    <KpiRow>
+      <KpiTile label={t('distribution.onboarding.kpi_in_onboarding')} value={inOnboarding} />
+      <KpiTile
+        label={t('distribution.onboarding.kpi_licences')}
+        value={licencesExpiring ?? t('distribution.onboarding.kpi_unknown')}
+        tone={licencesExpiring ? 'warn' : 'neutral'}
+      />
+    </KpiRow>
   );
 }

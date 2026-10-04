@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderT as render } from '../test-render';
 import { OrgTreePanel } from './OrgTreePanel';
 import { OrgUnitNode } from '../api';
 
