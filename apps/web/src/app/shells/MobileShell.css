@@ -1,0 +1,74 @@
+.m-stage {
+  width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--ground);
+}
+
+.m-frame {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  background: var(--ground);
+}
+
+@media (min-width: 520px) {
+  .m-frame {
+    width: 390px;
+    height: 844px;
+    max-height: 100dvh;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+}
+
+.m-appbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-bottom: 1px solid var(--line);
+  background: var(--accent);
+  color: #fff;
+}
+
+.m-brand {
+  flex: 1;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.m-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.m-bottomnav {
+  display: flex;
+  border-top: 1px solid var(--line);
+  background: var(--ground);
+}
+
+.m-navitem {
+  flex: 1;
+  min-height: var(--touch-min-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary);
+  text-decoration: none;
+  font-size: 0.8125rem;
+}
+
+.m-navitem[aria-current='page'] {
+  color: var(--accent);
+  font-weight: 600;
+  border-top: 2px solid var(--accent);
+}

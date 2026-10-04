@@ -37,11 +37,18 @@ function decodePayload(token: string): Record<string, unknown> {
   return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {};
 }
 
+function displayNameFrom(claims: Record<string, unknown>): string | undefined {
+  if (typeof claims.name === 'string' && claims.name) return claims.name;
+  if (typeof claims.preferred_username === 'string' && claims.preferred_username) return claims.preferred_username;
+  return undefined;
+}
+
 function toSession(user: User): Session {
   const claims = decodePayload(user.access_token);
   const roles = Array.isArray(claims.roles) ? claims.roles.filter((r): r is string => typeof r === 'string') : [];
   const tenantId = typeof claims.org === 'string' ? claims.org : '';
-  return { token: user.access_token, tenantId, roles };
+  const name = displayNameFrom(claims);
+  return name ? { token: user.access_token, tenantId, roles, name } : { token: user.access_token, tenantId, roles };
 }
 
 function onUserLoaded(user: User): void {

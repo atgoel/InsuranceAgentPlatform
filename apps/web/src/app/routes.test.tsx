@@ -8,6 +8,19 @@ import { ToastProvider } from '../design-system';
 import { routes } from './routes';
 
 describe('AC-M00-32 Routes', () => {
+  function renderRouter(router: ReturnType<typeof createMemoryRouter>) {
+    const client = new FetchApiClient({ baseUrl: '/api', getToken: () => undefined });
+    return render(
+      <AuthProvider>
+        <ApiProvider client={client}>
+          <I18nProvider>
+            <RouterProvider router={router} />
+          </I18nProvider>
+        </ApiProvider>
+      </AuthProvider>,
+    );
+  }
+
   function renderWithRouter(initialEntries?: string[]) {
     const router = createMemoryRouter(routes, { initialEntries: initialEntries || ['/'] });
     const client = new FetchApiClient({
@@ -28,18 +41,20 @@ describe('AC-M00-32 Routes', () => {
     );
   }
 
-  it('AC-M07-15 mobile and CRM shells render their nested screen without technical labels', () => {
+  it('AC-M07-15 mobile and CRM shells render their nested screen without technical labels', async () => {
     const shellRoutes = ['m', 'crm'].map(path => ({
       element: routes.find(route => route.path === path)?.element,
       path,
       children: [{ path: 'probe', element: <div>{path} child screen</div> }],
     }));
-    const mobile = render(<RouterProvider router={createMemoryRouter(shellRoutes, { initialEntries: ['/m/probe'] })} />);
-    expect(screen.getByText('m child screen')).toBeInTheDocument();
+    const mobile = renderRouter(createMemoryRouter(shellRoutes, { initialEntries: ['/m/probe'] }));
+    expect(await screen.findByText('m child screen')).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeInTheDocument();
     expect(screen.queryByText('Mobile Shell')).not.toBeInTheDocument();
     mobile.unmount();
-    render(<RouterProvider router={createMemoryRouter(shellRoutes, { initialEntries: ['/crm/probe'] })} />);
-    expect(screen.getByText('crm child screen')).toBeInTheDocument();
+    renderRouter(createMemoryRouter(shellRoutes, { initialEntries: ['/crm/probe'] }));
+    expect(await screen.findByText('crm child screen')).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Sections' })).toBeInTheDocument();
     expect(screen.queryByText('CRM Shell')).not.toBeInTheDocument();
   });
   it('defines routes array', () => {
@@ -140,9 +155,10 @@ describe('AC-M00-32 Routes', () => {
     expect(screen.queryByText('CRM Shell')).not.toBeInTheDocument();
   });
 
-  it('renders console shell placeholder', () => {
-    renderWithRouter(['/console']);
-    expect(screen.getByText('Console Shell')).toBeInTheDocument();
+  it('renders the console shell sidebar, not a placeholder', async () => {
+    renderWithRouter(['/console/unknown']);
+    expect(await screen.findByRole('navigation', { name: 'Sections' })).toBeInTheDocument();
+    expect(screen.queryByText('Console Shell')).not.toBeInTheDocument();
   });
 
   it('renders catch-all for completely unknown route', () => {
@@ -155,9 +171,12 @@ describe('AC-M00-32 Routes', () => {
     expect(screen.queryByText('Mobile Shell')).not.toBeInTheDocument();
   });
 
-  it('renders mobile customers nested route', () => {
-    renderWithRouter(['/m/customers']);
-    expect(screen.getByText('Coming in a later module')).toBeInTheDocument();
+  it('mobile customers routes render the party screens inside the mobile shell', () => {
+    const mRoute = routes.find(r => r.path === 'm');
+    const customers = mRoute?.children?.find(c => c.path === 'customers');
+    const record = mRoute?.children?.find(c => c.path === 'customers/:id');
+    expect(customers?.lazy).toBeDefined();
+    expect(record?.lazy).toBeDefined();
   });
 
   it('renders mobile book nested route', async () => {

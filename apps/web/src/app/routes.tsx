@@ -1,6 +1,9 @@
-import { Outlet, RouteObject } from 'react-router-dom';
+import { RouteObject } from 'react-router-dom';
 import { Home } from './Home';
-import { EmptyState } from '../design-system';
+import { ConsoleShell } from './shells/ConsoleShell';
+import { CrmShell } from './shells/CrmShell';
+import { LaterModule } from './shells/LaterModule';
+import { MobileShell } from './shells/MobileShell';
 
 export const routes: RouteObject[] = [
   {
@@ -23,7 +26,7 @@ export const routes: RouteObject[] = [
   // Mobile routes
   {
     path: 'm',
-    element: <Outlet />,
+    element: <MobileShell />,
     children: [
       {
         path: 'today',
@@ -41,7 +44,14 @@ export const routes: RouteObject[] = [
         path: 'tasks',
         lazy: () => import('../features/crm/screens/MyTasksScreen').then(m => ({ Component: m.MyTasksScreen })),
       },
-      { path: 'customers', element: <EmptyState title="Coming in a later module" /> },
+      {
+        path: 'customers',
+        lazy: () => import('../features/party/screens/CustomersScreen').then(m => ({ Component: m.CustomersScreen })),
+      },
+      {
+        path: 'customers/:id',
+        lazy: () => import('../features/party/screens/CustomerRecordScreen').then(m => ({ Component: m.CustomerRecordScreen })),
+      },
       { path: 'book', lazy: () => import('../features/book/screens/DueCalendarScreen').then(m => ({ Component: m.DueCalendarScreen })) },
       { path: 'dues', lazy: () => import('../features/book/screens/DueCalendarScreen').then(m => ({ Component: m.DueCalendarScreen })) },
       { path: 'book/import', lazy: () => import('../features/book/screens/BookImportScreen').then(m => ({ Component: m.BookImportScreen })) },
@@ -60,21 +70,25 @@ export const routes: RouteObject[] = [
       },
       {
         path: 'me',
-        element: <div>Me Shell</div>,
         children: [
+          {
+            index: true,
+            lazy: () => import('../features/tenancy/screens/SoloPlanScreen').then(m => ({ Component: m.SoloPlanScreen })),
+          },
           {
             path: 'plan',
             lazy: () => import('../features/tenancy/screens/SoloPlanScreen').then(m => ({ Component: m.SoloPlanScreen })),
           },
-          { path: '*', element: <EmptyState title="Coming in a later module" /> },
+          { path: '*', element: <LaterModule /> },
         ],
       },
+      { path: '*', element: <LaterModule /> },
     ],
   },
   // CRM routes
   {
     path: 'crm',
-    element: <Outlet />,
+    element: <CrmShell />,
     children: [
       {
         path: 'leads',
@@ -120,13 +134,13 @@ export const routes: RouteObject[] = [
         path: 'import/duplicates',
         lazy: () => import('../features/party/screens/DuplicateQueueScreen').then(m => ({ Component: m.DuplicateQueueScreen })),
       },
-      { path: '*', element: <EmptyState title="Coming in a later module" /> },
+      { path: '*', element: <LaterModule /> },
     ],
   },
   // Console routes
   {
     path: 'console',
-    element: <div>Console Shell<Outlet /></div>, // Placeholder
+    element: <ConsoleShell />,
     children: [
       {
         path: 'integrations',
@@ -161,12 +175,12 @@ export const routes: RouteObject[] = [
           },
         ],
       },
-      { path: '*', element: <EmptyState title="Coming in a later module" /> },
+      { path: '*', element: <LaterModule /> },
     ],
   },
   // Catch-all for unknown routes
   {
     path: '*',
-    element: <EmptyState title="Coming in a later module" />,
+    element: <LaterModule />,
   },
 ];

@@ -1,0 +1,69 @@
+.shell-lang {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.shell-lang button {
+  min-height: var(--touch-min-height);
+  min-width: var(--touch-min-width);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.shell-lang button[aria-pressed='true'] {
+  background: var(--accent);
+  color: #fff;
+}
+
+.shell-user {
+  position: relative;
+}
+
+.shell-avatar {
+  min-height: var(--touch-min-height);
+  min-width: var(--touch-min-width);
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--info-bg);
+  color: var(--info-fg);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shell-user-panel {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 10;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--ground);
+  color: var(--ink);
+  box-shadow: var(--shadow-md);
+}
+
+.shell-user-name {
+  font-weight: 600;
+}
+
+.shell-user-role {
+  color: var(--caption);
+}
+
+.shell-error {
+  color: var(--bad-fg);
+  background: var(--bad-bg);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+}

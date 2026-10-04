@@ -38,6 +38,12 @@ describe('AC-M00-32 oidc', () => {
     });
   });
 
+  it('AC-M00-32 completeSignIn keeps the display name from the name claim', async () => {
+    const token = fakeJwt({ org: 'ten_acme', roles: ['SALESPERSON'], name: 'Priya Sharma', preferred_username: 'priya.sales' });
+    oidcMock.signinRedirectCallback.mockResolvedValue({ access_token: token });
+    expect(await completeSignIn()).toEqual({ token, tenantId: 'ten_acme', roles: ['SALESPERSON'], name: 'Priya Sharma' });
+  });
+
   it('AC-M00-32 completeSignIn tolerates a token without roles', async () => {
     const token = fakeJwt({ org: 'ten_acme' });
     oidcMock.signinRedirectCallback.mockResolvedValue({ access_token: token });
