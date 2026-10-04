@@ -6,7 +6,8 @@
  *   node scripts/gate.mjs core [jest paths…]     typecheck + eslint + jest (unit/HTTP)
  *   node scripts/gate.mjs int  [jest paths…]     Postgres integration tests (needs the dev DB, see CLAUDE.md)
  *   node scripts/gate.mjs web  [vitest paths…]   typecheck + eslint + vitest
- *   node scripts/gate.mjs all                    core + web + int
+ *   node scripts/gate.mjs smoke                  boot smoke: run built core (/health/live), load built web /login in Chrome
+ *   node scripts/gate.mjs all                    core + web + int + smoke
  * Options: --tests-only (skip typecheck/lint), --max=N (failure lines shown, default 60)
  */
 import { spawnSync } from 'node:child_process';
@@ -97,5 +98,14 @@ if (target === 'web' || target === 'all') {
 }
 if (target === 'int' || target === 'all') {
   step('pg integration', 'apps/core', `npx jest --config jest.int.config.js --silent ${quoted}`, jestSummary, jestFailures, DB);
+}
+if (target === 'smoke' || target === 'all') {
+  const smokeSummary = (out, ok) => {
+    const lines = out.trim().split('\n');
+    return ok ? (lines.pop() ?? '') : (lines.find((l) => /^smoke \w+ failed/.test(l)) ?? 'failed');
+  };
+  const smokeFailures = (out) => out.trim().split('\n').slice(1);
+  step('smoke core', '.', 'node scripts/smoke.mjs core', smokeSummary, smokeFailures);
+  step('smoke web', '.', 'node scripts/smoke.mjs web', smokeSummary, smokeFailures);
 }
 process.exit(failed ? 1 : 0);
