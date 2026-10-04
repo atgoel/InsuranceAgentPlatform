@@ -50,14 +50,25 @@ describe('AC-M04-28 MyTasksScreen (/m/tasks)', () => {
     expect(client.get).toHaveBeenCalledTimes(2);
   });
 
-  it('AC-M04-28 a stale version (412) shows the error state', async () => {
+  it('AC-M04-28 a stale version (412) is shown inline with the server title; the list stays on screen', async () => {
     const client = mockClient({ [PATH]: { groups: GROUPS, counts: { overdue: 1, today: 1, upcoming: 0 } } });
     client.patch.mockRejectedValue(new ApiError(412, 'precondition_failed', 'Changed elsewhere'));
     renderAt(<MyTasksScreen />, client, '/m/tasks');
     await screen.findByText('Call Asha back');
     await userEvent.click(screen.getByRole('checkbox', { name: 'Complete task: Call Asha back' }));
     await userEvent.click(screen.getByRole('button', { name: 'Mark done' }));
-    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent('The task could not be completed: Changed elsewhere');
+    expect(screen.getByText('Call Asha back')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'All types' })).toBeInTheDocument();
+  });
+
+  it('AC-M04-28 groups show their counts and each task its type label and IST due date and time', async () => {
+    renderAt(<MyTasksScreen />, mockClient({ [PATH]: { groups: GROUPS, counts: { overdue: 1, today: 1, upcoming: 0 } } }), '/m/tasks');
+    expect(await screen.findByRole('heading', { level: 2, name: 'Overdue · 1' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Upcoming · 0' })).toBeInTheDocument();
+    const row = screen.getByText('Call Asha back').closest('li') as HTMLElement;
+    expect(within(row).getByText('Call')).toBeInTheDocument();
+    expect(within(row).getByText('3 Oct 2026, 3:30 pm')).toBeInTheDocument();
   });
 
   it('AC-M04-28 403 shows the permission state', async () => {

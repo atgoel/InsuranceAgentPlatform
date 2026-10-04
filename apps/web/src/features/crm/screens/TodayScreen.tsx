@@ -7,8 +7,10 @@ import { createCrmApi, type MyWorkItem } from '../api';
 import { LogQueue } from '../offline/log-queue';
 import { useMyWork } from '../offline/use-my-work';
 import { useQueueReplay } from '../offline/use-queue-replay';
-import { WorkItemRow } from '../components/today/WorkItemRow';
 import { LogSheet } from '../components/today/LogSheet';
+import { TodayHeader } from '../components/today/TodayHeader';
+import { WorkSections } from '../components/today/WorkSections';
+import { firstNameFromToken } from '../components/today/today-greeting';
 import '../styles/TodayScreen.css';
 
 interface TodayScreenProps {
@@ -17,16 +19,26 @@ interface TodayScreenProps {
   now?: () => Date;
 }
 
-/** M01 Today, CRM part (AC-M04-29): counts, my-work with one-tap actions, EN/हि, offline cache and queued logs. */
+function routeFor(item: MyWorkItem): string {
+  if (item.kind === 'DUE') return `/m/dues?policyId=${encodeURIComponent(item.subject.id)}`;
+  if (item.subject.type === 'SERVICING_REQUEST') return '/m/servicing';
+  return `/m/leads/${item.subject.id}`;
+}
+
+/** M01 Today, CRM part (AC-M04-29): date, greeting, KPIs, dues and my-work with one-tap actions, offline cache and queued logs. */
 export function TodayScreen({ storage = sessionStorage, now = () => new Date() }: TodayScreenProps) {
   const api = useApi();
   const crmApi = useMemo(() => createCrmApi(api), [api]);
   const queue = useMemo(() => new LogQueue(storage), [storage]);
-  const { t, lang, setLang } = useT();
+  const { t } = useT();
   const navigate = useNavigate();
   const work = useMyWork(crmApi, storage);
   const { pending, rejected, enqueue } = useQueueReplay(crmApi, queue);
   const [logging, setLogging] = useState<MyWorkItem | undefined>();
+  const [search, setSearch] = useState('');
+  const name = useMemo(() => firstNameFromToken(), []);
+  const query = search.trim().toLowerCase();
+  const items = useMemo(() => work.items.filter((i) => i.title.toLowerCase().includes(query)), [work.items, query]);
 
   if (work.loading) return <LoadingSkeleton />;
   if (work.error?.status === 403) return <PermissionDenied />;
@@ -34,30 +46,11 @@ export function TodayScreen({ storage = sessionStorage, now = () => new Date() }
 
   return (
     <main className="today-screen">
-      <header className="today-header">
-        <h1>{t('today.greeting')}</h1>
-        <div role="group" aria-label={t('today.language')}>
-          <button type="button" aria-pressed={lang === 'en'} onClick={() => setLang('en')}>EN</button>
-          <button type="button" aria-pressed={lang === 'hi'} onClick={() => setLang('hi')}>हि</button>
-        </div>
-      </header>
+      <TodayHeader now={now()} name={name} counts={work.counts} search={search} onSearch={setSearch} />
       {work.offline && <div role="status" className="offline-banner">{t('today.offline_cached')}</div>}
       {pending > 0 && <div role="status" className="queue-banner">{t('today.logs_pending', { count: pending })}</div>}
       {rejected > 0 && <div role="alert" className="queue-banner">{t('today.logs_rejected', { count: rejected })}</div>}
-      <dl className="counts-grid">
-        {(['overdue', 'today', 'hotLeads'] as const).map((k) => (
-          <div key={k} className="count-tile"><dt>{t(`today.${k}`)}</dt><dd>{work.counts[k]}</dd></div>
-        ))}
-      </dl>
-      {work.items.length === 0 ? (
-        <p className="empty-message">{t('today.noWork')}</p>
-      ) : (
-        <ul className="my-work-list">
-          {work.items.map((item) => (
-            <WorkItemRow key={`${item.kind}-${item.id}`} item={item} onOpen={(i) => navigate(i.kind === 'DUE' ? `/m/dues?policyId=${encodeURIComponent(i.subject.id)}` : i.subject.type === 'SERVICING_REQUEST' ? '/m/servicing' : `/m/leads/${i.subject.id}`)} onLog={setLogging} />
-          ))}
-        </ul>
-      )}
+      <WorkSections items={items} filtered={query !== ''} onOpen={(i) => navigate(routeFor(i))} onLog={setLogging} />
       {logging && (
         <LogSheet
           title={logging.title}

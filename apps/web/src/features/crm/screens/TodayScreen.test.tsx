@@ -5,6 +5,7 @@ import { ApiError } from '../../../lib/api/api-error';
 import type { MyWorkItem } from '../api';
 import { TodayScreen } from './TodayScreen';
 import { MemoryStorage, mockClient, renderAt, type MockClient } from '../../../test/render';
+import { setSession, clearSession } from '../../../lib/auth';
 
 const ITEMS: MyWorkItem[] = [
   {
@@ -29,6 +30,22 @@ const ITEMS: MyWorkItem[] = [
 const MY_WORK = { items: ITEMS, counts: { overdue: 2, today: 1, hotLeads: 1 } };
 const NOW = new Date('2026-10-03T09:30:00.000Z');
 const ACTIVITY = '/api/v1/leads/lead_1/activities';
+
+/** An unsigned JWT-shaped token carrying the one claim the screen reads (name). */
+function tokenFor(name: string): string {
+  const payload = btoa(JSON.stringify({ name })).replace(/=+$/, '');
+  return `header.${payload}.signature`;
+}
+const DUE_ITEM: MyWorkItem = {
+  kind: 'DUE',
+  id: 'hp1',
+  title: 'Life cover',
+  subtitle: 'DUE_TODAY',
+  dueAt: '2026-10-05T18:30:00.000Z',
+  priority: 1,
+  subject: { type: 'HELD_POLICY', id: 'hp1' },
+  actions: ['WHATSAPP', 'OPEN'],
+};
 
 describe('AC-M04-29 TodayScreen (/m/today)', () => {
   let online = true;
@@ -55,13 +72,19 @@ describe('AC-M04-29 TodayScreen (/m/today)', () => {
       () => `00000000-0000-4000-8000-00000000000${(n += 1)}` as `${string}-${string}-${string}-${string}-${string}`,
     );
   });
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    clearSession();
+    localStorage.removeItem('ui-lang');
+  });
 
   it('AC-M04-29 shows counts and the my-work list; Call opens the lead (no number is dialled from this screen)', async () => {
     render(mockClient({ '/api/v1/my-work': MY_WORK }));
     expect(await screen.findByText('Asha Verma')).toBeInTheDocument();
-    expect(screen.getAllByRole('definition').map((d) => d.textContent)).toEqual(['2', '1', '1']);
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.getByText('Overdue').parentElement).toHaveTextContent(/^Overdue2$/);
+    expect(screen.getByText('Today').parentElement).toHaveTextContent(/^Today1$/);
+    expect(screen.getByText('Hot leads').parentElement).toHaveTextContent(/^Hot leads1$/);
+    expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(['/m/leads?new=1', '/m/calculators', '/m/tasks']);
     await userEvent.click(within(screen.getByRole('listitem', { name: 'Asha Verma' })).getByRole('button', { name: 'Call' }));
     expect(await screen.findByTestId('location')).toHaveTextContent('/m/leads/lead_1');
   });
@@ -181,14 +204,90 @@ describe('AC-M04-29 TodayScreen (/m/today)', () => {
     expect(storage.getItem('crm:log-queue:v1')).toBeNull();
   });
 
-  it('AC-M04-29 switches between English and Hindi', async () => {
+  it('AC-M04-29 has no language switch of its own (the shell provides it) and follows the chosen language', async () => {
+    localStorage.setItem('ui-lang', 'hi');
     render(mockClient({ '/api/v1/my-work': MY_WORK }));
     await screen.findByText('Asha Verma');
-    await userEvent.click(screen.getByRole('button', { name: 'हि' }));
-    expect(screen.getByRole('button', { name: 'हि' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('शुभ दिन! आज का काम तैयार है।');
+    expect(screen.queryByRole('button', { name: 'हि' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'EN' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('नमस्कार');
     expect(
       within(screen.getByRole('listitem', { name: 'Asha Verma' })).getByRole('button', { name: 'गतिविधि लॉग करें' }),
     ).toBeInTheDocument();
+  });
+
+  it('UI-04 shows the IST date line and a greeting with the first name from the signed-in token', async () => {
+    setSession({ token: tokenFor('Priya Sharma'), tenantId: 'ten_1', roles: ['SALESPERSON'] });
+    render(mockClient({ '/api/v1/my-work': MY_WORK }));
+    await screen.findByText('Asha Verma');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Good afternoon, Priya');
+    expect(screen.getByText('3 Oct 2026')).toBeInTheDocument();
+  });
+
+  it('UI-04 greets without a name when the token has none; date and greeting follow IST, not UTC', async () => {
+    const lateUtc = new Date('2026-10-03T22:00:00.000Z'); // 03:30 on 4 Oct in India
+    renderAt(<TodayScreen storage={storage} now={() => lateUtc} />, mockClient({ '/api/v1/my-work': MY_WORK }), '/m/today');
+    await screen.findByText('Asha Verma');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^Good morning$/);
+    expect(screen.getByText('4 Oct 2026')).toBeInTheDocument();
+  });
+
+  it('UI-04 search filters my work by title; quick actions link to their screens', async () => {
+    render(mockClient({ '/api/v1/my-work': MY_WORK }));
+    await screen.findByText('Asha Verma');
+    const nav = within(screen.getByRole('navigation', { name: 'Quick actions' }));
+    expect(nav.getByRole('link', { name: 'New lead' })).toHaveAttribute('href', '/m/leads?new=1');
+    expect(nav.getByRole('link', { name: 'Needs analysis' })).toHaveAttribute('href', '/m/calculators');
+    expect(nav.getByRole('link', { name: 'My tasks' })).toHaveAttribute('href', '/m/tasks');
+    const box = screen.getByRole('searchbox', { name: 'Search my work' });
+    await userEvent.type(box, 'ravi');
+    expect(screen.queryByText('Asha Verma')).not.toBeInTheDocument();
+    expect(screen.getByText('Ravi Kumar')).toBeInTheDocument();
+    await userEvent.clear(box);
+    await userEvent.type(box, 'zzz');
+    expect(screen.getAllByText('Nothing matches your search')).toHaveLength(2);
+  });
+
+  it('BUG-16 UI-04 dues sit in the Dues and renewals card, show the IST date and never a time', async () => {
+    const servicing: MyWorkItem = {
+      kind: 'TASK',
+      id: 'srv1',
+      title: 'Servicing — ADDRESS_CHANGE',
+      dueAt: '2026-10-05T18:30:00.000Z',
+      priority: 1,
+      subject: { type: 'SERVICING_REQUEST', id: 'srv1' },
+      actions: ['OPEN', 'LOG'],
+    };
+    render(mockClient({ '/api/v1/my-work': { ...MY_WORK, items: [DUE_ITEM, servicing, ITEMS[0] as MyWorkItem] } }));
+    const dues = within(await screen.findByRole('region', { name: 'Dues and renewals' }));
+    expect(dues.getByText('Life cover')).toBeInTheDocument();
+    expect(dues.queryByText('Asha Verma')).not.toBeInTheDocument();
+    expect(dues.getAllByText('6 Oct 2026')).toHaveLength(1);
+    expect(dues.getByRole('button', { name: 'WhatsApp' })).toBeInTheDocument();
+    expect(dues.getByRole('button', { name: 'Open' })).toBeInTheDocument();
+    const work = within(screen.getByRole('region', { name: 'My work' }));
+    expect(work.getByText('Servicing tracker · Address change')).toBeInTheDocument();
+    expect(work.getByText('6 Oct 2026')).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/12:00|midnight|T18:30/i);
+  });
+
+  it('BUG-16 an item with a real time of day shows the time in IST', async () => {
+    const timed: MyWorkItem = { ...(ITEMS[0] as MyWorkItem), dueAt: '2026-10-03T10:00:00.000Z' };
+    render(mockClient({ '/api/v1/my-work': { ...MY_WORK, items: [timed] } }));
+    expect(await screen.findByText('3 Oct 2026, 3:30 pm')).toBeInTheDocument();
+  });
+
+  it('D4 hides proposal items (their module is not built)', async () => {
+    const proposal: MyWorkItem = {
+      kind: 'PROPOSAL',
+      id: 'prop1',
+      title: 'Proposal for Meena',
+      priority: 1,
+      subject: { type: 'PROPOSAL', id: 'prop1' },
+      actions: ['OPEN'],
+    };
+    render(mockClient({ '/api/v1/my-work': { ...MY_WORK, items: [proposal, ITEMS[0] as MyWorkItem] } }));
+    await screen.findByText('Asha Verma');
+    expect(screen.queryByText('Proposal for Meena')).not.toBeInTheDocument();
   });
 });
