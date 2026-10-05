@@ -80,3 +80,12 @@ Findings: `docs/quality/demo-readiness-findings.md`. Plan: `docs/plan/ui-parity-
 - Check every tool limitation you quote in a brief with one command. Do not copy it from an old handover note.
 - At batch start, ask the user once to close heavy external processes (e.g. Codex) before the full gates. Under load, run each full gate once and rerun only the failing files.
 - A revert proof must fail on the assertion under test; the hand-back quotes the failure line. Every wait on a browser or platform promise in scripts has a timeout.
+
+## Lessons from Wave 3 Session B (mandatory, `docs/quality/wave3-sessionB-retro.md`)
+- The plan names each session's batch, owner and owned files before a wave. At session start, run `git worktree list` and `git log -3` before creating worktrees.
+- Infra and network changes are verified on the real protocol path: one real request through it (`curl -k` to the real host and port) and a browser login. "Config valid" is not done.
+- Seed and setup code reconciles existing records (adds missing hosts, URIs, roles); it never skips the whole entry. Test the second run and the many-to-one case.
+- Only the orchestrator changes global settings of the shared stack (issuer, hostnames, images), after the other sessions agree. Announce it before and after, and restore it.
+- Browser checks wait for `/health/live` (or `docker compose up --wait`) after a restart.
+- Filter gate output on the first run: `node scripts/gate.mjs core 2>&1 | grep -E "^(PASS|FAIL)|●"`.
+- If `npm ci` or `node scripts/worktree.mjs check` fails, the agent stops and reports. It does not build on a broken worktree.
