@@ -65,10 +65,12 @@ export class InMemoryHeldPolicyRepository implements HeldPolicyRepository {
     return [...this.rows.of(tx).values()].map((p) => HeldPolicy.restore(structuredClone(p)));
   }
   async findByNumberHash(tx: Transaction, hash: string) {
-    return (await this.all(tx)).find((p) => p.props.policyNumberHash === hash);
+    const found = [...this.rows.of(tx).values()].find((p) => p.policyNumberHash === hash);
+    return found ? HeldPolicy.restore(structuredClone(found)) : undefined;
   }
   async findBySaleRef(tx: Transaction, id: string) {
-    return (await this.all(tx)).find((p) => p.props.saleRef?.policySaleId === id);
+    const found = [...this.rows.of(tx).values()].find((p) => p.saleRef?.policySaleId === id);
+    return found ? HeldPolicy.restore(structuredClone(found)) : undefined;
   }
   async list(tx: Transaction, f: HeldPolicyFilter) {
     const matches = (await this.all(tx)).filter((p) => matchesPolicy(p.props, f)).sort((a, b) => a.props.id.localeCompare(b.props.id));

@@ -9,6 +9,8 @@ export interface FieldCipher {
 
 export class AesGcmFieldCipher implements FieldCipher {
   private masterKey: Buffer;
+  private readonly dataKeys = new Map<string, Buffer>();
+  private readonly lookupKeys = new Map<string, Buffer>();
 
   constructor(masterKey: Buffer) {
     this.masterKey = masterKey;
@@ -57,11 +59,20 @@ export class AesGcmFieldCipher implements FieldCipher {
   }
 
   private deriveDataKey(tenantId: string): Buffer {
-    return Buffer.from(hkdfSync('sha256', this.masterKey, tenantId, 'iap-data-key', 32));
+    return this.derived(this.dataKeys, tenantId, 'iap-data-key');
   }
 
   private deriveLookupKey(tenantId: string): Buffer {
-    return Buffer.from(hkdfSync('sha256', this.masterKey, tenantId, 'iap-lookup-key', 32));
+    return this.derived(this.lookupKeys, tenantId, 'iap-lookup-key');
+  }
+
+  /** HKDF output is deterministic per tenant and purpose, so each key is derived once and reused. */
+  private derived(cache: Map<string, Buffer>, tenantId: string, info: string): Buffer {
+    const cached = cache.get(tenantId);
+    if (cached) return cached;
+    const key = Buffer.from(hkdfSync('sha256', this.masterKey, tenantId, info, 32));
+    cache.set(tenantId, key);
+    return key;
   }
 }
 

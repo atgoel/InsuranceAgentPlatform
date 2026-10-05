@@ -23,7 +23,9 @@ interface UploadInput {
 }
 interface ImportContext {
   principal: Principal;
-  batch: ImportBatch;
+  batchId: string;
+  asOf: string;
+  fileChecksum: string;
   row: ImportRow;
   hash: string;
 }
@@ -98,8 +100,8 @@ export class BookImportService {
       batch.map(mapping);
       const seen = new Set<string>();
       await batch.validate({ validate: () => [] }, { match: (parsed) => this.match(tx, principal, batch, parsed, seen) });
-      const rows = batch.props.rows;
-      for (const row of rows) await this.validateEnrichment(tx, row, { principal, asOf: batch.props.asOf });
+      const { rows, asOf } = batch.props;
+      for (const row of rows) await this.validateEnrichment(tx, row, { principal, asOf });
       batch.replaceRows(rows);
       await this.batches.save(tx, batch);
       return this.view(batch);
@@ -314,15 +316,18 @@ export class BookImportService {
       const batch = await this.mutableBatch(tx, principal, id);
       if (batch.props.state === 'COMMITTED') return;
       this.ensureReady(batch);
+      const { id: batchId, asOf, fileChecksum, rows } = batch.props;
+      const wanted = new Set(rowNos);
       const summary = structuredClone(batch.props.summary);
-      for (const row of batch.props.rows.filter((row) => rowNos.includes(row.rowNo) && !row.committed)) {
+      for (const row of rows.filter((row) => wanted.has(row.rowNo) && !row.committed)) {
         if (row.decision === 'SKIP') {
           summary.skipped++;
           this.rowMetric('skipped');
           continue;
         }
         if (!row.parsed) throw new BusinessRuleError('import_not_ready', 'Validated row is missing');
-        await this.commitRow(tx, { principal, batch, row, hash: this.numberHash(tx, row.parsed.policyNumber) }, row.parsed, summary);
+        const hash = this.numberHash(tx, row.parsed.policyNumber);
+        await this.commitRow(tx, { principal, batchId, asOf, fileChecksum, row, hash }, row.parsed, summary);
       }
       batch.finishRows(rowNos, summary);
       await this.batches.save(tx, batch);
@@ -333,12 +338,12 @@ export class BookImportService {
     let policy = await this.policies.findByNumberHash(tx, context.hash);
     if (policy) {
       await this.scope.policy(tx, context.principal, policy, policy.props.id);
-      if (context.row.decision !== 'UPDATE' || policy.props.asOf >= context.batch.props.asOf) {
+      if (context.row.decision !== 'UPDATE' || policy.props.asOf >= context.asOf) {
         summary.skipped++;
         this.rowMetric('skipped');
         return;
       }
-      await this.updatePolicy(tx, policy, parsed, context.batch.props.asOf);
+      await this.updatePolicy(tx, policy, parsed, context.asOf);
       summary.updated++;
     } else {
       policy = await this.createPolicy(tx, context, parsed, summary);
@@ -369,10 +374,10 @@ export class BookImportService {
     const view = await this.held.registerIn(
       tx,
       context.principal,
-      this.policyInput(parsed, holder.partyId, context.batch.props.asOf),
+      this.policyInput(parsed, holder.partyId, context.asOf),
       'IMPORT',
       {
-        sourceRef: `${context.batch.props.id}:${context.row.rowNo}`,
+        sourceRef: `${context.batchId}:${context.row.rowNo}`,
       },
     );
     const policy = await this.policies.get(tx, view.id);
@@ -398,7 +403,7 @@ export class BookImportService {
 
   private async recordCommission(tx: Transaction, policy: HeldPolicy, parsed: ParsedPolicy, context: ImportContext) {
     if (parsed.commissionAmount === undefined) return;
-    const { principal, batch, row, hash } = context;
+    const { principal, asOf, fileChecksum, row, hash } = context;
     await this.commissions.recordReceived(tx, {
       heldPolicyId: policy.props.id,
       insurerId: policy.props.insurerId,
@@ -407,8 +412,8 @@ export class BookImportService {
       ratePct: parsed.commissionRatePct,
       reason: parsed.commissionRemarks,
       invoiceNo: parsed.invoiceNo,
-      occurredOn: batch.props.asOf,
-      importKey: this.cipher.hash(tx.tenantId, `${batch.props.fileChecksum}:${row.rowNo}:${hash}`),
+      occurredOn: asOf,
+      importKey: this.cipher.hash(tx.tenantId, `${fileChecksum}:${row.rowNo}:${hash}`),
     });
   }
 
