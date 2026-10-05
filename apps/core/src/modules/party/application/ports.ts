@@ -15,6 +15,10 @@ export type { Transaction, RecordScope };
 export { RECORD_SCOPE_PROVIDER } from '../../distribution/application/ports';
 export type { RecordScopeProvider } from '../../distribution/application/ports';
 
+/** M07 publishes the segment id sets (ADR-M03-customer-segments); same token and type as the book module. */
+export { PARTY_BOOK_SEGMENT_READER } from '../../book/application/ports';
+export type { PartyBookSegmentReader } from '../../book/application/ports';
+
 export type PreferredChannel = 'WHATSAPP' | 'SMS' | 'EMAIL' | 'CALL';
 
 export interface FieldCipher {
@@ -29,6 +33,8 @@ export interface PartyListFilter {
   scope: RecordScope;
   tag?: string;
   ids?: string[];
+  /** Ids that must not appear (the M03 no_policy segment). */
+  excludeIds?: string[];
   cursor?: string;
   limit: number;
 }

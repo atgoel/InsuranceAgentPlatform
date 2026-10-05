@@ -80,3 +80,9 @@ export const IMPORT_BATCH_REPOSITORY = Symbol('ImportBatchRepository');
 export const SERVICING_REPOSITORY = Symbol('ServicingRepository');
 export const ALERT_LEDGER = Symbol('AlertLedger');
 export const ISSUED_POLICY_READER = Symbol('IssuedPolicyReader');
+/** M07 §4: id sets for the M03 customer segments (ADR-M03-customer-segments). */
+export interface PartyBookSegmentReader {
+  partyIdsWithDues(tx: Transaction, scope: RecordScope, today: string): Promise<string[]>;
+  partyIdsWithAnyPolicy(tx: Transaction, scope: RecordScope): Promise<string[]>;
+}
+export const PARTY_BOOK_SEGMENT_READER = Symbol('PartyBookSegmentReader');

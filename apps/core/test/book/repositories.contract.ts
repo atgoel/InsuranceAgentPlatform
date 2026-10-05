@@ -1,6 +1,8 @@
 import { HeldPolicy } from '../../src/modules/book/domain/held-policy';
 import { policy } from '../../src/modules/book/domain/test-fixture';
 import { ImportBatch } from '../../src/modules/book/domain/book-import';
+import { BookSegmentReader } from '../../src/modules/book/application/party-book-segment.reader';
+import { PartyRoleLink } from '../../src/modules/party/domain/party-role';
 import { ServicingRequest } from '../../src/modules/book/domain/servicing';
 import {
   AlertLedger,
@@ -150,6 +152,28 @@ export function bookRepositoryContract(label: string, setup: () => Promise<Harne
       await h.run(h.tenantA, (tx) => h.ledger.record(tx, [key, key]));
       expect(await h.run(h.tenantA, (tx) => h.ledger.emittedKeys(tx, [key, 'absent']))).toEqual(new Set([key]));
       expect(await h.run(h.tenantB, (tx) => h.ledger.emittedKeys(tx, [key]))).toEqual(new Set());
+    });
+    it('AC-M03-18 AC-M03-19 segment reader returns due policyholders and any-policy parties', async () => {
+      const mine = (key: string) => id(`seg_${key}`);
+      const insuredLink = (policyId: string): PartyRoleLink[] => [
+        { partyId: mine('insured'), role: 'INSURED', subjectType: 'HELD_POLICY', subjectId: policyId, createdAt: '2026-10-03T00:00:00.000Z' },
+      ];
+      const reader = new BookSegmentReader(h.policies, {
+        rolesForSubject: async (_tx, _type, policyId) => (policyId === id('seg_due') ? insuredLink(policyId) : []),
+      });
+      const seg = (key: string, partyKey: string, extra: Parameters<typeof policy>[0]) =>
+        save(held(`seg_${key}`, { proposerPartyId: mine(partyKey), ...extra }));
+      await seg('due', 'due', { nextDueDate: '2026-10-03' });
+      await seg('terminal', 'terminal', { nextDueDate: '2026-10-03', status: 'CLAIMED' });
+      await seg('seven', 'seven', { nextDueDate: '2026-10-10' });
+      await seg('eight', 'eight', { nextDueDate: '2026-10-11' });
+      const scope = { kind: 'TENANT' as const };
+      const mineOnly = (ids: string[]) => ids.filter((x) => x.startsWith(mine(''))).sort();
+      const dues = await h.run(h.tenantA, (tx) => reader.partyIdsWithDues(tx, scope, '2026-10-03'));
+      expect(mineOnly(dues)).toEqual([mine('due'), mine('seven')]);
+      const any = await h.run(h.tenantA, (tx) => reader.partyIdsWithAnyPolicy(tx, scope));
+      expect(mineOnly(any)).toEqual([mine('due'), mine('eight'), mine('insured'), mine('seven'), mine('terminal')]);
+      expect(await h.run(h.tenantB, (tx) => reader.partyIdsWithAnyPolicy(tx, scope))).toEqual([]);
     });
   });
 }

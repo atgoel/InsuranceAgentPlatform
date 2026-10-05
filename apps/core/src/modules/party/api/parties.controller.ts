@@ -39,7 +39,7 @@ export class PartiesController {
   @Get()
   @RequirePermission('party.read')
   list(@CurrentPrincipal() p: Principal, @Query(new ZodValidationPipe(ListPartiesQuery)) q: z.infer<typeof ListPartiesQuery>) {
-    return q.q ? this.queries.search(p, q.q) : this.queries.list(p, q);
+    return q.q ? this.queries.search(p, q.q, q.segment) : this.queries.list(p, q);
   }
 
   @Get(':id')

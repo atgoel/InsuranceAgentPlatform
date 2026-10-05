@@ -16,6 +16,7 @@ import {
   RoleLinkRepository,
   SuppressionRepository,
   HOUSEHOLD_REPOSITORY,
+  PARTY_BOOK_SEGMENT_READER,
   PARTY_FACADE,
   PARTY_REPOSITORY,
   POLICY_NUMBER_LOOKUP,
@@ -32,6 +33,7 @@ import { SensitivePartyAccessor } from './application/sensitive-party.accessor';
 import { DuplicateService } from './application/duplicate.service';
 import { HouseholdService } from './application/household.service';
 import { PartyFacadeService } from './application/party.facade';
+import { BookSegmentSlot } from './application/book-segment-slot';
 import { AesGcmFieldCipher, fieldMasterKey } from '../../kernel/crypto/aes-gcm-field-cipher';
 export { fieldMasterKey };
 import {
@@ -131,6 +133,8 @@ const services: Provider[] = [
   HouseholdService,
   PartyFacadeService,
   { provide: PARTY_FACADE, useExisting: PartyFacadeService },
+  BookSegmentSlot,
+  { provide: PARTY_BOOK_SEGMENT_READER, useExisting: BookSegmentSlot },
 ];
 
 /** M03 Party & Consent — system of record for customers, consent ledger and reviewed merges. */
@@ -138,7 +142,7 @@ const services: Provider[] = [
   imports: [DistributionModule, TenancyModule],
   controllers: [PartiesController, ConsentsController, DuplicatesController, HouseholdsController],
   providers: [...adapters, ...services],
-  exports: [PARTY_FACADE, FIELD_CIPHER],
+  exports: [PARTY_FACADE, FIELD_CIPHER, PARTY_BOOK_SEGMENT_READER, BookSegmentSlot],
 })
 export class PartyModule implements OnModuleInit {
   constructor(@Inject(PERMISSION_POLICY) private readonly permissions: RolePermissionMatrix) {}

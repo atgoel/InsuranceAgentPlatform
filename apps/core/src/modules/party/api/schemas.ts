@@ -37,6 +37,7 @@ export const ListPartiesQuery = z.object({
   q: z.string().trim().min(1).max(80).optional(),
   tag: z.string().max(40).optional(),
   householdId: z.string().optional(),
+  segment: z.enum(['with_dues', 'no_policy']).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(25),
   cursor: z.string().optional(),
 });

@@ -8,6 +8,7 @@ import { DomainEvent } from '../../kernel/domain/domain-event';
 import { TenancyModule } from '../tenancy/tenancy.module';
 import { DistributionModule } from '../distribution/distribution.module';
 import { PartyModule } from '../party/party.module';
+import { BookSegmentSlot } from '../party/application/book-segment-slot';
 import { CrmModule } from '../crm/crm.module';
 import { MyWorkService } from '../crm/application/my-work.service';
 import { CatalogueModule } from '../catalogue/catalogue.module';
@@ -45,6 +46,7 @@ import { BookImportLookups } from './application/book-import-lookups';
 import { BookPolicyResources, BookImportResources } from './application/book-resources';
 import { ServicingService } from './application/servicing.service';
 import { DueContributor, ServicingContributor } from './application/due-contributor';
+import { BookSegmentReader } from './application/party-book-segment.reader';
 import { RenewalOpportunityJob } from './application/renewal-opportunity.job';
 import { BookSubscribers, UnavailableIssuedPolicyReader } from './application/subscribers';
 import { HeldPoliciesController } from './api/held-policies.controller';
@@ -111,6 +113,7 @@ export const BOOK_PERMISSIONS: Record<string, string[]> = {
     ServicingContributor,
     RenewalOpportunityJob,
     BookSubscribers,
+    BookSegmentReader,
   ],
   exports: [
     HeldPolicyService,
@@ -136,11 +139,14 @@ export class BookModule implements OnModuleInit {
     private readonly work: MyWorkService,
     private readonly dues: DueContributor,
     private readonly servicing: ServicingContributor,
+    private readonly segmentSlot: BookSegmentSlot,
+    private readonly segmentReader: BookSegmentReader,
   ) {}
   onModuleInit() {
     for (const [role, permissions] of Object.entries(BOOK_PERMISSIONS)) this.permissions.grant(role, permissions);
     this.work.registerContributor(this.dues);
     this.work.registerContributor(this.servicing);
+    this.segmentSlot.bind(this.segmentReader);
     for (const type of ['crm.opportunity.issued', 'proposal.policy.issued'])
       this.bus.subscribe(
         type,

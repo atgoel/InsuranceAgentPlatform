@@ -16,6 +16,8 @@ export interface WindowDue {
   status: DueStatus;
   amountPaise: number;
 }
+/** Look-ahead of the "due today" worklist and of the M03 "With dues" segment (M07 §4). */
+export const DUE_LOOKAHEAD_DAYS = 7;
 const CLOSED = ['PAID_UP', 'MATURED', 'SURRENDERED', 'CLAIMED', 'EXPIRED', 'CANCELLED'];
 
 export class DueEngine {

@@ -121,6 +121,10 @@ export class PgPartyRepository implements PartyRepository {
       params.push(f.ids);
       where.push(`id = any($${params.length}::text[])`);
     }
+    if (f.excludeIds) {
+      params.push(f.excludeIds);
+      where.push(`id <> all($${params.length}::text[])`);
+    }
     const offset = offsetOf(f.cursor);
     const rows = await this.load(pg(tx), { where: where.join(' and '), params, orderBy: 'display_name collate "und-x-icu", id', limit: f.limit + 1, offset });
     return pageOf(rows, offset, f.limit);
