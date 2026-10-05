@@ -64,6 +64,15 @@ describe('AC-M00-32 LoginPage', () => {
     expect(oidcMock.signinRedirect).toHaveBeenCalledWith(undefined);
   });
 
+  it('AC-M00-32 hero band holds the product name as the page heading and the pitch', () => {
+    configure(false);
+    renderWithAuth(<LoginPage />, '/login');
+    const hero = screen.getByRole('banner');
+    expect(within(hero).getByRole('heading', { level: 1, name: 'Insurance Agent Platform' })).toBeInTheDocument();
+    expect(within(hero).getByText('Sign in to manage your leads, customers and policy book.')).toBeInTheDocument();
+    expect(within(hero).queryByRole('button')).not.toBeInTheDocument();
+  });
+
   it('AC-M00-32 shows the not-configured error when the authority is missing', () => {
     vi.stubEnv('VITE_OIDC_AUTHORITY', '');
     vi.stubEnv('VITE_OIDC_CLIENT_ID', '');
