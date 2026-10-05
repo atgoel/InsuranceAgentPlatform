@@ -7,10 +7,16 @@ import { FeatureFlagSet } from '../domain/feature-flags';
 import { BrandKit } from '../domain/brand-kit';
 import { TenantDirectory, TenantSettingsRepository } from '../application/ports';
 
+async function addHostIfUnregistered(directory: TenantDirectory, host: string, tenantId: string, now: Date): Promise<void> {
+  if (await directory.findByHost(host)) return;
+  await directory.addHost({ tenantId, host, kind: 'platform_subdomain', verifiedAt: now.toISOString() });
+}
+
 /**
  * Development/test only: materialises the kernel's DEV_TENANTS map into the tenant directory so
  * host resolution has one source of truth. `deps.legalName` (DEV_TENANT_LEGAL_NAME) overrides the host-derived legal name
- * for every seeded tenant. Only tenants missing from the directory are created; existing tenants are never updated.
+ * for every seeded tenant. Only tenants missing from the directory are created; existing tenants (entity, flags, brand kit) are never updated.
+ * For an existing tenant, a host that is not yet registered to any tenant is added, so several hosts can map to one tenant.
  * Production tenants come from provisioning.
  */
 export async function seedStaticTenants(
@@ -19,7 +25,10 @@ export async function seedStaticTenants(
 ): Promise<void> {
   const now = deps.clock.now();
   for (const [host, resolved] of Object.entries(staticTenants)) {
-    if (await deps.directory.findById(resolved.tenantId)) continue;
+    if (await deps.directory.findById(resolved.tenantId)) {
+      await addHostIfUnregistered(deps.directory, host, resolved.tenantId, now);
+      continue;
+    }
     const label = host.split('.')[0] ?? resolved.tenantId;
     await deps.directory.save(
       Tenant.restore({
