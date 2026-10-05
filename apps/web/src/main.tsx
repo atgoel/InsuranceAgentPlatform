@@ -5,6 +5,7 @@ import { App } from './app/App';
 import { AuthProvider } from './lib/auth';
 import { I18nProvider } from './lib/i18n';
 import { ApiProvider, FetchApiClient } from './lib/api';
+import { PwaProvider } from './lib/pwa';
 import { ToastProvider } from './design-system';
 import './design-system/theme.css';
 
@@ -31,7 +32,9 @@ ReactDOM.createRoot(root).render(
       <I18nProvider>
         <ApiProvider client={apiClient}>
           <ToastProvider>
-            <App />
+            <PwaProvider>
+              <App />
+            </PwaProvider>
           </ToastProvider>
         </ApiProvider>
       </I18nProvider>

@@ -1255,4 +1255,7 @@ export const messagesHi = {
   'party.duplicates.page_subtitle': 'विलय की समीक्षा होती है, 30 दिनों तक पलटा जा सकता है और उसका ऑडिट होता है।',
   'party.duplicates.tabs': 'आयात अनुभाग',
   'party.duplicates.queue_tab': 'डुप्लिकेट कतार',
+  'pwa.updateAvailable': 'एक नया संस्करण उपलब्ध है',
+  'pwa.reload': 'पुनः लोड करें',
+  'pwa.install': 'ऐप इंस्टॉल करें',
 } as const;
