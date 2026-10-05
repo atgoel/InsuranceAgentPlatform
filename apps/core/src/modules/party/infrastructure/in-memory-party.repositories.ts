@@ -77,7 +77,7 @@ export class InMemoryPartyRepository implements PartyRepository {
   async list(tx: Transaction, f: PartyListFilter): Promise<{ items: Party[]; nextCursor?: string }> {
     const all = this.active(tx)
       .map((p) => Party.restore(clone(p)))
-      .filter((p) => inScope(p, f.scope) && (!f.tag || p.props.tags.includes(f.tag)) && (!f.ids || f.ids.includes(p.props.id)))
+      .filter((p) => inScope(p, f.scope) && (!f.tag || p.props.tags.includes(f.tag)) && (!f.ids || f.ids.includes(p.props.id)) && !f.excludeIds?.includes(p.props.id))
       .sort((a, b) => a.props.displayName.localeCompare(b.props.displayName) || a.props.id.localeCompare(b.props.id));
     return page(all, f.cursor, f.limit);
   }

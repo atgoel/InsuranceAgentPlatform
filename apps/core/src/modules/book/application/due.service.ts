@@ -1,10 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Principal } from '../../../kernel/tenancy/principal';
 import { addDays, istDate } from '../../../kernel/domain/ist';
-import { DueEngine } from '../domain/due-engine';
+import { DueClassification, DueEngine } from '../domain/due-engine';
+import { HeldPolicy } from '../domain/held-policy';
 import { LIFE_GRACE } from '../domain/premium-schedule';
 import { HeldPolicyProps } from '../domain/held-policy';
-import { HELD_POLICY_REPOSITORY, HeldPolicyRepository, Transaction } from './ports';
+import { HELD_POLICY_REPOSITORY, HeldPolicyRepository, RecordScope, Transaction } from './ports';
+import { classifiedWindow } from './due-window';
 import { BookContext } from './book-context';
 import { BookScope } from './book-scope';
 export interface DueItem {
@@ -65,17 +67,20 @@ export class DueService {
       return { days: [...days].sort(([a], [b]) => a.localeCompare(b)).map(([date, dues]) => ({ date, dues })) };
     });
   }
+  /** The policies the today worklist considers, each classified against `today` (shared with the M03 segment reader). */
+  async classifiedWindow(tx: Transaction, today: string, scope: RecordScope): Promise<{ policy: HeldPolicy; due: DueClassification }[]> {
+    return classifiedWindow(this.policies, this.engine, tx, today, scope);
+  }
   today(p: Principal) {
     return this.ctx.uow.run(p.tenantId, async (tx) => {
       const today = istDate(this.ctx.clock.now());
-      const policies = await this.policies.dueBetween(tx, addDays(today, -30), addDays(today, 7), await this.scope.scopes.resolve(tx, p));
+      const window = await this.classifiedWindow(tx, today, await this.scope.scopes.resolve(tx, p));
       const result: {
         dueToday: DueItem[];
         inGrace: DueItem[];
         lapsingSoon: DueItem[];
       } = { dueToday: [], inGrace: [], lapsingSoon: [] };
-      for (const policy of policies) {
-        const due = this.engine.classify(policy.props, today);
+      for (const { policy, due } of window) {
         if (!due.dueDate) continue;
         const item = await this.item(tx, policy.props, due.dueDate, due.status);
         if (due.dueDate === today && ['DUE_TODAY', 'RENEWAL_DUE'].includes(due.status)) result.dueToday.push(item);
