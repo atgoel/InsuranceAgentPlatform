@@ -23,4 +23,9 @@ describe('AC-M00 i18n message catalogue', () => {
   it('has no Hindi keys that English lacks', () => {
     expect(Object.keys(messagesHi).filter((k) => !(k in messagesEn))).toEqual([]);
   });
+
+  it('has a Hindi message for every key English defines', () => {
+    const missing = Object.keys(messagesEn).filter((k) => !(k in messagesHi));
+    expect(missing, `Hindi is missing ${missing.length} key(s): ${missing.join(', ')}`).toEqual([]);
+  });
 });
