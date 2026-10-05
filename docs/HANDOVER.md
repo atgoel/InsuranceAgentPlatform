@@ -159,7 +159,7 @@ Orchestrator review of the Codex M07 commit `11c0319` found three problem groups
 - Real browser (D1 agent, vite preview): worker active on `/login`, Keycloak sign-in with the worker active lands on `/m/today`, a second build shows "A new version is available" and Reload works. Not verified: Install app in a real browser (headless Chrome fires no `beforeinstallprompt`) — check on a phone via the D2 profile.
 - Watch: the first sweep run stalled once on the Sign in click (passed on rerun); `shells.test.tsx` AC-M00-32 nav test failed in the B7 agent's two full runs, passes alone — load flake. Web suite under load needs a quiet machine; flaky list above goes to the owners.
 - Lesson: `npm ci` in the main checkout fails with EPERM while the user's Vite on :5173 (main checkout) holds the rolldown binary, and leaves `node_modules` half-deleted; `npm install` repaired it without killing Vite.
-- Next: Session B's live phone-profile check (stack released to it); then Install app on a real phone; remaining Wave 3 is done. Worktrees `../IMF-b7`, `../IMF-d1` removed.
+- Next: Session B's live phone-profile check passed (8569933). Only open Wave 3 item: on a real phone, trust the Caddy CA, then check the service worker over https and Install app in the avatar menu. Worktrees `../IMF-b7`, `../IMF-d1` removed.
 
 ## Next steps and remaining dependencies
 M08 implemented and reviewed on 2026-10-04. User approved decisions 1–13,
