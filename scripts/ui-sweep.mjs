@@ -7,7 +7,12 @@
  *
  * Usage:   node scripts/ui-sweep.mjs [--routes /m/today,/crm/leads] [--personas priya.sales,rahul.manager]
  *                                    [--app http://localhost:8080] [--proto http://localhost:8081]
- *                                    [--out reports/ui/<YYYY-MM-DD>]
+ *                                    [--out reports/ui/<YYYY-MM-DD>] [--ignore-https-errors] [--login-only]
+ * --ignore-https-errors  accept self-signed certificates in every browser context.
+ * --login-only           skip the route sweep. Waits for <app>/health/live (nginx proxies /health/ to core), signs in each
+ *                        persona and prints one line per persona: final URL, status and Authorization header presence of
+ *                        /api/v1/me, /api/v1/tenant and /api/v1/my-work, and the service worker state. One screenshot
+ *                        per persona goes to <out>/img/login__<persona>.png.
  * Needs the stack running (web, core, Keycloak realm iap, prototype) and Chrome installed; it starts nothing.
  * Environment: KEYCLOAK_URL [http://localhost:8180]   CHROME_PATH [auto: channel chrome, then Program Files]
  * Output: <out>/index.html, <out>/results.json, <out>/img/*.png. Add reports/ui/ to .gitignore.
@@ -69,6 +74,10 @@ const DETAILS = [
   ['/crm/customers', '/crm/customers/', '/crm/customers/:id', 'CRMCustomerRecord'],
 ];
 
+const BOOLEAN_FLAGS = ['ignore-https-errors', 'login-only'];
+const LOGIN_APIS = ['/api/v1/me', '/api/v1/tenant', '/api/v1/my-work'];
+const HEALTH_TIMEOUT_MS = 60000;
+
 function parseArgs(argv) {
   const opts = {
     routes: null,
@@ -76,10 +85,17 @@ function parseArgs(argv) {
     app: 'http://localhost:8080',
     proto: 'http://localhost:8081',
     out: join('reports', 'ui', new Date().toISOString().slice(0, 10)),
+    'ignore-https-errors': false,
+    'login-only': false,
   };
   for (let i = 0; i < argv.length; i += 2) {
     const key = argv[i]?.replace(/^--/, '');
     const value = argv[i + 1];
+    if (BOOLEAN_FLAGS.includes(key)) {
+      opts[key] = true;
+      i -= 1;
+      continue;
+    }
     if (!(key in opts) || value === undefined) {
       throw new Error(`Unknown or incomplete argument: ${argv[i]}`);
     }
@@ -119,6 +135,11 @@ function slug(text) {
 // The session lives in sessionStorage, so every visit reuses this one tab (a new tab would be signed out).
 async function signIn(context, app, persona) {
   const page = await context.newPage();
+  await signInOn(page, app, persona);
+  return page;
+}
+
+async function signInOn(page, app, persona) {
   await page.setViewportSize(DESKTOP);
   await page.goto(`${app}/login`, { waitUntil: 'load' });
   await page.getByRole('button', { name: /sign in/i }).first().click();
@@ -128,7 +149,6 @@ async function signIn(context, app, persona) {
   await page.click('#kc-login');
   await page.waitForURL((url) => url.origin === new URL(app).origin && !url.pathname.startsWith('/login'), { timeout: 20000 });
   await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => undefined);
-  return page;
 }
 
 function newRecord() {
@@ -203,7 +223,7 @@ async function clickFirstRow(page, app, prefix) {
   return path.startsWith(prefix) && path.length > prefix.length ? path : null;
 }
 
-async function artboardImage(browser, cache, proto, artboard, route, imgDir) {
+async function artboardImage(browser, cache, proto, artboard, route, imgDir, ignoreHTTPSErrors) {
   if (!artboard) {
     return null;
   }
@@ -212,7 +232,7 @@ async function artboardImage(browser, cache, proto, artboard, route, imgDir) {
   if (cache.has(key)) {
     return cache.get(key);
   }
-  const context = await browser.newContext({ viewport });
+  const context = await browser.newContext({ viewport, ignoreHTTPSErrors });
   const page = await context.newPage();
   await page.goto(`${proto}/#/${artboard}`, { waitUntil: 'load' }).catch(() => undefined);
   await page.waitForTimeout(1000);
@@ -282,7 +302,7 @@ function renderHtml(report, personas, routeLabels, artboards) {
 }
 
 async function sweepPersona(browser, opts, persona, routeList, state) {
-  const context = await browser.newContext({ viewport: DESKTOP });
+  const context = await browser.newContext({ viewport: DESKTOP, ignoreHTTPSErrors: opts['ignore-https-errors'] });
   const page = await signIn(context, opts.app, persona);
   const holder = { current: newRecord() };
   attachRecorders(page, holder);
@@ -300,7 +320,7 @@ async function sweepPersona(browser, opts, persona, routeList, state) {
   for (const [label, artboard, href] of targets) {
     const result = await visit(page, holder, opts.app, href ?? label, label, state.imgDir, persona.username);
     state.results.push(result);
-    state.boards.set(label, await artboardImage(browser, state.cache, opts.proto, artboard, label, state.imgDir));
+    state.boards.set(label, await artboardImage(browser, state.cache, opts.proto, artboard, label, state.imgDir, opts['ignore-https-errors']));
     visits += 1;
     flagged += flagsOf(result).length > 0 ? 1 : 0;
   }
@@ -309,15 +329,98 @@ async function sweepPersona(browser, opts, persona, routeList, state) {
 }
 
 async function sweepAnonymous(browser, opts, state) {
-  const context = await browser.newContext({ viewport: DESKTOP });
+  const context = await browser.newContext({ viewport: DESKTOP, ignoreHTTPSErrors: opts['ignore-https-errors'] });
   const page = await context.newPage();
   const holder = { current: newRecord() };
   attachRecorders(page, holder);
   const result = await visit(page, holder, opts.app, '/login', '/login', state.imgDir, 'anonymous');
   state.results.push(result);
-  state.boards.set('/login', await artboardImage(browser, state.cache, opts.proto, 'Start', '/m/login', state.imgDir));
+  state.boards.set('/login', await artboardImage(browser, state.cache, opts.proto, 'Start', '/m/login', state.imgDir, opts['ignore-https-errors']));
   await context.close();
   console.log(`anonymous: 1 visits, ${flagsOf(result).length > 0 ? 1 : 0} flagged`);
+}
+
+async function waitForHealth(app) {
+  const url = `${app}/health/live`;
+  const deadline = Date.now() + HEALTH_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const status = await fetchStatus(url);
+    if (status === 200) {
+      return;
+    }
+    await new Promise((done) => setTimeout(done, 2000));
+  }
+  throw new Error(`${url} did not return 200 within ${HEALTH_TIMEOUT_MS / 1000}s`);
+}
+
+async function fetchStatus(url) {
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    return response.status;
+  } catch {
+    return 0;
+  }
+}
+
+/** Records, per watched API path, the response status and whether the request carried an Authorization header. */
+function watchLoginApis(page) {
+  const seen = new Map();
+  page.on('response', (response) => {
+    const path = new URL(response.url()).pathname;
+    if (LOGIN_APIS.includes(path)) {
+      const hasAuth = 'authorization' in response.request().headers();
+      seen.set(path, { status: response.status(), hasAuth });
+    }
+  });
+  return seen;
+}
+
+async function serviceWorkerState(page) {
+  return page
+    .evaluate(async () => {
+      if (!('serviceWorker' in navigator)) {
+        return 'none';
+      }
+      const registration = await navigator.serviceWorker.getRegistration();
+      const controller = navigator.serviceWorker.controller ? 'controlled' : 'uncontrolled';
+      if (!registration) {
+        return 'none';
+      }
+      const worker = registration.active ?? registration.waiting ?? registration.installing;
+      return `${controller}, ${worker ? worker.state : 'no-worker'}`;
+    })
+    .catch(() => 'none');
+}
+
+function describeApi(path, seen) {
+  const entry = seen.get(path);
+  const name = path.replace('/api/v1/', '');
+  return entry ? `${name}=${entry.status} auth=${entry.hasAuth ? 'yes' : 'no'}` : `${name}=- auth=-`;
+}
+
+async function loginOnlyPersona(browser, opts, persona, imgDir) {
+  const context = await browser.newContext({ viewport: DESKTOP, ignoreHTTPSErrors: opts['ignore-https-errors'] });
+  const page = await context.newPage();
+  const seen = watchLoginApis(page);
+  await signInOn(page, opts.app, persona);
+  await settle(page);
+  const sw = await serviceWorkerState(page);
+  await page.screenshot({ path: join(imgDir, `login__${slug(persona.username)}.png`) });
+  const apis = LOGIN_APIS.map((path) => describeApi(path, seen)).join(' ');
+  console.log(`${persona.username} url=${page.url()} ${apis} sw=${sw}`);
+  await context.close();
+}
+
+async function runLoginOnly(opts, personas, imgDir) {
+  await waitForHealth(opts.app);
+  const browser = await launchBrowser();
+  try {
+    for (const persona of personas) {
+      await loginOnlyPersona(browser, opts, persona, imgDir);
+    }
+  } finally {
+    await browser.close();
+  }
 }
 
 async function main() {
@@ -325,6 +428,12 @@ async function main() {
   await assertReachable(`${opts.app}/login`, 'Web app');
   await assertReachable(`${KC_URL}/realms/iap`, 'Keycloak');
   const personas = PERSONAS.filter((p) => !opts.personas || opts.personas.includes(p.username));
+  if (opts['login-only']) {
+    const loginImgDir = join(resolve(opts.out), 'img');
+    mkdirSync(loginImgDir, { recursive: true });
+    await runLoginOnly(opts, personas, loginImgDir);
+    return;
+  }
   const routeList = ROUTES.filter(([route]) => !opts.routes || opts.routes.includes(route));
   const detailSpecs = opts.routes ? DETAILS.filter(([, , label]) => opts.routes.includes(label)) : DETAILS;
   const out = resolve(opts.out);
