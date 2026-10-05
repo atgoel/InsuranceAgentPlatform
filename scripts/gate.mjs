@@ -81,6 +81,8 @@ const vitestFailures = (out) => {
   return keep;
 };
 const quoted = paths.map((p) => `"${p}"`).join(' ');
+// vitest runs inside apps/web and filters relative to it, so repo-root paths lose their apps/web/ prefix.
+const webQuoted = paths.map((p) => `"${p.replace(/^(\.\/)?apps[\/]web[\/]/, '')}"`).join(' ');
 
 if (target === 'core' || target === 'all') {
   if (!testsOnly) {
@@ -94,7 +96,7 @@ if (target === 'web' || target === 'all') {
     step('web typecheck', 'apps/web', 'npx tsc --noEmit -p tsconfig.json', tscSummary, tscFailures);
     step('web lint', 'apps/web', 'npx eslint src', eslintSummary, eslintFailures);
   }
-  step('web tests', 'apps/web', `npx vitest run --reporter=default --silent ${quoted}`, vitestSummary, vitestFailures);
+  step('web tests', 'apps/web', `npx vitest run --reporter=default --silent=true ${webQuoted}`, vitestSummary, vitestFailures);
 }
 if (target === 'int' || target === 'all') {
   step('pg integration', 'apps/core', `npx jest --config jest.int.config.js --silent ${quoted}`, jestSummary, jestFailures, DB);
