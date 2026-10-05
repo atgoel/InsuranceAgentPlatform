@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { Button } from '../../design-system';
 import { useT } from '../../lib/i18n';
+import { usePwa } from '../../lib/pwa';
 import { RoleName } from './RoleName';
 import { SignOutButton } from './SignOutButton';
 
@@ -15,6 +17,7 @@ function initialOf(name: string): string {
 /** Avatar button that opens the account panel: user name, role and Sign out. */
 export function UserMenu({ userName, roles }: UserMenuProps) {
   const { t } = useT();
+  const { canInstall, install } = usePwa();
   const [open, setOpen] = useState(false);
   const name = userName ?? t('shell.user');
   return (
@@ -36,6 +39,18 @@ export function UserMenu({ userName, roles }: UserMenuProps) {
             <p className="shell-user-role">
               <RoleName role={roles[0]} />
             </p>
+          )}
+          {canInstall && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setOpen(false);
+                void install();
+              }}
+            >
+              {t('pwa.install')}
+            </Button>
           )}
           <SignOutButton />
         </div>

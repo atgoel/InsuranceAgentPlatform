@@ -3,7 +3,8 @@
  * Boot smoke (WP-E1). Runs the built entry points for real, which unit tests never do.
  *
  *   node scripts/smoke.mjs core   build core, run dist/main.js on a free port, poll GET /health/live
- *   node scripts/smoke.mjs web    build web, serve it with vite preview, load /login in installed Chrome
+ *   node scripts/smoke.mjs web    build web, serve it with vite preview, load /login in installed Chrome,
+ *                 check manifest, sw.js precache and that the service worker activates
  *
  * Prints one summary line on success. On failure prints the reason and the last lines of the child output
  * and exits 1. Child processes are always killed (whole tree on Windows). Needs no database (memory persistence)
@@ -135,6 +136,45 @@ async function checkLoginPage(url) {
   }
 }
 
+async function fetchText(url) {
+  const res = await fetch(url);
+  if (res.status !== 200) throw new Error(`GET ${url} returned ${res.status}`);
+  return res.text();
+}
+
+async function checkPwaFiles(base) {
+  const manifest = JSON.parse(await fetchText(`${base}/manifest.webmanifest`));
+  const sizes = (manifest.icons ?? []).map((i) => `${i.src}|${i.sizes}|${i.purpose ?? ''}`).sort();
+  const wantIcons = ['icons/icon-192.png|192x192|', 'icons/icon-512.png|512x512|', 'icons/icon-maskable-512.png|512x512|maskable'];
+  const fields = { name: 'Insurance Distribution Platform', start_url: '/m/today', display: 'standalone' };
+  for (const [key, want] of Object.entries(fields)) {
+    if (manifest[key] !== want) throw new Error(`manifest ${key} is ${JSON.stringify(manifest[key])}, expected "${want}"`);
+  }
+  if (JSON.stringify(sizes) !== JSON.stringify(wantIcons)) throw new Error(`manifest icons are ${sizes.join(', ')}`);
+  const sw = await fetchText(`${base}/sw.js`);
+  const urls = [...sw.matchAll(/url:\s*"([^"]+)"/g)].map((m) => m[1]);
+  if (urls.length === 0) throw new Error('sw.js precache list is empty');
+  const api = urls.find((u) => u.includes('/api/'));
+  if (api) throw new Error(`sw.js precaches an API url: ${api}`);
+}
+
+async function checkServiceWorker(url) {
+  const browser = await launchBrowser();
+  try {
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: 'load', timeout: TIMEOUT_MS });
+    // serviceWorker.ready never settles without a worker, so bound the wait.
+    const scope = await page.evaluate(async (ms) => {
+      const timeout = new Promise((resolve) => setTimeout(() => resolve(null), ms));
+      const ready = await Promise.race([navigator.serviceWorker.ready, timeout]);
+      return ready && ready.active ? ready.scope : '';
+    }, TIMEOUT_MS);
+    if (!scope.endsWith('/')) throw new Error('service worker did not become active on /login');
+  } finally {
+    await browser.close();
+  }
+}
+
 async function smokeWeb() {
   const cwd = join(root, 'apps/web');
   const outDir = mkdtempSync(join(tmpdir(), 'iap-smoke-web-'));
@@ -152,7 +192,9 @@ async function smokeWeb() {
     const base = `http://127.0.0.1:${port}`;
     await waitFor(child, () => respondsOk(`${base}/login`), `${base}/login to return 200`);
     await checkLoginPage(`${base}/login`);
-    return `web built, /login rendered sign-in UI on port ${port}`;
+    await checkPwaFiles(base);
+    await checkServiceWorker(`${base}/login`);
+    return `web built, /login rendered sign-in UI, manifest + sw.js ok, service worker active on port ${port}`;
   } finally {
     children.forEach(killTree);
     rmSync(outDir, { recursive: true, force: true });

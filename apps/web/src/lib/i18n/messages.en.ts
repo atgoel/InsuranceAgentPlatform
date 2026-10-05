@@ -1272,4 +1272,7 @@ export const messagesEn = {
   'party.duplicates.page_subtitle': 'Merges are reviewed, reversible for 30 days and audited.',
   'party.duplicates.tabs': 'Import sections',
   'party.duplicates.queue_tab': 'Duplicate queue',
+  'pwa.updateAvailable': 'A new version is available',
+  'pwa.reload': 'Reload',
+  'pwa.install': 'Install app',
 } as const;

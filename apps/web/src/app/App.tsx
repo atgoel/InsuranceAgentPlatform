@@ -1,6 +1,7 @@
 import { Navigate, Outlet, RouterProvider, createBrowserRouter, useLocation } from 'react-router-dom';
 import { routes } from './routes';
 import { useAuth } from '../lib/auth';
+import { UpdatePrompt } from './shells/UpdatePrompt';
 import './App.css';
 
 const PUBLIC_PATHS = ['/login', '/auth/callback', '/signup'];
@@ -17,5 +18,10 @@ function AuthGate() {
 const router = createBrowserRouter([{ element: <AuthGate />, children: routes }]);
 
 export function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <UpdatePrompt />
+    </>
+  );
 }
