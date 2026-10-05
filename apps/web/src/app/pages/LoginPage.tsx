@@ -57,16 +57,23 @@ export function LoginPage() {
 
   return (
     <main className="login-page">
-      <Card title={t('app.title')}>
-        <div className="login-body">
-          <p className="login-description">{t('login.description')}</p>
-          {demo && <DemoPersonaPicker username={username} onChange={setUsername} />}
-          {failure && <p role="alert" className="login-error">{failure}</p>}
-          <Button size="lg" loading={redirecting} onClick={start} className="login-submit">
-            {t('login.signIn')}
-          </Button>
+      <header className="login-hero">
+        <div className="login-hero-inner">
+          <h1 className="login-title">{t('app.title')}</h1>
+          <p className="login-pitch">{t('login.description')}</p>
         </div>
-      </Card>
+      </header>
+      <div className="login-panel">
+        <Card>
+          <div className="login-body">
+            {demo && <DemoPersonaPicker username={username} onChange={setUsername} />}
+            {failure && <p role="alert" className="login-error">{failure}</p>}
+            <Button size="lg" loading={redirecting} onClick={start} className="login-submit">
+              {t('login.signIn')}
+            </Button>
+          </div>
+        </Card>
+      </div>
     </main>
   );
 }
