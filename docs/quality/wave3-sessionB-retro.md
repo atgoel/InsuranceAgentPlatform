@@ -37,4 +37,4 @@ Scope: WP-D2 (phone access over HTTPS) and WP-E2 (worktree bootstrap, clean-chec
 ## Follow-ups
 - Real-phone check (`docs/dev/phone-https.md`): CA install, "Install app", service worker over HTTPS.
 - Investigate the post-restart 401 on `/me` and `/my-work`.
-- Proposed: `ui-sweep.mjs --ignore-https-errors --login-only` (learning 6), and an option for a second compose project with its own ports (learning 4). Both need the user's go-ahead.
+- Proposed: `ui-sweep.mjs --ignore-https-errors --login-only` (learning 6), and an option for a second compose project with its own ports (learning 4). Both approved by the user on 2026-10-05; planned as the next batch in `docs/HANDOVER.md`.
