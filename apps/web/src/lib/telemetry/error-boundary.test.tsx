@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ErrorBoundary } from './error-boundary';
 import { ClientTelemetry } from './client-telemetry';
+import { I18nProvider } from '../i18n';
 
 describe('AC-M00-30 ErrorBoundary', () => {
   function ThrowError(): never {
@@ -13,9 +14,9 @@ describe('AC-M00-30 ErrorBoundary', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(
-      <ErrorBoundary>
+      <I18nProvider><ErrorBoundary>
         <ThrowError />
-      </ErrorBoundary>,
+      </ErrorBoundary></I18nProvider>,
     );
 
     expect(screen.getByText(/Something went wrong/)).toBeInTheDocument();
@@ -30,9 +31,9 @@ describe('AC-M00-30 ErrorBoundary', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(
-      <ErrorBoundary telemetry={telemetry}>
+      <I18nProvider><ErrorBoundary telemetry={telemetry}>
         <ThrowError />
-      </ErrorBoundary>,
+      </ErrorBoundary></I18nProvider>,
     );
 
     expect(reportError).toHaveBeenCalled();
