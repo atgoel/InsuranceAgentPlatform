@@ -8,7 +8,7 @@
  * Usage:   node scripts/ui-sweep.mjs [--routes /m/today,/crm/leads] [--personas priya.sales,rahul.manager]
  *                                    [--app http://localhost:8080] [--proto http://localhost:8081]
  *                                    [--out reports/ui/<YYYY-MM-DD>] [--ignore-https-errors] [--login-only]
- * --ignore-https-errors  accept self-signed certificates in every browser context.
+ * --ignore-https-errors  accept self-signed certificates in every browser context and in the Node reachability checks.
  * --login-only           skip the route sweep. Waits for <app>/health/live (nginx proxies /health/ to core), signs in each
  *                        persona and prints one line per persona: final URL, status and Authorization header presence of
  *                        /api/v1/me, /api/v1/tenant and /api/v1/my-work, and the service worker state. One screenshot
@@ -425,6 +425,10 @@ async function runLoginOnly(opts, personas, imgDir) {
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
+  if (opts['ignore-https-errors']) {
+    // Node fetch (reachability and health checks) must accept the same self-signed certificates as the browser.
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  }
   await assertReachable(`${opts.app}/login`, 'Web app');
   await assertReachable(`${KC_URL}/realms/iap`, 'Keycloak');
   const personas = PERSONAS.filter((p) => !opts.personas || opts.personas.includes(p.username));
