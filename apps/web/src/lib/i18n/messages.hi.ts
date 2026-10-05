@@ -101,7 +101,6 @@ export const messagesHi = {
   'nav.section.people': 'लोग',
   'nav.section.setup': 'सेटअप',
   'nav.section.governance': 'शासन',
-  'nav.section.platform': 'प्लेटफ़ॉर्म',
   'nav.pipeline': 'पाइपलाइन',
   'nav.tasks': 'कार्य',
   'nav.campaigns': 'अभियान',
@@ -119,7 +118,6 @@ export const messagesHi = {
   'nav.compliance': 'अनुपालन',
   'nav.commission': 'कमीशन',
   'nav.aiControls': 'एआई नियंत्रण',
-  'nav.operatorTenants': 'ऑपरेटर टेनेंट',
 
   // Auth
   'auth.login': 'लॉगिन',

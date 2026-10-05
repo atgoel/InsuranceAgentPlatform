@@ -40,7 +40,6 @@ export const CONSOLE_NAV: NavEntry[] = [
   { section: 'nav.section.governance', labelKey: 'nav.compliance', to: '/console/compliance', built: false },
   { section: 'nav.section.governance', labelKey: 'nav.commission', to: '/console/commission', built: false },
   { section: 'nav.section.governance', labelKey: 'nav.aiControls', to: '/console/ai-controls', built: false },
-  { section: 'nav.section.platform', labelKey: 'nav.operatorTenants', to: '/console/ops/tenants', permission: 'ops.tenants', built: true },
 ];
 
 export interface NavSection {

@@ -101,7 +101,6 @@ export const messagesEn = {
   'nav.section.people': 'People',
   'nav.section.setup': 'Setup',
   'nav.section.governance': 'Governance',
-  'nav.section.platform': 'Platform',
   'nav.pipeline': 'Pipeline',
   'nav.tasks': 'Tasks',
   'nav.campaigns': 'Campaigns',
@@ -119,7 +118,6 @@ export const messagesEn = {
   'nav.compliance': 'Compliance',
   'nav.commission': 'Commission',
   'nav.aiControls': 'AI controls',
-  'nav.operatorTenants': 'Operator tenants',
 
   // Auth
   'auth.login': 'Login',

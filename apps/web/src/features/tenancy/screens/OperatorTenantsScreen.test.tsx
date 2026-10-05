@@ -52,6 +52,22 @@ function kpi(label: string): string | null | undefined {
   return tile?.querySelector('.kpi-tile-value')?.textContent;
 }
 
+describe('AC-M01-18 OperatorTenantsScreen KPI tiles', () => {
+  it('AC-M01-18 shows exact counts when the list has no next page', async () => {
+    setup();
+    await screen.findByRole('row', { name: /Beta Brokers/ });
+    expect(kpi('Organisation tenants')).toBe('3');
+    expect(kpi('Solo agents')).toBe('1');
+  });
+
+  it('AC-M01-18 shows a plus sign on both tiles when the list response has a nextCursor', async () => {
+    setup({ [TENANTS]: { items: tenants, nextCursor: 'page-2' } });
+    await screen.findByRole('row', { name: /Beta Brokers/ });
+    expect(kpi('Organisation tenants')).toBe('3+');
+    expect(kpi('Solo agents')).toBe('1+');
+  });
+});
+
 describe('AC-M01-18 OperatorTenantsScreen', () => {
   it('AC-M01-18 lists tenants with labelled type, plan name, status chip and formatted creation date (BUG-09, BUG-16)', async () => {
     setup();

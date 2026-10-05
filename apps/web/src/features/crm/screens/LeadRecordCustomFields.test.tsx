@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { screen, within, waitFor } from '@testing-library/react';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { cleanup, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderAt, mockClient } from '../../../test/render';
 import { LeadRecordScreen } from './LeadRecordScreen';
@@ -54,8 +54,17 @@ function render(items: CustomFieldDefinition[], detail: LeadDetailView = lead, p
 }
 
 describe('AC-CR001-08 lead record custom fields', () => {
+  // The first LeadRecordScreen render pays the cold cost of its whole component tree. Pay it once here, outside any
+  // test's wait, so the 1 s findBy* defaults measure only the data hop of each test.
+  beforeAll(async () => {
+    render([], lead, ['crm.lead.read']);
+    await screen.findByText('Rajesh Kumar', {}, { timeout: 10000 });
+    cleanup();
+  });
+
   it('AC-CR001-08 hides Edit without crm.lead.write', async () => {
     render([budgetDef], lead, ['crm.lead.read']);
+    await screen.findByText('Rajesh Kumar');
     expect(await screen.findByText('₹2,500.00')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit custom fields' })).not.toBeInTheDocument();
   });
@@ -63,6 +72,7 @@ describe('AC-CR001-08 lead record custom fields', () => {
   it('AC-CR001-08 shows the section with values and saves with PUT and If-Match of the lead version', async () => {
     const client = render([budgetDef]);
     client.put.mockResolvedValue({ ...lead, version: 5, customFields: { budget: 100050 } });
+    await screen.findByText('Rajesh Kumar');
     expect(await screen.findByText('₹2,500.00')).toBeInTheDocument();
     expect(client.get).toHaveBeenCalledWith('/api/v1/tenant/custom-fields', { query: { entity: 'lead' } });
 
