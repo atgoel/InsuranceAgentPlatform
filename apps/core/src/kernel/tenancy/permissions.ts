@@ -60,6 +60,20 @@ export class RolePermissionMatrix implements PermissionPolicy {
  * - 'ops.*' grants 'ops.log_overrides'
  */
 export function hasPermission(granted: ReadonlySet<string>, required: string): boolean {
+  if (grantsDirectly(granted, required)) {
+    return true;
+  }
+
+  const implyingPermissions = IMPLIED_BY[required] ?? [];
+  return implyingPermissions.some((implying) => grantsDirectly(granted, implying));
+}
+
+/** Permissions implied by holding another one (M02 §3.5: licence.read is implied by member.read). */
+const IMPLIED_BY: Readonly<Record<string, readonly string[]>> = {
+  'distribution.licence.read': ['distribution.member.read'],
+};
+
+function grantsDirectly(granted: ReadonlySet<string>, required: string): boolean {
   if (granted.has(required)) {
     return true;
   }

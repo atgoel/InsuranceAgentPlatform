@@ -49,6 +49,9 @@ export class OrgUnitService {
   }
 }
 
+/** memberCount = members in the node and all its descendants (M02 §6); the repository returns direct counts. */
 function withCounts(node: OrgUnitNode, counts: Record<string, number>): OrgUnitView {
-  return { ...node, memberCount: counts[node.id] ?? 0, children: (node.children ?? []).map((c) => withCounts(c, counts)) };
+  const children = (node.children ?? []).map((c) => withCounts(c, counts));
+  const descendantTotal = children.reduce((sum, child) => sum + child.memberCount, 0);
+  return { ...node, memberCount: (counts[node.id] ?? 0) + descendantTotal, children };
 }
