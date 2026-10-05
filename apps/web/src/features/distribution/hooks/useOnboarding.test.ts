@@ -79,11 +79,9 @@ describe('useOnboarding hook', () => {
 
     const { result } = renderHook(() => useOnboarding({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadTree();
+    await act(async () => {
+      await result.current.loadTree();
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.tree).toEqual(mockTree.root);
     expect(result.current.loading).toBe(false);
@@ -96,15 +94,9 @@ describe('useOnboarding hook', () => {
 
     const { result } = renderHook(() => useOnboarding({ apiClient: mockApiClient }));
 
-    try {
-      act(() => {
-        result.current.loadTree().catch(() => {});
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    } catch {
-      // Expected to throw
-    }
+    await act(async () => {
+      await result.current.loadTree().catch(() => {});
+    });
 
     expect(result.current.error).toBeDefined();
     expect(result.current.error?.code).toBe('server_error');
@@ -116,11 +108,9 @@ describe('useOnboarding hook', () => {
 
     const { result } = renderHook(() => useOnboarding({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.selectMember('mem_1');
+    await act(async () => {
+      await result.current.selectMember('mem_1');
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.selectedMember).toEqual(mockMember);
   });
@@ -131,11 +121,9 @@ describe('useOnboarding hook', () => {
 
     const { result } = renderHook(() => useOnboarding({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.selectMember('mem_invalid');
+    await act(async () => {
+      await result.current.selectMember('mem_invalid');
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.error).toBeDefined();
     expect(result.current.error?.code).toBe('not_found');
@@ -154,17 +142,13 @@ describe('useOnboarding hook', () => {
 
     const { result } = renderHook(() => useOnboarding({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.selectMember('mem_1');
+    await act(async () => {
+      await result.current.selectMember('mem_1');
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    act(() => {
-      result.current.activateMember('mem_1');
+    await act(async () => {
+      await result.current.activateMember('mem_1');
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.selectedMember?.status).toBe('active');
     expect(result.current.activationError).toBeUndefined();
@@ -179,21 +163,13 @@ describe('useOnboarding hook', () => {
 
     const { result } = renderHook(() => useOnboarding({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.selectMember('mem_1');
+    await act(async () => {
+      await result.current.selectMember('mem_1');
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    try {
-      act(() => {
-        result.current.activateMember('mem_1').catch(() => {});
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    } catch {
-      // Expected to throw
-    }
+    await act(async () => {
+      await result.current.activateMember('mem_1').catch(() => {});
+    });
 
     expect(result.current.activationError).toBe('Missing required onboarding items');
     expect(result.current.missingItems).toEqual(['TRAINING', 'CERTIFICATE']);
@@ -205,21 +181,13 @@ describe('useOnboarding hook', () => {
 
     const { result } = renderHook(() => useOnboarding({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.selectMember('mem_1');
+    await act(async () => {
+      await result.current.selectMember('mem_1');
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    try {
-      act(() => {
-        result.current.activateMember('mem_1').catch(() => {});
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    } catch {
-      // Expected to throw
-    }
+    await act(async () => {
+      await result.current.activateMember('mem_1').catch(() => {});
+    });
 
     expect(result.current.activationError).toBeDefined();
     expect(result.current.activationError).toContain('Server error');
@@ -243,25 +211,17 @@ describe('useOnboarding hook', () => {
     const { result } = renderHook(() => useOnboarding({ apiClient: mockApiClient }));
 
     // First attempt - should fail
-    try {
-      act(() => {
-        result.current.activateMember('mem_1').catch(() => {});
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    } catch {
-      // Expected to throw
-    }
+    await act(async () => {
+      await result.current.activateMember('mem_1').catch(() => {});
+    });
 
     expect(result.current.activationError).toBeDefined();
     expect(result.current.missingItems).toHaveLength(1);
 
     // Second attempt - should succeed and clear error
-    act(() => {
-      result.current.activateMember('mem_1');
+    await act(async () => {
+      await result.current.activateMember('mem_1');
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.activationError).toBeUndefined();
     expect(result.current.missingItems).toHaveLength(0);
@@ -272,15 +232,9 @@ describe('useOnboarding hook', () => {
 
     const { result } = renderHook(() => useOnboarding({ apiClient: mockApiClient }));
 
-    try {
-      act(() => {
-        result.current.activateMember('mem_1').catch(() => {});
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    } catch {
-      // Expected to throw
-    }
+    await act(async () => {
+      await result.current.activateMember('mem_1').catch(() => {});
+    });
 
     expect(result.current.activationError).toBeDefined();
   });
