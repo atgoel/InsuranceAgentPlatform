@@ -7,6 +7,11 @@ import { BrandKitScreen } from './BrandKitScreen';
 import type { BrandKitResponse } from '../api';
 
 const BRAND = '/api/v1/tenant/brand-kit';
+const ENTITLEMENTS = '/api/v1/tenant/entitlements';
+
+function entitlements(canHidePoweredBy: boolean) {
+  return { plan: { code: 'SOLO', name: 'Solo', capabilities: [], limits: {}, alertThresholdPct: 75, canHidePoweredBy }, usage: [], flags: [] };
+}
 
 const kit: BrandKitResponse = {
   brandName: 'Test Brand',
@@ -18,7 +23,7 @@ const kit: BrandKitResponse = {
 };
 
 function setup(over: Record<string, unknown> = {}) {
-  const client = mockClient({ [BRAND]: kit, ...over });
+  const client = mockClient({ [BRAND]: kit, [ENTITLEMENTS]: entitlements(true), ...over });
   client.put.mockResolvedValue(kit);
   renderAt(<BrandKitScreen />, client, '/console/brand');
   return client;
@@ -104,5 +109,26 @@ describe('AC-M01-17 BrandKitScreen', () => {
     client.get.mockImplementation(() => new Promise(() => undefined));
     renderAt(<BrandKitScreen />, client, '/console/brand');
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+
+  it('AC-M01-21 disables the Hide badge toggle and explains why when the plan cannot hide it', async () => {
+    const client = setup({ [ENTITLEMENTS]: entitlements(false) });
+    const toggle = await screen.findByRole('checkbox', { name: /Hide "Powered by" badge/ });
+    expect(toggle).toBeDisabled();
+    expect(toggle).not.toBeChecked();
+    expect(screen.getByText('Your plan does not allow hiding the badge.')).toBeInTheDocument();
+    expect(client.get).toHaveBeenCalledWith(ENTITLEMENTS);
+  });
+
+  it('AC-M01-21 enables the toggle when the plan can hide the badge', async () => {
+    setup();
+    expect(await screen.findByRole('checkbox', { name: /Hide "Powered by" badge/ })).toBeEnabled();
+    expect(screen.queryByText('Your plan does not allow hiding the badge.')).not.toBeInTheDocument();
+  });
+
+  it('AC-M01-21 keeps the toggle locked but still loads the screen when the entitlements cannot be read', async () => {
+    setup({ [ENTITLEMENTS]: new ApiError(500, 'server_error', 'Server error') });
+    expect(await screen.findByRole('checkbox', { name: /Hide "Powered by" badge/ })).toBeDisabled();
+    expect(screen.getByDisplayValue('Test Brand')).toBeInTheDocument();
   });
 });

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../../lib/api/api-error';
-import type { createPartyApi, PartyListItem } from './api';
+import type { createPartyApi, CustomerSegmentFilter, PartyListItem } from './api';
 
 type PartyApi = ReturnType<typeof createPartyApi>;
 
 export interface CustomersQuery {
   q?: string;
   tag?: string;
+  segment?: CustomerSegmentFilter;
 }
 
 export interface CustomersListState {
@@ -22,11 +23,11 @@ export function useCustomersList(partyApi: PartyApi, query: CustomersQuery): Cus
   const [error, setError] = useState<ApiError | undefined>();
   const [loading, setLoading] = useState(true);
   const [attempt, setAttempt] = useState(0);
-  const { q, tag } = query;
+  const { q, tag, segment } = query;
 
   useEffect(() => {
     let cancelled = false;
-    partyApi.listParties({ q, tag }).then(
+    partyApi.listParties({ q, tag, segment }).then(
       (result) => {
         if (cancelled) return;
         setItems(result.items);
@@ -42,7 +43,7 @@ export function useCustomersList(partyApi: PartyApi, query: CustomersQuery): Cus
     return () => {
       cancelled = true;
     };
-  }, [partyApi, q, tag, attempt]);
+  }, [partyApi, q, tag, segment, attempt]);
 
   const reload = useCallback(() => {
     setLoading(true);

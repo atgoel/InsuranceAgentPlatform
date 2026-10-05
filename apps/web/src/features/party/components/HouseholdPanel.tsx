@@ -5,6 +5,7 @@ import { useT } from '../../../lib/i18n';
 import { createPartyApi, type PartyListItem } from '../api';
 import { roleSummaryText } from '../partyLabels';
 import { usePartyHousehold } from '../useHouseholdMembers';
+import { CreateOpportunityAction } from './CreateOpportunityAction';
 import { HouseholdMembers } from './HouseholdMembers';
 
 interface HouseholdPanelProps {
@@ -72,6 +73,7 @@ export function HouseholdPanel({ party, onClose, onOpenRecord }: HouseholdPanelP
         <Button variant="primary" onClick={onOpenRecord}>
           {t('party.customers.open_full_record')}
         </Button>
+        <CreateOpportunityAction partyId={party.id} />
       </div>
     </aside>
   );

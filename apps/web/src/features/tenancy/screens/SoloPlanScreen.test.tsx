@@ -33,6 +33,7 @@ describe('AC-M01-20 SoloPlanScreen', () => {
         customFields: 5,
       },
       alertThresholdPct: 75,
+      canHidePoweredBy: false,
     },
     usage: [
       {

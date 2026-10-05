@@ -1,0 +1,22 @@
+.opportunity-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.opportunity-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 4px);
+}
+
+.opportunity-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--caption);
+}
+
+.opportunity-error {
+  margin: 0;
+  color: var(--bad-fg);
+}

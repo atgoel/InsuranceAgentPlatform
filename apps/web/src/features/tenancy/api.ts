@@ -97,6 +97,7 @@ export interface EntitlementsResponse {
     capabilities: string[];
     limits: PlanLimits;
     alertThresholdPct: number;
+    canHidePoweredBy: boolean;
   };
   usage: Array<UsageCounter & { percentUsed?: number }>;
   flags: FeatureFlag[];

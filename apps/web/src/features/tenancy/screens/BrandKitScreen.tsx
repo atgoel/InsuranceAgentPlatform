@@ -45,14 +45,20 @@ export function BrandKitScreen() {
   const [saveError, setSaveError] = useState<string | undefined>();
   const [saved, setSaved] = useState(false);
   const [formData, setFormData] = useState<BrandKitProps>(INITIAL);
+  const [canHideBadge, setCanHideBadge] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    tenancyApi
-      .getBrandKit()
-      .then((kit) => {
+    // The plan flag only gates the badge toggle: if it cannot be read the toggle stays locked, the screen still loads.
+    const canHide = tenancyApi.getEntitlements().then(
+      (entitlements) => entitlements.plan.canHidePoweredBy === true,
+      () => false,
+    );
+    Promise.all([tenancyApi.getBrandKit(), canHide])
+      .then(([kit, canHideBadgeFlag]) => {
         if (cancelled) return;
         setFormData(toProps(kit));
+        setCanHideBadge(canHideBadgeFlag);
         setLoaded(true);
       })
       .catch((err: unknown) => {
@@ -111,7 +117,7 @@ export function BrandKitScreen() {
         </p>
       )}
       <div className="brand-kit-grid">
-        <BrandKitForm value={formData} onChange={handleChange} />
+        <BrandKitForm value={formData} onChange={handleChange} canHideBadge={canHideBadge} />
         <BrandPreview value={formData} />
       </div>
     </PageContainer>

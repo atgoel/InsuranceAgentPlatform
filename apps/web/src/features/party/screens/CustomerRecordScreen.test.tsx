@@ -15,6 +15,7 @@ const PARTY = {
   preferredLanguage: 'hi',
   preferredChannel: 'WHATSAPP',
   ownerMemberId: 'mem_priya',
+  ownerName: 'Priya Nair',
   tags: ['vip'],
   source: { kind: 'LEAD' },
   status: 'ACTIVE',
@@ -43,7 +44,8 @@ const MEMBERS = [
 
 function client(whatsapp: unknown = { allowed: true, reason: 'ok' }): MockClient {
   return mockClient({
-    '/api/v1/me': { permissions: ['party.write'] },
+    '/api/v1/me': { permissions: ['party.write', 'crm.opportunity.write'] },
+    '/api/v1/opportunities': { id: 'opp_new' },
     '/api/v1/parties/cust-1': PARTY,
     '/api/v1/parties': { items: MEMBERS },
     '/api/v1/parties/cust-1/contactability': (opts: { query: { channel: string } }) =>
@@ -64,10 +66,45 @@ describe('AC-M03-16 CustomerRecordScreen (/crm/customers/:id)', () => {
     const header = within(screen.getByRole('region', { name: 'Customer summary' }));
     expect(header.getByText('RK')).toBeInTheDocument();
     expect(header.getByText('Kumar Family')).toBeInTheDocument();
-    expect(header.getByText('Owner: mem_priya')).toBeInTheDocument();
+    expect(header.getByText('Owner: Priya Nair')).toBeInTheDocument();
+    expect(header.queryByText(/mem_priya/)).not.toBeInTheDocument();
     expect(header.getByText('Language: Hindi')).toBeInTheDocument();
     expect(header.getByText('Channel: WhatsApp')).toBeInTheDocument();
     expect(header.getByText('Consent notice 1.0')).toBeInTheDocument();
+  });
+
+  it('AC-M03-20 omits the owner line without error when the owner name is unknown', async () => {
+    const c = mockClient({
+      '/api/v1/me': { permissions: [] },
+      '/api/v1/parties/cust-1': { ...PARTY, ownerName: undefined },
+      '/api/v1/parties': { items: MEMBERS },
+      '/api/v1/parties/cust-1/contactability': { allowed: true, reason: 'ok' },
+      '/api/v1/tenant/custom-fields': { items: [], usage: { active: 0, limit: 5 } },
+    });
+    open(c);
+    const header = within(await screen.findByRole('region', { name: 'Customer summary' }));
+    expect(header.getByText('Language: Hindi')).toBeInTheDocument();
+    expect(header.queryByText(/Owner:/)).not.toBeInTheDocument();
+    expect(header.queryByText(/mem_priya/)).not.toBeInTheDocument();
+  });
+
+  it('AC-M04-31 the record header Create opportunity posts the exact body and goes to the pipeline', async () => {
+    const c = client();
+    open(c);
+    await user.click(await screen.findByRole('button', { name: 'Create opportunity' }));
+    const sheet = within(screen.getByRole('dialog'));
+    await user.type(sheet.getByLabelText('Title'), '  Rajesh - Term  ');
+    await user.type(sheet.getByLabelText('Expected premium (₹)'), '0.07');
+    await user.click(sheet.getByRole('button', { name: 'Create' }));
+
+    expect(await screen.findByTestId('location')).toHaveTextContent('/crm/pipeline');
+    expect(c.post.mock.calls[0][0]).toBe('/api/v1/opportunities');
+    expect(c.post.mock.calls[0][1]).toEqual({
+      partyId: 'cust-1',
+      productInterest: 'TERM_LIFE',
+      title: 'Rajesh - Term',
+      expectedPremiumPaise: 7,
+    });
   });
 
   it('AC-M03-16 the breadcrumb leads back to the customers list of the same shell', async () => {

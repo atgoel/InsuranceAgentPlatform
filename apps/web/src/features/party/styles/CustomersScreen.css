@@ -178,10 +178,13 @@
 }
 
 .household-panel .panel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
   padding: var(--spacing-lg);
   border-top: 1px solid var(--line);
 }
 
-.household-panel .panel-actions button {
+.household-panel .panel-actions > button {
   width: 100%;
 }

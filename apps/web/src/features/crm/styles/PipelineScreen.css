@@ -99,6 +99,12 @@
   color: var(--accent, #1f5fbf);
 }
 
+.opp-owner {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.8rem;
+  color: var(--caption, #5f6776);
+}
+
 .opp-meta {
   margin: 0.25rem 0 0.75rem 0;
   font-size: 0.8rem;
