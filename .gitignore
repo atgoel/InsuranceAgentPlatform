@@ -9,3 +9,4 @@ reports/tmp/
 reports/ui/
 *.tsbuildinfo
 .tmp/
+infra/dev/stack2.env
