@@ -3,6 +3,8 @@
 	# Never reach for ACME: this is a LAN name or IP, signed by the local CA.
 	local_certs
 	skip_install_trust
+	# Clients send no SNI for an IP address (RFC 6066), so pick the phone host's certificate by default.
+	default_sni {$IAP_PHONE_HOST}
 }
 
 # The web app (nginx proxies /api to core and keeps the Host header for tenant lookup).
