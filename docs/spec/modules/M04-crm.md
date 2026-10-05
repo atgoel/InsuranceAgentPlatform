@@ -298,7 +298,7 @@ Steps (one unit of work, outbox + audit inside):
 | POST ✱ | `/leads/{id}/party-link` | `crm.lead.write` | `{ partyId }` → `LeadDetailView` |
 | POST ✱ | `/leads/{id}/conversion` | `crm.lead.convert` | `{ partyChoice, productInterest, expectedPremiumPaise, startStage }` → 201 `{ opportunityId, partyId }` |
 | GET | `/opportunities?view=board&owner=&product=` | `crm.opportunity.read` | board cards are `OpportunityView` with `ownerName?` from `SellerDirectory.displayNames` (ADR-009); `{ columns: BoardColumn[], closed: { issued: number, lost: number }, stats: { openCount, openExpectedPremiumPaise, medianDaysToIssue: number \| null, winRate90d: number \| null } }` |
-| POST ✱ | `/opportunities` | `crm.opportunity.write` | `{ partyId, productInterest: ProductLine, title: string(3..120), expectedPremiumPaise: integer ≥ 0 }` → 201 `OpportunityView`; opens DISCOVERY with the caller as owner; party missing or outside the caller's record scope → 404 `not_found` (ADR-009) |
+| POST ✱ | `/opportunities` | `crm.opportunity.write` | `{ partyId, productInterest: ProductLine, title: string(3..120), expectedPremiumPaise: integer ≥ 0 }` → 201 `OpportunityView`; opens DISCOVERY with the caller as owner; party missing or outside the caller's record scope → 404 `party_not_found`; caller without a member id → 403 `member_required` (ADR-009) |
 | POST ✱ | `/opportunities/{id}/stage-transitions` | `crm.opportunity.write` | `{ to }` → `OpportunityView` (422 `issued_requires_insurer_confirmation`) |
 | POST ✱ | `/opportunities/{id}/loss` | `crm.opportunity.write` | `{ reason }` → `OpportunityView` |
 | GET | `/tasks?mine=true&bucket=&kind=&owner=&limit=&cursor=` | `crm.task.read` | `{ groups: [{ bucket, items: TaskView[] }], counts: { overdue, today, upcoming } }` |
