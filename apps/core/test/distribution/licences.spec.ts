@@ -22,6 +22,24 @@ describe('Licences endpoints (AC-M02-08, 09, 13)', () => {
     await testApp.close();
   });
 
+  describe('GET /licences/expiring permission (M02 §3.5)', () => {
+    it('AC-M02-10 member.read implies licence.read: BRANCH_MANAGER gets 200, SALESPERSON without member.read gets 403', async () => {
+      const get = (roles: string[]) =>
+        testApp.http
+          .get('/api/v1/licences/expiring')
+          .set('Host', 'acme.iap.test')
+          .set('Authorization', `Bearer ${tokenFor({ tenantId: 'ten_acme', roles })}`);
+
+      const manager = await get(['BRANCH_MANAGER']);
+      const operations = await get(['OPS']);
+      const salesperson = await get(['SALESPERSON']);
+
+      expect(manager.status).toBe(200);
+      expect(operations.status).toBe(200);
+      expect(salesperson.status).toBe(403);
+    });
+  });
+
   describe('POST /members/{id}/licences', () => {
     it('records a valid licence for a member', async () => {
       const token = tokenFor({

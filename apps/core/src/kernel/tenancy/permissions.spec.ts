@@ -95,6 +95,15 @@ describe('permissions (AC-M00-19)', () => {
       expect(hasPermission(granted, 'ops.debug_tokens')).toBe(true);
     });
 
+    it('AC-M00-19 member.read implies licence.read, but not the reverse or licence.write', () => {
+      const memberReader = new Set(['distribution.member.read']);
+
+      expect(hasPermission(memberReader, 'distribution.licence.read')).toBe(true);
+      expect(hasPermission(memberReader, 'distribution.licence.write')).toBe(false);
+      expect(hasPermission(new Set(['distribution.licence.read']), 'distribution.member.read')).toBe(false);
+      expect(hasPermission(new Set(['distribution.self.read']), 'distribution.licence.read')).toBe(false);
+    });
+
     it('denies when empty set is provided', () => {
       const granted = new Set<string>();
 

@@ -56,6 +56,32 @@ describe('OrgUnits endpoints (AC-M02-01, AC-M02-13)', () => {
       expect(typeof response.body.root.memberCount).toBe('number');
     });
 
+    it('AC-M02-01 memberCount of each node includes members in all its descendants', async () => {
+      const token = tokenFor({ tenantId: 'ten_acme', roles: ['TENANT_ADMIN'] });
+      const auth = `Bearer ${token}`;
+      const create = (path: string, body: object) =>
+        testApp.http.post(path).set('Idempotency-Key', newIdempotencyKey()).set('Host', 'acme.iap.test').set('Authorization', auth).send(body);
+      const region = await create('/api/v1/org-units', { parentId: 'ou_root', kind: 'REGION', name: 'Count Region' });
+      const branch = await create('/api/v1/org-units', { parentId: region.body.id, kind: 'BRANCH', name: 'Count Branch' });
+      expect(region.status).toBe(201);
+      expect(branch.status).toBe(201);
+      const phones = ['+919876500101', '+919876500102', '+919876500103'];
+      const placements = [branch.body.id, branch.body.id, region.body.id];
+      for (const [i, orgUnitId] of placements.entries()) {
+        const res = await create('/api/v1/members', { displayName: `Counted ${i}`, phone: phones[i], roles: ['SALESPERSON'], salespersonType: 'EMPLOYEE', orgUnitId });
+        expect(res.status).toBe(201);
+      }
+
+      const response = await testApp.http.get('/api/v1/org-units').set('Host', 'acme.iap.test').set('Authorization', auth);
+
+      expect(response.status).toBe(200);
+      const regionNode = response.body.root.children.find((c: { id: string }) => c.id === region.body.id);
+      expect(response.body.root.memberCount).toBe(3);
+      expect(regionNode.memberCount).toBe(3);
+      expect(regionNode.children[0].id).toBe(branch.body.id);
+      expect(regionNode.children[0].memberCount).toBe(2);
+    });
+
     it('AC-M02-13 enforces tenant isolation: B cannot read A units', async () => {
       const tokenAcme = tokenFor({
         tenantId: 'ten_acme',
