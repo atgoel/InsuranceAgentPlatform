@@ -28,6 +28,7 @@ import { DuplicateDetector } from './application/duplicate-detector';
 import { PartyWriter } from './application/party-writer';
 import { PartyService } from './application/party.service';
 import { PartyQueryService } from './application/party-query.service';
+import { PartyListItems } from './application/party-list-items';
 import { ConsentService } from './application/consent.service';
 import { SensitivePartyAccessor } from './application/sensitive-party.accessor';
 import { DuplicateService } from './application/duplicate.service';
@@ -126,6 +127,7 @@ const services: Provider[] = [
   DuplicateDetector,
   PartyWriter,
   PartyService,
+  PartyListItems,
   PartyQueryService,
   ConsentService,
   SensitivePartyAccessor,
