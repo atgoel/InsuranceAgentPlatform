@@ -56,11 +56,9 @@ describe('useMembers hook', () => {
 
     const { result } = renderHook(() => useMembers({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadMembers();
+    await act(async () => {
+      await result.current.loadMembers();
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.members).toEqual([mockMember]);
     expect(result.current.loading).toBe(false);
@@ -73,11 +71,9 @@ describe('useMembers hook', () => {
 
     const { result } = renderHook(() => useMembers({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadMembers();
+    await act(async () => {
+      await result.current.loadMembers();
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.error).toBeDefined();
     expect(result.current.error?.code).toBe('server_error');
@@ -92,11 +88,9 @@ describe('useMembers hook', () => {
 
     const { result } = renderHook(() => useMembers({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadMembers({ status: 'active' });
+    await act(async () => {
+      await result.current.loadMembers({ status: 'active' });
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect((mockApiClient.get as Mock).mock.calls[0][1]).toEqual({
       query: {
@@ -118,22 +112,18 @@ describe('useMembers hook', () => {
 
     const { result } = renderHook(() => useMembers({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadMembers();
+    await act(async () => {
+      await result.current.loadMembers();
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    act(() => {
-      result.current.inviteMember({
+    await act(async () => {
+      await result.current.inviteMember({
         displayName: 'Jane Seller',
         phone: '+91-1234-5678-9012',
         roles: ['SALESPERSON'],
         orgUnitId: 'ou_branch1',
       });
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.members).toContain(newMember);
   });
@@ -145,17 +135,13 @@ describe('useMembers hook', () => {
 
     const { result } = renderHook(() => useMembers({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadMembers();
+    await act(async () => {
+      await result.current.loadMembers();
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    act(() => {
-      result.current.transitionMemberStatus('mem_1', 'suspended', 'Performance issues');
+    await act(async () => {
+      await result.current.transitionMemberStatus('mem_1', 'suspended', 'Performance issues');
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.members[0].status).toBe('suspended');
   });
@@ -165,11 +151,9 @@ describe('useMembers hook', () => {
 
     const { result } = renderHook(() => useMembers({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadMembers();
+    await act(async () => {
+      await result.current.loadMembers();
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.error).toBeDefined();
     expect(result.current.error?.code).toBe('unknown');
@@ -181,16 +165,14 @@ describe('useMembers hook', () => {
 
     const { result } = renderHook(() => useMembers({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadMembers({
+    await act(async () => {
+      await result.current.loadMembers({
         orgUnitId: 'ou_branch1',
         role: 'SALESPERSON',
         salespersonType: 'ISP',
         q: 'John',
       });
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect((mockApiClient.get as Mock).mock.calls[0][1]).toEqual({
       query: {

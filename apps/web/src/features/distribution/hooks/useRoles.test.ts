@@ -60,11 +60,9 @@ describe('useRoles hook', () => {
 
     const { result } = renderHook(() => useRoles({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadRoles();
+    await act(async () => {
+      await result.current.loadRoles();
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.roles).toEqual([mockRole]);
     expect(result.current.loading).toBe(false);
@@ -77,11 +75,9 @@ describe('useRoles hook', () => {
 
     const { result } = renderHook(() => useRoles({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadRoles();
+    await act(async () => {
+      await result.current.loadRoles();
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.error).toBeDefined();
     expect(result.current.error?.code).toBe('server_error');
@@ -93,11 +89,9 @@ describe('useRoles hook', () => {
 
     const { result } = renderHook(() => useRoles({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadRolePreview('BRANCH_MANAGER');
+    await act(async () => {
+      await result.current.loadRolePreview('BRANCH_MANAGER');
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.rolePreview).toEqual(mockRolePreview);
   });
@@ -108,11 +102,9 @@ describe('useRoles hook', () => {
 
     const { result } = renderHook(() => useRoles({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadRolePreview('UNKNOWN_ROLE');
+    await act(async () => {
+      await result.current.loadRolePreview('UNKNOWN_ROLE');
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.rolePreview).toBeUndefined();
   });
@@ -130,17 +122,13 @@ describe('useRoles hook', () => {
 
     const { result } = renderHook(() => useRoles({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadRoles();
+    await act(async () => {
+      await result.current.loadRoles();
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    act(() => {
-      result.current.updateRolePermissions('BRANCH_MANAGER', updatedRole.permissions, mockRole.etag);
+    await act(async () => {
+      await result.current.updateRolePermissions('BRANCH_MANAGER', updatedRole.permissions, mockRole.etag);
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const updated = result.current.roles.find((r) => r.role === 'BRANCH_MANAGER');
     expect(updated?.version).toBe(2);
@@ -154,21 +142,13 @@ describe('useRoles hook', () => {
 
     const { result } = renderHook(() => useRoles({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadRoles();
+    await act(async () => {
+      await result.current.loadRoles();
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    try {
-      act(() => {
-        result.current.updateRolePermissions('BRANCH_MANAGER', [...mockRole.permissions, 'distribution.member.write'], 'v_old').catch(() => {});
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    } catch {
-      // Expected to throw
-    }
+    await act(async () => {
+      await result.current.updateRolePermissions('BRANCH_MANAGER', [...mockRole.permissions, 'distribution.member.write'], 'v_old').catch(() => {});
+    });
 
     // Verify the put was called with the stale etag
     expect((mockApiClient.put as Mock).mock.calls[0][2]).toEqual({
@@ -181,11 +161,9 @@ describe('useRoles hook', () => {
 
     const { result } = renderHook(() => useRoles({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadRoles();
+    await act(async () => {
+      await result.current.loadRoles();
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.error).toBeDefined();
     expect(result.current.error?.code).toBe('unknown');
@@ -202,19 +180,15 @@ describe('useRoles hook', () => {
 
     const { result } = renderHook(() => useRoles({ apiClient: mockApiClient }));
 
-    act(() => {
-      result.current.loadRoles();
+    await act(async () => {
+      await result.current.loadRoles();
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.roles).toHaveLength(2);
 
-    act(() => {
-      result.current.updateRolePermissions('BRANCH_MANAGER', updatedRole1.permissions, role1.etag);
+    await act(async () => {
+      await result.current.updateRolePermissions('BRANCH_MANAGER', updatedRole1.permissions, role1.etag);
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const branchManagerRole = result.current.roles.find((r) => r.role === 'BRANCH_MANAGER');
     const salesManagerRole = result.current.roles.find((r) => r.role === 'SALES_MANAGER');
