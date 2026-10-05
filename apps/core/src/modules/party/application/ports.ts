@@ -12,7 +12,8 @@ import { RecordScope } from '../../distribution/application/ports';
 
 export type { Transaction, RecordScope };
 /** Record scope comes from M02 (published port) — the same token, so DI resolves M02's resolver. */
-export { RECORD_SCOPE_PROVIDER } from '../../distribution/application/ports';
+export { RECORD_SCOPE_PROVIDER, SELLER_DIRECTORY } from '../../distribution/application/ports';
+export type { SellerDirectory } from '../../distribution/application/ports';
 export type { RecordScopeProvider } from '../../distribution/application/ports';
 
 /** M07 publishes the segment id sets (ADR-M03-customer-segments); same token and type as the book module. */

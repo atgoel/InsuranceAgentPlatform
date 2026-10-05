@@ -1,19 +1,27 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CustomFieldValidator } from '../../../kernel/custom-fields';
-import { NotFoundError, PreconditionFailedError } from '../../../kernel/errors/domain-errors';
+import { ForbiddenError, NotFoundError, PreconditionFailedError, ValidationError } from '../../../kernel/errors/domain-errors';
 import { DomainEvent } from '../../../kernel/domain/domain-event';
 import { Principal } from '../../../kernel/tenancy/principal';
+import { Money } from '../../../kernel/domain/money';
 import { ProductLine } from '../domain/lead';
 import { Opportunity, OpportunityStage } from '../domain/opportunity';
 import { LostReason } from '../domain/lead';
 import { CRM_EVENTS } from '../domain/events';
-import { CRM_PORT_FACTORY, OPPORTUNITY_REPOSITORY, OpportunityLookup, OpportunityRepository, OpportunitySnapshot, RECORD_SCOPE_PROVIDER, RecordScopeProvider, Transaction } from './ports';
+import { CRM_PORT_FACTORY, OPPORTUNITY_REPOSITORY, PARTY_FACADE, PartyFacade, SELLER_DIRECTORY, SellerDirectory, OpportunityLookup, OpportunityRepository, OpportunitySnapshot, RECORD_SCOPE_PROVIDER, RecordScopeProvider, Transaction } from './ports';
 import { DefaultCrmPortFactory } from './crm-port';
 import { CrmContext } from './crm-context';
 import { inScope } from './crm-scope';
 
 const OPEN_STAGES: OpportunityStage[] = ['DISCOVERY', 'QUOTE_SHARED', 'PROPOSAL_COMPLETE', 'INSURER_PENDING'];
 const DAY_MS = 86_400_000;
+
+export interface CreateOpportunityInput {
+  partyId: string;
+  productInterest: ProductLine;
+  title: string;
+  expectedPremiumPaise: number;
+}
 
 export interface PolicyIssuedEvent {
   proposalId: string;
@@ -28,6 +36,8 @@ export class OpportunityService implements OpportunityLookup {
     @Inject(OPPORTUNITY_REPOSITORY) private readonly opportunities: OpportunityRepository,
     @Inject(RECORD_SCOPE_PROVIDER) private readonly scopes: RecordScopeProvider,
     @Inject(CRM_PORT_FACTORY) private readonly ports: DefaultCrmPortFactory,
+    @Inject(PARTY_FACADE) private readonly parties: PartyFacade,
+    @Inject(SELLER_DIRECTORY) private readonly sellers: SellerDirectory,
     private readonly ctx: CrmContext,
   ) {}
 
@@ -35,9 +45,11 @@ export class OpportunityService implements OpportunityLookup {
     return this.ctx.uow.run(principal.tenantId, async (tx) => {
       const now = this.ctx.clock.now();
       const all = await this.opportunities.board(tx, { scope: await this.scopes.resolve(tx, principal), ...filter });
+      const names = await this.sellers.displayNames(tx, all.map((o) => o.props.ownerMemberId));
       const columns = OPEN_STAGES.map((stage) => {
         const items = all.filter((o) => o.props.stage === stage);
-        return { stage, count: items.length, totalExpectedPremiumPaise: sumPaise(items), items: items.map((o) => opportunityView(o, now)) };
+        const cards = items.map((o) => opportunityView(o, now, names[o.props.ownerMemberId]));
+        return { stage, count: items.length, totalExpectedPremiumPaise: sumPaise(items), items: cards };
       });
       const open = all.filter((o) => OPEN_STAGES.includes(o.props.stage));
       return {
@@ -45,6 +57,34 @@ export class OpportunityService implements OpportunityLookup {
         closed: { issued: all.filter((o) => o.props.stage === 'ISSUED').length, lost: all.filter((o) => o.props.stage === 'LOST').length },
         stats: { openCount: open.length, openExpectedPremiumPaise: sumPaise(open), medianDaysToIssue: medianDaysToIssue(all), winRate90d: winRate(all, now) },
       };
+    });
+  }
+
+  /** Opens a DISCOVERY opportunity for an in-scope customer; the caller owns it (M04 route table, ADR-009). */
+  create(principal: Principal, input: CreateOpportunityInput) {
+    if (!Number.isInteger(input.expectedPremiumPaise) || input.expectedPremiumPaise < 0) {
+      throw new ValidationError('invalid_premium', 'Expected premium must be a whole number of paise');
+    }
+    return this.ctx.uow.run(principal.tenantId, async (tx) => {
+      if (!principal.memberId) throw new ForbiddenError('member_required', 'Only a member can open an opportunity');
+      const party = await this.parties.summary(tx, input.partyId);
+      if (!party || !inScope(party, await this.scopes.resolve(tx, principal))) throw new NotFoundError('party', input.partyId);
+      const now = this.ctx.clock.now();
+      const opportunity = Opportunity.open({
+        id: this.ctx.ids.next('opp'), partyId: input.partyId, productInterest: input.productInterest, title: input.title,
+        expectedPremium: Money.ofPaise(input.expectedPremiumPaise), startStage: 'DISCOVERY',
+        ownerMemberId: principal.memberId, orgUnitId: principal.orgUnitId, now,
+      });
+      await (await this.ports.forTenant(tx.tenantId)).saveOpportunity(tx, opportunity);
+      await this.ctx.recorder.record(tx, {
+        event: {
+          type: CRM_EVENTS.OPPORTUNITY_CREATED, subject: opportunity.props.id,
+          data: { opportunityId: opportunity.props.id, partyId: input.partyId, productInterest: input.productInterest, stage: 'DISCOVERY' },
+        },
+        audit: { action: CRM_EVENTS.OPPORTUNITY_CREATED, entityType: 'opportunity', entityId: opportunity.props.id },
+      });
+      const names = await this.sellers.displayNames(tx, [principal.memberId]);
+      return opportunityView(opportunity, now, names[principal.memberId]);
     });
   }
 
@@ -143,11 +183,11 @@ export class OpportunityService implements OpportunityLookup {
   }
 }
 
-export function opportunityView(o: Opportunity, now: Date) {
+export function opportunityView(o: Opportunity, now: Date, ownerName?: string) {
   // Custom fields are deliberately left out of board/move views (they would be unmasked); the detail view adds the visible set.
   const { customFields, ...p } = o.props;
   void customFields;
-  return { ...p, expectedPremium: p.expectedPremium.toJSON(), ageInStageDays: o.ageInStageDays(now) };
+  return { ...p, ownerName, expectedPremium: p.expectedPremium.toJSON(), ageInStageDays: o.ageInStageDays(now) };
 }
 
 function sumPaise(items: Opportunity[]): number {

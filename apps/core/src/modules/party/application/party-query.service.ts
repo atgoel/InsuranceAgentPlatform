@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CustomFieldValidator, CustomFieldValues } from '../../../kernel/custom-fields';
 import { Principal } from '../../../kernel/tenancy/principal';
 import { Party } from '../domain/party';
 import { ContactPointFactory } from '../domain/contact-point';
@@ -7,9 +6,11 @@ import { normaliseName } from '../domain/name-matching';
 import {
   FIELD_CIPHER, FieldCipher, HOUSEHOLD_REPOSITORY, HouseholdRepository, PARTY_REPOSITORY, POLICY_NUMBER_LOOKUP, PartyRepository, PolicyNumberLookup,
   PARTY_BOOK_SEGMENT_READER, PartyBookSegmentReader,
-  RECORD_SCOPE_PROVIDER, ROLE_LINK_REPOSITORY, RecordScopeProvider, RoleLinkRepository, Transaction,
+  RECORD_SCOPE_PROVIDER, RecordScopeProvider, Transaction,
 } from './ports';
 import { PartyContext } from './party-context';
+import { PartyListItem, PartyListItems } from './party-list-items';
+export type { PartyListItem } from './party-list-items';
 import { inScope } from './party-scope';
 import { istDate } from '../../../kernel/domain/ist';
 import { RecordScope } from './ports';
@@ -30,18 +31,6 @@ export function classifyQuery(raw: string): QueryKind {
   return 'name';
 }
 
-export interface PartyListItem {
-  id: string;
-  displayName: string;
-  primaryMobileMasked?: string;
-  householdName?: string;
-  rolesSummary: string[];
-  tags: string[];
-  ownerMemberId?: string;
-  /** CR-001: P2 values masked as '****'. */
-  customFields: CustomFieldValues;
-}
-
 /** Scoped customer lists and search for CRM04 (read side). */
 @Injectable()
 export class PartyQueryService {
@@ -50,11 +39,11 @@ export class PartyQueryService {
   constructor(
     @Inject(PARTY_REPOSITORY) private readonly parties: PartyRepository,
     @Inject(HOUSEHOLD_REPOSITORY) private readonly households: HouseholdRepository,
-    @Inject(ROLE_LINK_REPOSITORY) private readonly roles: RoleLinkRepository,
     @Inject(POLICY_NUMBER_LOOKUP) private readonly policies: PolicyNumberLookup,
     @Inject(RECORD_SCOPE_PROVIDER) private readonly scopes: RecordScopeProvider,
     @Inject(PARTY_BOOK_SEGMENT_READER) private readonly segments: PartyBookSegmentReader,
     @Inject(FIELD_CIPHER) private readonly cipher: FieldCipher,
+    private readonly items: PartyListItems,
     private readonly ctx: PartyContext,
   ) {
     this.contacts = new ContactPointFactory(cipher);
@@ -96,16 +85,13 @@ export class PartyQueryService {
     return { excludeIds: await this.segments.partyIdsWithAnyPolicy(tx, scope) };
   }
 
-  async listItems(tx: Transaction, parties: Party[]): Promise<PartyListItem[]> {
-    const defs = await this.ctx.defs.activeFor(tx, 'party');
-    return Promise.all(parties.map(async (p) => {
-      const [household, roles] = await Promise.all([this.households.forParty(tx, p.props.id), this.roles.forParty(tx, p.props.id)]);
-      return {
-        id: p.props.id, displayName: p.props.displayName, primaryMobileMasked: p.primary('MOBILE')?.masked, householdName: household?.name,
-        rolesSummary: [...new Set(roles.map((r) => (r.label ? `${r.role} · ${r.label}` : r.role)))], tags: [...p.props.tags], ownerMemberId: p.props.ownerMemberId,
-        customFields: CustomFieldValidator.mask(defs, p.props.customFields),
-      };
-    }));
+  /** Owner display name for a single-record view (ADR-009). */
+  ownerNameOf(tenantId: string, ownerMemberId: string | undefined): Promise<string | undefined> {
+    return this.items.ownerNameOf(tenantId, ownerMemberId);
+  }
+
+  listItems(tx: Transaction, parties: Party[]): Promise<PartyListItem[]> {
+    return this.items.build(tx, parties);
   }
 
   private async lookup(tx: Transaction, q: string): Promise<Party[]> {

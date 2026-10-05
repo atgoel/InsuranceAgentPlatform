@@ -13,6 +13,7 @@ import { MyWorkService } from '../application/my-work.service';
 import { LeadImportService } from '../application/lead-import.service';
 import {
   BoardQuery,
+  CreateOpportunitySchema,
   CreateTaskSchema,
   LeadImportSchema,
   ListTasksQuery,
@@ -33,6 +34,16 @@ export class OpportunitiesController {
   @RequirePermission('crm.opportunity.read')
   board(@CurrentPrincipal() p: Principal, @Query(new ZodValidationPipe(BoardQuery)) q: z.infer<typeof BoardQuery>) {
     return this.opportunities.board(p, { ownerMemberId: q.owner === 'me' ? p.memberId : q.owner, productInterest: q.product });
+  }
+
+  @Post()
+  @Idempotent()
+  @RequirePermission('crm.opportunity.write')
+  create(
+    @CurrentPrincipal() p: Principal,
+    @Body(new ZodValidationPipe(CreateOpportunitySchema)) body: z.infer<typeof CreateOpportunitySchema>,
+  ) {
+    return this.opportunities.create(p, body);
   }
 
   @Get(':id')

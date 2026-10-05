@@ -79,6 +79,14 @@ export const ConversionSchema = z
   })
   .strict();
 
+export const CreateOpportunitySchema = z
+  .object({
+    partyId: z.string().min(1),
+    productInterest: ProductLine,
+    title: z.string().trim().min(3).max(120),
+    expectedPremiumPaise: z.number().int().min(0),
+  })
+  .strict();
 export const BoardQuery = z.object({ view: z.literal('board').default('board'), owner: z.string().optional(), product: ProductLine.optional() });
 export const OpportunityMoveSchema = z.object({ to: z.enum(['DISCOVERY', 'QUOTE_SHARED', 'PROPOSAL_COMPLETE', 'INSURER_PENDING', 'ISSUED']) }).strict();
 export const LossSchema = z.object({ reason: LostReason }).strict();

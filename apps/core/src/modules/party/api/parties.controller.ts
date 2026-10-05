@@ -10,6 +10,7 @@ import { PartyService } from '../application/party.service';
 import { PartyQueryService } from '../application/party-query.service';
 import { ConsentService } from '../application/consent.service';
 import { SensitivePartyAccessor } from '../application/sensitive-party.accessor';
+import { Party } from '../domain/party';
 import { partyView } from '../application/party-views';
 import { householdView } from './views';
 import { CreatePartySchema, ListPartiesQuery, PatchPartySchema, ReplaceCustomFieldsSchema, SensitiveQuery } from './schemas';
@@ -24,6 +25,11 @@ export class PartiesController {
     private readonly sensitiveAccessor: SensitivePartyAccessor,
   ) {}
 
+  private async view(p: Principal, party: Party) {
+    const [defs, ownerName] = await Promise.all([this.parties.activeDefinitions(p), this.queries.ownerNameOf(p.tenantId, party.props.ownerMemberId)]);
+    return partyView(party, defs, ownerName);
+  }
+
   @Post()
   @Idempotent()
   @RequirePermission('party.write')
@@ -31,7 +37,7 @@ export class PartiesController {
     const { onDuplicate, ...input } = body;
     const { party, candidates } = await this.parties.create(p, input, onDuplicate);
     return {
-      party: partyView(party, await this.parties.activeDefinitions(p)),
+      party: await this.view(p, party),
       duplicateCandidates: candidates.map(({ id, partyAId, partyBId, score, rule, explanation }) => ({ id, partyAId, partyBId, score, rule, explanation })),
     };
   }
@@ -46,14 +52,14 @@ export class PartiesController {
   @RequirePermission('party.read')
   async get(@CurrentPrincipal() p: Principal, @Param('id') id: string) {
     const [{ party, household, roles }, consents] = await Promise.all([this.parties.detail(p, id), this.consents.ledger(p, id)]);
-    return { ...partyView(party, await this.parties.activeDefinitions(p)), household: household && householdView(household), roles, consentSummary: consents.summary };
+    return { ...(await this.view(p, party)), household: household && householdView(household), roles, consentSummary: consents.summary };
   }
 
   @Patch(':id')
   @RequirePermission('party.write')
   async update(@CurrentPrincipal() p: Principal, @Param('id') id: string, @Headers('if-match') ifMatch: string | undefined, @Body(new ZodValidationPipe(PatchPartySchema)) body: z.infer<typeof PatchPartySchema>) {
     const party = await this.parties.update(p, id, body, parseIfMatch(ifMatch));
-    return partyView(party, await this.parties.activeDefinitions(p));
+    return this.view(p, party);
   }
 
   @Put(':id/custom-fields')
@@ -64,7 +70,7 @@ export class PartiesController {
   ) {
     const party = await this.parties.replaceCustomFields(p, id, body.customFields, parseIfMatch(ifMatch));
     res.setHeader('ETag', etagFor(party.props.version));
-    return partyView(party, await this.parties.activeDefinitions(p));
+    return this.view(p, party);
   }
 
   @Get(':id/sensitive')

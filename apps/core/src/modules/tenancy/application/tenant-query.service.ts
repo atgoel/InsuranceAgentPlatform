@@ -81,6 +81,7 @@ export class TenantQueryService {
         capabilities: [...plan.capabilities].sort(),
         limits: plan.limits,
         alertThresholdPct: plan.alertThresholdPct,
+        canHidePoweredBy: plan.canHidePoweredBy,
       },
       usage: USAGE_METRICS.map((metric, i) => usageView(counters[i] ?? { metric, period, used: 0, limit: plan.limits[metric] })),
       flags: flags as FeatureFlag[],
