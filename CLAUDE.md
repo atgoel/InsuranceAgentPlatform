@@ -71,3 +71,12 @@ Findings: `docs/quality/demo-readiness-findings.md`. Plan: `docs/plan/ui-parity-
 - Orchestrator review: read `git diff --stat` and only the risky hunks (money, state, security, crypto). Look at screenshots only at batch end, at most 3.
 - Shared files (`messages.*.ts`, `nav.ts`) get one owner per batch, or a final task, so that no task waits on another.
 - Haiku only for exact text edits that make no verification claim.
+
+## Lessons from Wave 3 Session A (mandatory, `docs/quality/wave3a-retro.md`)
+- The readiness gate has an output: a gap list. Every detail the orchestrator picks that no approved document states verbatim is a Proposed item. Ask the user about all of them in one round before spawning builders, even when the gap "follows from" an Accepted ADR.
+- Before creating worktrees, claim the session's packages: check `ListAgents` for peer sessions and write the claim under HANDOVER "In progress". The plan names each session's packages.
+- Never run `git checkout -- <file>` or `git restore` on uncommitted agent work. Commit the agent's work on its branch first, then do revert proofs with an inverse edit or against a commit.
+- In the main checkout, use `npm install`, not `npm ci`. A running dev server locks native binaries, and `npm ci` leaves `node_modules` half deleted. Use `npm ci` only in fresh worktrees (`scripts/worktree.mjs`).
+- Check every tool limitation you quote in a brief with one command. Do not copy it from an old handover note.
+- At batch start, ask the user once to close heavy external processes (e.g. Codex) before the full gates. Under load, run each full gate once and rerun only the failing files.
+- A revert proof must fail on the assertion under test; the hand-back quotes the failure line. Every wait on a browser or platform promise in scripts has a timeout.
