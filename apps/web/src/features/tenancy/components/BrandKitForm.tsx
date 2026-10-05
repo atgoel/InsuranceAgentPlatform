@@ -15,6 +15,8 @@ const PRESETS = [
 export interface BrandKitFormProps {
   value: BrandKitProps;
   onChange(next: BrandKitProps): void;
+  /** `plan.canHidePoweredBy` from the entitlements; the badge toggle is disabled without it. */
+  canHideBadge: boolean;
 }
 
 interface ColourFieldProps {
@@ -35,7 +37,7 @@ function ColourField({ label, value, onChange }: ColourFieldProps) {
   );
 }
 
-function Presets({ value, onChange }: BrandKitFormProps) {
+function Presets({ value, onChange }: Pick<BrandKitFormProps, 'value' | 'onChange'>) {
   const { t } = useT();
   return (
     <div className="brand-field">
@@ -59,7 +61,7 @@ function Presets({ value, onChange }: BrandKitFormProps) {
   );
 }
 
-function Typefaces({ value, onChange }: BrandKitFormProps) {
+function Typefaces({ value, onChange }: Pick<BrandKitFormProps, 'value' | 'onChange'>) {
   const { t } = useT();
   return (
     <fieldset>
@@ -83,7 +85,7 @@ function Typefaces({ value, onChange }: BrandKitFormProps) {
   );
 }
 
-export function BrandKitForm({ value, onChange }: BrandKitFormProps) {
+export function BrandKitForm({ value, onChange, canHideBadge }: BrandKitFormProps) {
   const { t } = useT();
   const ratio = contrastRatio(value.primary, '#FFFFFF');
   return (
@@ -111,10 +113,12 @@ export function BrandKitForm({ value, onChange }: BrandKitFormProps) {
           <input
             type="checkbox"
             checked={!value.poweredByVisible}
+            disabled={!canHideBadge}
             onChange={(e) => onChange({ ...value, poweredByVisible: !e.target.checked })}
           />
           <span>{t('tenancy.brand.powered_by')}</span>
         </label>
+        {!canHideBadge && <p className="brand-plan-note">{t('tenancy.brand.powered_by_locked')}</p>}
       </div>
     </Card>
   );

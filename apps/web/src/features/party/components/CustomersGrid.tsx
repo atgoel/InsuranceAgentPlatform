@@ -32,13 +32,9 @@ export function CustomersGrid({ items, onRowClick }: CustomersGridProps) {
       render: (item) => item.rolesSummary.map((role) => roleSummaryText(t, role)).join(', ') || NONE,
     },
     {
-      key: 'ownerMemberId',
+      key: 'ownerName',
       header: t('party.customers.owner'),
-      render: (item) => (
-        <span className="customer-owner" title={item.ownerMemberId}>
-          {item.ownerMemberId || NONE}
-        </span>
-      ),
+      render: (item) => <span className="customer-owner">{item.ownerName || NONE}</span>,
     },
     { key: 'tags', header: t('party.customers.tags'), render: (item) => item.tags.join(', ') || NONE },
   ];

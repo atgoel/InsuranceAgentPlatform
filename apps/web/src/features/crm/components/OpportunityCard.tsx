@@ -34,6 +34,7 @@ export function OpportunityCard({ opportunity, stage, canMoveBack, canMoveForwar
       <h4>{title}</h4>
       <p className="opp-amount">{formatPaise(opportunity.expectedPremium.amountPaise)}</p>
       <p className="opp-meta">{`${product} · ${age}`}</p>
+      {opportunity.ownerName && <p className="opp-owner">{`${t('crm.pipeline.owner')}: ${opportunity.ownerName}`}</p>}
       <div className="opp-actions">
         {canMoveBack && (
           <button type="button" className="action-btn" aria-label={t('crm.pipeline.move_back', { title })} onClick={() => onMove(-1)}>

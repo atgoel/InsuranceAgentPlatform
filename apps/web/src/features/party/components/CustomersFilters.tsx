@@ -1,7 +1,13 @@
 import { CountChips, SearchField } from '../../../design-system';
 import { useT } from '../../../lib/i18n';
 
-export type CustomerSegment = 'all' | 'tags';
+export type CustomerSegment = 'all' | 'with_dues' | 'no_policy' | 'tags';
+
+const SEGMENTS: readonly CustomerSegment[] = ['all', 'with_dues', 'no_policy', 'tags'];
+
+function toSegment(id: string): CustomerSegment {
+  return SEGMENTS.find((segment) => segment === id) ?? 'all';
+}
 
 interface CustomersFiltersProps {
   search: string;
@@ -12,10 +18,7 @@ interface CustomersFiltersProps {
   onTagChange: (value: string) => void;
 }
 
-/**
- * Segment chips are All and Tags. With dues and No policy wait for ADR-M03-customer-segments (Proposed), and no chip
- * carries a count because the list response carries none.
- */
+/** Segment chips: All, With dues, No policy and Tags (ADR-M03-customer-segments). No chip carries a count. */
 export function CustomersFilters({ search, onSearchChange, segment, onSegmentChange, tag, onTagChange }: CustomersFiltersProps) {
   const { t } = useT();
 
@@ -24,9 +27,11 @@ export function CustomersFilters({ search, onSearchChange, segment, onSegmentCha
       <CountChips
         ariaLabel={t('party.customers.segments')}
         selected={segment}
-        onChange={(id) => onSegmentChange(id === 'tags' ? 'tags' : 'all')}
+        onChange={(id) => onSegmentChange(toSegment(id))}
         options={[
           { id: 'all', label: t('party.customers.segment_all') },
+          { id: 'with_dues', label: t('party.customers.segment_with_dues') },
+          { id: 'no_policy', label: t('party.customers.segment_no_policy') },
           { id: 'tags', label: t('party.customers.segment_tags') },
         ]}
       />

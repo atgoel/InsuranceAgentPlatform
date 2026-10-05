@@ -8,6 +8,11 @@ import { type BoardResponse, type OpportunityView } from '../api';
 
 const THREE_DAYS_AGO = new Date(Date.now() - 3 * 86_400_000).toISOString();
 
+const OWNERS: Record<string, { id: string; name: string }> = {
+  'opp-1': { id: 'member-1', name: 'Priya Nair' },
+  'opp-2': { id: 'member-2', name: 'Amit Rao' },
+};
+
 function opp(id: string, title: string, stage: OpportunityView['stage'], paise: number): OpportunityView {
   return {
     id,
@@ -16,7 +21,8 @@ function opp(id: string, title: string, stage: OpportunityView['stage'], paise: 
     title,
     expectedPremium: { amountPaise: paise, currency: 'INR' },
     stage,
-    ownerMemberId: 'member-1',
+    ownerMemberId: OWNERS[id]?.id ?? 'member-1',
+    ownerName: OWNERS[id]?.name,
     createdAt: THREE_DAYS_AGO,
     stageEnteredAt: THREE_DAYS_AGO,
     version: 1,
@@ -155,5 +161,30 @@ describe('AC-M04-27 PipelineScreen', () => {
     const c = mockClient({ '/api/v1/opportunities': new ApiError(403, 'forbidden', 'No') });
     renderAt(<PipelineScreen />, c, '/crm/pipeline');
     expect(await screen.findByText('Access Denied')).toBeInTheDocument();
+  });
+
+  it('AC-M04-32 cards show the owner name and omit the line, never the member id, when the name is unknown', async () => {
+    renderAt(<PipelineScreen />, client(), '/crm/pipeline');
+    await screen.findByText('Rajesh Kumar - Term');
+    expect(screen.getByText('Owner: Priya Nair')).toBeInTheDocument();
+    expect(screen.getByText('Owner: Amit Rao')).toBeInTheDocument();
+    expect(screen.getAllByText(/^Owner: /)).toHaveLength(2);
+    expect(screen.queryByText(/member-1/)).not.toBeInTheDocument();
+  });
+
+  it('AC-M04-32 the owner filter lists owners by name and sends the member id', async () => {
+    const c = client();
+    renderAt(<PipelineScreen />, c, '/crm/pipeline');
+    const user = userEvent.setup();
+    await screen.findByText('Rajesh Kumar - Term');
+    const select = screen.getByLabelText('Owner');
+    const options = within(select).getAllByRole('option').map((o) => [o.textContent, (o as HTMLOptionElement).value]);
+    expect(options).toEqual([
+      ['All owners', ''],
+      ['Priya Nair', 'member-1'],
+      ['Amit Rao', 'member-2'],
+    ]);
+    await user.selectOptions(select, 'member-2');
+    await waitFor(() => expect(c.get).toHaveBeenLastCalledWith('/api/v1/opportunities', { query: { view: 'board', owner: 'member-2' } }));
   });
 });

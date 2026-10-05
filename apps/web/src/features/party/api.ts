@@ -4,6 +4,7 @@ import type { CustomFieldValues } from '../tenancy/api';
 // Party types from spec §3
 export type PartyKind = 'PERSON' | 'ORGANISATION';
 export type PartyStatus = 'ACTIVE' | 'MERGED' | 'ERASED';
+export type CustomerSegmentFilter = 'with_dues' | 'no_policy';
 export type Language = 'en' | 'hi' | string;
 export type Channel = 'MOBILE' | 'EMAIL';
 export type PreferredChannel = 'WHATSAPP' | 'SMS' | 'EMAIL' | 'CALL';
@@ -27,6 +28,8 @@ export interface PartyView {
   preferredLanguage: Language;
   preferredChannel?: PreferredChannel;
   ownerMemberId?: string;
+  /** Resolved by the server (ADR-009); absent when the member is unknown. */
+  ownerName?: string;
   tags: string[];
   source: { kind: string; ref?: string };
   status: PartyStatus;
@@ -44,6 +47,8 @@ export interface PartyListItem {
   rolesSummary: string[];
   tags: string[];
   ownerMemberId?: string;
+  /** Resolved by the server (ADR-009); absent when the member is unknown. */
+  ownerName?: string;
 }
 
 export interface HouseholdMember {
@@ -131,6 +136,7 @@ export function createPartyApi(apiClient: ApiClient) {
     async listParties(filter?: {
       q?: string;
       tag?: string;
+      segment?: CustomerSegmentFilter;
       householdId?: string;
       limit?: number;
       cursor?: string;
@@ -139,6 +145,7 @@ export function createPartyApi(apiClient: ApiClient) {
         query: {
           q: filter?.q,
           tag: filter?.tag,
+          segment: filter?.segment,
           householdId: filter?.householdId,
           limit: filter?.limit ?? 25,
           cursor: filter?.cursor,

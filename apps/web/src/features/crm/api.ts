@@ -132,6 +132,8 @@ export interface OpportunityView {
   expectedPremium: { amountPaise: number; currency: 'INR' };
   stage: OpportunityStage;
   ownerMemberId: string;
+  /** Resolved by the server (ADR-009); absent when the member is unknown. */
+  ownerName?: string;
   lostReason?: LostReason;
   issuedPolicySaleId?: string;
   stageEnteredAt: string;
@@ -381,6 +383,16 @@ function pipelineAndTasks(apiClient: ApiClient) {
           product: filter?.product,
         },
       });
+    },
+
+    /** Opens a DISCOVERY opportunity for an existing customer (ADR-009 decision 2). */
+    async createOpportunity(input: {
+      partyId: string;
+      productInterest: ProductLine;
+      title: string;
+      expectedPremiumPaise: number;
+    }): Promise<OpportunityView> {
+      return apiClient.post('/api/v1/opportunities', input, { idempotencyKey: newIdempotencyKey() });
     },
 
     async moveOpportunityStage(

@@ -25,6 +25,19 @@ function asApiError(err: unknown): ApiError {
   return err instanceof ApiError ? err : new ApiError(0, 'network_error', 'Network error');
 }
 
+/** Owner filter options come from the board itself: member id to the server-resolved ownerName. */
+function collectOwners(board: BoardResponse, known: Record<string, string>): Record<string, string> {
+  const next = { ...known };
+  for (const column of board.columns) {
+    for (const opportunity of column.items) {
+      if (opportunity.ownerName) {
+        next[opportunity.ownerMemberId] = opportunity.ownerName;
+      }
+    }
+  }
+  return next;
+}
+
 function PipelineKpis({ board }: { board: BoardResponse }) {
   const { t } = useT();
   const { stats } = board;
@@ -59,6 +72,8 @@ export function PipelineScreen() {
 
   const [state, setState] = useState<BoardState>({ loading: true });
   const [product, setProduct] = useState('');
+  const [owner, setOwner] = useState('');
+  const [owners, setOwners] = useState<Record<string, string>>({});
   const [reloadKey, setReloadKey] = useState(0);
   /** A failed move or loss is shown inline; the board stays on screen. */
   const [actionError, setActionError] = useState<string | undefined>();
@@ -68,8 +83,14 @@ export function PipelineScreen() {
     const load = async () => {
       setState((prev) => ({ ...prev, loading: true, error: undefined }));
       try {
-        const board = await crmApi.getOpportunitiesBoard({ product: (product || undefined) as ProductLine | undefined });
-        if (!cancelled) setState({ loading: false, board });
+        const board = await crmApi.getOpportunitiesBoard({
+          product: (product || undefined) as ProductLine | undefined,
+          owner: owner || undefined,
+        });
+        if (!cancelled) {
+          setState({ loading: false, board });
+          setOwners((known) => collectOwners(board, known));
+        }
       } catch (err) {
         if (!cancelled) setState((prev) => ({ ...prev, loading: false, error: asApiError(err) }));
       }
@@ -78,7 +99,7 @@ export function PipelineScreen() {
     return () => {
       cancelled = true;
     };
-  }, [crmApi, product, reloadKey]);
+  }, [crmApi, product, owner, reloadKey]);
 
   const runAction = useCallback(
     async (action: () => Promise<unknown>) => {
@@ -107,6 +128,11 @@ export function PipelineScreen() {
     ...PRODUCT_LINES.map((p) => ({ value: p, label: t(`labels.line.${p}`) })),
   ];
 
+  const ownerOptions: SelectOption[] = [
+    { value: '', label: t('crm.leads.all_owners') },
+    ...Object.entries(owners).map(([id, name]) => ({ value: id, label: name })),
+  ];
+
   if (state.error?.status === 403) {
     return <PermissionDenied />;
   }
@@ -123,6 +149,7 @@ export function PipelineScreen() {
         {state.board && <PipelineKpis board={state.board} />}
         <div className="pipeline-filters">
           <Select label={t('crm.pipeline.product_filter')} value={product} options={productOptions} onChange={setProduct} />
+          <Select label={t('crm.pipeline.owner_filter')} value={owner} options={ownerOptions} onChange={setOwner} />
         </div>
         {state.error && <ErrorState error={state.error} onRetry={() => setReloadKey((key) => key + 1)} />}
         {!state.error && !state.board && <LoadingSkeleton />}

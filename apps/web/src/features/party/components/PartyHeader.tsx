@@ -3,6 +3,7 @@ import { Button } from '../../../design-system';
 import { useT } from '../../../lib/i18n';
 import type { ConsentSummaryItem, ContactabilityDecision, HouseholdView, PartyView } from '../api';
 import { partyLabel } from '../partyLabels';
+import { CreateOpportunityAction } from './CreateOpportunityAction';
 
 interface PartyHeaderProps {
   party: PartyView & { household?: HouseholdView; consentSummary: ConsentSummaryItem[] };
@@ -66,9 +67,9 @@ export function PartyHeader({ party, contactability }: PartyHeaderProps) {
         <h1>{party.displayName}</h1>
         {party.household && <p className="household-name">{party.household.name}</p>}
         <ul className="preferences">
-          {party.ownerMemberId && (
+          {party.ownerName && (
             <li>
-              {t('party.record.owner')}: {party.ownerMemberId}
+              {t('party.record.owner')}: {party.ownerName}
             </li>
           )}
           <li>
@@ -85,6 +86,7 @@ export function PartyHeader({ party, contactability }: PartyHeaderProps) {
       <div className="header-actions">
         <ContactAction label={t('party.record.call_button')} decision={contactability.call} />
         <ContactAction label={t('party.record.whatsapp_button')} decision={contactability.whatsapp} />
+        <CreateOpportunityAction partyId={party.id} />
       </div>
     </section>
   );

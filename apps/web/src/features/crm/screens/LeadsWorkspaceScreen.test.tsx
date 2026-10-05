@@ -119,6 +119,13 @@ describe('AC-M04-25 LeadsWorkspaceScreen', () => {
     await waitFor(() => expect(leadQueries(c).at(-1)).toEqual({ stage: OPEN, owner: 'member-1', limit: 25 }));
   });
 
+  it('AC-M04-32 the grid owner column shows the owner name, never the member id', async () => {
+    renderAt(<LeadsWorkspaceScreen />, client(), '/crm/leads');
+    const row = (await screen.findByText('Rajesh Kumar')).closest('tr');
+    expect(within(row as HTMLElement).getByText('Agent Singh')).toBeInTheDocument();
+    expect(row?.textContent).not.toContain('member-1');
+  });
+
   it('AC-M04-25 saved views and the product filter are API queries', async () => {
     const c = client();
     renderAt(<LeadsWorkspaceScreen />, c, '/crm/leads');

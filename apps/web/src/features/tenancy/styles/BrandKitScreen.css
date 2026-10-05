@@ -206,3 +206,9 @@
   flex-direction: row;
   align-items: center;
 }
+
+.brand-plan-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--caption);
+}

@@ -58,7 +58,11 @@ export function CustomersScreen() {
   const q = useDebouncedValue(search).trim();
   const tagQuery = useDebouncedValue(tag).trim();
   const query = useMemo(
-    () => ({ q: q || undefined, tag: segment === 'tags' && tagQuery ? tagQuery : undefined }),
+    () => ({
+      q: q || undefined,
+      tag: segment === 'tags' && tagQuery ? tagQuery : undefined,
+      segment: segment === 'with_dues' || segment === 'no_policy' ? segment : undefined,
+    }),
     [q, segment, tagQuery],
   );
   const list = useCustomersList(partyApi, query);
