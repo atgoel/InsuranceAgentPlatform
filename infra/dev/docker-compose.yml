@@ -39,7 +39,9 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       # One issuer for the browser and for the core container, which reaches Keycloak at keycloak:8080.
-      KC_HOSTNAME: http://localhost:8180
+      KC_HOSTNAME: ${IAP_KC_URL:-http://localhost:8180}
+      # Set to xforwarded by phone.env (TLS terminates at caddy); unset in the default mode.
+      KC_PROXY_HEADERS:
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
     ports:
       - "8180:8080"
@@ -78,13 +80,13 @@ services:
       PLATFORM_DATABASE_URL: postgres://iap_owner:iap@postgres:5432/iap
       AUTH_HS256_SECRET: dev-only-hs256-secret-change-me-0001
       AUTH_JWKS_URL: http://keycloak:8080/realms/iap/protocol/openid-connect/certs
-      AUTH_ISSUER: http://localhost:8180/realms/iap
+      AUTH_ISSUER: ${IAP_KC_URL:-http://localhost:8180}/realms/iap
       AUTH_AUDIENCE: iap-core
       DEBUG_TOKEN_SECRET: dev-only-debug-secret
       ACTOR_PEPPER: dev-only-actor-pepper
       OTP_PEPPER: dev-only-otp-pepper
       DEV_AUTH: "1"
-      DEV_TENANTS: '{"localhost":{"tenantId":"ten_acme","status":"active"}}'
+      DEV_TENANTS: '${IAP_DEV_TENANTS:-{"localhost":{"tenantId":"ten_acme","status":"active"}}}'
       DEV_TENANT_LEGAL_NAME: Sharma Insurance Marketing Firm Pvt Ltd
     ports:
       - "3000:3000"
@@ -105,7 +107,7 @@ services:
       context: ../..
       dockerfile: infra/docker/web.Dockerfile
       args:
-        VITE_OIDC_AUTHORITY: http://localhost:8180/realms/iap
+        VITE_OIDC_AUTHORITY: ${IAP_KC_URL:-http://localhost:8180}/realms/iap
         VITE_OIDC_CLIENT_ID: iap-web
         VITE_DEMO_LOGIN: "1"
     image: iap-web:dev
@@ -128,6 +130,38 @@ services:
       - ../../screens.js:/usr/share/nginx/html/screens.js:ro
       - ../../vendor:/usr/share/nginx/html/vendor:ro
 
+  # Phone access over HTTPS (ADR-008 decision 2): docs/dev/phone-https.md. Needs --env-file infra/dev/phone.env.
+  caddy:
+    profiles: ["phone"]
+    image: caddy:2-alpine
+    container_name: iap-caddy
+    environment:
+      IAP_PHONE_HOST: ${IAP_PHONE_HOST:-}
+    ports:
+      - "443:443"
+      - "8443:8443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - iap-caddy-data:/data
+    depends_on:
+      - web
+      - keycloak
+
+  keycloak-phone:
+    profiles: ["phone"]
+    image: node:22-alpine
+    container_name: iap-keycloak-phone
+    command: ["node", "/work/phone-client.mjs", "--host", "${IAP_PHONE_HOST:-}"]
+    environment:
+      KC_ADMIN_URL: http://keycloak:8080
+    volumes:
+      - ./keycloak/phone-client.mjs:/work/phone-client.mjs:ro
+    restart: "no"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
 volumes:
+  iap-caddy-data:
   iap-pg-data:
   iap-kc-data:

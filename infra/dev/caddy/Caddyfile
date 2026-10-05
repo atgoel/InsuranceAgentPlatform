@@ -1,0 +1,21 @@
+# Phone access over HTTPS. Caddy's internal CA signs the certificates (docs/dev/phone-https.md).
+{
+	# Never reach for ACME: this is a LAN name or IP, signed by the local CA.
+	local_certs
+	skip_install_trust
+}
+
+# The web app (nginx proxies /api to core and keeps the Host header for tenant lookup).
+https://{$IAP_PHONE_HOST} {
+	tls internal
+	reverse_proxy web:80
+}
+
+# Keycloak, on the issuer URL https://<host>:8443.
+https://{$IAP_PHONE_HOST}:8443 {
+	tls internal
+	reverse_proxy keycloak:8080 {
+		header_up X-Forwarded-Proto https
+		header_up X-Forwarded-Port 8443
+	}
+}
