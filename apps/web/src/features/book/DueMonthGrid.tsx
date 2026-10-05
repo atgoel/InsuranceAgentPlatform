@@ -4,9 +4,9 @@ import { leadingBlanks, weekdayHeadings, type DayCell } from './dueGrid';
 import { compactPaise, formatPaise } from './money';
 import './dueCalendar.css';
 
-function cellName(cell: DayCell, lang: 'en' | 'hi', dueWord: string): string {
+function cellName(cell: DayCell, lang: 'en' | 'hi', dueCount: string): string {
   const date = formatIstDate(cell.date, lang);
-  return cell.count === 0 ? date : `${date}, ${cell.count} ${dueWord}, ${formatPaise(cell.totalPaise)}`;
+  return cell.count === 0 ? date : `${date}, ${dueCount}, ${formatPaise(cell.totalPaise)}`;
 }
 
 function DayButton({ cell, selected, onPick }: { cell: DayCell; selected: boolean; onPick(date: string): void }) {
@@ -17,7 +17,7 @@ function DayButton({ cell, selected, onPick }: { cell: DayCell; selected: boolea
       className="due-day"
       data-tone={cell.tone ?? 'none'}
       aria-pressed={selected}
-      aria-label={cellName(cell, lang, t('book.dues_word'))}
+      aria-label={cellName(cell, lang, t('book.dues_count', { count: cell.count }))}
       onClick={() => onPick(cell.date)}
     >
       <span className="due-day-number">{cell.dayOfMonth}</span>

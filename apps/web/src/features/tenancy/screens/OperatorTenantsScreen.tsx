@@ -25,6 +25,11 @@ function asApiError(err: unknown): ApiError {
   return err instanceof ApiError ? err : ApiError.network(err instanceof Error ? err : new Error(String(err)));
 }
 
+/** KPI tiles count the first page only, so a further page makes the figure a lower bound. */
+function kpiCount(count: number, hasMore: boolean): string {
+  return hasMore ? `${count}+` : String(count);
+}
+
 function ProvisionNotice({ result }: { result: ProvisionTenantResponse }) {
   const { t } = useT();
   if (result.failedStep) {
@@ -48,6 +53,7 @@ export function OperatorTenantsScreen() {
 
   const [tenants, setTenants] = useState<TenantSummary[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [hasMore, setHasMore] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<ApiError | undefined>();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -61,6 +67,7 @@ export function OperatorTenantsScreen() {
       .then(([tenantList, planList]) => {
         if (cancelled) return;
         setTenants(tenantList.items);
+        setHasMore(tenantList.nextCursor !== undefined);
         setPlans(planList.items);
         setLoaded(true);
       })
@@ -76,6 +83,7 @@ export function OperatorTenantsScreen() {
     try {
       const updated = await tenancyApi.listTenants({ limit: PAGE_SIZE });
       setTenants(updated.items);
+      setHasMore(updated.nextCursor !== undefined);
     } catch (err) {
       setActionError(asApiError(err).title);
     }
@@ -125,8 +133,8 @@ export function OperatorTenantsScreen() {
         }
       />
       <KpiRow>
-        <KpiTile label={t('tenancy.operator.kpi_orgs')} value={organisations} caption={t('tenancy.operator.kpi_orgs_caption')} />
-        <KpiTile label={t('tenancy.operator.kpi_solo')} value={tenants.length - organisations} />
+        <KpiTile label={t('tenancy.operator.kpi_orgs')} value={kpiCount(organisations, hasMore)} caption={t('tenancy.operator.kpi_orgs_caption')} />
+        <KpiTile label={t('tenancy.operator.kpi_solo')} value={kpiCount(tenants.length - organisations, hasMore)} />
       </KpiRow>
       {notice && <ProvisionNotice result={notice} />}
       {actionError && (

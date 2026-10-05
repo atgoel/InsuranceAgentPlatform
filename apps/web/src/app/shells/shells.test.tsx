@@ -237,10 +237,12 @@ describe('AC-M00-32 ConsoleShell', () => {
     expect(within(nav).queryByRole('link', { name: 'Integrations' })).not.toBeInTheDocument();
   });
 
-  it('AC-M00-32 an operator sees the operator tenants entry through the ops wildcard', async () => {
+  it('AC-M00-32 the console sidebar has no Operator tenants entry or Platform section, even for an operator', async () => {
     renderApp('/console/content', api(['platform.operator'], ['ops.*']));
-    const link = await screen.findByRole('link', { name: 'Operator tenants' });
-    expect(link).toHaveAttribute('href', '/console/ops/tenants');
+    const nav = await screen.findByRole('navigation', { name: 'Sections' });
+    expect(within(nav).queryByRole('link', { name: 'Operator tenants' })).not.toBeInTheDocument();
+    expect(within(nav).queryByText('Platform')).not.toBeInTheDocument();
+    expect(CONSOLE_NAV.filter((entry) => entry.to === '/console/ops/tenants')).toEqual([]);
   });
 
   it('AC-M00-32 unknown routes outside the shells show the later-module empty state', async () => {

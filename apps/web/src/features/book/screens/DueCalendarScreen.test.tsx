@@ -43,8 +43,8 @@ describe('AC-M07-15 due calendar month grid', () => {
     await screen.findByText('October 2026');
     expect(client.get).toHaveBeenCalledWith('/api/v1/dues', { query: { from: '2026-10-01', to: '2026-10-31' } });
     expect(screen.getByLabelText('4 Oct 2026, 2 dues, ₹3,500.50')).toHaveAttribute('data-tone', 'warn');
-    expect(screen.getByLabelText('9 Oct 2026, 1 dues, ₹1,23,456.78')).toHaveAttribute('data-tone', 'bad');
-    expect(screen.getByLabelText('15 Oct 2026, 1 dues, ₹50')).toHaveAttribute('data-tone', 'ok');
+    expect(screen.getByLabelText('9 Oct 2026, 1 due, ₹1,23,456.78')).toHaveAttribute('data-tone', 'bad');
+    expect(screen.getByLabelText('15 Oct 2026, 1 due, ₹50')).toHaveAttribute('data-tone', 'ok');
     expect(screen.getByLabelText('5 Oct 2026')).toHaveAttribute('data-tone', 'none');
     expect(screen.getByText('₹1.2L')).toBeInTheDocument();
   });
@@ -57,9 +57,17 @@ describe('AC-M07-15 due calendar month grid', () => {
     expect(document.querySelectorAll('.due-meta')).toHaveLength(2);
     expect(screen.getAllByText(/Life insurance/, { selector: '.due-meta' })).toHaveLength(2);
   });
+  it('AC-M07-15 names a day with one due in the singular and several in the plural', async () => {
+    open();
+    await screen.findByText('October 2026');
+    expect(screen.getByLabelText('9 Oct 2026, 1 due, ₹1,23,456.78')).toBeInTheDocument();
+    expect(screen.getByLabelText('4 Oct 2026, 2 dues, ₹3,500.50')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/1 dues/)).not.toBeInTheDocument();
+  });
+
   it('lists the dues of a picked day and filters by line with counts', async () => {
     open();
-    fireEvent.click(await screen.findByLabelText('9 Oct 2026, 1 dues, ₹1,23,456.78'));
+    fireEvent.click(await screen.findByLabelText('9 Oct 2026, 1 due, ₹1,23,456.78'));
     expect(screen.getByText('₹1,23,456.78', { selector: 'strong' })).toBeInTheDocument();
     expect(screen.getByText('Lapsed', { selector: '.status-chip' })).toBeInTheDocument();
     const chip = screen.getByRole('button', { name: /^Health insurance\s*1$/ });
