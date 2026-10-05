@@ -82,7 +82,7 @@ const vitestFailures = (out) => {
 };
 const quoted = paths.map((p) => `"${p}"`).join(' ');
 // vitest runs inside apps/web and filters relative to it, so repo-root paths lose their apps/web/ prefix.
-const webQuoted = paths.map((p) => `"${p.replace(/^(\.\/)?apps[\/]web[\/]/, '')}"`).join(' ');
+const webQuoted = paths.map((p) => `"${p.replace(/^(\.[\\/])?apps[\\/]web[\\/]/, '')}"`).join(' ');
 
 if (target === 'core' || target === 'all') {
   if (!testsOnly) {
