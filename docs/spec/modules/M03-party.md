@@ -256,7 +256,7 @@ Token names: `PARTY_REPOSITORY, CONSENT_REPOSITORY, SUPPRESSION_REPOSITORY, HOUS
 | Method | Path | Permission | Request → Response |
 |---|---|---|---|
 | POST ✱ | `/parties` | `party.write` | `{ kind, displayName, contacts: [{ channel, value, isPrimary? }], dateOfBirth?: 'YYYY-MM-DD', pan?: string, preferredLanguage?, preferredChannel?, tags?, consent?: { purpose, channel, granted, noticeVersion, source, evidenceRef? }[], onDuplicate?: 'create' \| 'reject' }` → 201 `{ party: PartyView, duplicateCandidates: DuplicateCandidateView[] }` / 409 `possible_duplicate` |
-| GET | `/parties?q=&tag=&householdId=&limit=&cursor=` | `party.read` | `{ items: PartyListItem[], nextCursor? }` |
+| GET | `/parties?q=&tag=&householdId=&segment=&limit=&cursor=` | `party.read` | `{ items: PartyListItem[], nextCursor? }`; `segment` = `with_dues` \| `no_policy` (ADR-M03-customer-segments; ids from M07 `PartyBookSegmentReader`, AND with the other filters and record scope; other values → 400 `validation_failed`) |
 | GET | `/parties/{id}` | `party.read` | `PartyView & { household?: HouseholdView; roles: PartyRoleLink[]; consentSummary: ConsentSummaryItem[] }` |
 | PATCH | `/parties/{id}` (`If-Match`) | `party.write` | patch → `PartyView` |
 | GET | `/parties/{id}/sensitive?purpose=` | `party.sensitive.read` | `{ dateOfBirth?, pan? }` (audited; `Cache-Control: no-store`) |
@@ -333,7 +333,7 @@ Logs never contain raw contact values: the kernel redactor masks them, and servi
 
 | Route | Screen (wireframe) | Behaviour |
 |---|---|---|
-| `/crm/customers` | `CustomersScreen` (CRM04) | Segment chips (All, With dues, No policy, Tags), search box (name / mobile / email / policy no.), DataGrid (customer, masked mobile, household, roles, owner, tags); row select opens household side panel (members with relation and roles) with "Open full record" and "Create opportunity" (navigates to `/crm/pipeline/new?partyId=` — M04); copy "Shared numbers never merge people automatically". |
+| `/crm/customers` | `CustomersScreen` (CRM04) | Segment chips (All, With dues → `segment=with_dues`, No policy → `segment=no_policy`, Tags; no counts on any chip), search box (name / mobile / email / policy no.), DataGrid (customer, masked mobile, household, roles, owner, tags); row select opens household side panel (members with relation and roles) with "Open full record" and "Create opportunity" (navigates to `/crm/pipeline/new?partyId=` — M04); copy "Shared numbers never merge people automatically". |
 | `/crm/customers/:id` | `CustomerRecordScreen` (CRM09) | Breadcrumb; header (initials, name, household, owner, language & channel preference, consent notice version); action buttons (Call/WhatsApp disabled with reason when contactability denies); tabs: Overview (household and roles), Consent (summary per purpose/channel with Granted/Withdrawn chips and dates, "Record consent" sheet with ConsentCheckbox, withdrawal), Policies/Activity/Documents tabs show "Coming in a later module" until M04/M07/M13. |
 | `/crm/import/duplicates` | `DuplicateQueueScreen` (CRM08 queue part) | Queue list with score, rule explanation; compare table field-by-field with A/B radio per field; "Merge records" (confirm sheet stating merges are reversible for 30 days) and "Not a duplicate"; empty state "Queue is clear." |
 
@@ -356,6 +356,8 @@ Logs never contain raw contact values: the kernel redactor masks them, and servi
 - **AC-M03-15** Customers screen: search, segment chips, grid with masked mobiles, household panel with roles, and the shared-number note.
 - **AC-M03-16** Customer record screen: header with preferences and consent notice version, consent tab with granted/withdrawn chips, record-consent sheet (notice version shown), WhatsApp/Call disabled with the contactability reason when denied.
 - **AC-M03-17** Duplicate queue: compare with per-field survivor choice, merge confirmation mentioning 30-day reversibility, "Not a duplicate", and the empty state.
+- **AC-M03-18** `GET /parties?segment=with_dues` returns only policyholders of a non-terminal policy with an installment `DUE_TODAY`, `IN_GRACE`, `RENEWAL_DUE` or `UPCOMING` within 7 days (IST); a party whose only such policy is terminal is excluded.
+- **AC-M03-19** `GET /parties?segment=no_policy` returns only parties with no held policy as policyholder or insured; an insured-only party is excluded; an unknown `segment` → 400 `validation_failed`.
 
 ## 11. CR-001 additions — custom fields on parties
 

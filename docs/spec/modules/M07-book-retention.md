@@ -125,6 +125,7 @@ export interface HeldPolicyRepository { get; save; findByNumberHash(tx, hash): P
 export interface ImportBatchRepository { get; save; findByChecksum(tx, checksum): Promise<ImportBatch | undefined> }
 export interface ServicingRepository { get; save; forPolicy(tx, policyId): Promise<ServicingRequest[]>; openFollowUpsBefore(tx, date, memberId?): Promise<ServicingRequest[]> }
 export interface AlertLedger { emittedKeys(tx, keys: string[]): Promise<Set<string>>; record(tx, keys: string[]): Promise<void> }   // once-only lifecycle alerts
+export interface PartyBookSegmentReader { partyIdsWithDues(tx, scope: RecordScope, today: string): Promise<string[]>; partyIdsWithAnyPolicy(tx, scope: RecordScope): Promise<string[]> }   // provided to M03 (token PARTY_BOOK_SEGMENT_READER) for GET /parties?segment= (ADR-M03-customer-segments); dues = non-terminal policyholder with DUE_TODAY | IN_GRACE | RENEWAL_DUE | UPCOMING ≤ 7 days; any policy = policyholder or insured
 export interface IssuedPolicyReader { read(tx, policySaleId): Promise<{ insurerConfirmed: boolean; policySaleId: string; policyNumber: string; policy: HeldPolicyInput } | undefined> }   // M09 producer; until M09 exists the default reader throws dependency_unavailable so the outbox event is retried
 // From other modules: PARTY_FACADE + FIELD_CIPHER hash (M03), RECORD_SCOPE_PROVIDER (M02), CATALOGUE lookup (M05), OPPORTUNITY creation via CRM (M04 `RenewalOpportunityPort`), MY_WORK_CONTRIBUTORS (M04 multi-provider)
 ```
