@@ -60,3 +60,14 @@ Findings: `docs/quality/demo-readiness-findings.md`. Plan: `docs/plan/ui-parity-
 - Delegate building to the project agents in `.claude/agents` (Sonnet): `backend-builder`, `web-builder`, `wiring` (mechanical, low effort), `module-reviewer` (writes the review JSON). Give each a precise brief: paths, the LLD sections, the pattern file to copy, the ACs.
 - The orchestrator keeps the spec, money/state-machine design and the final verification, re-running the gate itself before accepting any agent claim.
 - Read only the file sections you need; keep command output small (gate, `--silent`, `| tail`).
+
+## Lessons from the Wave 2 retrospective (mandatory, `docs/quality/wave2-retro.md`)
+- Readiness gate before building: for each screen, check that every field, route and decision it needs exists in the LLD. Send all gaps to the user in one decision round as Proposed ADRs. Build only when the gap list is empty.
+- A session is one batch of at most 3 agent tasks that touch disjoint files. The plan names the batch. At the batch end, update the handover, commit and stop. Do not start new scope in the same session.
+- Merge train: agents run targeted gates (`gate.mjs <target> <paths>`). The orchestrator merges the whole batch, then runs each full gate once. Run `int` only when Postgres code changed. Rerun only the failing files.
+- Before full gates, stop external heavy processes. A test that fails only under load is logged as flaky, not chased in the same session.
+- Every agent brief starts with: "run `npm ci` in the worktree; confirm `node_modules/vitest` or `node_modules/jest` exists".
+- Agent hand-backs are at most about 15 lines: files changed, gate lines, deviations with file:line, revert-proof result.
+- Orchestrator review: read `git diff --stat` and only the risky hunks (money, state, security, crypto). Look at screenshots only at batch end, at most 3.
+- Shared files (`messages.*.ts`, `nav.ts`) get one owner per batch, or a final task, so that no task waits on another.
+- Haiku only for exact text edits that make no verification claim.
