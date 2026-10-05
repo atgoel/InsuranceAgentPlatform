@@ -148,6 +148,13 @@ export const messagesEn = {
   'common.edit': 'Edit',
   'common.close': 'Close',
   'common.noData': 'No data found',
+  'ds.loading.label': 'Loading',
+  'ds.permission.title': 'Access Denied',
+  'ds.permission.role': 'You do not have the required role to access this page.',
+  'ds.permission.tenant': 'Your tenant does not have access to this feature.',
+  'ds.error.reference': 'Reference {ref}',
+  'ds.error.copyTrace': 'Copy trace ID',
+  'ds.offline.banner': 'You are offline. Changes will sync when you reconnect.',
 
   // Errors
   'error.networkError': 'Network error. Please check your connection.',

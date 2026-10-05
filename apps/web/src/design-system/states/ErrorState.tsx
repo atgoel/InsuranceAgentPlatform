@@ -1,4 +1,5 @@
 import { Button } from '../Button';
+import { useT } from '../../lib/i18n';
 import './ErrorState.css';
 import { ApiError } from '../../lib/api/api-error';
 
@@ -10,6 +11,7 @@ export interface ErrorStateProps {
 }
 
 export function ErrorState({ error, onRetry }: ErrorStateProps) {
+  const { t } = useT();
   const isApiError = error instanceof ApiError;
   const traceId = isApiError ? error.traceId : undefined;
   const traceRef = traceId ? traceId.substring(0, 8) : '';
@@ -23,19 +25,19 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
   return (
     <div className="error-state">
       <div className="error-state-icon">⚠️</div>
-      <h2 className="error-state-title">Something went wrong</h2>
+      <h2 className="error-state-title">{t('common.error')}</h2>
       {isApiError && error.detail && <p className="error-state-detail">{error.detail}</p>}
       {traceRef && (
         <div className="error-state-trace">
-          <span>Reference {traceRef}</span>
-          <button onClick={copyTrace} aria-label="Copy trace ID" className="copy-button">
+          <span>{t('ds.error.reference', { ref: traceRef })}</span>
+          <button onClick={copyTrace} aria-label={t('ds.error.copyTrace')} className="copy-button">
             📋
           </button>
         </div>
       )}
       {onRetry && (
         <Button onClick={onRetry} size="lg">
-          Try again
+          {t('common.retry')}
         </Button>
       )}
     </div>

@@ -1,3 +1,4 @@
+import { useT } from '../../lib/i18n';
 import './PermissionDenied.css';
 
 export interface PermissionDeniedProps {
@@ -5,16 +6,13 @@ export interface PermissionDeniedProps {
 }
 
 export function PermissionDenied({ reason }: PermissionDeniedProps) {
-  const messages = {
-    role: 'You do not have the required role to access this page.',
-    tenant: 'Your tenant does not have access to this feature.',
-  };
+  const { t } = useT();
 
   return (
     <div className="permission-denied">
       <div className="permission-icon">🔒</div>
-      <h2 className="permission-title">Access Denied</h2>
-      <p className="permission-message">{messages[reason || 'role']}</p>
+      <h2 className="permission-title">{t('ds.permission.title')}</h2>
+      <p className="permission-message">{t(reason === 'tenant' ? 'ds.permission.tenant' : 'ds.permission.role')}</p>
     </div>
   );
 }

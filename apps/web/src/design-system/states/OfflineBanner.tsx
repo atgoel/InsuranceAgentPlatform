@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useT } from '../../lib/i18n';
 import './OfflineBanner.css';
 
 export function OfflineBanner() {
+  const { t } = useT();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -21,7 +23,7 @@ export function OfflineBanner() {
 
   return (
     <div className="offline-banner">
-      📡 You are offline. Changes will sync when you reconnect.
+      📡 {t('ds.offline.banner')}
     </div>
   );
 }
