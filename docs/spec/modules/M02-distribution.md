@@ -202,6 +202,7 @@ export interface IdentityAdmin {                    // Keycloak admin (HLD K7); 
 export interface SellerDirectory {                  // published for M04 routing
   eligibleSellers(tx: Transaction, criteria: { orgUnitIds?: string[]; line?: 'LIFE' | 'HEALTH' | 'GENERAL'; posEligibleProduct?: boolean; language?: string; at: Date }): Promise<EligibleSeller[]>
   sellingScope(tx: Transaction, memberId: string, at: Date): Promise<SellingScope | undefined>
+  displayNames(tx: Transaction, memberIds: readonly string[]): Promise<Record<string, string>>   // owner names for M03/M04 read views; unknown ids omitted (ADR-009)
 }
 export interface EligibleSeller { memberId: string; displayName: string; orgUnitId: string; salespersonType: SalespersonType; capacityPerDay: number; skills: string[]; languages: string[] }
 // eligibility: status active; not on leave at `at`; seller; POSP only when posEligibleProduct !== false; licence for the line valid at `at` when the type requires one (POSP, INDIVIDUAL_AGENT); within orgUnitIds when given; language match when given

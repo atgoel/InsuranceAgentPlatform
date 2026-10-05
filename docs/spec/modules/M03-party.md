@@ -273,7 +273,7 @@ Token names: `PARTY_REPOSITORY, CONSENT_REPOSITORY, SUPPRESSION_REPOSITORY, HOUS
 | POST ✱ | `/households/{id}/members` | `party.write` | `{ partyId, relation }` → `HouseholdView` |
 | DELETE | `/households/{id}/members/{partyId}` | `party.write` | 204 |
 
-Views: `PartyView = { id, kind, displayName, contacts: [{ channel, masked, isPrimary, verified }], dobYear?, panLast4?, preferredLanguage, preferredChannel?, ownerMemberId?, tags, source, status, createdAt, version }` — never raw contacts, DOB or PAN. `PartyListItem = { id, displayName, primaryMobileMasked?, householdName?, rolesSummary: string[], tags, ownerMemberId? }`.
+Views: `PartyView = { id, kind, displayName, contacts: [{ channel, masked, isPrimary, verified }], dobYear?, panLast4?, preferredLanguage, preferredChannel?, ownerMemberId?, ownerName?, tags, source, status, createdAt, version }` — never raw contacts, DOB or PAN. `PartyListItem = { id, displayName, primaryMobileMasked?, householdName?, rolesSummary: string[], tags, ownerMemberId?, ownerName? }`. `ownerName` comes from M02 `SellerDirectory.displayNames` (ADR-009).
 
 Permissions registered: `SALESPERSON, SOLO_OWNER → party.read, party.write, party.consent.write` · `BRANCH_MANAGER, SALES_MANAGER → + party.merge` · `OPS → party.*` except `party.sensitive.read` is granted only with purpose on proposals (M09) — at launch OPS has `party.sensitive.read` · `COMPLIANCE → party.read, party.consent.write, party.suppression.write` · `TENANT_ADMIN → party.*`.
 
@@ -333,7 +333,7 @@ Logs never contain raw contact values: the kernel redactor masks them, and servi
 
 | Route | Screen (wireframe) | Behaviour |
 |---|---|---|
-| `/crm/customers` | `CustomersScreen` (CRM04) | Segment chips (All, With dues → `segment=with_dues`, No policy → `segment=no_policy`, Tags; no counts on any chip), search box (name / mobile / email / policy no.), DataGrid (customer, masked mobile, household, roles, owner, tags); row select opens household side panel (members with relation and roles) with "Open full record" and "Create opportunity" (navigates to `/crm/pipeline/new?partyId=` — M04); copy "Shared numbers never merge people automatically". |
+| `/crm/customers` | `CustomersScreen` (CRM04) | Segment chips (All, With dues → `segment=with_dues`, No policy → `segment=no_policy`, Tags; no counts on any chip), search box (name / mobile / email / policy no.), DataGrid (customer, masked mobile, household, roles, owner, tags); row select opens household side panel (members with relation and roles) with "Open full record" and "Create opportunity" (sheet: product line, title, expected premium in ₹ → M04 `POST /opportunities`, then `/crm/pipeline`; also on the customer record header) (ADR-009); copy "Shared numbers never merge people automatically". |
 | `/crm/customers/:id` | `CustomerRecordScreen` (CRM09) | Breadcrumb; header (initials, name, household, owner, language & channel preference, consent notice version); action buttons (Call/WhatsApp disabled with reason when contactability denies); tabs: Overview (household and roles), Consent (summary per purpose/channel with Granted/Withdrawn chips and dates, "Record consent" sheet with ConsentCheckbox, withdrawal), Policies/Activity/Documents tabs show "Coming in a later module" until M04/M07/M13. |
 | `/crm/import/duplicates` | `DuplicateQueueScreen` (CRM08 queue part) | Merge sends `survivor: 'A'`; the per-field choices decide every value (user decision 2026-10-05); Queue list with score, rule explanation; compare table field-by-field with A/B radio per field; "Merge records" (confirm sheet stating merges are reversible for 30 days) and "Not a duplicate"; empty state "Queue is clear." |
 
@@ -358,6 +358,7 @@ Logs never contain raw contact values: the kernel redactor masks them, and servi
 - **AC-M03-17** Duplicate queue: compare with per-field survivor choice, merge confirmation mentioning 30-day reversibility, "Not a duplicate", and the empty state.
 - **AC-M03-18** `GET /parties?segment=with_dues` returns only policyholders of a non-terminal policy with an installment `DUE_TODAY`, `IN_GRACE`, `RENEWAL_DUE` or `UPCOMING` within 7 days (IST); a party whose only such policy is terminal is excluded.
 - **AC-M03-19** `GET /parties?segment=no_policy` returns only parties with no held policy as policyholder or insured; an insured-only party is excluded; an unknown `segment` → 400 `validation_failed`.
+- **AC-M03-20** Customer list and record show the owner name (`ownerName`) and omit it, without error, when the member is unknown (ADR-009).
 
 ## 11. CR-001 additions — custom fields on parties
 

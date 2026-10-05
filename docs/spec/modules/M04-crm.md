@@ -297,7 +297,8 @@ Steps (one unit of work, outbox + audit inside):
 | POST ✱ | `/leads/{id}/activities` | `crm.activity.write` | `{ kind, outcome?, summary?, occurredAt?, clientRef? }` → 201 `Activity` |
 | POST ✱ | `/leads/{id}/party-link` | `crm.lead.write` | `{ partyId }` → `LeadDetailView` |
 | POST ✱ | `/leads/{id}/conversion` | `crm.lead.convert` | `{ partyChoice, productInterest, expectedPremiumPaise, startStage }` → 201 `{ opportunityId, partyId }` |
-| GET | `/opportunities?view=board&owner=&product=` | `crm.opportunity.read` | `{ columns: BoardColumn[], closed: { issued: number, lost: number }, stats: { openCount, openExpectedPremiumPaise, medianDaysToIssue: number \| null, winRate90d: number \| null } }` |
+| GET | `/opportunities?view=board&owner=&product=` | `crm.opportunity.read` | board cards are `OpportunityView` with `ownerName?` from `SellerDirectory.displayNames` (ADR-009); `{ columns: BoardColumn[], closed: { issued: number, lost: number }, stats: { openCount, openExpectedPremiumPaise, medianDaysToIssue: number \| null, winRate90d: number \| null } }` |
+| POST ✱ | `/opportunities` | `crm.opportunity.write` | `{ partyId, productInterest: ProductLine, title: string(3..120), expectedPremiumPaise: integer ≥ 0 }` → 201 `OpportunityView`; opens DISCOVERY with the caller as owner; party missing or outside the caller's record scope → 404 `not_found` (ADR-009) |
 | POST ✱ | `/opportunities/{id}/stage-transitions` | `crm.opportunity.write` | `{ to }` → `OpportunityView` (422 `issued_requires_insurer_confirmation`) |
 | POST ✱ | `/opportunities/{id}/loss` | `crm.opportunity.write` | `{ reason }` → `OpportunityView` |
 | GET | `/tasks?mine=true&bucket=&kind=&owner=&limit=&cursor=` | `crm.task.read` | `{ groups: [{ bucket, items: TaskView[] }], counts: { overdue, today, upcoming } }` |
@@ -462,6 +463,8 @@ Frontend
 - **AC-M04-28** Tasks and My tasks: buckets, complete with outcome, type filters; Routing rules: edit, test a lead shows who and why, capacity table.
 - **AC-M04-29** Today (mobile): my-work list with one-tap actions, EN/हि, offline banner, queued log actions replayed with the same `clientRef`.
 - **AC-M04-30** Lead import wizard: mapping, preview counts, rejected-row download, commit result with batch id.
+- **AC-M04-31** `POST /opportunities` opens a DISCOVERY opportunity for an in-scope customer with the caller as owner and integer paise premium; an out-of-scope or unknown party → 404; a replay with the same idempotency key returns the same opportunity (ADR-009).
+- **AC-M04-32** Pipeline board cards carry `ownerName`; the lead and pipeline owner filters list owners by name (ADR-009).
 
 ## 11. CR-001 additions — custom fields on leads and opportunities, attribution alignment
 
