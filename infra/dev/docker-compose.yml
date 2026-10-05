@@ -9,18 +9,19 @@
 #   core API  http://localhost:3000
 #   keycloak  http://localhost:8180   (admin console admin / admin; demo users' password Demo@1234)
 #   prototype http://localhost:8081   (static design prototype, no backend)
+# A second, isolated stack next to this one: docs/dev/isolated-stack.md (IAP_STACK, IAP_PORT_* variables).
 # The secrets below are development-only placeholders. Never reuse them outside local machines.
 name: iap-dev
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: iap-postgres
+    container_name: ${IAP_STACK:-iap}-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
-      - "5433:5432"
+      - "${IAP_PORT_POSTGRES:-5433}:5432"
     volumes:
       - ./init-roles.sql:/docker-entrypoint-initdb.d/01-init-roles.sql:ro
       - iap-pg-data:/var/lib/postgresql/data
@@ -33,18 +34,18 @@ services:
   keycloak:
     profiles: ["app"]
     image: quay.io/keycloak/keycloak:26.4
-    container_name: iap-keycloak
+    container_name: ${IAP_STACK:-iap}-keycloak
     command: ["start-dev", "--import-realm", "--health-enabled=true"]
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       # One issuer for the browser and for the core container, which reaches Keycloak at keycloak:8080.
-      KC_HOSTNAME: ${IAP_KC_URL:-http://localhost:8180}
+      KC_HOSTNAME: ${IAP_KC_URL:-http://localhost:${IAP_PORT_KEYCLOAK:-8180}}
       # Set to xforwarded by phone.env (TLS terminates at caddy); unset in the default mode.
       KC_PROXY_HEADERS:
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
     ports:
-      - "8180:8080"
+      - "${IAP_PORT_KEYCLOAK:-8180}:8080"
     volumes:
       - ./keycloak/iap-realm.json:/opt/keycloak/data/import/iap-realm.json:ro
       # Keeps users and the seed's mid/ou attributes when the container is recreated (the import skips an existing realm).
@@ -71,7 +72,7 @@ services:
   core:
     profiles: ["app"]
     image: iap-core:dev
-    container_name: iap-core
+    container_name: ${IAP_STACK:-iap}-core
     environment:
       NODE_ENV: development
       PORT: "3000"
@@ -80,7 +81,7 @@ services:
       PLATFORM_DATABASE_URL: postgres://iap_owner:iap@postgres:5432/iap
       AUTH_HS256_SECRET: dev-only-hs256-secret-change-me-0001
       AUTH_JWKS_URL: http://keycloak:8080/realms/iap/protocol/openid-connect/certs
-      AUTH_ISSUER: ${IAP_KC_URL:-http://localhost:8180}/realms/iap
+      AUTH_ISSUER: ${IAP_KC_URL:-http://localhost:${IAP_PORT_KEYCLOAK:-8180}}/realms/iap
       AUTH_AUDIENCE: iap-core
       DEBUG_TOKEN_SECRET: dev-only-debug-secret
       ACTOR_PEPPER: dev-only-actor-pepper
@@ -89,7 +90,7 @@ services:
       DEV_TENANTS: '${IAP_DEV_TENANTS:-{"localhost":{"tenantId":"ten_acme","status":"active"}}}'
       DEV_TENANT_LEGAL_NAME: Sharma Insurance Marketing Firm Pvt Ltd
     ports:
-      - "3000:3000"
+      - "${IAP_PORT_CORE:-3000}:3000"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/health/live || exit 1"]
       interval: 3s
@@ -107,13 +108,13 @@ services:
       context: ../..
       dockerfile: infra/docker/web.Dockerfile
       args:
-        VITE_OIDC_AUTHORITY: ${IAP_KC_URL:-http://localhost:8180}/realms/iap
+        VITE_OIDC_AUTHORITY: ${IAP_KC_URL:-http://localhost:${IAP_PORT_KEYCLOAK:-8180}}/realms/iap
         VITE_OIDC_CLIENT_ID: iap-web
         VITE_DEMO_LOGIN: "1"
-    image: iap-web:dev
-    container_name: iap-web
+    image: ${IAP_WEB_IMAGE:-iap-web:dev}
+    container_name: ${IAP_STACK:-iap}-web
     ports:
-      - "8080:80"
+      - "${IAP_PORT_WEB:-8080}:80"
     depends_on:
       core:
         condition: service_healthy
@@ -121,9 +122,9 @@ services:
   prototype:
     profiles: ["app"]
     image: nginx:1.27-alpine
-    container_name: iap-prototype
+    container_name: ${IAP_STACK:-iap}-prototype
     ports:
-      - "8081:80"
+      - "${IAP_PORT_PROTOTYPE:-8081}:80"
     volumes:
       - ../../index.html:/usr/share/nginx/html/index.html:ro
       - ../../app.js:/usr/share/nginx/html/app.js:ro
@@ -134,12 +135,12 @@ services:
   caddy:
     profiles: ["phone"]
     image: caddy:2-alpine
-    container_name: iap-caddy
+    container_name: ${IAP_STACK:-iap}-caddy
     environment:
       IAP_PHONE_HOST: ${IAP_PHONE_HOST:-}
     ports:
-      - "443:443"
-      - "8443:8443"
+      - "${IAP_PORT_CADDY:-443}:443"
+      - "${IAP_PORT_CADDY_KC:-8443}:8443"
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - iap-caddy-data:/data
@@ -150,8 +151,23 @@ services:
   keycloak-phone:
     profiles: ["phone"]
     image: node:22-alpine
-    container_name: iap-keycloak-phone
+    container_name: ${IAP_STACK:-iap}-keycloak-phone
     command: ["node", "/work/phone-client.mjs", "--host", "${IAP_PHONE_HOST:-}"]
+    environment:
+      KC_ADMIN_URL: http://keycloak:8080
+    volumes:
+      - ./keycloak/phone-client.mjs:/work/phone-client.mjs:ro
+    restart: "no"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
+  # Second stack only (docs/dev/isolated-stack.md): registers this stack's web origin on its own Keycloak client.
+  keycloak-origin:
+    profiles: ["origin"]
+    image: node:22-alpine
+    container_name: ${IAP_STACK:-iap}-keycloak-origin
+    command: ["node", "/work/phone-client.mjs", "--origin", "http://localhost:${IAP_PORT_WEB:-8080}"]
     environment:
       KC_ADMIN_URL: http://keycloak:8080
     volumes:

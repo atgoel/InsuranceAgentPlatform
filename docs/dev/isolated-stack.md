@@ -1,0 +1,57 @@
+# A second, isolated stack
+
+Why: a worktree session can test against its own Postgres, Keycloak, core and web without touching the default
+stack (`iap-postgres`, `iap-keycloak`, `iap-core`, `iap-web`, `iap-prototype`) that another session or a phone check uses.
+
+## What differs from the default stack
+
+All names and host ports come from variables in `infra/dev/docker-compose.yml`. The defaults equal the original
+values, so a render without variables is unchanged.
+
+| Variable | Default | Controls |
+| --- | --- | --- |
+| `IAP_STACK` | `iap` | container name prefix (`<IAP_STACK>-core` ...) |
+| `IAP_PORT_POSTGRES` / `_KEYCLOAK` / `_CORE` / `_WEB` / `_PROTOTYPE` | 5433 / 8180 / 3000 / 8080 / 8081 | published host ports |
+| `IAP_PORT_CADDY` / `IAP_PORT_CADDY_KC` | 443 / 8443 | phone profile only; the Caddyfile still listens on 443/8443 inside |
+| `IAP_KC_URL` | `http://localhost:<IAP_PORT_KEYCLOAK>` | Keycloak issuer, core `AUTH_ISSUER`, web build argument |
+| `IAP_WEB_IMAGE` | `iap-web:dev` | web image tag |
+
+The compose project name (`-p`) separates networks and volumes (`<project>_iap-pg-data`, `<project>_iap-kc-data`),
+so the second stack has its own database and Keycloak realm data.
+
+The Keycloak URL is baked into the web bundle at build time. The default `iap-web:dev` points at port 8180, so the
+second stack needs its own web image (`IAP_WEB_IMAGE=iap2-web:dev`). `iap-core:dev` and the other images are shared.
+
+## Start
+
+```
+cp infra/dev/stack2.env.example infra/dev/stack2.env      # adjust ports if they clash
+docker compose -p iap2 -f infra/dev/docker-compose.yml --env-file infra/dev/stack2.env build web
+docker compose -p iap2 -f infra/dev/docker-compose.yml --env-file infra/dev/stack2.env --profile app --profile origin up -d --no-build
+```
+
+- `build web` builds only `iap2-web:dev`; it never retags `iap-web:dev` or `iap-core:dev`. Build `iap-core:dev` first
+  (`node scripts/build-images.mjs`) if it does not exist.
+- The `origin` profile runs `keycloak-origin` once: `phone-client.mjs --origin http://localhost:<IAP_PORT_WEB>` adds the
+  web port to the `iap-web` client (redirect URIs, web origins, post-logout URIs). It is idempotent and exits.
+- Never run these commands without `-p`: the default project name is `iap-dev`.
+- Urls: web `http://localhost:9080`, core `:13000`, Keycloak `:18180`, Postgres `:15433` (values from the example file).
+- Demo data: `CORE_URL=http://localhost:13000 KEYCLOAK_URL=http://localhost:18180 node scripts/demo-seed.mjs`.
+
+## Stop
+
+```
+docker compose -p iap2 -f infra/dev/docker-compose.yml --env-file infra/dev/stack2.env --profile app --profile origin down -v
+```
+
+`-v` removes only the `iap2_*` volumes. Check with `docker ps` that the five default containers still run.
+
+## Scripts that assume the default ports
+
+`scripts/gate.mjs` (Postgres 5433 via `DATABASE_URL` and `MIGRATION_DATABASE_URL`), `scripts/demo-seed.mjs`
+(`CORE_URL`, `KEYCLOAK_URL`) and `scripts/ui-sweep.mjs` (`KEYCLOAK_URL`, `--app`, `--proto`) take overrides from
+the environment or flags. `scripts/quality-report.mjs` has the same Postgres defaults as the gate.
+
+## Phone profile
+
+`phone.env` and the Caddyfile hard-code 443/8443 for the issuer, so run the phone profile only on the default stack.
