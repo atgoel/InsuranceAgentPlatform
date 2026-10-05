@@ -228,7 +228,7 @@ All writes run in `uow.run(tenantId, …)` with outbox + audit in the same trans
 
 | Method | Path | Permission | Request → Response |
 |---|---|---|---|
-| GET | `/org-units` | `distribution.member.read` | `{ root: OrgUnitNode }` with `memberCount` per node |
+| GET | `/org-units` | `distribution.member.read` | `{ root: OrgUnitNode }` with `memberCount` per node = members in the node and all its descendants (user decision 2026-10-05) |
 | POST ✱ | `/org-units` | `distribution.org.write` (TENANT_ADMIN) | `{ parentId, kind, name, territoryCodes? }` → 201 `OrgUnit` |
 | POST ✱ | `/org-units/{id}/moves` | `distribution.org.write` | `{ parentId }` → `OrgUnit` |
 | GET | `/members?status=&role=&orgUnitId=&salespersonType=&q=&limit=&cursor=` | `distribution.member.read` (scoped by record scope: managers see their subtree) | `{ items: MemberView[], nextCursor? }` |
@@ -299,8 +299,8 @@ create table if not exists tenant_role (tenant_id text not null references tenan
 
 | Route | Screen (wireframe) | Behaviour |
 |---|---|---|
-| `/console/onboarding` | `OnboardingHierarchyScreen` (W02) | KPI tiles (in onboarding, licences expiring in 60 days); hierarchy tree with counts and filter by unit; onboarding pipeline columns by checklist stage (Invite accepted → Identity → Training & exam → Certificate → Insurer codes); selecting a candidate shows the evidence checklist with notes, insurer code input, "Activate" enabled only when complete (else "Activate · checklist incomplete"); exit panel: choose transfer target, confirm, F97 note "customers stay with the tenant; the ISP receives no customer export". "+ Invite salesperson" sheet. |
-| `/console/users` | `UsersRolesScreen` (W10) | KPI tiles (active users, privileged with MFA, invites pending, deactivated); role filter chips; user DataGrid (name, masked contact, role, record scope, sign-in method OTP/MFA, status, action Deactivate/Reactivate); role permission editor with locked permissions shown disabled with "Locked", Save creates a new version (If-Match); "What a <role> sees" preview; sign-in policy and medical-documents note copy from the wireframe. |
+| `/console/onboarding` | `OnboardingHierarchyScreen` (W02) | Invite sheet invites with role SALESPERSON and a unit from the tree (other roles later) (user decision 2026-10-05); KPI tiles (in onboarding, licences expiring in 60 days); hierarchy tree with counts and filter by unit; onboarding pipeline columns by checklist stage (Invite accepted → Identity → Training & exam → Certificate → Insurer codes); selecting a candidate shows the evidence checklist with notes, insurer code input, "Activate" enabled only when complete (else "Activate · checklist incomplete"); exit panel: choose transfer target, confirm, F97 note "customers stay with the tenant; the ISP receives no customer export". "+ Invite salesperson" sheet. |
+| `/console/users-roles` | `UsersRolesScreen` (W10) | KPI tiles (active users, privileged with MFA, invites pending, deactivated); role filter chips; user DataGrid (name, masked contact, role, record scope, sign-in method OTP/MFA, status, action Deactivate/Reactivate); role permission editor with locked permissions shown disabled with "Locked", Save creates a new version (If-Match); "What a <role> sees" preview; sign-in policy and medical-documents note copy from the wireframe. |
 
 ## 10. Acceptance criteria
 

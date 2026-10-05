@@ -185,7 +185,7 @@ Events `advice.record.finalised`, `quote.option.created`, `quote.request.shared`
 ## 9. Frontend (apps/web/src/features/advice)
 | Route | Screen | Behaviour |
 |---|---|---|
-| `/m/calculators` | `CalculatorsScreen` (M06) | tabs per calculator, inputs in ₹ (converted to paise), result card with workings and "Assumptions v2026.1" link; "Save to customer" when opened from a customer |
+| `/m/calculators` | `CalculatorsScreen` (M06) | tabs per calculator, inputs in ₹ (converted to paise), result card with workings and "Assumptions v2026.1" link; "Save to customer" when opened from a customer; next-step link under the result: retirement/child → `/m/research?line=LIFE`, health/floater → `/m/compare?line=HEALTH` (user decision 2026-10-05) |
 | `/crm/opportunities/:id/quote` | `QuoteWorkspaceScreen` (M09) | scope disclosure banner (from advice/scope), add option form (in-scope products only, premium components with live total check), comparison grid, share link copy, select option; BI attach + acknowledgement state per option; "Benefit illustration acknowledgement required" for savings/ULIP/pension |
 | `/crm/advice/:id` | `AdviceRecordScreen` | calculator runs, recommendations with rationale, customer choice, notes, finalise (shows missing items) — read-only after finalisation |
 

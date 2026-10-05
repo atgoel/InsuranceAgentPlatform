@@ -174,7 +174,7 @@ Events above; metrics `book_import_rows_total{outcome}`, `book_dues_computed_tot
 ## 9. Frontend (apps/web/src/features/book)
 | Route | Screen | Behaviour |
 |---|---|---|
-| `/m/dues` | `DueCalendarScreen` (M04) | month grid with counts, day list (holder, product, amount, status chip, grace end), filters (life/health/general), "Mark paid" sheet, WhatsApp reminder action (M12) |
+| `/m/dues` | `DueCalendarScreen` (M04) | subtitle total = sum of the loaded month's installments; filter chips are lines, not statuses (user decision 2026-10-05); month grid with counts, day list (holder, product, amount, status chip, grace end), filters (life/health/general), "Mark paid" sheet, WhatsApp reminder action (M12) |
 | `/m/book/import` | `BookImportScreen` (M05) | upload CSV (parsed client-side) → suggested mapping editor → validation summary → review queue (problems / duplicates / updates) with per-row decision → commit result with "re-running the same file skips imported rows" |
 | `/crm/customers/:id` Policies tab | `HeldPoliciesPanel` | list with source + as-of chip ("Imported 12 Mar 2026 · confidence medium"), schedule, servicing requests |
 | `/m/servicing` | `ServicingTrackerScreen` | open requests by follow-up date, status updates, notes |
