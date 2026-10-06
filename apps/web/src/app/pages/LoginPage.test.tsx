@@ -29,7 +29,10 @@ describe('AC-M00-32 LoginPage', () => {
     vi.clearAllMocks();
     oidcMock.signinRedirect.mockResolvedValue(undefined);
   });
-  afterEach(() => vi.unstubAllEnvs());
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    delete window.__IAP_CONFIG__;
+  });
 
   it('AC-M00-32 demo mode lists the five personas and the demo password', () => {
     configure(true);
@@ -86,5 +89,25 @@ describe('AC-M00-32 LoginPage', () => {
     sessionStorage.setItem('iap_session', JSON.stringify({ token: 't', tenantId: 'x', roles: ['BRANCH_MANAGER'] }));
     renderWithAuth(<LoginPage />, '/login');
     expect(await screen.findByTestId('location')).toHaveTextContent('/crm/leads');
+  });
+
+  it('AC-M00-37 window.__IAP_CONFIG__ decides the demo flag over VITE_DEMO_LOGIN', () => {
+    configure(false);
+    window.__IAP_CONFIG__ = { demoLogin: true };
+    renderWithAuth(<LoginPage />, '/login');
+    expect(screen.getByLabelText('Demo persona')).toBeInTheDocument();
+  });
+
+  it('AC-M00-37 an injected demoLogin false hides the persona picker even when VITE_DEMO_LOGIN is 1', () => {
+    configure(true);
+    window.__IAP_CONFIG__ = { demoLogin: false };
+    renderWithAuth(<LoginPage />, '/login');
+    expect(screen.queryByLabelText('Demo persona')).not.toBeInTheDocument();
+  });
+
+  it('AC-M00-37 without the global the VITE demo flag applies', () => {
+    configure(true);
+    renderWithAuth(<LoginPage />, '/login');
+    expect(screen.getByLabelText('Demo persona')).toBeInTheDocument();
   });
 });
