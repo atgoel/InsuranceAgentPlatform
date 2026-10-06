@@ -14,3 +14,4 @@
 | [ADR-M08-contract-clarifications](ADR-M08-contract-clarifications.md) | Integration hub decisions 1–7 | Accepted |
 | [ADR-M08-integration-hub](ADR-M08-integration-hub.md) | Integration hub decisions 8–13, recorded amendments and five simple implementation contract completions | Accepted |
 | [ADR-M08-future-evolution](ADR-M08-future-evolution.md) | Larger-scale alternatives, comparison estimates and revisit triggers; implementation not authorized | Proposed |
+| [ADR-M09-readiness-gaps](ADR-M09-readiness-gaps.md) | M09 readiness gate: cross-module ports (M03/M04/M06/M07), start trigger, assisted queue, auto-issuance on matching premium, record-only payments, seeded templates, LLD completion details 1–31 | Accepted |

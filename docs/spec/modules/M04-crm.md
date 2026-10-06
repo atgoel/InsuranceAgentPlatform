@@ -236,6 +236,8 @@ export interface OpportunityRepository { get(tx, id): Promise<Opportunity | unde
 export interface RoutingRuleRepository { list(tx): Promise<RoutingRule[]>; replaceAll(tx, rules: RoutingRule[]): Promise<void>; cursor(tx, ruleId: string): Promise<string | undefined>; setCursor(tx, ruleId: string, memberId: string): Promise<void> }
 export interface LeadImportRepository { findBatchByChecksum(tx, checksum: string): Promise<LeadImportBatch | undefined>; saveBatch(tx, b: LeadImportBatch): Promise<void>; rowSeen(tx, rowHash: string): Promise<boolean>; markRow(tx, rowHash: string, batchId: string): Promise<void> }
 export interface PublicLeadGuard { check(input: { ipHash: string; honeypot?: string; at: Date }): void }   // honeypot filled → ValidationError('spam_detected'); > 10 submissions per ipHash per 10 min → RateLimitedError('public_lead_rate_limited')
+/** Published to M09 (token OPPORTUNITY_ATTRIBUTION_READER, ADR-M09-readiness-gaps #3): opportunity → its lead's source and referrer. undefined when the opportunity is missing; empty object when it has no lead. */
+export interface OpportunityAttributionReader { attribution(tx: Transaction, opportunityId: string): Promise<{ leadSource?: LeadSource; referrerPartyId?: string } | undefined> }
 // From other modules (injected tokens): PARTY_FACADE (M03), SELLER_DIRECTORY + RECORD_SCOPE_PROVIDER (M02), TENANT_DIRECTORY (M01: crmMode), ENTITLEMENT_CHECKER (M01: 'customers' metering for SOLO)
 ```
 

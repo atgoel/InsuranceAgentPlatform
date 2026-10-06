@@ -75,7 +75,7 @@ Sources, in precedence order when they disagree:
 
 | Group | Measures | Source events |
 |---|---|---|
-| Sales | leads by source, contact rate, quote-to-proposal, proposal-to-issued, time to issue, issued premium | `crm.lead.created`, `crm.lead.stage_changed`, `quote.option.shared`, `proposal.submission.created`, `proposal.policy.issued` |
+| Sales | leads by source, contact rate, quote-to-proposal, proposal-to-issued, time to issue, issued premium | `crm.lead.created`, `crm.lead.stage_changed`, `quote.option.shared`, `proposal.submitted`, `proposal.policy.issued` |
 | Retention | policies under management, dues actioned before grace end, renewal premium retained, revivals, 13th-month persistency | `book.policy.*`, `book.due.outcome_recorded`, `commission.persistency.snapshotted` |
 | Adoption | weekly active salespeople, share with book imported, daily-plan actions, WhatsApp shares, AI acceptance rate | canonical request lines (actor pseudonym), `book.import.completed`, `engagement.message.*`, `ai.interaction.reviewed` |
 | Commercial | solo free-to-paid conversion, activation time, churn, revenue vs metered run cost | `tenant.*`, `tenant.usage.*` |

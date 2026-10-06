@@ -132,6 +132,9 @@ export interface AdviceRepository { get(tx, id): Promise<AdviceRecord | undefine
 export interface QuoteRepository { get(tx, id): Promise<QuoteRequest | undefined>; save(tx, q: QuoteRequest): Promise<void>; forOpportunity(tx, opportunityId: string): Promise<QuoteRequest[]>; findOption(tx, optionId: string): Promise<{ request: QuoteRequest; option: QuoteOptionProps } | undefined>; openWithValidityBefore(tx, date: string, limit: number): Promise<QuoteRequest[]> }
 export interface BiRepository { get(tx, id): Promise<BiRecord | undefined>; save(tx, b: BiRecord): Promise<void>; forOption(tx, optionId: string): Promise<BiRecord[]> }
 export interface CalculatorRunRepository { add(tx, run: CalculatorRun): Promise<void>; forParty(tx, partyId: string, limit: number): Promise<CalculatorRun[]> }
+/** Published to M09 (token SELECTED_QUOTE_READER, ADR-M09-readiness-gaps #1). Returns undefined unless the quote is SELECTED with this option. */
+export interface SelectedQuoteReader { selected(tx, optionId: string): Promise<SelectedQuoteView | undefined> }
+export interface SelectedQuoteView { quoteRequestId: string; opportunityId: string; partyId: string; line: QuoteLine; insuredPartyIds: string[]; insurerId: string; productVersionId: string; sumAssuredPaise: number; policyTermYears?: number; premiumPayingTermYears?: number; premium: { netPaise: number; taxPaise: number; grossPaise: number; frequency: PremiumFrequency } }   // net = basePaise + ridersPaise, tax = taxPaise, gross = totalPaise
 // From other modules: COMPARISON_SCOPE_FACADE (M05), CATALOGUE_QUERY (M05 version details), PARTY_FACADE (M03), OPPORTUNITY_LOOKUP (M04: scope + owner + stage move to QUOTE_SHARED via CrmPort event)
 ```
 
