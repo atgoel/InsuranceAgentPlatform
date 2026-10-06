@@ -32,6 +32,7 @@ interface JwsHeader {
 export class JwksTokenVerifier implements TokenVerifier {
   private keys = new Map<string, KeyObject>();
   private lastFetchAt: number | undefined;
+  private inflight: Promise<void> | undefined;
 
   constructor(
     private readonly jwksUrl: string,
@@ -70,9 +71,19 @@ export class JwksTokenVerifier implements TokenVerifier {
   }
 
   private async refetchIfAllowed(): Promise<void> {
+    if (this.inflight) {
+      await this.inflight;
+      return;
+    }
     const now = this.clock.now().getTime();
     if (this.lastFetchAt !== undefined && now - this.lastFetchAt < REFETCH_INTERVAL_MS) return;
-    this.lastFetchAt = now;
+    this.inflight = this.fetchAndStore(now).finally(() => {
+      this.inflight = undefined;
+    });
+    await this.inflight;
+  }
+
+  private async fetchAndStore(startedAt: number): Promise<void> {
     const fetchJwks = this.opts.fetchJwks ?? defaultFetchJwks;
     const jwks = await fetchJwks(this.jwksUrl);
     const next = new Map<string, KeyObject>();
@@ -82,5 +93,6 @@ export class JwksTokenVerifier implements TokenVerifier {
       }
     }
     this.keys = next;
+    this.lastFetchAt = startedAt;
   }
 }
