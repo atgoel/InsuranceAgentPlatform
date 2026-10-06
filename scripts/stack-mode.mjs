@@ -15,6 +15,7 @@ const args = process.argv.slice(2);
 const mode = args.find((arg) => !arg.startsWith('--'));
 const dryRun = args.includes('--dry-run');
 const COMPOSE = ['compose', '-f', 'infra/dev/docker-compose.yml'];
+const PHONE = [...COMPOSE, '--env-file', 'infra/dev/phone.env', '--profile', 'app', '--profile', 'phone'];
 
 function fail(message, detail) {
   console.log(`FAIL  ${message}`);
@@ -34,7 +35,13 @@ function phoneSteps(host) {
     {
       name: 'compose up (phone)',
       cmd: 'docker',
-      args: [...COMPOSE, '--env-file', 'infra/dev/phone.env', '--profile', 'app', '--profile', 'phone', 'up', '-d', '--no-build', '--wait'],
+      args: [...PHONE, 'up', '-d', '--no-build', '--wait', 'keycloak', 'core', 'web', 'caddy'],
+    },
+    {
+      // One-shot client setup: `up --wait` fails on any exited container, so it runs attached and reports its exit code.
+      name: 'keycloak phone client',
+      cmd: 'docker',
+      args: [...PHONE, 'up', '--no-build', '--exit-code-from', 'keycloak-phone', 'keycloak-phone'],
     },
     {
       name: 'login sweep (phone)',
