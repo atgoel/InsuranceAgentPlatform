@@ -107,11 +107,11 @@ services:
     build:
       context: ../..
       dockerfile: infra/docker/web.Dockerfile
-      args:
-        VITE_OIDC_AUTHORITY: ${IAP_KC_URL:-http://localhost:${IAP_PORT_KEYCLOAK:-8180}}/realms/iap
-        VITE_OIDC_CLIENT_ID: iap-web
-        VITE_DEMO_LOGIN: "1"
-    image: ${IAP_WEB_IMAGE:-iap-web:dev}
+    image: iap-web:dev
+    environment:
+      IAP_OIDC_AUTHORITY: ${IAP_KC_URL:-http://localhost:${IAP_PORT_KEYCLOAK:-8180}}/realms/iap
+      IAP_OIDC_CLIENT_ID: iap-web
+      IAP_DEMO_LOGIN: "1"
     container_name: ${IAP_STACK:-iap}-web
     ports:
       - "${IAP_PORT_WEB:-8080}:80"
