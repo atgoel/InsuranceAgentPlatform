@@ -45,6 +45,10 @@ T1 `jwks-race` (6104b41), T2 `runtime-config` (b446b98), T3 `stack-mode` (8c87e5
 - Orchestrator fixes on agent work: `web-config.sh` omits `demoLogin` when `IAP_DEMO_LOGIN` is unset (LLD wording); stale `build web` bullet in `isolated-stack.md`.
 - `SignOutButton.tsx` unchanged: `signOut()` no longer rejects on end-session failure, so its "Sign-out failed" branch only covers storage errors.
 
+## In progress (session imf-a0, 2026-10-06)
+M09 go-ahead given by the user. Readiness gate done: ADR-M09-readiness-gaps decisions 1–31 accepted; M09 LLD rewritten as the full contract; port additions written into M03 §5, M04 §4, M06 §4, M07 §4 (commit 27709ae).
+Batch 1 claimed (worktrees `../IMF-m09-<task>`, branches `ui/m09-<task>`): T1 `m09-domain-a` (proposal/domain: form-template, answer-validation, proposal, snapshot), T2 `m09-domain-b` (proposal/domain: submission, payment, policy-sale, requirements, events), T3 `m09-ports` (M06 SelectedQuoteReader, M04 OpportunityAttributionReader, M03 SENSITIVE_PARTY_ACCESSOR + contactPhone).
+
 ## Backlog for the user to prioritise
 Product scope (needs go-ahead, see memory "IAP scope gate"):
 1. **M09** (issuance): unblocks the real `IssuedPolicyReader` for M07, CR-001 §11, and seeding ISSUED opportunities.
