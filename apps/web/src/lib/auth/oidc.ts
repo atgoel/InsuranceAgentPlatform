@@ -1,17 +1,20 @@
 import { UserManager, WebStorageStateStore, type User } from 'oidc-client-ts';
+import { getRuntimeConfig } from '../config';
 import { clearSession, getSession, setSession, type Session } from './session';
 
 let manager: UserManager | undefined;
 
 export function isOidcConfigured(): boolean {
-  return Boolean(import.meta.env.VITE_OIDC_AUTHORITY) && Boolean(import.meta.env.VITE_OIDC_CLIENT_ID);
+  const { oidcAuthority, oidcClientId } = getRuntimeConfig();
+  return Boolean(oidcAuthority) && Boolean(oidcClientId);
 }
 
 function createManager(): UserManager {
   const origin = window.location.origin;
+  const { oidcAuthority, oidcClientId } = getRuntimeConfig();
   const created = new UserManager({
-    authority: String(import.meta.env.VITE_OIDC_AUTHORITY),
-    client_id: String(import.meta.env.VITE_OIDC_CLIENT_ID),
+    authority: String(oidcAuthority),
+    client_id: String(oidcClientId),
     redirect_uri: `${origin}/auth/callback`,
     post_logout_redirect_uri: `${origin}/login`,
     response_type: 'code',
@@ -68,7 +71,16 @@ export async function completeSignIn(): Promise<Session> {
   return session;
 }
 
+/** Always ends the app session locally; Keycloak end-session is best effort (ADR-010 decision 4). */
 export async function signOut(): Promise<void> {
+  const oidc = getManager();
+  const user = await oidc.getUser();
+  const idToken = user?.id_token;
+  await oidc.removeUser();
   clearSession();
-  await getManager().signoutRedirect();
+  try {
+    await oidc.signoutRedirect(idToken ? { id_token_hint: idToken } : undefined);
+  } catch {
+    window.location.assign('/login');
+  }
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, ErrorState, ApiError } from '../../design-system';
 import { DEMO_PASSWORD, DEMO_PERSONAS, homeForRoles, isOidcConfigured, signIn, useAuth } from '../../lib/auth';
+import { getRuntimeConfig } from '../../lib/config';
 import { useT } from '../../lib/i18n';
 import './LoginPage.css';
 
@@ -27,7 +28,7 @@ function DemoPersonaPicker({ username, onChange }: { username: string; onChange(
 export function LoginPage() {
   const { t } = useT();
   const navigate = useNavigate();
-  const demo = import.meta.env.VITE_DEMO_LOGIN === '1';
+  const demo = getRuntimeConfig().demoLogin;
   const [username, setUsername] = useState(DEMO_PERSONAS[0].username);
   const [redirecting, setRedirecting] = useState(false);
   const [failure, setFailure] = useState<string>();
