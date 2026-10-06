@@ -13,25 +13,23 @@ values, so a render without variables is unchanged.
 | `IAP_STACK` | `iap` | container name prefix (`<IAP_STACK>-core` ...) |
 | `IAP_PORT_POSTGRES` / `_KEYCLOAK` / `_CORE` / `_WEB` / `_PROTOTYPE` | 5433 / 8180 / 3000 / 8080 / 8081 | published host ports |
 | `IAP_PORT_CADDY` / `IAP_PORT_CADDY_KC` | 443 / 8443 | phone profile only; the Caddyfile still listens on 443/8443 inside |
-| `IAP_KC_URL` | `http://localhost:<IAP_PORT_KEYCLOAK>` | Keycloak issuer, core `AUTH_ISSUER`, web build argument |
-| `IAP_WEB_IMAGE` | `iap-web:dev` | web image tag |
+| `IAP_KC_URL` | `http://localhost:<IAP_PORT_KEYCLOAK>` | Keycloak issuer, core `AUTH_ISSUER`, web `/config.js` authority |
 
 The compose project name (`-p`) separates networks and volumes (`<project>_iap-pg-data`, `<project>_iap-kc-data`),
 so the second stack has its own database and Keycloak realm data.
 
-The Keycloak URL is baked into the web bundle at build time. The default `iap-web:dev` points at port 8180, so the
-second stack needs its own web image (`IAP_WEB_IMAGE=iap2-web:dev`). `iap-core:dev` and the other images are shared.
+The web image is environment-neutral: it reads the Keycloak authority at runtime from `/config.js` (ADR-010), so the second
+stack reuses `iap-web:dev`. `iap-core:dev` and the other images are shared too.
 
 ## Start
 
 ```
 cp infra/dev/stack2.env.example infra/dev/stack2.env      # adjust ports if they clash
-docker compose -p iap2 -f infra/dev/docker-compose.yml --env-file infra/dev/stack2.env build web
 docker compose -p iap2 -f infra/dev/docker-compose.yml --env-file infra/dev/stack2.env --profile app --profile origin up -d --no-build
 ```
 
-- `build web` builds only `iap2-web:dev`; it never retags `iap-web:dev` or `iap-core:dev`. Build `iap-core:dev` first
-  (`node scripts/build-images.mjs`) if it does not exist.
+- The stack uses the shared `iap-core:dev` and `iap-web:dev` images. Build them first (`node scripts/build-images.mjs`) if they do
+  not exist.
 - The `origin` profile runs `keycloak-origin` once: `phone-client.mjs --origin http://localhost:<IAP_PORT_WEB>` adds the
   web port to the `iap-web` client (redirect URIs, web origins, post-logout URIs). It is idempotent and exits.
 - Never run these commands without `-p`: the default project name is `iap-dev`.

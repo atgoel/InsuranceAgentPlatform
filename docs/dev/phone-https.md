@@ -9,9 +9,9 @@ Set one variable, `IAP_PHONE_HOST`, to the PC's LAN IP (or a hostname the phone 
 ```
 # PowerShell                          # bash
 $env:IAP_PHONE_HOST = "192.168.1.20"  export IAP_PHONE_HOST=192.168.1.20
-docker compose -f infra/dev/docker-compose.yml --env-file infra/dev/phone.env --profile app --profile phone up -d --build
+docker compose -f infra/dev/docker-compose.yml --env-file infra/dev/phone.env --profile app --profile phone up -d --no-build
 ```
-- `--build` is required: the OIDC authority is baked into the web image at build time.
+- The web app reads the Keycloak address at runtime from `/config.js` (ADR-010); a browser that cached an older shell needs one **Reload** or "Clear site data" once. `node scripts/stack-mode.mjs phone|local` switches modes.
 - The one-shot `keycloak-phone` service adds `https://<host>/*` to the `iap-web` redirect URIs, web origins and post-logout URIs
   (idempotent, keeps existing entries, works on an imported or a persisted realm). Preview: `node infra/dev/keycloak/phone-client.mjs --host <host> --dry-run`.
 - Open `https://<host>` on the phone (web) and `https://<host>:8443` is Keycloak (the sign-in redirect goes there).
@@ -42,6 +42,6 @@ The phone and the PC must be on the same network, and the IP must not change (us
 ## 5. Return to localhost mode
 Unset the variable (`Remove-Item Env:IAP_PHONE_HOST` / `unset IAP_PHONE_HOST`) and run without `--env-file` and `--profile phone`:
 ```
-docker compose -f infra/dev/docker-compose.yml --profile app up -d --build --remove-orphans
+docker compose -f infra/dev/docker-compose.yml --profile app up -d --no-build --remove-orphans
 ```
 The extra redirect URIs stay in Keycloak; they are harmless.
