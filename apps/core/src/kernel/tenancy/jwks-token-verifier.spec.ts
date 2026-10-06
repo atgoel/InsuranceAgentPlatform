@@ -1,3 +1,5 @@
+import { createServer, Server } from 'http';
+import { AddressInfo } from 'net';
 import { generateKeyPairSync, JsonWebKey, KeyObject, sign } from 'crypto';
 import { FixedClock } from '../domain/clock';
 import { HmacJwtVerifier, signHs256 } from './jwt';
@@ -79,6 +81,70 @@ describe('JwksTokenVerifier (AC-M00-33)', () => {
     clock.advance(2_000);
     await expect(verifier.verify(token)).rejects.toMatchObject({ code: 'invalid_token' });
     expect(fetchCount).toBe(2);
+  });
+
+  it('BUG-cold-start-401 AC-M00-33 concurrent verify() calls during one pending fetch share it and all succeed', async () => {
+    let calls = 0;
+    let release: (value: { keys: JsonWebKey[] }) => void = () => undefined;
+    const pending = new Promise<{ keys: JsonWebKey[] }>((resolve) => {
+      release = resolve;
+    });
+    const shared = new JwksTokenVerifier('https://kc.example/certs', clock, {
+      issuer: ISS,
+      audience: AUD,
+      fetchJwks: async () => {
+        calls += 1;
+        return pending;
+      },
+    });
+    const token = rs256(k1.privateKey, baseClaims());
+    const all = Promise.all([1, 2, 3, 4, 5].map(() => shared.verify(token)));
+    release({ keys: [k1.jwk] });
+    const principals = await all;
+    expect(principals.map((p) => p.userRef)).toEqual(['u1', 'u1', 'u1', 'u1', 'u1']);
+    expect(calls).toBe(1);
+  });
+
+  it('AC-M00-33 a failed JWKS fetch does not start the 60 s throttle', async () => {
+    let calls = 0;
+    const flaky = new JwksTokenVerifier('https://kc.example/certs', clock, {
+      issuer: ISS,
+      audience: AUD,
+      fetchJwks: async () => {
+        calls += 1;
+        if (calls === 1) throw new Error('network down');
+        return { keys: [k1.jwk] };
+      },
+    });
+    const token = rs256(k1.privateKey, baseClaims());
+    await expect(flaky.verify(token)).rejects.toMatchObject({ code: 'invalid_token' });
+    const principal = await flaky.verify(token);
+    expect(principal.userRef).toBe('u1');
+    expect(calls).toBe(2);
+  });
+
+  describe('default fetchJwks over real HTTP', () => {
+    let server: Server | undefined;
+
+    afterEach(async () => {
+      const running = server;
+      server = undefined;
+      if (running) await new Promise<void>((resolve) => running.close(() => resolve()));
+    });
+
+    it('AC-M00-33 fetches the JWKS from a real endpoint when no fetchJwks is injected', async () => {
+      server = createServer((_req, res) => {
+        res.setHeader('content-type', 'application/json');
+        res.end(JSON.stringify({ keys: [k1.jwk] }));
+      });
+      const running = server;
+      await new Promise<void>((resolve) => running.listen(0, '127.0.0.1', () => resolve()));
+      const { port } = running.address() as AddressInfo;
+      const real = new JwksTokenVerifier(`http://127.0.0.1:${port}/certs`, clock, { issuer: ISS, audience: AUD });
+      const principal = await real.verify(rs256(k1.privateKey, baseClaims()));
+      expect(principal.userRef).toBe('u1');
+      expect(principal.tenantId).toBe('ten_a');
+    });
   });
 
   it('AC-M00-33 picks up a rotated key on an unknown kid', async () => {
