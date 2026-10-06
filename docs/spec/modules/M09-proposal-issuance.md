@@ -184,6 +184,7 @@ export class SubmissionAttempt {
   awaitAssisted(now: Date): void
   recordAssistedEvidence(insurerRef: string, evidenceRef: string, now: Date): void
   resolveUnknown(status: 'RECEIVED' | 'NOT_FOUND', insurerRef: string | undefined, now: Date): void
+  resend(now: Date): void      // canResend() → SENT, same key; else BusinessRuleError('submission_not_resendable')
   isOpen(): boolean            // PENDING, SENT or UNKNOWN
   canResend(): boolean         // PENDING with a non-ASSISTED route or no route yet
 }
@@ -192,7 +193,7 @@ export class SubmissionAttempt {
 - `apply` (SENT or PENDING only): success → ACKNOWLEDGED with `insurerRef`; failure retryable → PENDING (same key); failure non-retryable → REJECTED with `failureCode`; unknown `timeout`/`connection_reset` → UNKNOWN with `reconciliationId`; unknown `assisted` → `BusinessRuleError('assisted_not_applicable')` (use `awaitAssisted`).
 - `awaitAssisted`: SENT → PENDING with route ASSISTED. `recordAssistedEvidence`: PENDING + ASSISTED only → ACKNOWLEDGED with insurerRef and evidenceRef (both non-empty). Assisted attempts never enter UNKNOWN.
 - `resolveUnknown`: UNKNOWN only; RECEIVED → ACKNOWLEDGED (insurerRef required); NOT_FOUND → REJECTED with `failureCode: 'not_received'`.
-- Re-send of the same attempt is allowed only when `canResend()`; it sets SENT again with the same key.
+- `resend`: re-send of the same attempt, allowed only when `canResend()`; sets SENT again with the same key.
 - Saga rule (application): a new attempt (`attemptNo + 1`, new key) may begin only when the latest attempt is REJECTED; while the latest is SENT/UNKNOWN or PENDING ASSISTED → `ConflictError('submission_in_flight')`; ACKNOWLEDGED → `ConflictError('submission_acknowledged')`.
 
 ### 3.6 Payment (`payment.ts`)
